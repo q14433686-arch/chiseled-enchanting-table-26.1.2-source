@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.BlastArmorCapture;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
+import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -37,7 +38,8 @@ public abstract class LivingEntityBlastDefenseMixin {
         BlastDefenseSkills.ProtectionFrame frame = BlastDefenseSkills.beginProtection(player, source);
         try {
             float vanilla = original.call(level, victim, source);
-            return frame == null ? vanilla : BlastDefenseSkills.finishProtection(frame, vanilla, level);
+            float blast = frame == null ? vanilla : BlastDefenseSkills.finishProtection(frame, vanilla, level);
+            return FireTradeoffSkills.primaryProtection(level, player, source, blast);
         } finally { BlastDefenseSkills.endProtection(frame); }
     }
 }

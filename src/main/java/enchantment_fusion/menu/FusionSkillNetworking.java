@@ -10,6 +10,7 @@ import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
+import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +53,9 @@ public final class FusionSkillNetworking {
         CHARGED_CROSSBOW("skill.enchantment_fusion.charged_crossbow"),
         DURABILITY_RESERVE("skill.enchantment_fusion.durability_reserve"),
         PATH_ECHO("skill.enchantment_fusion.path_echo"),
-        MOMENTUM_SEAL("skill.enchantment_fusion.momentum_seal");
+        MOMENTUM_SEAL("skill.enchantment_fusion.momentum_seal"),
+        FIRE_COMPENSATION("skill.enchantment_fusion.fire_compensation"),
+        FIRE_WAVE("skill.enchantment_fusion.fire_wave");
         final String translation;
         Skill(String translation) { this.translation = translation; }
     }
@@ -63,7 +66,7 @@ public final class FusionSkillNetworking {
     private FusionSkillNetworking() {}
 
     private static List<Skill> equippedSkills(ServerPlayer player) {
-        List<Skill> skills = new ArrayList<>(11);
+        List<Skill> skills = new ArrayList<>(13);
         if (UnderwaterMiningSkills.hasEquippedSpend(player)) skills.add(Skill.BREATH);
         if (FrostFallSkills.find(player, true) != null) skills.add(Skill.FROST_WAVE);
         if (FrostFallSkills.find(player, false) != null) skills.add(Skill.FROST_STEP);
@@ -75,6 +78,8 @@ public final class FusionSkillNetworking {
         if (DurabilityReserveSkills.hasEquipped(player)) skills.add(Skill.DURABILITY_RESERVE);
         if (EchoPathSkills.hasEquipped(player)) skills.add(Skill.PATH_ECHO);
         if (MomentumSealSkills.hasEquipped(player)) skills.add(Skill.MOMENTUM_SEAL);
+        if (FireTradeoffSkills.hasEquipped(player, true)) skills.add(Skill.FIRE_COMPENSATION);
+        if (FireTradeoffSkills.hasEquipped(player, false)) skills.add(Skill.FIRE_WAVE);
         return skills;
     }
 
@@ -129,6 +134,8 @@ public final class FusionSkillNetworking {
             case DURABILITY_RESERVE -> DurabilityReserveSkills.activate(player);
             case PATH_ECHO -> EchoPathSkills.activate(player);
             case MOMENTUM_SEAL -> MomentumSealSkills.activate(player);
+            case FIRE_COMPENSATION -> FireTradeoffSkills.toggle(player);
+            case FIRE_WAVE -> FireTradeoffSkills.release(player);
         }
     }
 

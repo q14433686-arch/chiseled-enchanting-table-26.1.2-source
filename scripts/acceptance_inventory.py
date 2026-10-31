@@ -31,6 +31,8 @@ DIRECTION_FIXTURES = {
     ("piercing", "quick_charge"): ("12-piercing-quick", True),
     ("flame", "punch"): ("14-flame-punch", True),
     ("punch", "flame"): ("14-punch-flame", True),
+    ("protection", "fire_protection"): ("17-protection-fire", True),
+    ("fire_protection", "protection"): ("17-fire-protection", True),
     ("loyalty", "riptide"): ("15-loyalty-riptide", False),
     ("riptide", "loyalty"): ("15-loyalty-riptide", False),
     ("blast_protection", "protection"): ("16-blast-protection", True),

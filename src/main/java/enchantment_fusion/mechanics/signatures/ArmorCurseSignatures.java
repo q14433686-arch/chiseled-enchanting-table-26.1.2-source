@@ -418,7 +418,12 @@ public final class ArmorCurseSignatures {
                     }
                 }
                 case "furnace_aegis", "true_gold_refinery" -> {
-                    if (player.isOnFire()) {
+                    // The selected fire-to-wear direction replaces the old free fire resistance
+                    // only on its supported carriers; preserve any unsupported legacy carrier.
+                    boolean legacy = !"furnace_aegis".equals(sigId)
+                        || !FireTradeoffSkills.applies(eq.pair(), eq.stack(), sigId)
+                        || FireTradeoffSkills.hasLegacyPassive(player);
+                    if (legacy && player.isOnFire()) {
                         player.clearFire();
                         grantEffect(player, "fire_resistance", 60, 0);
                     }

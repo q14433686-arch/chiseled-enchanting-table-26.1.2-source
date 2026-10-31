@@ -2,13 +2,16 @@ package enchantment_fusion.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
+import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 
 /** Observe one actual fall from entry through accepted damage and death handling. */
 @Mixin(Player.class)
@@ -26,6 +29,13 @@ public abstract class PlayerFrostLandingMixin {
         } finally {
             FrostLandingCapture.end(frame, completed);
         }
+    }
+
+    @WrapOperation(method = "actuallyHurt", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/player/Player;getDamageAfterMagicAbsorb(Lnet/minecraft/world/damagesource/DamageSource;F)F"))
+    private float ef$fireTradeoffAfterMagic(Player self, DamageSource source, float damage, Operation<Float> original) {
+        float vanilla = original.call(self, source, damage);
+        return self instanceof ServerPlayer player ? FireTradeoffSkills.afterMagic(player, source, damage, vanilla) : vanilla;
     }
 
     @WrapMethod(method = "actuallyHurt")

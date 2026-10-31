@@ -26,6 +26,7 @@ import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
+import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -192,6 +193,8 @@ public final class FusionTooltipRenderer {
                 && PiercingChainSkills.matches(pair, sigOpt.get().id()) && !PiercingChainSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyThermalCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ThermalProjectileSkills.matches(pair, sigOpt.get().id()) && !ThermalProjectileSkills.applies(pair, stack, sigOpt.get().id());
+            boolean legacyFireTradeoffCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && FireTradeoffSkills.matches(pair, sigOpt.get().id()) && !FireTradeoffSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ((GlazedStrikeEffect.isPair(pair) && GlazedStrikeEffect.SIGNATURE.equals(sigOpt.get().id())
                         && !GlazedStrikeEffect.applies(pair, stack, sigOpt.get().id()))
@@ -233,7 +236,7 @@ public final class FusionTooltipRenderer {
                     && !legacyFrostFireCarrier && !legacyPhantomCarrier && !legacyPrecisionCarrier
                     && !legacyDurabilityCarrier && !legacyBlastCarrier && !legacyHeavyCarrier && !legacySoulCarrier
                     && !legacyFishingCarrier && !legacyCadenceCarrier && !legacyReserveCarrier
-                    && !legacyMomentumCarrier && !legacyPiercingChainCarrier && !legacyThermalCarrier && !legacyGlazeAmberCarrier) {
+                    && !legacyMomentumCarrier && !legacyPiercingChainCarrier && !legacyThermalCarrier && !legacyFireTradeoffCarrier && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -308,6 +311,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacyThermalCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_thermal_projectile_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyFireTradeoffCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyGlazeAmberCarrier) {

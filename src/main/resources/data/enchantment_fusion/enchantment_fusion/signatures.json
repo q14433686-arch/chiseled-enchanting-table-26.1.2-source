@@ -238,12 +238,18 @@
     "furnace_aegis": {
       "primary": "minecraft:protection",
       "secondary": "minecraft:fire_protection",
-      "domain": "armor_curse"
+      "domain": "armor_curse",
+      "fire_conversion_percent": 50,
+      "wear_per_damage": 2
     },
     "searing_counter": {
       "primary": "minecraft:fire_protection",
       "secondary": "minecraft:protection",
-      "domain": "armor_curse"
+      "domain": "armor_curse",
+      "heat_cap": 40,
+      "heat_required": 4,
+      "heat_lifetime_ticks": 400,
+      "wave_range_tenths": 60
     },
     "reactive_plate": {
       "primary": "minecraft:protection",
