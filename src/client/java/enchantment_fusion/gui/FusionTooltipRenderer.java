@@ -34,6 +34,7 @@ import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
+import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
@@ -223,6 +224,8 @@ public final class FusionTooltipRenderer {
                 && SegmentThreadSkills.matches(pair, sigOpt.get().id()) && !SegmentThreadSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacySealedOreCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && SealedOreSkills.matches(pair, sigOpt.get().id()) && !SealedOreSkills.applies(pair, stack, sigOpt.get().id());
+            boolean legacyFortuneBankCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && FortuneBankSkills.matches(pair, sigOpt.get().id()) && !FortuneBankSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyRetainedVolleyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && RetainedVolleyHosts.matches(pair, sigOpt.get().id()) && !RetainedVolleyHosts.supportsHost(stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
@@ -268,7 +271,8 @@ public final class FusionTooltipRenderer {
                     && !legacyFishingCarrier && !legacyCadenceCarrier && !legacyReserveCarrier
                     && !legacyMomentumCarrier && !legacyPiercingChainCarrier && !legacyThermalCarrier && !legacyFireTradeoffCarrier
                     && !legacySoulThreadCarrier && !legacyFireThornsCarrier && !legacyFireSweepCarrier && !legacyWindSweepCarrier
-                    && !legacySoulBladeCarrier && !legacySegmentThreadCarrier && !legacySealedOreCarrier && !legacyGlazeAmberCarrier) {
+                    && !legacySoulBladeCarrier && !legacySegmentThreadCarrier && !legacySealedOreCarrier
+                    && !legacyFortuneBankCarrier && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -375,6 +379,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacySealedOreCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_sealed_ore_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyFortuneBankCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_fortune_bank_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyRetainedVolleyCarrier) {

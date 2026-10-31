@@ -12,6 +12,7 @@ import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import enchantment_fusion.mechanics.signatures.SoulStepSkills;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
+import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.menu.FusionSkillNetworking;
 import enchantment_fusion.mixin.FusionMixinConfigPlugin;
@@ -45,6 +46,7 @@ public final class EnchantmentFusion implements ModInitializer {
         SoulStepSkills.init();
         RangedCadenceSkills.init();
         PiercingChainSkills.init();
+        FortuneBankSkills.init();
         FusionBlocks.init();
         FusionItems.init();
         FusionBlockEntities.init();

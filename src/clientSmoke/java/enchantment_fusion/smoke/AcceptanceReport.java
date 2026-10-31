@@ -21,6 +21,8 @@ final class AcceptanceReport {
         plan("04-sharpness-smite", "Sharpness ▷ Smite: weakness, opposite-side damage and control fixture", "Not reached if setup fails.");
         plan("04-smite-sharpness", "Smite ▷ Sharpness: undead kill, stored charge and piercing blade fixture", "Not reached if setup fails.");
         plan("06-silk-fortune", "Silk Touch ▷ Fortune: real ore mining, cancellation, provenance and prepared single-sample exchange", "Not reached if setup fails.");
+        plan("06-fortune-silk", "Fortune ▷ Silk Touch: real ore mining, cancellation, bounded reserve, target redemption and direct fallback", "Not reached if setup fails.");
+        plan("06-runtime-compat", "06 actual key input, unusual loot functions and stack splitting, save/restart, multiplayer and protection mods", "Not covered by the prepared single-player fixture.");
         plan("10-sharpness-bane", "Sharpness ▷ Bane: real hit and simulated movement/mark age fixture", "Not reached if setup fails.");
         plan("10-bane-sharpness", "Bane ▷ Sharpness: real hit and simulated circling/protected-victim fixture", "Not reached if setup fails.");
         plan("common-format", "Risk text formatting", "Not reached if an earlier setup/UI assertion fails.");

@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.ExtraBlockHarvest;
 import enchantment_fusion.mechanics.HarvestDropCapture;
 import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
+import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -67,11 +68,15 @@ public abstract class ServerPlayerGameModeHarvestMixin {
     private void ef$capturePlayerDestroy(Block block, Level level, Player breaker, BlockPos pos, BlockState state,
                                          @Nullable BlockEntity blockEntity, ItemStack tool, Operation<Void> original) {
         boolean tracked = level instanceof ServerLevel && breaker instanceof ServerPlayer;
-        if (tracked) HarvestDropCapture.enterPlayerDestroy((ServerLevel) level, (ServerPlayer) breaker, pos);
+        ItemStack lootTool = tracked ? SealedOreSkills.lootTool((ServerLevel) level, tool) : tool;
+        if (tracked) lootTool = FortuneBankSkills.lootTool((ServerLevel) level, lootTool);
+        if (tracked) HarvestDropCapture.enterPlayerDestroy((ServerLevel) level, (ServerPlayer) breaker, pos, lootTool, state);
         try {
-            ItemStack lootTool = tracked ? SealedOreSkills.lootTool((ServerLevel) level, tool) : tool;
             original.call(block, level, breaker, pos, state, blockEntity, lootTool);
-            if (tracked) SealedOreSkills.sealDrop((ServerLevel) level, (ServerPlayer) breaker, pos, state, blockEntity, lootTool);
+            if (tracked) {
+                SealedOreSkills.sealDrop((ServerLevel) level, (ServerPlayer) breaker, pos, state, blockEntity, lootTool);
+                FortuneBankSkills.afterDestroy((ServerLevel) level, (ServerPlayer) breaker, pos, state, blockEntity, lootTool);
+            }
         } finally {
             if (tracked) HarvestDropCapture.leavePlayerDestroy((ServerLevel) level, (ServerPlayer) breaker, pos);
         }

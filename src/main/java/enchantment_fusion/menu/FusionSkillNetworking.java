@@ -13,6 +13,7 @@ import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
+import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,7 +67,8 @@ public final class FusionSkillNetworking {
         MOMENTUM_SEAL("skill.enchantment_fusion.momentum_seal"),
         FIRE_COMPENSATION("skill.enchantment_fusion.fire_compensation"),
         FIRE_WAVE("skill.enchantment_fusion.fire_wave"),
-        OPEN_SEALED_ORE("skill.enchantment_fusion.open_sealed_ore");
+        OPEN_SEALED_ORE("skill.enchantment_fusion.open_sealed_ore"),
+        FORTUNE_BANK("skill.enchantment_fusion.fortune_bank");
         final String translation;
         Skill(String translation) { this.translation = translation; }
     }
@@ -78,7 +80,7 @@ public final class FusionSkillNetworking {
     private FusionSkillNetworking() {}
 
     private static List<Skill> equippedSkills(ServerPlayer player) {
-        List<Skill> skills = new ArrayList<>(14);
+        List<Skill> skills = new ArrayList<>(15);
         if (UnderwaterMiningSkills.hasEquippedSpend(player)) skills.add(Skill.BREATH);
         if (FrostFallSkills.find(player, true) != null) skills.add(Skill.FROST_WAVE);
         if (FrostFallSkills.find(player, false) != null) skills.add(Skill.FROST_STEP);
@@ -93,6 +95,7 @@ public final class FusionSkillNetworking {
         if (FireTradeoffSkills.hasEquipped(player, true)) skills.add(Skill.FIRE_COMPENSATION);
         if (FireTradeoffSkills.hasEquipped(player, false)) skills.add(Skill.FIRE_WAVE);
         if (SealedOreSkills.hasOpenableSample(player)) skills.add(Skill.OPEN_SEALED_ORE);
+        if (FortuneBankSkills.hasEquipped(player)) skills.add(Skill.FORTUNE_BANK);
         return skills;
     }
 
@@ -150,6 +153,7 @@ public final class FusionSkillNetworking {
             case FIRE_COMPENSATION -> FireTradeoffSkills.toggle(player);
             case FIRE_WAVE -> FireTradeoffSkills.release(player);
             case OPEN_SEALED_ORE -> SealedOreSkills.openSample(player);
+            case FORTUNE_BANK -> FortuneBankSkills.activate(player);
         }
     }
 

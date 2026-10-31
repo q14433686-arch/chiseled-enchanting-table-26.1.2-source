@@ -6,6 +6,8 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "AbstractArrowAccessor",
+    "ApplyBonusFortuneCaptureMixin",
+    "ApplyBonusSafeFormulaMixin",
     "ArrowHeavyCrushMixin",
     "BowHeavyCrushMixin",
     "CrossbowHeavyCrushMixin",
@@ -32,6 +34,7 @@
     "LivingEntityConsumableFusionMixin",
     "LivingEntityFireThornsMixin",
     "LivingEntityFrostProtectionMixin",
+    "LootItemFunctionsProvenanceMixin",
     "MobFireThornsMixin",
     "NativeFrostWaterWriteMixin",
     "PhantomArrowMixin",

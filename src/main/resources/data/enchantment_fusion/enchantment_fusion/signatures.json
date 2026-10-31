@@ -127,7 +127,9 @@
     "smelt_fortune": {
       "primary": "minecraft:fortune",
       "secondary": "minecraft:silk_touch",
-      "domain": "mining_utility"
+      "domain": "mining_utility",
+      "bank_cap_per_item": 64,
+      "payout_per_break": 3
     },
     "pulse_prospect": {
       "primary": "minecraft:efficiency",

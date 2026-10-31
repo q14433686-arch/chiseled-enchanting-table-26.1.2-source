@@ -30,6 +30,7 @@ import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
+import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -320,11 +321,12 @@ public final class MatrixEffectExecutor {
             boolean redesignedSoulBlade = sigOpt.isPresent() && SoulBladeSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedSegmentThread = sigOpt.isPresent() && SegmentThreadSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedSealedOre = sigOpt.isPresent() && SealedOreSkills.applies(pair, hostStack, sigOpt.get().id());
+            boolean redesignedFortuneBank = sigOpt.isPresent() && FortuneBankSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
                 || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal
                 || redesignedFireTradeoff || redesignedSoulThread || redesignedFireThorns || redesignedFireSweep || redesignedWindSweep
-                || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre;
+                || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre || redesignedFortuneBank;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

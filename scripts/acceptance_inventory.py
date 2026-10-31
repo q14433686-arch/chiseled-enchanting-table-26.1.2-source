@@ -26,6 +26,7 @@ DIRECTION_FIXTURES = {
     ("sharpness", "smite"): ("04-sharpness-smite", True),
     ("smite", "sharpness"): ("04-smite-sharpness", True),
     ("silk_touch", "fortune"): ("06-silk-fortune", True),
+    ("fortune", "silk_touch"): ("06-fortune-silk", True),
     ("sharpness", "bane_of_arthropods"): ("10-sharpness-bane", True),
     ("bane_of_arthropods", "sharpness"): ("10-bane-sharpness", True),
     ("fire_aspect", "knockback"): ("01-fire-knockback", False),

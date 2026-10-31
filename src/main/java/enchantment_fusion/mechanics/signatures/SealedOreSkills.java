@@ -55,6 +55,7 @@ public final class SealedOreSkills {
         return pair != null && SILK.equals(pair.primaryId()) && FORTUNE.equals(pair.secondaryId()) && SIGNATURE.equals(signature);
     }
     public static boolean supportsCarrier(Set<FusionCarrier> roles) { return roles != null && roles.stream().anyMatch(TOOLS::contains); }
+    static @Nullable Item oreOutput(BlockState state) { return state == null ? null : ORES.get(state.getBlock()); }
     /** A host must actually be able to obtain at least one of the supported ore drops. */
     public static boolean supportsHost(@Nullable ItemStack stack) {
         return stack != null && !stack.isEmpty() && supportsCarrier(FusionCarrier.classify(stack))
