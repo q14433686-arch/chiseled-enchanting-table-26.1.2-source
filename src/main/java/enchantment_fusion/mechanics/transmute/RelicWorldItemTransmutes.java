@@ -129,6 +129,77 @@ public final class RelicWorldItemTransmutes {
         return 7 + pointsIntoLevel >= 8;
     }
 
+    /** Only the hazard named by the enchantment is blocked; unrelated damage remains vanilla. */
+    public static boolean protectsDroppedItem(ItemStack stack, DamageSource source) {
+        if (stack == null || stack.isEmpty() || source == null || !hasAnyTransmutedEnchants(stack)
+            || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return false;
+        if (source.is(DamageTypeTags.IS_FIRE) && getStandaloneEnchantLevel(stack, "minecraft:fire_protection") > 0
+            && resolve("minecraft:fire_protection", stack).isPresent()) return true;
+        return source.is(DamageTypeTags.IS_EXPLOSION) && getStandaloneEnchantLevel(stack, "minecraft:blast_protection") > 0
+            && resolve("minecraft:blast_protection", stack).isPresent();
+    }
+
+    private static ServerPlayer verifiedOwner(ItemEntity item) {
+        if (!(item.getOwner() instanceof ServerPlayer owner) || !owner.isAlive()) return null;
+        UUID pickupTarget = ((DroppedItemOwnerAccess) (Object) item).ef$pickupTarget();
+        return pickupTarget == null || pickupTarget.equals(owner.getUUID()) ? owner : null;
+    }
+
+    /** Never discard an uninserted remainder, including partial adds or creative full inventories. */
+    private static void returnToOwner(ServerLevel level, ItemEntity item, ServerPlayer owner, boolean rescue) {
+        ItemStack original = item.getItem();
+        int before = countMatching(owner, original);
+        ItemStack offered = original.copy();
+        owner.getInventory().add(offered);
+        int inserted = Math.clamp(countMatching(owner, original) - before, 0, original.getCount());
+        if (inserted > 0) {
+            ItemStack remaining = original.copyWithCount(original.getCount() - inserted);
+            if (remaining.isEmpty()) item.discard();
+            else item.setItem(remaining);
+            level.playSound(null, owner.blockPosition(), rescue ? SoundEvents.TRIDENT_RETURN : SoundEvents.ENCHANTMENT_TABLE_USE,
+                SoundSource.PLAYERS, rescue ? 0.7F : 0.5F, rescue ? 1.2F : 0.7F);
+        }
+        if (rescue && item.isAlive()) {
+            // Retain a real entity for the uninserted remainder and prevent bystanders taking it.
+            item.setTarget(owner.getUUID());
+            item.setNoPickUpDelay();
+            item.setPos(owner.getX(), owner.getY() + 0.5D, owner.getZ());
+            item.setDeltaMovement(Vec3.ZERO);
+        }
+    }
+
+    private static int countMatching(ServerPlayer player, ItemStack sample) {
+        int count = 0;
+        var inventory = player.getInventory();
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack item = inventory.getItem(i);
+            if (!item.isEmpty() && ItemStack.isSameItemSameComponents(item, sample)) count += item.getCount();
+        }
+        return count;
+    }
+
+    /** Process one real, already-spawned item; no nearby player's identity is used as a fallback. */
+    public static void processWorldItem(ServerLevel level, ItemEntity item) {
+        if (item == null || !item.isAlive() || item.level() != level) return;
+        ItemStack stack = item.getItem();
+        if (stack.isEmpty() || !hasAnyTransmutedEnchants(stack)) return;
+        if (getStandaloneEnchantLevel(stack, "minecraft:fire_protection") > 0
+            && resolve("minecraft:fire_protection", stack).isPresent()) {
+            item.clearFire();
+            if (item.isInLava()) item.setDeltaMovement(item.getDeltaMovement().x * 0.8D, 0.12D, item.getDeltaMovement().z * 0.8D);
+        }
+        ServerPlayer owner = verifiedOwner(item);
+        if (owner != null && getStandaloneEnchantLevel(stack, "minecraft:loyalty") > 0
+            && resolve("minecraft:loyalty", stack).isPresent()
+            && (item.getY() <= level.getMinY() + 6 || item.isInLava())) {
+            returnToOwner(level, item, owner, true);
+            return;
+        }
+        if (owner != null && getTransmutedLevel(stack, "sticky_root_curse") > 0) {
+            returnToOwner(level, item, owner, false);
+        }
+    }
+
     public static void tickWorldItems(ServerLevel level) {
         if (level.getGameTime() % 10L != 0L || level.players().isEmpty()) return;
         Set<Integer> visitedIds = new HashSet<>();
@@ -140,39 +211,7 @@ public final class RelicWorldItemTransmutes {
             List<ItemEntity> nearby = level.getEntitiesOfClass(ItemEntity.class, columnBox, Entity::isAlive);
             for (ItemEntity ie : nearby) {
                 if (!visitedIds.add(ie.getId())) continue;
-                ItemStack st = ie.getItem();
-                if (st.isEmpty() || !hasAnyTransmutedEnchants(st)) continue;
-
-                if (getStandaloneEnchantLevel(st, "minecraft:fire_protection") > 0 && resolve("minecraft:fire_protection", st).isPresent()) {
-                    ie.setInvulnerable(true);
-                    ie.clearFire();
-                    if (ie.isInLava()) ie.setDeltaMovement(ie.getDeltaMovement().x * 0.8D, 0.12D, ie.getDeltaMovement().z * 0.8D);
-                }
-                if (getStandaloneEnchantLevel(st, "minecraft:blast_protection") > 0 && resolve("minecraft:blast_protection", st).isPresent()) {
-                    ie.setInvulnerable(true);
-                }
-                if (getStandaloneEnchantLevel(st, "minecraft:loyalty") > 0 && resolve("minecraft:loyalty", st).isPresent()) {
-                    ie.setInvulnerable(true);
-                    if (ie.getY() <= level.getMinY() + 6 || ie.isInLava()) {
-                        ServerPlayer targetOwner = (ie.getOwner() instanceof ServerPlayer sp && sp.isAlive()) ? sp : player;
-                        ie.setNoPickUpDelay();
-                        ie.setNoGravity(true);
-                        if (targetOwner.getInventory().add(st.copy())) {
-                            ie.discard();
-                            level.playSound(null, targetOwner.blockPosition(), SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 0.7F, 1.2F);
-                            continue;
-                        } else {
-                            ie.setPos(targetOwner.getX(), targetOwner.getY() + 0.5D, targetOwner.getZ());
-                            ie.setDeltaMovement(Vec3.ZERO);
-                        }
-                    }
-                }
-                if (getTransmutedLevel(st, "sticky_root_curse") > 0 && ie.getOwner() instanceof ServerPlayer owner && owner.isAlive()) {
-                    if (owner.getInventory().add(st.copy())) {
-                        ie.discard();
-                        level.playSound(null, owner.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.5F, 0.7F);
-                    }
-                }
+                processWorldItem(level, ie);
             }
         }
     }

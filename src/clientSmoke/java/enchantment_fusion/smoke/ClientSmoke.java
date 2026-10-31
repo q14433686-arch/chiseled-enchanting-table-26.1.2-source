@@ -1151,6 +1151,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         GlazedStrikeProbe.exercise(sp);
                         ThirdPartyCarrierProbe.exercise(sp);
                         ReplenishProbe.exercise(sp);
+                        DroppedItemSafetyProbe.exercise(sp);
                         exerciseExtraMining(sp);
                         exerciseLifelineAnchors(sp);
                         exerciseLoyaltyRiptide(sp);

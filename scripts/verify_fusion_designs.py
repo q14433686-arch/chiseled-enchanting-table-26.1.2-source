@@ -253,7 +253,12 @@ def verify_baseline(ref: str, now: dict) -> None:
           == read_doc(DRAFT).split("## 肉鸽参考", 1)[1].split("## 53：", 1)[0],
           "baseline: pre-53 autonomous proposals changed")
     old_transmutation = subprocess.check_output(["git", "show", f"{ref}:docs/{TRANSMUTATION}"], cwd=ROOT, text=True)
-    check(old_transmutation == read_doc(TRANSMUTATION), "baseline: cross-domain transmutation design changed")
+    transmutation_banner = ("> 本页保留撰写时的草案和静态风险描述；当前代码与验证进度以[实现状态]"
+        "(FUSION_IMPLEMENTATION_STATUS.md)为准，文末旧疑点不代表后续修正已经或未经过游戏验证。\n\n")
+    current_transmutation = read_doc(TRANSMUTATION)
+    check(current_transmutation.count(transmutation_banner) <= 1, "duplicate transmutation status banner")
+    check(old_transmutation == current_transmutation.replace(transmutation_banner, "", 1),
+          "baseline: cross-domain transmutation design changed")
     print(f"PASS baseline {ref}: selected decisions/scopes and prior proposals preserved; one documented 47.37 draft scope widened; 48 promoted to 53 and 972 linked to 54")
 
 
