@@ -11,6 +11,7 @@ import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.mechanics.signatures.PrecisionConstruction;
+import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -84,6 +85,7 @@ public final class MatrixRuntimeHooks {
             GlazedStrikeEffect.clear();
             FrostFallSkills.clear();
             PrecisionConstruction.clear();
+            BlastDefenseSkills.clear();
             FusionMatrixRegistry.setClientSnapshot(null);
         });
 
@@ -98,6 +100,7 @@ public final class MatrixRuntimeHooks {
             FrostFallSkills.onPlayerDisconnect(pid);
             UnderwaterMiningSkills.onPlayerDisconnect(handler.getPlayer());
             PrecisionConstruction.onDisconnect(pid);
+            BlastDefenseSkills.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -286,6 +289,7 @@ public final class MatrixRuntimeHooks {
                 MirageSnapbackSkill.onPlayerDisconnect(deadPlayer.getUUID());
                 UnderwaterMiningSkills.onPlayerDisconnect(deadPlayer);
                 FrostFallSkills.onPlayerDisconnect(deadPlayer.getUUID());
+                BlastDefenseSkills.onDisconnect(deadPlayer.getUUID());
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
@@ -307,6 +311,7 @@ public final class MatrixRuntimeHooks {
             AmberSealSkill.tickServer(server);
             UnderwaterMiningSkills.tickServer(server);
             FrostFallSkills.tickServer(server);
+            BlastDefenseSkills.tickServer(server);
             FlyingBladeManager.tickServer(server);
             ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);

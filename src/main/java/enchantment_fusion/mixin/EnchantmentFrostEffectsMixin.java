@@ -2,6 +2,7 @@ package enchantment_fusion.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
 import enchantment_fusion.mechanics.signatures.NativeFrostWaterGuard;
@@ -25,6 +26,8 @@ public abstract class EnchantmentFrostEffectsMixin {
         float before = protection.floatValue();
         original.call(level, enchantmentLevel, item, victim, source, protection);
         FrostLandingCapture.observeEnchantment((Enchantment) (Object) this, level, item, victim,
+            source, before, protection.floatValue());
+        BlastDefenseSkills.observeProtection((Enchantment) (Object) this, level, item, victim,
             source, before, protection.floatValue());
     }
 

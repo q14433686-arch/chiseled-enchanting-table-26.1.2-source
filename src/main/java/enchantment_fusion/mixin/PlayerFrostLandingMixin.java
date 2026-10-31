@@ -2,6 +2,7 @@ package enchantment_fusion.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,7 +30,13 @@ public abstract class PlayerFrostLandingMixin {
 
     @WrapMethod(method = "actuallyHurt")
     private void ef$afterHealthSubtraction(ServerLevel level, DamageSource source, float damage, Operation<Void> original) {
+        if (!((Object) this instanceof ServerPlayer player)) {
+            original.call(level, source, damage);
+            return;
+        }
+        float beforeHealth = player.getHealth(), beforeAbsorption = player.getAbsorptionAmount();
         original.call(level, source, damage);
-        if ((Object) this instanceof ServerPlayer player) FrostLandingCapture.afterHealthDamage(player, source);
+        FrostLandingCapture.afterHealthDamage(player, source);
+        BlastDefenseSkills.observeActualDamage(player, source, beforeHealth, beforeAbsorption);
     }
 }

@@ -635,6 +635,8 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("11-piercing-multishot", () -> PhantomVolleyProbe.exerciseCluster(sp, tablePos.above(58).east(12)));
         acceptance.run("05-mending-unbreaking", () -> DurabilityEconomyProbe.exerciseGrowth(sp));
         acceptance.run("05-unbreaking-mending", () -> DurabilityEconomyProbe.exerciseRescue(sp));
+        acceptance.run("16-blast-protection", () -> BlastDefenseProbe.exerciseCounter(sp, tablePos.above(74).east(12)));
+        acceptance.run("16-protection-blast", () -> BlastDefenseProbe.exerciseGuard(sp));
         acceptance.run("09-efficiency-silk", () -> PrecisionConstructionProbe.exerciseSlice(sp, tablePos.above(64).east(12)));
         acceptance.run("09-silk-efficiency", () -> PrecisionConstructionProbe.exerciseLine(sp, tablePos.above(64).east(12)));
         acceptance.run("common-station-selection", () -> StationSelectionProbe.exercise(sp));

@@ -230,12 +230,21 @@
     "reactive_plate": {
       "primary": "minecraft:protection",
       "secondary": "minecraft:blast_protection",
-      "domain": "armor_curse"
+      "domain": "armor_curse",
+      "protection_conversion_percent": 50
     },
     "kinetic_payback": {
       "primary": "minecraft:blast_protection",
       "secondary": "minecraft:protection",
-      "domain": "armor_curse"
+      "domain": "armor_curse",
+      "knockback_per_level_percent": 15,
+      "counter_window_ticks": 40,
+      "counter_threshold_health": 10,
+      "counter_radius_tenths": 30,
+      "counter_radius_cap": 64,
+      "counter_damage_tenths": 40,
+      "counter_damage_cap": 100,
+      "counter_target_cap": 256
     },
     "deflection_field": {
       "primary": "minecraft:protection",
