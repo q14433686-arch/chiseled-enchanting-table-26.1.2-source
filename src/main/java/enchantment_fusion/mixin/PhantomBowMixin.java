@@ -1,6 +1,8 @@
 package enchantment_fusion.mixin;
 
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
+import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
+import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.BowItem;
@@ -18,5 +20,6 @@ public abstract class PhantomBowMixin {
                                                float inaccuracy, float angle, @Nullable LivingEntity targetOverride,
                                                CallbackInfo ci) {
         PhantomVolley.configureBow(projectile, shooter, index);
+        RangedCadenceSkills.trackBow(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
     }
 }

@@ -1,10 +1,16 @@
 package enchantment_fusion.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
+import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
+import enchantment_fusion.mechanics.signatures.RangedCadenceMath;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,6 +36,59 @@ public abstract class LivingEntityConsumableFusionMixin {
 
     @Unique
     private ItemStack ef$consumableSnapshot = ItemStack.EMPTY;
+    @Unique
+    private boolean ef$drawCreditApplied;
+    @Unique
+    private int ef$lastDrawGeneration, ef$ignoredActiveGeneration;
+
+    @WrapMethod(method = "startUsingItem")
+    private void ef$startEarnedBowDraw(InteractionHand hand, Operation<Void> original) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        ItemStack candidate = self.getItemInHand(hand);
+        boolean alreadyUsing = self.isUsingItem() || !this.useItem.isEmpty();
+        original.call(hand);
+        if (alreadyUsing || candidate.isEmpty() || this.useItem != candidate || !(self instanceof Player player)) return;
+        this.ef$drawCreditApplied = false;
+        this.ef$ignoredActiveGeneration = 0;
+        int credit = 0;
+        if (player instanceof ServerPlayer serverPlayer) {
+            credit = RangedCadenceSkills.startBowDraw(serverPlayer, hand, candidate);
+        } else if (self.level().isClientSide()) {
+            int view = RangedCadenceSkills.clientDrawView(player, hand, candidate);
+            int generation = RangedCadenceMath.viewGeneration(view);
+            if (RangedCadenceMath.viewActive(view)) {
+                // An active view already present before this local action may be from
+                // the previous action; only a new generation may arrive late.
+                this.ef$ignoredActiveGeneration = generation;
+            } else if (generation > 0 && generation != this.ef$lastDrawGeneration) {
+                credit = RangedCadenceMath.viewTicks(view);
+                this.ef$lastDrawGeneration = generation;
+            }
+        }
+        if (credit > 0) {
+            this.useItemRemaining = Math.max(1, this.useItemRemaining - credit);
+            this.ef$drawCreditApplied = true;
+        }
+    }
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void ef$syncLateBowDrawView(CallbackInfo ci) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!this.isUsingItem() && this.useItem.isEmpty()) {
+            this.ef$drawCreditApplied = false;
+            return;
+        }
+        if (!self.level().isClientSide() || this.ef$drawCreditApplied || !this.isUsingItem()
+            || !(self instanceof Player player) || this.useItem.isEmpty()) return;
+        int view = RangedCadenceSkills.clientDrawView(player, self.getUsedItemHand(), this.useItem);
+        int generation = RangedCadenceMath.viewGeneration(view);
+        if (RangedCadenceMath.viewActive(view) && generation > 0 && generation != this.ef$lastDrawGeneration
+            && generation != this.ef$ignoredActiveGeneration) {
+            this.useItemRemaining = Math.max(1, this.useItemRemaining - RangedCadenceMath.viewTicks(view));
+            this.ef$drawCreditApplied = true;
+            this.ef$lastDrawGeneration = generation;
+        }
+    }
 
     @Inject(method = "tick", at = @At("HEAD"))
     private void ef$accelerateBowAndShieldUseSpeed(CallbackInfo ci) {

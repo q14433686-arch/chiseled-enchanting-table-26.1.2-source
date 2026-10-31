@@ -8,6 +8,8 @@ import enchantment_fusion.EnchantmentFusion;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TransmuteVariant;
 import enchantment_fusion.mechanics.VesselCapacityRules;
+import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
+import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.HostForm;
@@ -351,6 +353,10 @@ public final class TransmuteCatalog {
         int best = Math.max(getTransmutedLevel(stack, "swift_draw"), getTransmutedLevel(stack, "reflex_shield"));
         FusedEnchantmentList pairs = stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         for (FusedPair p : pairs.pairs()) {
+            // Power ▷ Quick Charge on its redesigned bow earns a discrete draw credit
+            // only after a full real arrow hits; do not also give it unconditional speed.
+            if (SignatureCatalog.resolve(p).map(entry -> RangedCadenceSkills.BOW.equals(entry.id())
+                    && RangedCadenceSkills.applies(p, stack, entry.id())).orElse(false)) continue;
             if ("minecraft:quick_charge".equals(p.primaryId())) {
                 best = Math.max(best, p.primaryLevel());
             } else if ("minecraft:quick_charge".equals(p.secondaryId())) {

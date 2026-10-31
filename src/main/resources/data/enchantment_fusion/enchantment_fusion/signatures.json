@@ -170,12 +170,18 @@
     "swift_draw_burst": {
       "primary": "minecraft:quick_charge",
       "secondary": "minecraft:power",
-      "domain": "ranged"
+      "domain": "ranged",
+      "load_capacity": 3,
+      "load_lifetime_ticks": 400,
+      "arrow_bonus_percent_per_stack_and_level": 8
     },
     "overdraw_snipe": {
       "primary": "minecraft:power",
       "secondary": "minecraft:quick_charge",
-      "domain": "ranged"
+      "domain": "ranged",
+      "draw_ticks_per_level": 2,
+      "maximum_draw_credit_ticks": 12,
+      "draw_credit_lifetime_ticks": 400
     },
     "hydro_flying_sword": {
       "primary": "minecraft:loyalty",

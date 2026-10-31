@@ -14,6 +14,7 @@ import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.SoulStepSkills;
 import enchantment_fusion.mechanics.signatures.FishingTideSkills;
+import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.model.FusedPair;
@@ -91,6 +92,9 @@ public final class DirectionalHostRules {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (FishingTideSkills.matches(pair, signature) && !FishingTideSkills.supportsCarrier(actual)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
+        if (RangedCadenceSkills.matches(pair, signature) && !RangedCadenceSkills.supportsCarrier(pair, actual)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (pair.primaryId().equals("minecraft:fire_aspect") && pair.secondaryId().equals("minecraft:aqua_affinity")

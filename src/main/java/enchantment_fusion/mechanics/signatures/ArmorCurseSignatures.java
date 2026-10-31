@@ -460,7 +460,9 @@ public final class ArmorCurseSignatures {
                     }
                 }
                 case "rapid_bowstring", "swift_draw_burst" -> {
-                    if (slot == EquipmentSlot.MAINHAND) {
+                    // Preserve legacy haste on old unsupported hosts; the redesigned
+                    // crossbow uses real loads instead of an unconditional extra buff.
+                    if (slot == EquipmentSlot.MAINHAND && !RangedCadenceSkills.applies(eq.pair(), eq.stack(), sigId)) {
                         grantEffect(player, "haste", 30, 1);
                     }
                 }

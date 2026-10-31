@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
+import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -47,6 +48,7 @@ public abstract class PhantomArrowMixin {
             return succeeded;
         } finally {
             HeavyCrushSkill.endHit(heavyHit, succeeded);
+            RangedCadenceSkills.finishBowHit(arrow, target, succeeded);
             if (reserved) PhantomVolley.finishImpact(arrow, target, hit.getLocation(), succeeded);
         }
     }
