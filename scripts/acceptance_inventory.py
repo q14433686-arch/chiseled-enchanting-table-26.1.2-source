@@ -23,6 +23,8 @@ DIRECTION_FIXTURES = {
     ("sweeping_edge", "fire_aspect"): ("02-sweep-fire", True),
     ("knockback", "sweeping_edge"): ("03-knockback-sweep", True),
     ("sweeping_edge", "knockback"): ("03-sweep-knockback", True),
+    ("sharpness", "smite"): ("04-sharpness-smite", True),
+    ("smite", "sharpness"): ("04-smite-sharpness", True),
     ("fire_aspect", "knockback"): ("01-fire-knockback", False),
     ("knockback", "fire_aspect"): ("01-fire-knockback", False),
     ("mending", "unbreaking"): ("05-mending-unbreaking", True),

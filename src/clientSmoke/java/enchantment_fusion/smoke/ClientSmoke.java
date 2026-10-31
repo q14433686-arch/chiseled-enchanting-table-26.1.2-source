@@ -641,6 +641,8 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("02-sweep-fire", () -> FireSweepProbe.exercise(sp, tablePos.above(180).east(12), true));
         acceptance.run("03-knockback-sweep", () -> WindSweepProbe.exercise(sp, tablePos.above(180).east(12), false));
         acceptance.run("03-sweep-knockback", () -> WindSweepProbe.exercise(sp, tablePos.above(180).east(12), true));
+        acceptance.run("04-sharpness-smite", () -> SoulBladeProbe.exercise(sp, tablePos.above(180).east(12), false));
+        acceptance.run("04-smite-sharpness", () -> SoulBladeProbe.exercise(sp, tablePos.above(180).east(12), true));
         acceptance.run("31.3-glaze", () -> GlazedStrikeProbe.exercise(sp));
         acceptance.run("31.3-amber", () -> AmberSealProbe.exercise(sp, tablePos.above(48).west(16)));
         acceptance.run("31.4-carrier", () -> WaterFireCarrierProbe.exercise(sp));

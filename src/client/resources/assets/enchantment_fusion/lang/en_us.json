@@ -119,10 +119,10 @@
   "aberration.enchantment_fusion.mutual_glacier.desc": "25% chance to teleport you to the target and place a temporary 3x3x3 frost cage in available air. It cracks away without producing water.",
   "aberration.enchantment_fusion.hot_potato.title": "Hot Potato",
   "aberration.enchantment_fusion.hot_potato.desc": "Burns the target; each activation has a 20% chance to set you on fire briefly.",
-  "signature.enchantment_fusion.sanctified_execute.title": "Sanctified Execute",
-  "signature.enchantment_fusion.sanctified_execute.desc": "Adds magic damage based on target armor (up to 6). Against undead at or below 25% health, attempts an execution and grants absorption.",
-  "signature.enchantment_fusion.radiant_shockwave.title": "Radiant Shockwave",
-  "signature.enchantment_fusion.radiant_shockwave.desc": "Strikes on undead unleash a holy shockwave that blinds and weakens nearby foes.",
+  "signature.enchantment_fusion.sanctified_execute.title": "Flank the Soul",
+  "signature.enchantment_fusion.sanctified_execute.desc": "[Sharpness ▷ Smite] A fully charged hit on an undead enemy reveals a weak point on its far side. Circle around and strike fully again for extra damage and brief slowing.",
+  "signature.enchantment_fusion.radiant_shockwave.title": "Stored Soul Blade",
+  "signature.enchantment_fusion.radiant_shockwave.desc": "[Smite ▷ Sharpness] Killing undead stores soul edges. Your next fully charged air swing or damaging melee hit releases a piercing blade ahead.",
   "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
@@ -998,5 +998,6 @@
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Legacy carrier keeps its old effect; the new thorn skills use damageable armor or a held shield.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "This legacy carrier keeps its old effects; new installations require a bow/crossbow or a mining tool for the matching direction.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "This legacy carrier keeps its old effects; the new boundary uses melee weapons and the fuse requires a sword sweep.",
-  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "This legacy carrier keeps its old effects; the wind eye uses melee weapons and the core requires a sword sweep."
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "This legacy carrier keeps its old effects; the wind eye uses melee weapons and the core requires a sword sweep.",
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "This legacy carrier keeps its old effects; the new soul skills use melee weapons."
 }

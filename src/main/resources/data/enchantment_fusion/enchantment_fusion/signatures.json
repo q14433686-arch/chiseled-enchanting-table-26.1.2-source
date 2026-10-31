@@ -5,12 +5,15 @@
     "sanctified_execute": {
       "primary": "minecraft:sharpness",
       "secondary": "minecraft:smite",
-      "domain": "melee"
+      "domain": "melee",
+      "weakness_ticks": 120
     },
     "radiant_shockwave": {
       "primary": "minecraft:smite",
       "secondary": "minecraft:sharpness",
-      "domain": "melee"
+      "domain": "melee",
+      "charge_ticks": 240,
+      "blade_range_tenths": 90
     },
     "hamstring_rend": {
       "primary": "minecraft:sharpness",

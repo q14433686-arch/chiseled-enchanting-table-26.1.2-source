@@ -56,7 +56,7 @@ jobs:
           status=0
           # Compile (but do not run) the disposable game probe as well. The eventual
           # single-process in-game acceptance is deliberately a separate step.
-          ./gradlew -Pclient_smoke=true compileJava compileClientJava compileClientSmokeJava test --console=plain --stacktrace --no-daemon \
+          ./gradlew -Pclient_smoke=true compileJava compileClientJava compileClientSmokeJava checkClientSoulBladeHook test --console=plain --stacktrace --no-daemon \
             >> build-reports/compile-java.log 2>&1 || status=$?
           echo "gradle exit code: $status" >> build-reports/compile-java.log
           python3 scripts/summarize_test_results.py >> build-reports/compile-java.log 2>&1

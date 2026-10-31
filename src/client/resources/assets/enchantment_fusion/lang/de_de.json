@@ -119,10 +119,10 @@
   "aberration.enchantment_fusion.mutual_glacier.desc": "25% chance to teleport you to the target and place a temporary 3x3x3 frost cage in available air. It cracks away without producing water.",
   "aberration.enchantment_fusion.hot_potato.title": "Hot Potato",
   "aberration.enchantment_fusion.hot_potato.desc": "Burns the target; each activation has a 20% chance to set you on fire briefly.",
-  "signature.enchantment_fusion.sanctified_execute.title": "Sanctified Execute",
-  "signature.enchantment_fusion.sanctified_execute.desc": "Adds magic damage based on target armor (up to 6). Against undead at or below 25% health, attempts an execution and grants absorption.",
-  "signature.enchantment_fusion.radiant_shockwave.title": "Radiant Shockwave",
-  "signature.enchantment_fusion.radiant_shockwave.desc": "Strikes on undead unleash a holy shockwave that blinds and weakens nearby foes.",
+  "signature.enchantment_fusion.sanctified_execute.title": "Seelenflanke",
+  "signature.enchantment_fusion.sanctified_execute.desc": "[Schärfe ▷ Bann] Ein voll aufgeladener Treffer gegen Untote zeigt gegenüber eine Schwachstelle. Umrunde sie und triff voll aufgeladen für Zusatzschaden und Verlangsamung.",
+  "signature.enchantment_fusion.radiant_shockwave.title": "Gesammelte Seelenklinge",
+  "signature.enchantment_fusion.radiant_shockwave.desc": "[Bann ▷ Schärfe] Untote Kills sammeln Seelenkraft. Der nächste voll aufgeladene Leerschwung oder wirksame Nahkampftreffer entfesselt eine durchdringende Klinge.",
   "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
@@ -998,5 +998,6 @@
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Alter Träger behält seinen Effekt; nötig sind beschädigbare Rüstung oder ein gehaltener Schild.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Alte Träger behalten ihre Wirkung; neue benötigen je nach Richtung Bogen/Armbrust oder Abbauwerkzeug.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "Alte Träger behalten ihren Effekt; die Grenze nutzt Nahkampfwaffen, die Zündschnur einen Schwertschwung.",
-  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "Alte Träger behalten ihren Effekt; das Auge nutzt Nahkampfwaffen, der Kern einen Schwertschwung."
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "Alte Träger behalten ihren Effekt; das Auge nutzt Nahkampfwaffen, der Kern einen Schwertschwung.",
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "Alte Träger behalten ihren Effekt; die neuen Seelentechniken nutzen Nahkampfwaffen."
 }

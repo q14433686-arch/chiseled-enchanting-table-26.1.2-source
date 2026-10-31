@@ -155,6 +155,12 @@ if (providers.gradleProperty('client_smoke').orNull == 'true') {
             runtimeClasspath += sourceSets.main.output + sourceSets.client.runtimeClasspath
         }
     }
+    // Bytecode contract only: this starts no Minecraft client or world.
+    tasks.register('checkClientSoulBladeHook', JavaExec) {
+        dependsOn tasks.named('compileClientSmokeJava')
+        classpath = sourceSets.clientSmoke.runtimeClasspath
+        mainClass = 'enchantment_fusion.smoke.ClientSoulBladeHookCheck'
+    }
     loom.mods {
         'ef-client-smoke' { sourceSet sourceSets.clientSmoke }
     }

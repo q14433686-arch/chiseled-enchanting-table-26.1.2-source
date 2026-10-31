@@ -119,10 +119,10 @@
   "aberration.enchantment_fusion.mutual_glacier.desc": "25% chance to teleport you to the target and place a temporary 3x3x3 frost cage in available air. It cracks away without producing water.",
   "aberration.enchantment_fusion.hot_potato.title": "Hot Potato",
   "aberration.enchantment_fusion.hot_potato.desc": "Burns the target; each activation has a 20% chance to set you on fire briefly.",
-  "signature.enchantment_fusion.sanctified_execute.title": "Sanctified Execute",
-  "signature.enchantment_fusion.sanctified_execute.desc": "Adds magic damage based on target armor (up to 6). Against undead at or below 25% health, attempts an execution and grants absorption.",
-  "signature.enchantment_fusion.radiant_shockwave.title": "Radiant Shockwave",
-  "signature.enchantment_fusion.radiant_shockwave.desc": "Strikes on undead unleash a holy shockwave that blinds and weakens nearby foes.",
+  "signature.enchantment_fusion.sanctified_execute.title": "Brèche d’âme",
+  "signature.enchantment_fusion.sanctified_execute.desc": "[Tranchant ▷ Châtiment] Un coup chargé sur un mort-vivant révèle une faiblesse de l’autre côté. Contournez-le et frappez chargé pour des dégâts supplémentaires et un ralentissement.",
+  "signature.enchantment_fusion.radiant_shockwave.title": "Lame des âmes",
+  "signature.enchantment_fusion.radiant_shockwave.desc": "[Châtiment ▷ Tranchant] Tuer des morts-vivants accumule des âmes. Le prochain coup chargé dans le vide ou coup de mêlée effectif libère une lame pénétrante.",
   "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
@@ -998,5 +998,6 @@
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "L’ancien support conserve son effet ; les nouvelles capacités exigent une armure endommageable ou un bouclier tenu.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Les anciens supports gardent leurs effets ; les nouveaux exigent un arc/une arbalète ou un outil de minage selon le sens.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "L’ancien support garde son effet ; la frontière utilise une arme de mêlée, la mèche un balayage d’épée.",
-  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "L’ancien support garde son effet ; l’œil utilise une arme de mêlée, le noyau un balayage d’épée."
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "L’ancien support garde son effet ; l’œil utilise une arme de mêlée, le noyau un balayage d’épée.",
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "L’ancien support garde son effet ; les nouvelles techniques d’âme utilisent une arme de mêlée."
 }

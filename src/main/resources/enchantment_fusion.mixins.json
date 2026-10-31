@@ -55,6 +55,7 @@
     "VibrationSoulStepMixin"
   ],
   "client": [
+    "ClientSoulBladeInputMixin",
     "CetCleanseListPopulateMixin",
     "CetCleanseOptionModelMixin",
     "CetEnchantmentDisplayNamesMixin"

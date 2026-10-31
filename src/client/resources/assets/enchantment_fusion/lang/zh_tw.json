@@ -119,10 +119,10 @@
   "aberration.enchantment_fusion.mutual_glacier.desc": "25% 機率傳送至目標處，並在可用空氣中生成 3×3×3 暫時霜冰籠；霜冰龜裂消散，不產生水。",
   "aberration.enchantment_fusion.hot_potato.title": "燙手山芋",
   "aberration.enchantment_fusion.hot_potato.desc": "灼燒目標；每次觸發有 20% 機率短暫點燃自己。",
-  "signature.enchantment_fusion.sanctified_execute.title": "聖裁處決",
-  "signature.enchantment_fusion.sanctified_execute.desc": "依目標護甲值追加魔法傷害（最多 6 點）；不死生物生命不超過 25% 時嘗試處決並獲得傷害吸收。",
-  "signature.enchantment_fusion.radiant_shockwave.title": "聖光震盪",
-  "signature.enchantment_fusion.radiant_shockwave.desc": "对亡灵觸發聖光爆破波及周圍敵人，並施加短暫失明与虛弱。",
+  "signature.enchantment_fusion.sanctified_execute.title": "繞背破魂",
+  "signature.enchantment_fusion.sanctified_execute.desc": "【鋒利 ▷ 不死剋星】滿蓄命中亡靈後，在另一側顯現弱點；繞到對側再次滿蓄命中，造成額外傷害並短暫遲緩。",
+  "signature.enchantment_fusion.radiant_shockwave.title": "積魂貫斬",
+  "signature.enchantment_fusion.radiant_shockwave.desc": "【不死剋星 ▷ 鋒利】擊殺亡靈積攢魂鋒；下次滿蓄揮空或有效近戰命中時，向前釋放貫穿靈刃。",
   "signature.enchantment_fusion.hamstring_rend.title": "斷筋破甲",
   "signature.enchantment_fusion.hamstring_rend.desc": "止住目標並施加緩速；目標原本移動或騰空時額外受到傷害。",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "神經劇毒",
@@ -998,5 +998,6 @@
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "舊載體保留原效果；新荊棘技能適合可損傷護甲或手持盾牌。",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "舊載體保留原效果；新裝載按方向使用弓／弩或採掘工具。",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "舊載體保留原效果；新餘燼界使用近戰武器，引信需要劍的真實橫掃。",
-  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "舊載體保留原效果；新風眼使用近戰武器，風核需要劍的真實橫掃。"
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "舊載體保留原效果；新風眼使用近戰武器，風核需要劍的真實橫掃。",
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "舊載體保留原效果；新的破魂和靈刃使用近戰武器。"
 }

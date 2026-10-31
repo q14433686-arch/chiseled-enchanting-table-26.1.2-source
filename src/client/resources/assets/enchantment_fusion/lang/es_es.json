@@ -119,10 +119,10 @@
   "aberration.enchantment_fusion.mutual_glacier.desc": "25% chance to teleport you to the target and place a temporary 3x3x3 frost cage in available air. It cracks away without producing water.",
   "aberration.enchantment_fusion.hot_potato.title": "Hot Potato",
   "aberration.enchantment_fusion.hot_potato.desc": "Burns the target; each activation has a 20% chance to set you on fire briefly.",
-  "signature.enchantment_fusion.sanctified_execute.title": "Sanctified Execute",
-  "signature.enchantment_fusion.sanctified_execute.desc": "Adds magic damage based on target armor (up to 6). Against undead at or below 25% health, attempts an execution and grants absorption.",
-  "signature.enchantment_fusion.radiant_shockwave.title": "Radiant Shockwave",
-  "signature.enchantment_fusion.radiant_shockwave.desc": "Strikes on undead unleash a holy shockwave that blinds and weakens nearby foes.",
+  "signature.enchantment_fusion.sanctified_execute.title": "Flanco del alma",
+  "signature.enchantment_fusion.sanctified_execute.desc": "[Filo ▷ Castigo] Un golpe cargado a un no muerto revela un punto débil al otro lado. Rodéalo y golpea cargado de nuevo para causar daño extra y ralentizar.",
+  "signature.enchantment_fusion.radiant_shockwave.title": "Filo de almas",
+  "signature.enchantment_fusion.radiant_shockwave.desc": "[Castigo ▷ Filo] Derrotar no muertos acumula almas. El siguiente golpe cargado al aire o golpe cuerpo a cuerpo efectivo libera una hoja penetrante hacia delante.",
   "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
@@ -998,5 +998,6 @@
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades requieren armadura dañable o escudo en mano.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Los objetos antiguos conservan sus efectos; los nuevos requieren arco/ballesta o herramienta de minería según la dirección.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "El objeto antiguo conserva su efecto; el límite usa armas cuerpo a cuerpo y la mecha requiere barrido de espada.",
-  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "El objeto antiguo conserva su efecto; el ojo usa armas cuerpo a cuerpo y el núcleo exige barrido de espada."
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "El objeto antiguo conserva su efecto; el ojo usa armas cuerpo a cuerpo y el núcleo exige barrido de espada.",
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades de alma usan armas cuerpo a cuerpo."
 }

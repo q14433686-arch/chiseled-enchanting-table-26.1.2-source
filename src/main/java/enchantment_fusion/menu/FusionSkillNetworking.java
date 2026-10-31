@@ -11,6 +11,7 @@ import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
+import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +43,14 @@ public final class FusionSkillNetworking {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
+    /** Client reports the original miss branch; the server still validates charge, equipment and resources. */
+    public record AirAttackPayload() implements CustomPacketPayload {
+        public static final Type<AirAttackPayload> TYPE = new Type<>(EnchantmentFusion.id("air_attack"));
+        public static final AirAttackPayload INSTANCE = new AirAttackPayload();
+        public static final StreamCodec<ByteBuf, AirAttackPayload> CODEC = StreamCodec.unit(INSTANCE);
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
     private enum Skill {
         BREATH("skill.enchantment_fusion.breath_mining"),
         FROST_WAVE("skill.enchantment_fusion.frost_wave"),
@@ -62,6 +71,7 @@ public final class FusionSkillNetworking {
 
     private static final Map<UUID, Long> LAST_REQUEST = new HashMap<>();
     private static final Map<UUID, Long> LAST_CYCLE = new HashMap<>();
+    private static final Map<UUID, Long> LAST_AIR_ATTACK = new HashMap<>();
     private static final Map<UUID, Skill> SELECTED = new HashMap<>();
     private FusionSkillNetworking() {}
 
@@ -142,15 +152,18 @@ public final class FusionSkillNetworking {
     public static void init() {
         PayloadTypeRegistry.serverboundPlay().register(ActivatePayload.TYPE, ActivatePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(CyclePayload.TYPE, CyclePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(AirAttackPayload.TYPE, AirAttackPayload.CODEC);
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             UUID id = handler.getPlayer().getUUID();
             LAST_REQUEST.remove(id);
             LAST_CYCLE.remove(id);
+            LAST_AIR_ATTACK.remove(id);
             SELECTED.remove(id);
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             LAST_REQUEST.clear();
             LAST_CYCLE.clear();
+            LAST_AIR_ATTACK.clear();
             SELECTED.clear();
         });
         ServerPlayNetworking.registerGlobalReceiver(ActivatePayload.TYPE, (payload, ctx) -> {
@@ -163,6 +176,15 @@ public final class FusionSkillNetworking {
             ServerPlayer player = ctx.player();
             ctx.server().execute(() -> {
                 if (allowRequest(LAST_CYCLE, player)) cycle(player);
+            });
+        });
+        ServerPlayNetworking.registerGlobalReceiver(AirAttackPayload.TYPE, (payload, ctx) -> {
+            ServerPlayer player = ctx.player();
+            ctx.server().execute(() -> {
+                if (ctx.server().getPlayerList().getPlayer(player.getUUID()) != player) return;
+                long tick = player.level().getGameTime();
+                Long previous = LAST_AIR_ATTACK.put(player.getUUID(), tick);
+                if (previous == null || previous != tick) SoulBladeSkills.onAirAttack(player);
             });
         });
     }

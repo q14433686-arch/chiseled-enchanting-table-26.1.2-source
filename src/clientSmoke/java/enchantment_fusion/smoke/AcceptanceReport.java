@@ -18,6 +18,8 @@ final class AcceptanceReport {
         plan("02-sweep-fire", "Sweeping Edge ▷ Fire Aspect: real sweep, fuse and delayed-chain scheduling fixture", "Not reached if setup fails.");
         plan("03-knockback-sweep", "Knockback ▷ Sweeping Edge: attack, resisted knockback and moving eye fixture", "Not reached if setup fails.");
         plan("03-sweep-knockback", "Sweeping Edge ▷ Knockback: real sweep, pull and simulated aimed swing release fixture", "Not reached if setup fails.");
+        plan("04-sharpness-smite", "Sharpness ▷ Smite: weakness, opposite-side damage and control fixture", "Not reached if setup fails.");
+        plan("04-smite-sharpness", "Smite ▷ Sharpness: undead kill, stored charge and piercing blade fixture", "Not reached if setup fails.");
         plan("common-format", "Risk text formatting", "Not reached if an earlier setup/UI assertion fails.");
         plan("common-config", "Server configuration save/validation", "Not reached if setup fails.");
         plan("common-frost-smelt", "Frost/water and crouching smelt fixtures", "Not reached if setup fails.");
@@ -72,6 +74,7 @@ final class AcceptanceReport {
         plan("01-fire-knockback", "Multi-tick fire/knockback integration sequence", "Not reached if an earlier phase fails.");
         plan("02-runtime-compat", "02 natural sweep timing, delayed chain damage, PvP, walls, datapacks and protection mods", "Not covered by the prepared single-player attack fixture.");
         plan("03-runtime-compat", "03 real client swing packets, natural knockback/movement, PvP, walls and protection mods", "Not covered by the simulated input and timing fixture.");
+        plan("04-runtime-compat", "04 natural positioning, sprint/charge timing, chained kills, walls, datapacks and PvP", "Not covered by the simulated position and charge fixture.");
         plan("05-runtime-compat", "05 real restart, unusual item formats, external mod cancellation and multiplayer synchronization", "Not covered by the prepared single-player server fixture.");
         plan("16-runtime-compat", "16 natural blast push, multiplayer PvP, totems and protection-mod compatibility", "Not covered by the prepared single-player server fixture.");
         plan("39.1-runtime-compat", "39.1 real draw/throw, client rocket sync, multiplayer PvP, totems and protection mods", "Not covered by the prepared fixture.");

@@ -119,10 +119,10 @@
   "aberration.enchantment_fusion.mutual_glacier.desc": "25% chance to teleport you to the target and place a temporary 3x3x3 frost cage in available air. It cracks away without producing water.",
   "aberration.enchantment_fusion.hot_potato.title": "뜨거운 감자",
   "aberration.enchantment_fusion.hot_potato.desc": "Burns the target; each activation has a 20% chance to set you on fire briefly.",
-  "signature.enchantment_fusion.sanctified_execute.title": "Sanctified Execute",
-  "signature.enchantment_fusion.sanctified_execute.desc": "Adds magic damage based on target armor (up to 6). Against undead at or below 25% health, attempts an execution and grants absorption.",
-  "signature.enchantment_fusion.radiant_shockwave.title": "Radiant Shockwave",
-  "signature.enchantment_fusion.radiant_shockwave.desc": "Strikes on undead unleash a holy shockwave that blinds and weakens nearby foes.",
+  "signature.enchantment_fusion.sanctified_execute.title": "측면 영혼 파쇄",
+  "signature.enchantment_fusion.sanctified_execute.desc": "【날카로움 ▷ 강타】완전 충전 공격으로 언데드를 맞히면 반대편에 약점이 나타납니다. 돌아가 다시 완전 충전해 맞히면 추가 피해와 둔화를 줍니다.",
+  "signature.enchantment_fusion.radiant_shockwave.title": "영혼 관통 베기",
+  "signature.enchantment_fusion.radiant_shockwave.desc": "【강타 ▷ 날카로움】언데드를 처치해 영혼을 모읍니다. 다음 완전 충전 헛스윙이나 유효 근접 공격에서 관통하는 영혼 칼날을 내보냅니다.",
   "signature.enchantment_fusion.hamstring_rend.title": "Hamstring Rend",
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
@@ -998,5 +998,6 @@
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 내구도 있는 방어구나 손에 든 방패가 필요합니다.",
   "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "기존 장비의 효과는 유지됩니다. 새로 부착하려면 방향에 맞는 활/쇠뇌 또는 채굴 도구가 필요합니다.",
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "기존 장비는 기존 효과를 유지합니다. 새 경계는 근접 무기, 도화선은 검의 휩쓸기가 필요합니다.",
-  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "기존 장비는 기존 효과를 유지합니다. 바람눈은 근접 무기, 바람핵은 검의 휩쓸기가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "기존 장비는 기존 효과를 유지합니다. 바람눈은 근접 무기, 바람핵은 검의 휩쓸기가 필요합니다.",
+  "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "기존 장비는 기존 효과를 유지하며 새 영혼 기술에는 근접 무기가 필요합니다."
 }
