@@ -15,6 +15,7 @@ import enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills;
 import enchantment_fusion.mechanics.signatures.FrostFireSkills;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.PrecisionConstruction;
+import enchantment_fusion.mechanics.signatures.DurabilityEconomy;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -157,6 +158,9 @@ public final class FusionTooltipRenderer {
             boolean legacyPrecisionCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && PrecisionConstruction.matches(pair, sigOpt.get().id())
                 && !PrecisionConstruction.applies(pair, stack, sigOpt.get().id());
+            boolean legacyDurabilityCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && DurabilityEconomy.matches(pair, sigOpt.get().id())
+                && !DurabilityEconomy.applies(pair, stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ((GlazedStrikeEffect.isPair(pair) && GlazedStrikeEffect.SIGNATURE.equals(sigOpt.get().id())
                         && !GlazedStrikeEffect.applies(pair, stack, sigOpt.get().id()))
@@ -195,7 +199,8 @@ public final class FusionTooltipRenderer {
                     secondaryLabel
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
                 if (shift && !legacyUnderwaterCarrier && !legacyFrostFallCarrier && !legacyFrostWakeCarrier
-                    && !legacyFrostFireCarrier && !legacyPhantomCarrier && !legacyPrecisionCarrier && !legacyGlazeAmberCarrier) {
+                    && !legacyFrostFireCarrier && !legacyPhantomCarrier && !legacyPrecisionCarrier
+                    && !legacyDurabilityCarrier && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -230,6 +235,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacyPrecisionCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_precision_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyDurabilityCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_durability_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyGlazeAmberCarrier) {

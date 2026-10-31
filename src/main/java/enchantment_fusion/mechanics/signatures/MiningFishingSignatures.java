@@ -217,9 +217,16 @@ public final class MiningFishingSignatures {
                     }
                 }
                 case "self_healing_lattice" -> {
-                    if (tool.isDamaged() && rng.nextFloat() < 0.45F) tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
+                    if (!DurabilityEconomy.applies(pair, tool, sigId) && tool.isDamaged() && rng.nextFloat() < 0.45F) {
+                        tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
+                    }
                 }
-                case "perpetual_craft", "eternal_bowstring", "overflow_plating", "tempered_anvil_heart" -> {
+                case "overflow_plating" -> {
+                    if (!DurabilityEconomy.applies(pair, tool, sigId) && tool.isDamaged() && rng.nextFloat() < 0.75F) {
+                        tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
+                    }
+                }
+                case "perpetual_craft", "eternal_bowstring", "tempered_anvil_heart" -> {
                     if (tool.isDamaged() && rng.nextFloat() < 0.75F) tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
                 }
                 case "ocean_breath_mine" -> {

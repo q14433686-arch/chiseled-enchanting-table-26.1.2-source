@@ -283,7 +283,12 @@ public final class FusionConfigStore {
             else if (file.equals("transmutations") && path.contains("replenish_settings") && key.equals("xp_interval")) { min = 1; max = 10_000; }
             else if (file.equals("transmutations") && path.contains("replenish_settings") && key.equals("group_cap")) { min = 1; max = 256; }
             else if (file.equals("signatures") && (key.equals("slice_extra_per_level") || key.equals("line_blocks_per_level"))) { min = 1; max = 32; }
-            else if (file.equals("signatures") && (key.equals("slice_extra_cap") || key.equals("line_blocks_cap"))) { min = 1; max = 256; }
+            else if (file.equals("signatures") && (key.equals("slice_extra_cap") || key.equals("line_blocks_cap") || key.equals("conversion_xp_cap"))) { min = 1; max = 256; }
+            else if (file.equals("signatures") && key.equals("growth_chance_percent")) { min = 0; max = 100; }
+            else if (file.equals("signatures") && key.equals("growth_per_thousand")) { min = 1; max = 50; }
+            else if (file.equals("signatures") && key.equals("growth_cap_percent")) { min = 100; max = 500; }
+            else if (file.equals("signatures") && key.equals("rescue_percent")) { min = 1; max = 100; }
+            else if (file.equals("signatures") && key.equals("rescue_durability_cap")) { min = 1; max = 10_000; }
             else if (key.equals("melee_min_charge")) { min = 0.05; max = 1; }
             else if (key.equals("melee_full_charge")) { min = 0.10; max = 1; }
             else if (key.startsWith("stabilizer_reduction_")) { min = 0.01; max = 1; }

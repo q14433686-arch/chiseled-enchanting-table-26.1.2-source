@@ -16,7 +16,8 @@ class AcceptancePlanTest(unittest.TestCase):
         self.assertEqual(len(planned), len(set(planned)), "duplicate result IDs")
         exercised = re.findall(r'acceptance\.(?:run|passed|failed)\("([^"]+)"', client)
         self.assertFalse(set(exercised) - set(planned), "unplanned fixture IDs")
-        self.assertTrue({"09-efficiency-silk", "09-silk-efficiency", "11-multishot-piercing",
+        self.assertTrue({"05-mending-unbreaking", "05-unbreaking-mending",
+                         "09-efficiency-silk", "09-silk-efficiency", "11-multishot-piercing",
                          "11-piercing-multishot"}.issubset(exercised))
         self.assertIn('"SKIP"', plan)
         self.assertIn('"FAIL"', plan)

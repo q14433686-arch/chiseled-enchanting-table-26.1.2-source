@@ -154,6 +154,24 @@ public final class FusionDataComponents {
             .build()
     );
 
+    /** Original per-item maximum captured on first permanent mending growth; retained after extraction. */
+    public static final DataComponentType<Integer> DURABILITY_GROWTH_BASE = Registry.register(
+        BuiltInRegistries.DATA_COMPONENT_TYPE,
+        EnchantmentFusion.id("durability_growth_base"),
+        DataComponentType.<Integer>builder()
+            .persistent(Codec.intRange(1, Integer.MAX_VALUE))
+            .networkSynchronized(ByteBufCodecs.VAR_INT.map(
+                v -> {
+                    if (v < 1) throw new DecoderException("Invalid durability growth base: " + v);
+                    return v;
+                },
+                v -> {
+                    if (v < 1) throw new EncoderException("Invalid durability growth base: " + v);
+                    return v;
+                }))
+            .build()
+    );
+
     public static final DataComponentType<Integer> VESSEL_BONUS = Registry.register(
         BuiltInRegistries.DATA_COMPONENT_TYPE,
         EnchantmentFusion.id("vessel_bonus"),

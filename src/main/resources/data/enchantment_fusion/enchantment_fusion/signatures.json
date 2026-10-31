@@ -124,12 +124,18 @@
     "overflow_plating": {
       "primary": "minecraft:mending",
       "secondary": "minecraft:unbreaking",
-      "domain": "armor_curse"
+      "domain": "armor_curse",
+      "growth_chance_percent": 20,
+      "growth_per_thousand": 3,
+      "growth_cap_percent": 200
     },
     "self_healing_lattice": {
       "primary": "minecraft:unbreaking",
       "secondary": "minecraft:mending",
-      "domain": "armor_curse"
+      "domain": "armor_curse",
+      "conversion_xp_cap": 64,
+      "rescue_percent": 10,
+      "rescue_durability_cap": 4096
     },
     "starlight_quiver": {
       "primary": "minecraft:infinity",

@@ -159,10 +159,10 @@
   "signature.enchantment_fusion.pulse_prospect.desc": "[Efficiency ▷ Fortune] Mining emits a crystalline dowsing pulse that illuminates nearby hidden ore veins through rock and grants Haste II!",
   "signature.enchantment_fusion.vein_peel.title": "Precision Slice",
   "signature.enchantment_fusion.vein_peel.desc": "Efficiency ▷ Silk Touch. Hold a tool in the main hand and press G to cycle the horizontal, east-west, north-south, and off planes. Breaking an ordinary full cube mines connected cubes of the exact same state in that plane using your real tool, normal drops, durability, and per-block permissions. Sneak to pause. The extra-block limit scales with Efficiency and is configurable.",
-  "signature.enchantment_fusion.overflow_plating.title": "Overflow Plating",
-  "signature.enchantment_fusion.overflow_plating.desc": "Excess XP collected at full durability condenses into an Absorption shield.",
-  "signature.enchantment_fusion.self_healing_lattice.title": "Kintsugi Hundred-Temper",
-  "signature.enchantment_fusion.self_healing_lattice.desc": "[Efficiency ▷ Unbreaking] Golden-seam kintsugi turns wear into edge: lower remaining durability deals higher armor-piercing damage while mending cracks on hit and harvest!",
+  "signature.enchantment_fusion.overflow_plating.title": "Experience Tempering",
+  "signature.enchantment_fusion.overflow_plating.desc": "An XP orb that actually repairs this item can permanently raise its maximum durability, even after extraction. Normal Mending remains.",
+  "signature.enchantment_fusion.self_healing_lattice.title": "Lasting Lifeline",
+  "signature.enchantment_fusion.self_healing_lattice.desc": "Crossing 1% converts safely payable worn-armor durability to XP; skips if insufficient. On break, spend XP, saturation, then hunger to restore durability, never health.",
   "signature.enchantment_fusion.starlight_quiver.title": "Starlight Quiver",
   "signature.enchantment_fusion.starlight_quiver.desc": "Dual-state resonance: empowers shots with starlight pierce at high integrity, and repairs durability on hit when worn!",
   "signature.enchantment_fusion.spectral_condense.title": "Spectral Condense",
@@ -914,5 +914,12 @@
   "config.enchantment_fusion.property.slice_extra_cap": "Maximum extra slice blocks",
   "config.enchantment_fusion.property.line_blocks_per_level": "Line blocks per Efficiency level",
   "config.enchantment_fusion.property.line_blocks_cap": "Maximum line blocks",
-  "tooltip.enchantment_fusion.legacy_precision_carrier": "This legacy carrier retains its old behavior; the new slice/line skills require a suitable tool."
+  "tooltip.enchantment_fusion.legacy_precision_carrier": "This legacy carrier retains its old behavior; the new slice/line skills require a suitable tool.",
+  "tooltip.enchantment_fusion.legacy_durability_carrier": "This legacy carrier retains its old behavior; the new durability skills require damageable equipment.",
+  "config.enchantment_fusion.property.growth_chance_percent": "Growth base chance (%)",
+  "config.enchantment_fusion.property.growth_per_thousand": "Growth per repair (per mille of original maximum)",
+  "config.enchantment_fusion.property.growth_cap_percent": "Permanent growth cap (% of original maximum)",
+  "config.enchantment_fusion.property.conversion_xp_cap": "1% conversion XP cap",
+  "config.enchantment_fusion.property.rescue_percent": "Break rescue target (%)",
+  "config.enchantment_fusion.property.rescue_durability_cap": "Maximum durability restored per rescue"
 }

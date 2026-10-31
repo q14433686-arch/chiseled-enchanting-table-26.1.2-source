@@ -25,6 +25,8 @@ final class AcceptanceReport {
         plan("24.1-frost-fire", "Frost/fire worn-carrier and block fixture", "Not reached if setup fails.");
         plan("11-multishot-piercing", "Multishot ▷ Piercing: prepared server fixture", "Not reached if setup fails.");
         plan("11-piercing-multishot", "Piercing ▷ Multishot: prepared server fixture", "Not reached if setup fails.");
+        plan("05-mending-unbreaking", "Mending ▷ Unbreaking: real orb repair and permanent growth fixture", "Not reached if setup fails.");
+        plan("05-unbreaking-mending", "Unbreaking ▷ Mending: real wear, XP conversion and break rescue fixture", "Not reached if setup fails.");
         plan("09-efficiency-silk", "Efficiency ▷ Silk Touch: prepared server fixture", "Not reached if setup fails.");
         plan("09-silk-efficiency", "Silk Touch ▷ Efficiency: prepared server fixture", "Not reached if setup fails.");
         plan("common-station-selection", "Station selection and stale-target checks", "Not reached if setup fails.");
@@ -37,6 +39,7 @@ final class AcceptanceReport {
         plan("common-lifeline", "Lifeline anchor checks", "Not reached if setup fails.");
         plan("15-loyalty-riptide", "Legacy loyalty/riptide fixture", "Not reached if setup fails.");
         plan("01-fire-knockback", "Multi-tick fire/knockback integration sequence", "Not reached if an earlier phase fails.");
+        plan("05-runtime-compat", "05 real restart, unusual item formats, external mod cancellation and multiplayer synchronization", "Not covered by the prepared single-player server fixture.");
         plan("09-input-config", "09 real client G/V input, configuration reload and multiplayer permissions", "Not covered by the prepared server fixture.");
         plan("11-shot-pvp", "11 real draw/reload, randomness, two-player PvP and natural save/unload", "Not covered by the prepared server fixture.");
         plan("multiplayer-protection", "Real multiplayer, third-party protection plugins and modded projectile compatibility", "Requires additional clients/mods; not covered by these probes.");

@@ -159,10 +159,10 @@
   "signature.enchantment_fusion.pulse_prospect.desc": "【效率 ▷ 时运】破岩瞬间释放灵脉勘探波，隔墙浮现星芒标示周围深藏矿脉方位并赋予急迫II！",
   "signature.enchantment_fusion.vein_peel.title": "精准切片",
   "signature.enchantment_fusion.vein_peel.desc": "效率▷精准采集：主手持工具，按 G 循环选择水平面、东西竖面、南北竖面或关闭。挖普通完整方块时，沿该平面扩展采掘相连且方块状态完全相同的方块，逐格使用真实工具、掉落、耐久和权限；潜行暂停。额外数量随效率等级增加，可在配置中调整上限。",
-  "signature.enchantment_fusion.overflow_plating.title": "溢能镀层",
-  "signature.enchantment_fusion.overflow_plating.desc": "经验修补满耐久后，溢出的经验将转化为短暂伤害吸收护盾。",
-  "signature.enchantment_fusion.self_healing_lattice.title": "金缮百炼",
-  "signature.enchantment_fusion.self_healing_lattice.desc": "【效率 ▷ 耐久】以金修裂，伤痕即锋芒：器物已损耐久比例越高追加的金缮破甲真伤越高，并在挥砍采掘间自愈裂纹！",
+  "signature.enchantment_fusion.overflow_plating.title": "经验淬韧",
+  "signature.enchantment_fusion.overflow_plating.desc": "经验球实际修复本装备时，有概率永久提高本件耐久上限；移除融合后保留。原版修补正常。",
+  "signature.enchantment_fusion.self_healing_lattice.title": "濒损续命",
+  "signature.enchantment_fusion.self_healing_lattice.desc": "耐久跨过 1% 时，其他穿戴装备支付不会致损的耐久以生成经验球；不足则跳过。将损毁时依次支付经验、饱和度和饥饿来恢复耐久，不扣生命。",
   "signature.enchantment_fusion.starlight_quiver.title": "星辉箭袋",
   "signature.enchantment_fusion.starlight_quiver.desc": "双态星辉共鸣：器物完好时箭矢附带星芒穿透追伤；受损时每次命中自动引星辉修补耐久！",
   "signature.enchantment_fusion.spectral_condense.title": "灵矢凝华",
@@ -914,5 +914,12 @@
   "config.enchantment_fusion.property.slice_extra_cap": "切片额外方块上限",
   "config.enchantment_fusion.property.line_blocks_per_level": "每级效率连筑数量",
   "config.enchantment_fusion.property.line_blocks_cap": "连筑方块上限",
-  "tooltip.enchantment_fusion.legacy_precision_carrier": "旧载体保留旧版效果；新版切片/连筑需要适用工具。"
+  "tooltip.enchantment_fusion.legacy_precision_carrier": "旧载体保留旧版效果；新版切片/连筑需要适用工具。",
+  "tooltip.enchantment_fusion.legacy_durability_carrier": "旧载体保留旧版效果；新版经验淬韧/濒损续命需要可损坏装备。",
+  "config.enchantment_fusion.property.growth_chance_percent": "成长基础概率（%）",
+  "config.enchantment_fusion.property.growth_per_thousand": "每次成长量（原上限的千分比）",
+  "config.enchantment_fusion.property.growth_cap_percent": "永久成长上限（原上限的 %）",
+  "config.enchantment_fusion.property.conversion_xp_cap": "1% 转换经验球上限",
+  "config.enchantment_fusion.property.rescue_percent": "濒损救回目标（%）",
+  "config.enchantment_fusion.property.rescue_durability_cap": "单次救回耐久上限"
 }
