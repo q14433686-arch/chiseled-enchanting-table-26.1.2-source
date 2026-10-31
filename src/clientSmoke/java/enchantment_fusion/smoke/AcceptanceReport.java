@@ -25,6 +25,13 @@ final class AcceptanceReport {
         plan("06-runtime-compat", "06 actual key input, unusual loot functions and stack splitting, save/restart, multiplayer and protection mods", "Not covered by the prepared single-player fixture.");
         plan("10-sharpness-bane", "Sharpness ▷ Bane: real hit and simulated movement/mark age fixture", "Not reached if setup fails.");
         plan("10-bane-sharpness", "Bane ▷ Sharpness: real hit and simulated circling/protected-victim fixture", "Not reached if setup fails.");
+        plan("42.3-sharp-swift", "Sharpness ▷ Swift Sneak: real hits and simulated imprint movement", "Not reached if setup fails.");
+        plan("42.3-swift-sharp", "Swift Sneak ▷ Sharpness: worn leggings, simulated crouch and real hit", "Not reached if setup fails.");
+        plan("42.3-smite-swift", "Smite ▷ Swift Sneak: real hits, undead filtering and simulated imprint movement", "Not reached if setup fails.");
+        plan("42.3-swift-smite", "Swift Sneak ▷ Smite: worn leggings, simulated crouch and undead filtering", "Not reached if setup fails.");
+        plan("42.3-bane-swift", "Bane ▷ Swift Sneak: real hits, arthropod filtering and simulated imprint movement", "Not reached if setup fails.");
+        plan("42.3-swift-bane", "Swift Sneak ▷ Bane: worn leggings, simulated crouch and arthropod filtering", "Not reached if setup fails.");
+        plan("42.3-runtime-compat", "42.3 natural input, sneak pose, lance thrust, multiplayer, datapacks and third-party claims", "Not covered by the simulated single-player fixtures.");
         plan("common-format", "Risk text formatting", "Not reached if an earlier setup/UI assertion fails.");
         plan("common-config", "Server configuration save/validation", "Not reached if setup fails.");
         plan("common-frost-smelt", "Frost/water and crouching smelt fixtures", "Not reached if setup fails.");

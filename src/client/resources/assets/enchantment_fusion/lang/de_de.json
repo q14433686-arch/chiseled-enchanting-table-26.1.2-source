@@ -1018,5 +1018,8 @@
   "tooltip.enchantment_fusion.legacy_fortune_bank_carrier": "Alter Gegenstand behält seinen Effekt; die Reserve benötigt ein geeignetes Erzwerkzeug.",
   "message.enchantment_fusion.fortune_bank_full": "Passende Reserve voll; der Bonus bleibt im Drop.",
   "message.enchantment_fusion.fortune_bank_empty": "Kein gespeicherter Gegenstand passt zu %s und seinen Komponenten.",
-  "message.enchantment_fusion.fortune_bank_unverified": "Drop nicht sicher überprüfbar; Reserve und Ziel bleiben erhalten."
+  "message.enchantment_fusion.fortune_bank_unverified": "Drop nicht sicher überprüfbar; Reserve und Ziel bleiben erhalten.",
+  "tooltip.enchantment_fusion.stealth_blade_weapon": "Ein voll aufgeladener Nahkampftreffer hinterlässt eine Klingenmarke. Schleiche darüber und treffe erneut, um eine kurze Klinge freizusetzen. Bann und Nemesis beschränken die Ziele.",
+  "tooltip.enchantment_fusion.stealth_blade_legs": "Mit getragenen Beinschienen schleichend bewegen, um einen Schritt vorzubereiten; der nächste gültige Nahkampftreffer löst eine Klinge aus. Bann und Nemesis beschränken die Ziele.",
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "Der alte Träger behält seinen Effekt. Die neuen Richtungen benötigen eine Nahkampfwaffe bzw. getragene Beinschienen."
 }

@@ -11,7 +11,6 @@ import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +39,6 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentTarget;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +59,6 @@ public final class SoulBladeSkills {
             this.owner = owner.getUUID(); this.dimension = owner.level().dimension(); this.gear = gear; this.expires = expires; this.stacks = 1;
         }
     }
-    private record Impact(LivingEntity entity, Vec3 point, double distance) {}
     public static final class Attack {
         final @Nullable Attack previous; final Player player; final ItemStack weapon; final Entity target; final @Nullable Gear gear;
         final boolean full; final Vec3 direction; @Nullable Weakpoint prepared;
@@ -251,41 +248,9 @@ public final class SoulBladeSkills {
         releaseBlade(owner, gear, null, look, charge.stacks);
     }
     private static void releaseBlade(ServerPlayer owner, Gear gear, @Nullable LivingEntity directVictim, Vec3 look, int stacks) {
-        if (!Double.isFinite(look.x) || !Double.isFinite(look.y) || !Double.isFinite(look.z) || look.lengthSqr() < 1.0E-8D) return;
-        ServerLevel level = owner.level(); Vec3 start = owner.getEyePosition(), unit = look.normalize();
-        double length = param(BLADE, "blade_range_tenths", 90, 20, 160) / 10.0D;
-        Vec3 end = start;
-        // Short bounded steps stop the visual and attack before the first wall or unloaded chunk.
-        int steps = (int) Math.ceil(length * 2.0D);
-        for (int i = 1; i <= steps; i++) {
-            Vec3 next = start.add(unit.scale(length * i / steps));
-            if (!VirtualCombatSight.clear(level, owner, start, next)) break;
-            end = next;
-        }
-        AABB box = new AABB(start, end).inflate(0.5D); List<Impact> impacts = new ArrayList<>();
-        for (LivingEntity candidate : level.getEntitiesOfClass(LivingEntity.class, box, e -> e != directVictim && eligible(owner, e))) {
-            var intersection = candidate.getBoundingBox().inflate(0.2D).clip(start, end);
-            if (intersection.isEmpty()) continue;
-            Vec3 point = intersection.get(); impacts.add(new Impact(candidate, point, point.distanceToSqr(start)));
-        }
-        impacts.sort(Comparator.comparingDouble(Impact::distance));
-        boolean previous = Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get());
-        TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.set(true);
-        try {
-            int count = 0;
-            for (Impact impact : impacts) {
-                if (++count > 8) break;
-                LivingEntity victim = impact.entity();
-                if (!eligible(owner, victim) || !VirtualCombatSight.clear(level, owner, start, impact.point())) continue;
-                victim.hurtServer(level, level.damageSources().playerAttack(owner), SoulBladeMath.bladeDamage(stacks, gear.pair().secondaryLevel()));
-            }
-        } finally { TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.set(previous); }
-        double actual = Math.sqrt(start.distanceToSqr(end));
-        int particles = Math.max(1, (int) Math.ceil(actual * 2));
-        for (int i = 0; i <= particles; i++) {
-            Vec3 point = start.add(unit.scale(actual * i / particles));
-            level.sendParticles(ParticleTypes.SOUL, point.x, point.y, point.z, 1, 0.02D, 0.02D, 0.02D, 0.005D);
-        }
+        VirtualBlade.cast(owner, look, directVictim, param(BLADE, "blade_range_tenths", 90, 20, 160) / 10.0D,
+            SoulBladeMath.bladeDamage(stacks, gear.pair().secondaryLevel()), 8,
+            target -> eligible(owner, target), ParticleTypes.SOUL);
     }
     public static void tickServer(MinecraftServer server) {
         for (Weakpoint mark : List.copyOf(WEAKPOINTS.values())) {

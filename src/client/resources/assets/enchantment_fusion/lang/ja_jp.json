@@ -1018,5 +1018,8 @@
   "tooltip.enchantment_fusion.legacy_fortune_bank_carrier": "旧装備は旧効果を維持。蓄積には対応鉱石を採掘できる道具が必要。",
   "message.enchantment_fusion.fortune_bank_full": "一致する蓄積が満杯です。増加分はドロップに残ります。",
   "message.enchantment_fusion.fortune_bank_empty": "%s とそのコンポーネントに一致する資源はありません。",
-  "message.enchantment_fusion.fortune_bank_unverified": "ドロップを安全に確認できません。蓄積と対象は保持されます。"
+  "message.enchantment_fusion.fortune_bank_unverified": "ドロップを安全に確認できません。蓄積と対象は保持されます。",
+  "tooltip.enchantment_fusion.stealth_blade_weapon": "十分に溜めた近接攻撃で刃の印を残す。スニークで踏み、次の有効な近接攻撃で短い斬撃を放つ。聖なる力と虫特効は対象を限定する。",
+  "tooltip.enchantment_fusion.stealth_blade_legs": "脚防具を装着してスニーク移動すると伏歩が溜まり、次の有効な近接攻撃で斬撃を放つ。聖なる力と虫特効は対象を限定する。",
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "旧来の装備は旧効果を保持。新しい方向にはそれぞれ近接武器または装着した脚防具が必要。"
 }

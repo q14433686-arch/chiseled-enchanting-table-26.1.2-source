@@ -13,6 +13,8 @@ import enchantment_fusion.mechanics.signatures.FireSweepSkills;
 import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
+import enchantment_fusion.mechanics.signatures.ConfirmedMelee;
+import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -90,6 +92,7 @@ public abstract class PlayerAmberAttackMixin {
         try {
             ItemStack weapon = player.getWeaponItem();
             boolean full = SoulThreadSkills.swingFull(player, weapon, target);
+            ConfirmedMelee.Observation confirmed = ConfirmedMelee.before(player, weapon, EquipmentSlot.MAINHAND, target, source, full);
             FireSweepSkills.Hit fireSweep = FireSweepSkills.beginHit(player, weapon, target, source, full);
             WindSweepSkills.Hit wind = WindSweepSkills.beforeDamage(player, weapon, target, source);
             SoulBladeSkills.Hit soulBlade = SoulBladeSkills.beforeDamage(player, weapon, target, source);
@@ -99,6 +102,7 @@ public abstract class PlayerAmberAttackMixin {
                 HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginMelee(player, weapon, target, source, false);
                 try {
                     succeeded = original.call(target, source, damage);
+                    ConfirmedMelee.after(confirmed, succeeded);
                     return succeeded;
                 } finally {
                     try { SegmentThreadSkills.afterDamage(segment, succeeded); }
@@ -136,6 +140,7 @@ public abstract class PlayerAmberAttackMixin {
         try {
             ItemStack weapon = player.getItemBySlot(slot);
             boolean full = SoulThreadSkills.stabFull(player, slot, weapon);
+            ConfirmedMelee.Observation confirmed = ConfirmedMelee.before(player, weapon, slot, target, source, full);
             FireSweepSkills.Hit fireSweep = FireSweepSkills.beginHit(player, weapon, target, source, full);
             WindSweepSkills.Hit wind = WindSweepSkills.beforeDamage(player, weapon, target, source);
             SoulBladeSkills.Hit soulBlade = SoulBladeSkills.beforeDamage(player, weapon, target, source);
@@ -145,6 +150,7 @@ public abstract class PlayerAmberAttackMixin {
                 HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginMelee(player, weapon, target, source, true);
                 try {
                     succeeded = original.call(target, source, damage);
+                    ConfirmedMelee.after(confirmed, succeeded);
                     return succeeded;
                 } finally {
                     try { SegmentThreadSkills.afterDamage(segment, succeeded); }
@@ -176,6 +182,7 @@ public abstract class PlayerAmberAttackMixin {
         SoulThreadSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
         SoulBladeSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
         SegmentThreadSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
+        StealthBladeSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
         FireSweepSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
     }
 

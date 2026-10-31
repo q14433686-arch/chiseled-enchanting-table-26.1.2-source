@@ -172,6 +172,11 @@ public final class SegmentThreadSkills {
         THREADS.put(owner.getUUID(), new Thread(owner, target, gear, now + param(THREAD, "thread_ticks", 100, 20, 400)));
         CompendiumDiscoveryTracker.recordDiscovery(owner, BANE, SHARP);
     }
+    /** Whether this handler owns the selected cross-carrier primary replay. */
+    public static boolean replaysPrimary(ItemStack weapon, String primary) {
+        Gear gear = selected(weapon);
+        return gear != null && primary.equals(gear.pair().primaryId());
+    }
     private static boolean replayedEarlier(ItemStack weapon, String primary) {
         return SoulThreadSkills.replaysPrimary(weapon, primary) || SoulBladeSkills.replaysPrimary(weapon, primary);
     }

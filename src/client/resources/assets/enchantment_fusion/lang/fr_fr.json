@@ -1018,5 +1018,8 @@
   "tooltip.enchantment_fusion.legacy_fortune_bank_carrier": "L’ancien support garde son effet ; la réserve exige un outil adapté au minerai.",
   "message.enchantment_fusion.fortune_bank_full": "Réserve correspondante pleine ; le bonus reste dans le butin.",
   "message.enchantment_fusion.fortune_bank_empty": "Aucun objet stocké ne correspond à %s et ses composants.",
-  "message.enchantment_fusion.fortune_bank_unverified": "Butin invérifiable ; la réserve et la cible sont conservées."
+  "message.enchantment_fusion.fortune_bank_unverified": "Butin invérifiable ; la réserve et la cible sont conservées.",
+  "tooltip.enchantment_fusion.stealth_blade_weapon": "Un coup de mêlée chargé laisse une marque. Passez dessus en vous accroupissant, puis touchez à nouveau pour libérer une courte lame. Châtiment et Fléau limitent les cibles.",
+  "tooltip.enchantment_fusion.stealth_blade_legs": "Déplacez-vous accroupi avec des jambières équipées pour préparer un pas ; le prochain coup valide libère une lame. Châtiment et Fléau limitent les cibles.",
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "L’ancien support conserve son effet ; les nouvelles directions exigent une arme de mêlée ou des jambières portées."
 }

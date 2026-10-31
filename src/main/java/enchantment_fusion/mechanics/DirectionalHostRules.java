@@ -27,6 +27,7 @@ import enchantment_fusion.mechanics.signatures.FireSweepSkills;
 import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
+import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
@@ -66,6 +67,9 @@ public final class DirectionalHostRules {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         String signature = SignatureCatalog.resolve(pair).map(e -> e.id()).orElse("");
+        if (StealthBladeSkills.matches(pair) && !StealthBladeSkills.supportsCarrier(pair, actual)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
         if (AmberSealSkill.isPair(pair) && AmberSealSkill.SIGNATURE.equals(signature)
             && !AmberSealSkill.applies(pair, host, signature)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;

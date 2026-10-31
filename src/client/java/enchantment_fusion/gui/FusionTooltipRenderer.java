@@ -33,6 +33,7 @@ import enchantment_fusion.mechanics.signatures.FireSweepSkills;
 import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
+import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
@@ -226,6 +227,9 @@ public final class FusionTooltipRenderer {
                 && SealedOreSkills.matches(pair, sigOpt.get().id()) && !SealedOreSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyFortuneBankCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && FortuneBankSkills.matches(pair, sigOpt.get().id()) && !FortuneBankSkills.applies(pair, stack, sigOpt.get().id());
+            boolean stealthTemplate = StealthBladeSkills.matches(pair);
+            boolean legacyStealthCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && stealthTemplate
+                && !StealthBladeSkills.applies(pair, stack);
             boolean legacyRetainedVolleyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && RetainedVolleyHosts.matches(pair, sigOpt.get().id()) && !RetainedVolleyHosts.supportsHost(stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
@@ -257,6 +261,11 @@ public final class FusionTooltipRenderer {
                         ? "tooltip.enchantment_fusion.aberrant_cet_active"
                         : "tooltip.enchantment_fusion.aberrant_cet_required"
                 ).withStyle(ChatFormatting.DARK_RED));
+                if (shift && stealthTemplate && !legacyStealthCarrier) {
+                    lines.add(Component.translatable(StealthBladeSkills.isAttackFirst(pair)
+                        ? "tooltip.enchantment_fusion.stealth_blade_weapon"
+                        : "tooltip.enchantment_fusion.stealth_blade_legs").withStyle(ChatFormatting.AQUA));
+                }
             } else if (sigOpt.isPresent()) {
                 Component sigTitle = Component.translatable(sigOpt.get().titleKey());
                 lines.add(Component.translatable(
@@ -282,8 +291,18 @@ public final class FusionTooltipRenderer {
                     secondaryLabel
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
                 if (shift) {
-                    lines.add(buildMatrixSentence(pair, hostForm).copy().withStyle(ChatFormatting.AQUA));
+                    if (stealthTemplate && !legacyStealthCarrier) {
+                        lines.add(Component.translatable(StealthBladeSkills.isAttackFirst(pair)
+                            ? "tooltip.enchantment_fusion.stealth_blade_weapon"
+                            : "tooltip.enchantment_fusion.stealth_blade_legs").withStyle(ChatFormatting.AQUA));
+                    } else {
+                        lines.add(buildMatrixSentence(pair, hostForm).copy().withStyle(ChatFormatting.AQUA));
+                    }
                 }
+            }
+            if (legacyStealthCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_stealth_blade_carrier")
+                    .withStyle(ChatFormatting.GOLD));
             }
             if (legacyUnderwaterCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_underwater_carrier")

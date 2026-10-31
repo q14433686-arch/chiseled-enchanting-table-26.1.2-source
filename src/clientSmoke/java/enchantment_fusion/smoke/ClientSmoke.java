@@ -647,6 +647,12 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("06-fortune-silk", () -> FortuneBankProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("10-sharpness-bane", () -> SegmentThreadProbe.exercise(sp, tablePos.above(180).east(12), false));
         acceptance.run("10-bane-sharpness", () -> SegmentThreadProbe.exercise(sp, tablePos.above(180).east(12), true));
+        acceptance.run("42.3-sharp-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
+        acceptance.run("42.3-swift-sharp", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
+        acceptance.run("42.3-smite-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));
+        acceptance.run("42.3-swift-smite", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
+        acceptance.run("42.3-bane-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
+        acceptance.run("42.3-swift-bane", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));
         acceptance.run("31.3-glaze", () -> GlazedStrikeProbe.exercise(sp));
         acceptance.run("31.3-amber", () -> AmberSealProbe.exercise(sp, tablePos.above(48).west(16)));
         acceptance.run("31.4-carrier", () -> WaterFireCarrierProbe.exercise(sp));

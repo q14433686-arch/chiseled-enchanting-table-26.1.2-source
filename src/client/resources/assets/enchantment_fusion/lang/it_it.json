@@ -1018,5 +1018,8 @@
   "tooltip.enchantment_fusion.legacy_fortune_bank_carrier": "Il vecchio oggetto mantiene l’effetto; la riserva richiede uno strumento adatto al minerale.",
   "message.enchantment_fusion.fortune_bank_full": "Riserva corrispondente piena; il bonus resta nel bottino.",
   "message.enchantment_fusion.fortune_bank_empty": "Nessun oggetto conservato corrisponde a %s e ai suoi componenti.",
-  "message.enchantment_fusion.fortune_bank_unverified": "Bottino non verificabile; riserva e bersaglio restano invariati."
+  "message.enchantment_fusion.fortune_bank_unverified": "Bottino non verificabile; riserva e bersaglio restano invariati.",
+  "tooltip.enchantment_fusion.stealth_blade_weapon": "Un colpo corpo a corpo caricato lascia un segno. Passaci sopra accovacciato e colpisci di nuovo per liberare un breve taglio. Anatema e Flagello limitano i bersagli.",
+  "tooltip.enchantment_fusion.stealth_blade_legs": "Muoviti accovacciato con i gambali indossati per preparare un passo; il prossimo colpo valido libera un taglio. Anatema e Flagello limitano i bersagli.",
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "Il supporto precedente conserva il suo effetto; le nuove direzioni richiedono un’arma da mischia o gambali indossati."
 }

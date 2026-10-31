@@ -1018,5 +1018,8 @@
   "tooltip.enchantment_fusion.legacy_fortune_bank_carrier": "舊載體保留原效果；蓄運需要能採集支援礦石的工具。",
   "message.enchantment_fusion.fortune_bank_full": "相符礦運已滿；本次增產仍留在掉落中。",
   "message.enchantment_fusion.fortune_bank_empty": "沒有與 %s 及其元件完全相同的已存資源。",
-  "message.enchantment_fusion.fortune_bank_unverified": "無法安全確認這次掉落；礦運與定標均保留。"
+  "message.enchantment_fusion.fortune_bank_unverified": "無法安全確認這次掉落；礦運與定標均保留。",
+  "tooltip.enchantment_fusion.stealth_blade_weapon": "滿蓄近擊合格目標留下刀印；潛行踏過後，下次有效近擊沿視線釋放短暫鋒斬。亡靈殺手與節肢殺手只作用於對應敵人。",
+  "tooltip.enchantment_fusion.stealth_blade_legs": "穿戴護腿潛行移動積攢伏步；下一次有效近擊釋放鋒斬。鋒斬只傷害合格敵人，亡靈和節肢附魔各有目標限制。",
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "舊載體保留舊效果；新方向分別要求近戰武器或實際穿戴的護腿。"
 }

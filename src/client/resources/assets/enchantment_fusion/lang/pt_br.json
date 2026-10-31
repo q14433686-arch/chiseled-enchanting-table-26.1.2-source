@@ -1018,5 +1018,8 @@
   "tooltip.enchantment_fusion.legacy_fortune_bank_carrier": "O item antigo mantém o efeito; a reserva exige ferramenta adequada ao minério.",
   "message.enchantment_fusion.fortune_bank_full": "Reserva correspondente cheia; o bônus permanece no saque.",
   "message.enchantment_fusion.fortune_bank_empty": "Nenhum item guardado corresponde a %s e seus componentes.",
-  "message.enchantment_fusion.fortune_bank_unverified": "Saque não verificável; a reserva e o alvo permanecem."
+  "message.enchantment_fusion.fortune_bank_unverified": "Saque não verificável; a reserva e o alvo permanecem.",
+  "tooltip.enchantment_fusion.stealth_blade_weapon": "Um golpe corpo a corpo carregado deixa uma marca. Passe agachado por ela e acerte outro golpe válido para liberar um corte curto. Julgamento e Ruína limitam os alvos.",
+  "tooltip.enchantment_fusion.stealth_blade_legs": "Agache e mova-se com calças equipadas para preparar um passo; o próximo golpe válido libera um corte. Julgamento e Ruína limitam os alvos.",
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "O equipamento antigo mantém seu efeito; as novas direções exigem arma corpo a corpo ou calças equipadas, respectivamente."
 }

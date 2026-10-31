@@ -1018,5 +1018,8 @@
   "tooltip.enchantment_fusion.legacy_fortune_bank_carrier": "Старый предмет сохраняет эффект; для запаса нужен подходящий инструмент.",
   "message.enchantment_fusion.fortune_bank_full": "Подходящий запас полон; прибавка остаётся в добыче.",
   "message.enchantment_fusion.fortune_bank_empty": "Нет сохранённых предметов, совпадающих с %s и его компонентами.",
-  "message.enchantment_fusion.fortune_bank_unverified": "Не удалось безопасно проверить добычу; запас и цель сохранены."
+  "message.enchantment_fusion.fortune_bank_unverified": "Не удалось безопасно проверить добычу; запас и цель сохранены.",
+  "tooltip.enchantment_fusion.stealth_blade_weapon": "Полностью заряженный удар оставляет метку. Пройдите по ней крадучись и нанесите следующий действительный удар, чтобы выпустить короткий клинок. Небесная кара и Бич членистоногих ограничивают цели.",
+  "tooltip.enchantment_fusion.stealth_blade_legs": "Двигайтесь крадучись в надетых поножах, чтобы накопить шаг; следующий действительный удар выпустит клинок. Небесная кара и Бич членистоногих ограничивают цели.",
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "Старый носитель сохраняет прежний эффект; новым направлениям нужны оружие ближнего боя или надетые поножи соответственно."
 }

@@ -1018,5 +1018,8 @@
   "tooltip.enchantment_fusion.legacy_fortune_bank_carrier": "El objeto antiguo conserva su efecto; la reserva necesita una herramienta apta para la mena.",
   "message.enchantment_fusion.fortune_bank_full": "Reserva coincidente llena; el aumento permanece en el botín.",
   "message.enchantment_fusion.fortune_bank_empty": "No hay objetos guardados idénticos a %s y sus componentes.",
-  "message.enchantment_fusion.fortune_bank_unverified": "No se pudo verificar el botín; la reserva y el objetivo se conservan."
+  "message.enchantment_fusion.fortune_bank_unverified": "No se pudo verificar el botín; la reserva y el objetivo se conservan.",
+  "tooltip.enchantment_fusion.stealth_blade_weapon": "Un golpe cuerpo a cuerpo cargado deja una marca. Pasa agachado sobre ella y acierta otro golpe válido para liberar un corte breve. Castigo y Perdición limitan los objetivos.",
+  "tooltip.enchantment_fusion.stealth_blade_legs": "Muévete agachado con grebas equipadas para preparar un paso; el siguiente golpe válido libera un corte. Castigo y Perdición limitan los objetivos.",
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "El objeto antiguo conserva su efecto; las nuevas direcciones requieren un arma cuerpo a cuerpo o grebas equipadas, respectivamente."
 }

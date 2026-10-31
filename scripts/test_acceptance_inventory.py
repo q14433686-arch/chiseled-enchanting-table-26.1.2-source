@@ -39,6 +39,13 @@ class AcceptanceInventoryTest(unittest.TestCase):
         self.assertIn(fixture, row)
         self.assertNotIn(" | PASS | ", text)
 
+    def test_stealth_blade_family_has_six_individually_scoped_fixtures(self):
+        pairs = {(attack, "swift_sneak") for attack in ("sharpness", "smite", "bane_of_arthropods")}
+        pairs |= {(secondary, primary) for primary, secondary in pairs.copy()}
+        fixtures = {DIRECTION_FIXTURES[pair][0] for pair in pairs}
+        self.assertEqual(6, len(fixtures))
+        self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
+
     def test_unique_and_shared_failures_remain_distinct(self):
         results = parse_report("| unique | scope | FAIL | failure |\n| shared | scope | FAIL | failure |\n")
         self.assertEqual("FAIL", scoped_status(("unique", True), results)[0])
