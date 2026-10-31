@@ -28,9 +28,11 @@ TRANSMUTATION = "TRANSMUTATION_DRAFT.md"
 REDESIGN = "FUSION_REDESIGN.md"
 GLOBAL = "FUSION_GLOBAL_DESIGN.md"
 SEMANTIC = "FUSION_SEMANTIC_COMBINATION.md"
-DOC_FILES = [COVERAGE, FALLBACK, INDEX, FAMILY, DRAFT, TRANSMUTATION, REDESIGN, GLOBAL, SEMANTIC]
+DIRECTION_CATALOG = "FUSION_DIRECTION_CATALOG.md"
+CARRIER_COMPATIBILITY = "FUSION_CARRIER_COMPATIBILITY.md"
+DOC_FILES = [COVERAGE, FALLBACK, INDEX, FAMILY, DRAFT, TRANSMUTATION, REDESIGN, GLOBAL, SEMANTIC, DIRECTION_CATALOG, CARRIER_COMPATIBILITY]
 
-EXPECTED = Counter({"专属": 184, "副位通配": 124, "已选模板": 124, "代设计": 402, "候选推广": 0, "总设初稿": 972})
+EXPECTED = Counter({"专属": 184, "副位通配": 124, "已选模板": 124, "代设计": 402, "候选推广": 0, "组件提案": 972})
 FAMILIES = {
     "M": "sharpness smite bane_of_arthropods fire_aspect knockback breach density lunge sweeping_edge wind_burst",
     "R": "power punch flame infinity multishot piercing quick_charge",
@@ -75,14 +77,18 @@ BATCH53 = [
 ]
 
 ROW = re.compile(r"^\| ([^|\n]+)（`([^`]+)`） \| ([^|\n]+) \| ([^|\n]+) \| ([^|\n]+) \|$", re.M)
-G_STATE = re.compile(r"\[总设初稿 · G(\d{4})\]\((?:FUSION_FAMILY_INDEX|FUSION_FALLBACK_DRAFT)\.md#g\1\)（未逐项核验）")
+G_STATE = re.compile(
+    r"\[(?:总设初稿|组件提案) · G(\d{4})\]"
+    r"\((?:FUSION_FAMILY_INDEX|FUSION_FALLBACK_DRAFT|FUSION_DIRECTION_CATALOG)\.md#g\1\)"
+    r"（(?:未逐项核验|组件展开待核验)）"
+)
 FALLBACK_ROW = re.compile(
     r'^\| ([^|]+) · <a id="g(\d{4})"></a>G\2（`([^`]+)` → `([^`]+)`）'
     r'(?:（已由 53\.(\d{2}) 取代）)? \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|$', re.M
 )
 INDEX_ROW = re.compile(
-    r'^\| <a id="g(\d{4})"></a>\[([^]]+) · G\1\]\(FUSION_FALLBACK_DRAFT\.md#g\1\)'
-    r' \| <a id="g(\d{4})"></a>\[([^]]+) · G\3\]\(FUSION_FALLBACK_DRAFT\.md#g\3\) \|$'
+    r'^\| <a id="g(\d{4})"></a>\[([^]]+) · G\1\]\(FUSION_DIRECTION_CATALOG\.md#g\1\)'
+    r' \| <a id="g(\d{4})"></a>\[([^]]+) · G\3\]\(FUSION_DIRECTION_CATALOG\.md#g\3\) \|$'
 )
 
 
@@ -92,7 +98,11 @@ def check(condition: bool, message: str) -> None:
 
 
 def category(state: str) -> str:
-    return "总设初稿" if state.startswith("[总设初稿") else state.split(" · ")[0]
+    if state.startswith("[总设初稿"):
+        return "总设初稿"
+    if state.startswith("[组件提案"):
+        return "组件提案"
+    return state.split(" · ")[0]
 
 
 def read_doc(name: str) -> str:
@@ -131,7 +141,7 @@ def verify_overview(text: str, entries: dict, names: dict) -> None:
     rows = re.findall(r"^\| ([^|]+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \| (\d+) \|$", section, re.M)
     by_name = {row[0]: list(map(int, row[1:])) for row in rows}
     check(len(by_name) == 43, "coverage overview must have 43 unique rows")
-    order = ["专属", "副位通配", "已选模板", "代设计", "候选推广", "总设初稿"]
+    order = ["专属", "副位通配", "已选模板", "代设计", "候选推广", "组件提案"]
     for a, name in names.items():
         count = Counter(category(state) for (main, _), (state, _scope) in entries.items() if main == a)
         check(by_name.get(name) == [count[c] for c in order], f"overview is stale for {a}: {by_name.get(name)} vs {count}")
@@ -218,6 +228,11 @@ def verify_baseline(ref: str, now: dict) -> None:
             old_g, new_g = G_STATE.fullmatch(old_state), G_STATE.fullmatch(state)
             check(old_g is not None and new_g is not None and old_g.group(1) == new_g.group(1) and old_scope == scope,
                   f"baseline pending identity/scope changed {key}")
+        elif key == ("mending", "impaling"):
+            check(state == old_state and category(state) == "代设计"
+                  and old_scope == "支持投枪动作且有耐久的装备（建议）"
+                  and scope == "可被真实经验修复的可损坏装备（建议；投枪分支需真实投枪）",
+                  "documented 47.37 suggested scope widening changed unexpectedly")
         else:
             check((old_state, old_scope) == (state, scope), f"baseline previously selected/design scope changed {key}")
     old_redesign = subprocess.check_output(["git", "show", f"{ref}:docs/{REDESIGN}"], cwd=ROOT, text=True)
@@ -228,11 +243,12 @@ def verify_baseline(ref: str, now: dict) -> None:
     check(old_redesign.split(marker, 1)[1].split(end, 1)[0] == new_redesign.split(marker, 1)[1].split(end, 1)[0],
           "baseline: three selected global decisions changed")
     old_draft = subprocess.check_output(["git", "show", f"{ref}:docs/{DRAFT}"], cwd=ROOT, text=True)
-    check(old_draft.split("## 尚未完成", 1)[0] == read_doc(DRAFT).split("## 53：", 1)[0],
+    check(old_draft.split("## 肉鸽参考", 1)[1].split("## 尚未完成", 1)[0]
+          == read_doc(DRAFT).split("## 肉鸽参考", 1)[1].split("## 53：", 1)[0],
           "baseline: pre-53 autonomous proposals changed")
     old_transmutation = subprocess.check_output(["git", "show", f"{ref}:docs/{TRANSMUTATION}"], cwd=ROOT, text=True)
     check(old_transmutation == read_doc(TRANSMUTATION), "baseline: cross-domain transmutation design changed")
-    print(f"PASS baseline {ref}: selected states, scopes, numeric/safety constraints and prior proposals preserved; exactly 48 pending directions promoted")
+    print(f"PASS baseline {ref}: selected decisions/scopes and prior proposals preserved; one documented 47.37 draft scope widened; 48 promoted to 53 and 972 linked to 54")
 
 
 def main() -> None:
@@ -262,16 +278,71 @@ def main() -> None:
     check(set(old_g) == set(range(1, 1021)) and len(set(old_g.values())) == 1020, "historical G rows are missing/duplicated")
     pending_g = {}
     for pair, (state, scope) in entries.items():
-        if category(state) == "总设初稿":
+        if category(state) == "组件提案":
             match = G_STATE.fullmatch(state)
-            check(match is not None and "FUSION_FAMILY_INDEX.md" in state, f"invalid family index state {pair}: {state}")
+            check(match is not None and "FUSION_DIRECTION_CATALOG.md" in state, f"invalid direction catalog state {pair}: {state}")
             n = int(match.group(1))
             check(n not in pending_g and old_g[n] == pair, f"G{n:04d}: wrong pair or duplicate")
             check("建议" in scope and "待确认" in scope, f"pending scope presented as final: {pair}")
             pending_g[n] = pair
     check(len(pending_g) == 972 and set(pending_g).isdisjoint(replaced), "pending/replaced G rows overlap")
     check(set(pending_g) | set(replaced) == set(old_g) and len(replaced) == 48, "historical G partition must be 972 + 48")
-    check(all((b, a) in entries and category(entries[b, a][0]) == "总设初稿" for a, b in pending_g.values()), "pending directions must be paired reversibly")
+    check(all((b, a) in entries and category(entries[b, a][0]) == "组件提案" for a, b in pending_g.values()), "component directions must be paired reversibly")
+
+    # Validate identities and required concrete fields, not the fun or feasibility of the generated prose.
+    catalog = read_doc(DIRECTION_CATALOG)
+    catalog_rows = {}
+    for match in re.finditer(
+        r'^### <a id="g(\d{4})"></a>G\1 ([^\n]+) ▷ ([^\n｜]+)｜([^\n]+)\n'
+        r'- \*\*取义与连接\*\*：([^\n]+)\n'
+        r'- \*\*触发与操作\*\*：([^\n]+)\n'
+        r'- \*\*结果\*\*：([^\n]+)\n'
+        r'- \*\*装备与原版\*\*：([^\n]+)\n', catalog, re.M
+    ):
+        n, first, second, title, connection, trigger, result, host = match.groups()
+        n = int(n)
+        check(n in pending_g and n not in catalog_rows, f"unknown/duplicate catalog G{n:04d}")
+        a, b = pending_g[n]
+        check(first == names[a] and second == names[b], f"catalog G{n:04d} points to the wrong pair")
+        check(all(field.strip() for field in (title, connection, trigger, result, host)), f"catalog G{n:04d} has an empty field")
+        harmful_secondaries = {
+            "sharpness", "smite", "bane_of_arthropods", "fire_aspect", "knockback", "breach", "density", "lunge",
+            "sweeping_edge", "wind_burst", "power", "punch", "flame", "infinity", "multishot", "piercing",
+            "loyalty", "riptide", "channeling", "silk_touch",
+        }
+        if FAMILY_OF[a] in {"H", "D", "V", "W", "S", "F"} and b in harmful_secondaries:
+            check("主动" in trigger, f"catalog G{n:04d} has an automatic harmful effect from a non-attack event")
+        if b == "frost_walker":
+            check("主动" in trigger and "主动" in result, f"catalog G{n:04d} is missing explicit frost-attack consent")
+        if b in {"mending", "unbreaking"}:
+            check("可损坏" in host, f"catalog G{n:04d} durability effect has no damageable-host requirement")
+        catalog_rows[n] = (trigger, result)
+    check(set(catalog_rows) == set(pending_g), "54 catalog does not contain exactly 972 complete structured G rows")
+    id_by_pair = {pair: n for n, pair in pending_g.items()}
+    check(all(catalog_rows[n] != catalog_rows[id_by_pair[b, a]] for n, (a, b) in pending_g.items()),
+          "a forward/reverse component pair has identical trigger and result text")
+    for main_level in range(1, 6):
+        for sub_level in range(1, 6):
+            damage = 2 + .5 * (main_level - 1) + .25 * (sub_level - 1)
+            mitigation = .10 + .05 * (sub_level - 1)
+            chance = .10 + .02 * (sub_level - 1)
+            check(damage > 0 and 0 < mitigation < 1 and 0 < chance < 1, "54 example formula exceeds its intended range")
+
+    # The explicitly documented carrier alternatives may affect assistant drafts only.
+    compatibility = read_doc(CARRIER_COMPATIBILITY)
+    ids_by_name = {value: key for key, value in names.items()}
+    check(len(ids_by_name) == len(names), "ambiguous Chinese enchantment names")
+    compat_rows = re.findall(r'^\| ((?:47|48|52)\.\d{2}) ([^|]+?) ▷ ([^|]+?) \| ([^|]+) \|$', compatibility, re.M)
+    check(len(compat_rows) == 26, "expected 26 documented carrier alternatives")
+    compat_pairs = set()
+    for batch, first, second, action in compat_rows:
+        check(first in ids_by_name and second in ids_by_name and action.strip(), f"unknown compatibility direction {batch} {first} ▷ {second}")
+        pair = (ids_by_name[first], ids_by_name[second])
+        check(pair not in compat_pairs and entries[pair][0] == f"代设计 · {batch}（待审）",
+              f"compatibility alternative unexpectedly targets a selected or wrong direction: {batch} {pair}")
+        compat_pairs.add(pair)
+    for selected in ("44.4 水战作业", "46.3 命中备掘／掘后引矢", "效率 × 多重射击"):
+        check(selected in compatibility, f"missing selected-template protection {selected}")
 
     section53 = draft.split("## 53：", 1)[1].split("## 尚未完成", 1)[0]
     headings53 = re.findall(r"^### 53\.(\d{2}) ([^\n]+) × ([^\n]+)$", section53, re.M)
@@ -367,7 +438,8 @@ def main() -> None:
     if args.baseline_ref:
         verify_baseline(args.baseline_ref, entries)
     print("PASS matrix: 1,806 unique directions; 184/124/124/402/0/972, including all 43 overview rows")
-    print("PASS traceability: 24 × 2 batch-53 directions, 48 replaced G rows, 972 current G links, 486 reverse pairs, 41 family counts")
+    print("PASS traceability: 24 × 2 batch-53 directions, 48 replaced G rows, 972 structured 54 proposals, 486 reverse pairs, 41 family counts")
+    print("PASS 26 documented carrier alternatives target assistant drafts only; selected-template protections present")
     print("PASS selected exceptions, 43 semantic profiles, 116 cross-domain variants and 28 × 5 tool adapters")
     print("PASS local links, explicit G/family anchors, table shapes, selected safety/decision markers")
     print("NOTE: static document checks do not verify playability, balance, implementation or in-game safety")
