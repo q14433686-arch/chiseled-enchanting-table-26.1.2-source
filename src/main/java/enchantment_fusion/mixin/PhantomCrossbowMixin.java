@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
+import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -29,13 +30,17 @@ public abstract class PhantomCrossbowMixin {
         PhantomVolley.configureCrossbow(projectile, shooter, index);
         RangedCadenceSkills.configureCrossbowShot(projectile, shooter, index);
         EchoPathSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
+        PiercingChainSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
     }
 
     @WrapOperation(method = "onUseTick", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/item/CrossbowItem;tryLoadProjectiles(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;)Z"))
     private boolean ef$realArrowLoad(LivingEntity shooter, ItemStack weapon, Operation<Boolean> original) {
         boolean loaded = original.call(shooter, weapon);
-        if (loaded) RangedCadenceSkills.loadedCrossbow(shooter, weapon);
+        if (loaded) {
+            RangedCadenceSkills.loadedCrossbow(shooter, weapon);
+            PiercingChainSkills.loaded(shooter, weapon);
+        }
         return loaded;
     }
 

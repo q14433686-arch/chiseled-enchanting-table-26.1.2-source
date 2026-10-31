@@ -10,6 +10,7 @@ import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
+import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.model.TriggerType;
 import java.util.EnumSet;
 import java.util.Set;
@@ -261,8 +262,8 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
             || SignaturePairs.playerHasEquippedSignature(shooter, "boomerang_lance")) {
             ProjectilePathTracker.schedulePathEcho(path, 9L, 4.0F, true, true);
         }
-        if (SignaturePairs.stackHasSignature(weapon, "threading_needle")
-            || SignaturePairs.playerHasEquippedSignature(shooter, "threading_needle")) {
+        if (PiercingChainSkills.hasLegacySignature(weapon, PiercingChainSkills.FORWARD)
+            || PiercingChainSkills.playerHasLegacySignature(shooter, PiercingChainSkills.FORWARD)) {
             ProjectilePathTracker.applyPathTrailEffect(level, shooter, path, PathTrailStyle.SILK_TETHER, 1.15F);
         }
         if (SignaturePairs.stackHasSignature(weapon, "thunderbolt_cavalry")

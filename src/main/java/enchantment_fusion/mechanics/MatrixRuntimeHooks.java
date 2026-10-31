@@ -19,6 +19,7 @@ import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
+import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -84,6 +85,7 @@ public final class MatrixRuntimeHooks {
             DurabilityReserveSkills.clear();
             EchoPathSkills.clear();
             MomentumSealSkills.clear();
+            PiercingChainSkills.clear(server);
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             AmberSealSkill.onEntityUnload(entity);
@@ -126,6 +128,7 @@ public final class MatrixRuntimeHooks {
             DurabilityReserveSkills.onDisconnect(pid);
             EchoPathSkills.onDisconnect(pid);
             MomentumSealSkills.onDisconnect(handler.getPlayer());
+            PiercingChainSkills.onDisconnect(handler.getPlayer());
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -321,6 +324,7 @@ public final class MatrixRuntimeHooks {
                 DurabilityReserveSkills.onDisconnect(deadPlayer.getUUID());
                 EchoPathSkills.onDisconnect(deadPlayer.getUUID());
                 MomentumSealSkills.onDisconnect(deadPlayer);
+                PiercingChainSkills.onDisconnect(deadPlayer);
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
@@ -371,6 +375,7 @@ public final class MatrixRuntimeHooks {
                 RangedCadenceSkills.tickPlayer(player);
                 DurabilityReserveSkills.tickPlayer(player);
                 EchoPathSkills.tickPlayer(player);
+                PiercingChainSkills.tickPlayer(player);
                 SignaturePairs.tickServerPlayer(serverLevel, player);
                 CrossDomainTransmutations.tickServerPlayer(serverLevel, player);
 

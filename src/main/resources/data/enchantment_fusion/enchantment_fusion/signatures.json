@@ -755,12 +755,16 @@
     "threading_needle": {
       "primary": "minecraft:quick_charge",
       "secondary": "minecraft:piercing",
-      "domain": "ranged"
+      "domain": "ranged",
+      "repeat_window_ticks": 80
     },
     "bamboo_split_momentum": {
       "primary": "minecraft:piercing",
       "secondary": "minecraft:quick_charge",
-      "domain": "ranged"
+      "domain": "ranged",
+      "reload_ticks_per_enemy_per_level": 1,
+      "reload_credit_cap": 12,
+      "reload_credit_lifetime_ticks": 400
     },
     "moth_to_flame": {
       "primary": "minecraft:lure",

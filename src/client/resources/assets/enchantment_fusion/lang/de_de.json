@@ -714,10 +714,10 @@
   "signature.enchantment_fusion.bitter_medicine_carapace.desc": "[Thorns ▷ Mending] Turning pain into craft: taking a hit retaliates with thorns while repairing durability across all equipped gear and granting Regeneration!",
   "signature.enchantment_fusion.forged_retaliation.title": "Gall-Tempered Quills",
   "signature.enchantment_fusion.forged_retaliation.desc": "[Mending ▷ Thorns] Quietly stores up to 8 tempered quills over time and unleashes the entire quill-storm at once when struck or striking!",
-  "signature.enchantment_fusion.threading_needle.title": "Thread the Needle",
-  "signature.enchantment_fusion.threading_needle.desc": "[Quick Charge ▷ Piercing] Draws a cached silk-tether along the projectile path, stitching and pulling every pierced enemy tightly together!",
-  "signature.enchantment_fusion.bamboo_split_momentum.title": "Splitting-Bamboo Momentum",
-  "signature.enchantment_fusion.bamboo_split_momentum.desc": "[Piercing ▷ Quick Charge] Successive enemies on the attack path take increasing damage, and the wielder gains brief Haste.",
+  "signature.enchantment_fusion.threading_needle.title": "Folgeschuss",
+  "signature.enchantment_fusion.threading_needle.desc": "[Schnellladen ▷ Durchschuss] Trifft ein echter mittlerer Pfeil kurz darauf dasselbe Ziel, fliegt er in Richtung des ersten Pfeils weiter und kann ein Ziel dahinter treffen. Echte Munition wird benötigt.",
+  "signature.enchantment_fusion.bamboo_split_momentum.title": "Durchschuss-Nachladen",
+  "signature.enchantment_fusion.bamboo_split_momentum.desc": "[Durchschuss ▷ Schnellladen] Jeder geeignete Feind, den ein echter Armbrustpfeil durchdringt, verkürzt das nächste Nachladen. Munition bleibt nötig.",
   "signature.enchantment_fusion.moth_to_flame.title": "Moths to the Flame",
   "signature.enchantment_fusion.moth_to_flame.desc": "[Lure ▷ Fire Aspect] Turns your ignited target into a living lantern that irresistibly pulls surrounding monsters into the blaze!",
   "signature.enchantment_fusion.beacon_bonfire.title": "Watchtower Bonfire",
@@ -980,5 +980,7 @@
   "message.enchantment_fusion.momentum_released": "Stored momentum released.",
   "message.enchantment_fusion.momentum_not_ready": "No eligible target with momentum is ready.",
   "message.enchantment_fusion.momentum_not_moving": "The target is no longer moving in the original push direction.",
-  "tooltip.enchantment_fusion.legacy_momentum_carrier": "Legacy host keeps its old effect; the new directions need a sword, axe, spear or mace."
+  "tooltip.enchantment_fusion.legacy_momentum_carrier": "Legacy host keeps its old effect; the new directions need a sword, axe, spear or mace.",
+  "message.enchantment_fusion.piercing_reload_ready": "Nächstes Nachladen um %s Ticks verkürzt.",
+  "tooltip.enchantment_fusion.legacy_piercing_chain_carrier": "Alte Träger behalten ihren Effekt; Folgeschuss braucht Bogen oder Armbrust, Nachladen eine Armbrust."
 }

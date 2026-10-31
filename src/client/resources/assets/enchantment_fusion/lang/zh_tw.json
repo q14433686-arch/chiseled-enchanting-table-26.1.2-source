@@ -714,10 +714,10 @@
   "signature.enchantment_fusion.bitter_medicine_carapace.desc": "【尖刺 ▷ 修補】苦肉計成：每次受創反刺強敵的同時，將痛楚化為全身受損裝備耐久自癒與生命再生！",
   "signature.enchantment_fusion.forged_retaliation.title": "臥薪嚐膽",
   "signature.enchantment_fusion.forged_retaliation.desc": "【修補 ▷ 尖刺】平日修養蓄積至多8枚膽氣飛刺，一旦受擊或出招便傾數萬刺齊發橫掃周遭敵群！",
-  "signature.enchantment_fusion.threading_needle.title": "穿針引線",
-  "signature.enchantment_fusion.threading_needle.desc": "【快速裝填 ▷ 貫穿】彈道與飛矛沿暫快取路徑穿引靈絲，將沿線貫穿的多名敵人一併縫聚拉攏至一處！",
-  "signature.enchantment_fusion.bamboo_split_momentum.title": "勢如破竹",
-  "signature.enchantment_fusion.bamboo_split_momentum.desc": "【貫穿 ▷ 快速裝填】攻擊路徑上依次命中的目標受到遞增傷害，持有者獲得短暫加速挖掘。",
+  "signature.enchantment_fusion.threading_needle.title": "追孔連射",
+  "signature.enchantment_fusion.threading_needle.desc": "【快速裝填 ▷ 穿透】短時間內真實中央箭再次命中同一目標時，可沿前一箭方向繼續飛行，攻擊後方一個目標；仍使用真實彈藥。",
+  "signature.enchantment_fusion.bamboo_split_momentum.title": "透擊加速",
+  "signature.enchantment_fusion.bamboo_split_momentum.desc": "【穿透 ▷ 快速裝填】真實弩箭每穿過一個合格敵人，就縮短下一次成功裝填的時間；仍需真實彈藥。",
   "signature.enchantment_fusion.moth_to_flame.title": "飛蛾撲火",
   "signature.enchantment_fusion.moth_to_flame.desc": "【魚餌 ▷ 火焰附加】被點燃的敵人化作誘蛾火燈，不由自主地牽引周遭怪物撲向火源一同焚燒！",
   "signature.enchantment_fusion.beacon_bonfire.title": "烽火聚靈",
@@ -980,5 +980,7 @@
   "message.enchantment_fusion.momentum_released": "已釋放封存的動量。",
   "message.enchantment_fusion.momentum_not_ready": "沒有可操作的目標動量。",
   "message.enchantment_fusion.momentum_not_moving": "目標已不再沿原擊退方向移動。",
-  "tooltip.enchantment_fusion.legacy_momentum_carrier": "舊載體保留原效果；新方向需要劍、斧、長矛或重錘。"
+  "tooltip.enchantment_fusion.legacy_momentum_carrier": "舊載體保留原效果；新方向需要劍、斧、長矛或重錘。",
+  "message.enchantment_fusion.piercing_reload_ready": "穿透蓄勢：下次裝填縮短 %s tick。",
+  "tooltip.enchantment_fusion.legacy_piercing_chain_carrier": "舊載體保留原效果；追孔連射適合弓弩，透擊加速需要弩。"
 }

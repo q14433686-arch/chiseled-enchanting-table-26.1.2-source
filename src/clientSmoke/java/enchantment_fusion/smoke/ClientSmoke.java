@@ -650,6 +650,8 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("05-unbreaking-mending", () -> DurabilityEconomyProbe.exerciseRescue(sp));
         acceptance.run("16-blast-protection", () -> BlastDefenseProbe.exerciseCounter(sp, tablePos.above(74).east(12)));
         acceptance.run("16-protection-blast", () -> BlastDefenseProbe.exerciseGuard(sp));
+        acceptance.run("12-quick-piercing", () -> PiercingChainProbe.exercise(sp, tablePos.above(180).east(12), false));
+        acceptance.run("12-piercing-quick", () -> PiercingChainProbe.exercise(sp, tablePos.above(180).east(12), true));
         acceptance.run("39.1-density-breach", () -> HeavyCrushProbe.exercise(sp, tablePos.above(90).east(12), false));
         acceptance.run("39.1-breach-density", () -> HeavyCrushProbe.exercise(sp, tablePos.above(90).east(12), true));
         acceptance.run("39.2-infinity-unbreaking", () -> EchoReserveProbe.exerciseEcho(sp, tablePos.above(150).east(12)));

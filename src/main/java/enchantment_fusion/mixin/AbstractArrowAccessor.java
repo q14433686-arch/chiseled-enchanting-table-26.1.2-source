@@ -1,6 +1,8 @@
 package enchantment_fusion.mixin;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -16,4 +18,10 @@ public interface AbstractArrowAccessor {
 
     @Accessor("baseDamage")
     double ef$getBaseDamage();
+
+    @Accessor("piercingIgnoreEntityIds")
+    @Nullable IntOpenHashSet ef$getPiercingIgnoreEntityIds();
+
+    @Accessor("piercingIgnoreEntityIds")
+    void ef$setPiercingIgnoreEntityIds(@Nullable IntOpenHashSet ids);
 }

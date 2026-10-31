@@ -3,6 +3,7 @@ package enchantment_fusion.mechanics;
 import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
 import enchantment_fusion.mechanics.ProjectilePathTracker.PathSourceKind;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
+import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.model.TriggerType;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -464,8 +465,8 @@ public final class FlyingBladeManager {
             ProjectilePathTracker.schedulePathEcho(path, 9L, Math.max(3.8F, rawAttack * 0.62F), true, true);
         }
         // [快速装填 ▷ 穿透] 穿针引线：将整条飞行路径贯穿的敌人串联牵引至终点！
-        if (SignaturePairs.stackHasSignature(f.weaponSnapshot, "threading_needle")
-            || SignaturePairs.playerHasEquippedSignature(owner, "threading_needle")) {
+        if (PiercingChainSkills.hasLegacySignature(f.weaponSnapshot, PiercingChainSkills.FORWARD)
+            || PiercingChainSkills.playerHasLegacySignature(owner, PiercingChainSkills.FORWARD)) {
             ProjectilePathTracker.applyPathTrailEffect(level, owner, path, ProjectilePathTracker.PathTrailStyle.SILK_TETHER, 1.15F);
         }
         // [突进 ▷ 引雷] 惊雷破阵：沿长矛/飞剑缓存路径依次引落雷弧！
@@ -545,8 +546,8 @@ public final class FlyingBladeManager {
 
             // [穿透 ▷ 快速装填] 势如破竹：沿路径每多贯穿一个敌人，伤害递增 18%！
             float pierceRamp = 1.0F;
-            if (f.hitEnemiesCount > 1 && (SignaturePairs.stackHasSignature(f.weaponSnapshot, "bamboo_split_momentum")
-                || SignaturePairs.playerHasEquippedSignature(owner, "bamboo_split_momentum"))) {
+            if (f.hitEnemiesCount > 1 && (PiercingChainSkills.hasLegacySignature(f.weaponSnapshot, PiercingChainSkills.REVERSE)
+                || PiercingChainSkills.playerHasLegacySignature(owner, PiercingChainSkills.REVERSE))) {
                 pierceRamp += 0.18F * Math.min(5, f.hitEnemiesCount - 1);
             }
 

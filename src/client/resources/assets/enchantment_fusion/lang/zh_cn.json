@@ -714,10 +714,10 @@
   "signature.enchantment_fusion.bitter_medicine_carapace.desc": "【荆棘 ▷ 经验修补】苦肉计成：每次受创反刺强敌的同时，将痛楚化为全身受损装备耐久自愈与生命再生！",
   "signature.enchantment_fusion.forged_retaliation.title": "卧薪尝胆",
   "signature.enchantment_fusion.forged_retaliation.desc": "【经验修补 ▷ 荆棘】平日修养蓄积至多8枚胆气飞刺，一旦受击或出招便倾数万刺齐发横扫周遭敌群！",
-  "signature.enchantment_fusion.threading_needle.title": "穿针引线",
-  "signature.enchantment_fusion.threading_needle.desc": "【快速装填 ▷ 穿透】弹道与飞矛沿暂缓存路径穿引灵丝，将沿线贯穿的多名敌人一并缝聚拉拢至一处！",
-  "signature.enchantment_fusion.bamboo_split_momentum.title": "势如破竹",
-  "signature.enchantment_fusion.bamboo_split_momentum.desc": "【穿透 ▷ 快速装填】攻击路径上依次命中的目标受到递增伤害，持有者获得短暂急迫。",
+  "signature.enchantment_fusion.threading_needle.title": "追孔连射",
+  "signature.enchantment_fusion.threading_needle.desc": "【快速装填 ▷ 穿透】短时间内真实中央箭再次命中同一目标时，可沿前一箭方向继续飞行，攻击后方一个目标；仍使用真实弹药。",
+  "signature.enchantment_fusion.bamboo_split_momentum.title": "透击加速",
+  "signature.enchantment_fusion.bamboo_split_momentum.desc": "【穿透 ▷ 快速装填】真实弩箭每穿过一个合格敌人，就缩短下一次成功装填的时间；仍需真实弹药。",
   "signature.enchantment_fusion.moth_to_flame.title": "飞蛾扑火",
   "signature.enchantment_fusion.moth_to_flame.desc": "【饵钓 ▷ 火焰附加】被点燃的敌人化作诱蛾火灯，不由自主地牵引周遭怪物扑向火源一同焚烧！",
   "signature.enchantment_fusion.beacon_bonfire.title": "烽火聚灵",
@@ -980,5 +980,7 @@
   "message.enchantment_fusion.momentum_released": "已释放封存的动量。",
   "message.enchantment_fusion.momentum_not_ready": "没有可操作的目标动量。",
   "message.enchantment_fusion.momentum_not_moving": "目标已不再沿原击退方向移动。",
-  "tooltip.enchantment_fusion.legacy_momentum_carrier": "旧载体保留原效果；新方向需要剑、斧、长矛或重锤。"
+  "tooltip.enchantment_fusion.legacy_momentum_carrier": "旧载体保留原效果；新方向需要剑、斧、长矛或重锤。",
+  "message.enchantment_fusion.piercing_reload_ready": "穿透蓄势：下次装填缩短 %s tick。",
+  "tooltip.enchantment_fusion.legacy_piercing_chain_carrier": "旧载体保留原效果；追孔连射适合弓弩，透击加速需要弩。"
 }

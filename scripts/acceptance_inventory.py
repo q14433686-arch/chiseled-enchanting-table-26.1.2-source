@@ -27,6 +27,8 @@ DIRECTION_FIXTURES = {
     ("silk_touch", "efficiency"): ("09-silk-efficiency", True),
     ("multishot", "piercing"): ("11-multishot-piercing", True),
     ("piercing", "multishot"): ("11-piercing-multishot", True),
+    ("quick_charge", "piercing"): ("12-quick-piercing", True),
+    ("piercing", "quick_charge"): ("12-piercing-quick", True),
     ("loyalty", "riptide"): ("15-loyalty-riptide", False),
     ("riptide", "loyalty"): ("15-loyalty-riptide", False),
     ("blast_protection", "protection"): ("16-blast-protection", True),
