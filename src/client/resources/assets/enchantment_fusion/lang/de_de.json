@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "Druckklinge bereits vorbereitet; keine weitere Luft verbraucht.",
   "message.enchantment_fusion.water_pressure_air": "Nicht genug Luft für die Druckklinge.",
   "message.enchantment_fusion.water_pressure_paid": "Druckklinge bereit; %s Luft-Ticks verbraucht.",
-  "message.enchantment_fusion.water_pressure_underwater": "Tauche mit den Augen unter Wasser, um die Druckklinge vorzubereiten."
+  "message.enchantment_fusion.water_pressure_underwater": "Tauche mit den Augen unter Wasser, um die Druckklinge vorzubereiten.",
+  "skill.enchantment_fusion.melee_wear_guard": "Komboschutz",
+  "skill.enchantment_fusion.melee_wear_edge": "Gesparte Schneide",
+  "tooltip.enchantment_fusion.melee_wear_guard": "Eine haltbare Nahkampfwaffe halten: Nach mindestens 3 passenden Treffern mit höchstens 4 Sekunden Abstand aktivieren, um 10 Sekunden lang echten Verschleiß zu verhindern. Bann und Nemesis verlangen passende Gegner.",
+  "tooltip.enchantment_fusion.melee_wear_edge": "Echter durch Haltbarkeit verhinderter Verschleiß erzeugt Klingensplitter. Mindestens 2 einsetzen, um den nächsten passenden Nahkampftreffer innerhalb von 5 Sekunden zu verstärken. Bann und Nemesis verlangen passende Gegner.",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "Alter Träger behält den alten Effekt; die neue Richtung benötigt eine haltbare Nahkampfwaffe.",
+  "message.enchantment_fusion.melee_wear_guard_active": "Der Waffenschutz ist noch aktiv; keine Kombo verbraucht.",
+  "message.enchantment_fusion.melee_wear_guard_need": "3 passende Treffer mit höchstens 4 Sekunden Abstand nötig: %s/3.",
+  "message.enchantment_fusion.melee_wear_guard_set": "Schutz bereit: verhindert bis zu %s Punkte echten Verschleiß für 10 Sekunden.",
+  "message.enchantment_fusion.melee_wear_guard_ready": "Kombo bereit; Waffenschutz aktivieren.",
+  "message.enchantment_fusion.melee_wear_edge_active": "Der verstärkte Treffer ist schon vorbereitet; keine Splitter verbraucht.",
+  "message.enchantment_fusion.melee_wear_edge_need": "Mindestens 2 Splitter aus echtem verhindertem Verschleiß nötig: %s/2.",
+  "message.enchantment_fusion.melee_wear_edge_set": "%s Splitter verbraucht; der nächste passende Nahkampftreffer ist 5 Sekunden lang verstärkt.",
+  "message.enchantment_fusion.melee_wear_edge_ready": "Genug Klingensplitter; verstärkten Treffer aktivieren."
 }

@@ -3,6 +3,7 @@ package enchantment_fusion.mixin;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
+import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -16,7 +17,13 @@ public abstract class EnchantmentDurabilityReserveMixin {
     private void ef$observeActualUnbreaking(ServerLevel level, int enchantmentLevel, ItemStack stack,
                                             MutableFloat change, Operation<Void> original) {
         float before = change.floatValue();
-        original.call(level, enchantmentLevel, stack, change);
-        DurabilityReserveSkills.observed(level, (Enchantment) (Object) this, stack, before, change.floatValue());
+        MeleeWearSkills.WearFrame frame = MeleeWearSkills.beginEffect(stack);
+        try {
+            original.call(level, enchantmentLevel, stack, change);
+            DurabilityReserveSkills.observed(level, (Enchantment) (Object) this, stack, before, change.floatValue());
+            MeleeWearSkills.observedEffect(frame, level, (Enchantment) (Object) this, stack, before, change.floatValue());
+        } finally {
+            MeleeWearSkills.endEffect(frame);
+        }
     }
 }

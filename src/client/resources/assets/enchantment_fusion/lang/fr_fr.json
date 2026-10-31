@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "Lame déjà préparée ; aucun air supplémentaire dépensé.",
   "message.enchantment_fusion.water_pressure_air": "Air insuffisant pour préparer la lame.",
   "message.enchantment_fusion.water_pressure_paid": "Lame préparée ; %s ticks d’air dépensés.",
-  "message.enchantment_fusion.water_pressure_underwater": "Immergez les yeux pour préparer la lame de pression."
+  "message.enchantment_fusion.water_pressure_underwater": "Immergez les yeux pour préparer la lame de pression.",
+  "skill.enchantment_fusion.melee_wear_guard": "Garde du combo",
+  "skill.enchantment_fusion.melee_wear_edge": "Tranchant épargné",
+  "tooltip.enchantment_fusion.melee_wear_guard": "Tenez une arme de mêlée à durabilité. Après au moins 3 coups valides espacés de 4 secondes au plus, activez une garde contre son usure réelle pendant 10 secondes. Châtiment et Fléau exigent des ennemis adaptés.",
+  "tooltip.enchantment_fusion.melee_wear_edge": "L’usure réellement évitée par Solidité sur cette arme produit des éclats. Dépensez-en au moins 2 pour renforcer le prochain coup valide pendant 5 secondes. Châtiment et Fléau exigent des ennemis adaptés.",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "L’ancien support conserve son effet ; cette direction exige une arme de mêlée à durabilité.",
+  "message.enchantment_fusion.melee_wear_guard_active": "La garde est encore active ; aucun combo dépensé.",
+  "message.enchantment_fusion.melee_wear_guard_need": "Il faut 3 coups valides espacés de 4 secondes au plus : %s/3.",
+  "message.enchantment_fusion.melee_wear_guard_set": "Garde prête : annule jusqu’à %s points d’usure réelle pendant 10 secondes.",
+  "message.enchantment_fusion.melee_wear_guard_ready": "Combo prêt ; activez la garde.",
+  "message.enchantment_fusion.melee_wear_edge_active": "Le coup renforcé est déjà prêt ; aucun éclat dépensé.",
+  "message.enchantment_fusion.melee_wear_edge_need": "Il faut 2 éclats issus d’une usure réellement évitée : %s/2.",
+  "message.enchantment_fusion.melee_wear_edge_set": "%s éclats dépensés ; le prochain coup valide est renforcé pendant 5 secondes.",
+  "message.enchantment_fusion.melee_wear_edge_ready": "Assez d’éclats ; activez le coup renforcé."
 }

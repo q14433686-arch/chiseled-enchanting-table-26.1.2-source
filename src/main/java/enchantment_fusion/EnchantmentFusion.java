@@ -15,6 +15,7 @@ import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
+import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.menu.FusionSkillNetworking;
 import enchantment_fusion.mixin.FusionMixinConfigPlugin;
@@ -51,6 +52,7 @@ public final class EnchantmentFusion implements ModInitializer {
         FortuneBankSkills.init();
         StealthBladeSkills.init();
         WaterPressureSkills.init();
+        MeleeWearSkills.init();
         FusionBlocks.init();
         FusionItems.init();
         FusionBlockEntities.init();

@@ -15,6 +15,7 @@ import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
+import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,7 +71,9 @@ public final class FusionSkillNetworking {
         FIRE_WAVE("skill.enchantment_fusion.fire_wave"),
         OPEN_SEALED_ORE("skill.enchantment_fusion.open_sealed_ore"),
         FORTUNE_BANK("skill.enchantment_fusion.fortune_bank"),
-        WATER_PRESSURE("skill.enchantment_fusion.water_pressure");
+        WATER_PRESSURE("skill.enchantment_fusion.water_pressure"),
+        MELEE_WEAR_GUARD("skill.enchantment_fusion.melee_wear_guard"),
+        MELEE_WEAR_EDGE("skill.enchantment_fusion.melee_wear_edge");
         final String translation;
         Skill(String translation) { this.translation = translation; }
     }
@@ -99,6 +102,8 @@ public final class FusionSkillNetworking {
         if (SealedOreSkills.hasOpenableSample(player)) skills.add(Skill.OPEN_SEALED_ORE);
         if (FortuneBankSkills.hasEquipped(player)) skills.add(Skill.FORTUNE_BANK);
         if (WaterPressureSkills.hasEquipped(player)) skills.add(Skill.WATER_PRESSURE);
+        if (MeleeWearSkills.hasEquipped(player, true)) skills.add(Skill.MELEE_WEAR_GUARD);
+        if (MeleeWearSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WEAR_EDGE);
         return skills;
     }
 
@@ -158,6 +163,8 @@ public final class FusionSkillNetworking {
             case OPEN_SEALED_ORE -> SealedOreSkills.openSample(player);
             case FORTUNE_BANK -> FortuneBankSkills.activate(player);
             case WATER_PRESSURE -> WaterPressureSkills.activate(player);
+            case MELEE_WEAR_GUARD -> MeleeWearSkills.activate(player, true);
+            case MELEE_WEAR_EDGE -> MeleeWearSkills.activate(player, false);
         }
     }
 

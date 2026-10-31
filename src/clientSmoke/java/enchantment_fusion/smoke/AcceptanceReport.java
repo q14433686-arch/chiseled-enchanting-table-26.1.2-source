@@ -25,6 +25,13 @@ final class AcceptanceReport {
         plan("06-runtime-compat", "06 actual key input, unusual loot functions and stack splitting, save/restart, multiplayer and protection mods", "Not covered by the prepared single-player fixture.");
         plan("10-sharpness-bane", "Sharpness ▷ Bane: real hit and simulated movement/mark age fixture", "Not reached if setup fails.");
         plan("10-bane-sharpness", "Bane ▷ Sharpness: real hit and simulated circling/protected-victim fixture", "Not reached if setup fails.");
+        plan("42.1-sharp-unbreaking", "Sharpness ▷ Unbreaking: confirmed combo and actual guarded wear", "Not reached if setup fails.");
+        plan("42.1-unbreaking-sharp", "Unbreaking ▷ Sharpness: real prevented wear and prepared melee bonus", "Not reached if setup fails.");
+        plan("42.1-smite-unbreaking", "Smite ▷ Unbreaking: undead combo and actual guarded wear", "Not reached if setup fails.");
+        plan("42.1-unbreaking-smite", "Unbreaking ▷ Smite: real prevented wear and undead bonus", "Not reached if setup fails.");
+        plan("42.1-bane-unbreaking", "Bane ▷ Unbreaking: arthropod combo and actual guarded wear", "Not reached if setup fails.");
+        plan("42.1-unbreaking-bane", "Unbreaking ▷ Bane: real prevented wear and arthropod bonus", "Not reached if setup fails.");
+        plan("42.1-runtime-compat", "42.1 natural inputs and timing, spear, reload, multiplayer and other durability mods", "Not covered by the simulated single-player fixture.");
         plan("42.2-sharp-breath", "Sharpness ▷ Respiration: real underwater hits and simulated water state", "Not reached if setup fails.");
         plan("42.2-breath-sharp", "Respiration ▷ Sharpness: prepared helmet, air payment and real underwater hit", "Not reached if setup fails.");
         plan("42.2-smite-breath", "Smite ▷ Respiration: underwater bubble and undead filtering", "Not reached if setup fails.");

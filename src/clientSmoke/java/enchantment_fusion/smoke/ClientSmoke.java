@@ -647,6 +647,12 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("06-fortune-silk", () -> FortuneBankProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("10-sharpness-bane", () -> SegmentThreadProbe.exercise(sp, tablePos.above(180).east(12), false));
         acceptance.run("10-bane-sharpness", () -> SegmentThreadProbe.exercise(sp, tablePos.above(180).east(12), true));
+        acceptance.run("42.1-sharp-unbreaking", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
+        acceptance.run("42.1-unbreaking-sharp", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
+        acceptance.run("42.1-smite-unbreaking", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));
+        acceptance.run("42.1-unbreaking-smite", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
+        acceptance.run("42.1-bane-unbreaking", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
+        acceptance.run("42.1-unbreaking-bane", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));
         acceptance.run("42.2-sharp-breath", () -> WaterPressureProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("42.2-breath-sharp", () -> WaterPressureProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
         acceptance.run("42.2-smite-breath", () -> WaterPressureProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));

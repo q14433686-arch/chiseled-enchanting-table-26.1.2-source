@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "水壓斬已準備，不再扣除氧氣。",
   "message.enchantment_fusion.water_pressure_air": "氧氣不足，無法準備水壓斬。",
   "message.enchantment_fusion.water_pressure_paid": "水壓斬已準備，消耗 %s 刻氧氣。",
-  "message.enchantment_fusion.water_pressure_underwater": "請將頭部浸入水中後準備水壓斬。"
+  "message.enchantment_fusion.water_pressure_underwater": "請將頭部浸入水中後準備水壓斬。",
+  "skill.enchantment_fusion.melee_wear_guard": "連斬護器",
+  "skill.enchantment_fusion.melee_wear_edge": "免耗生鋒",
+  "tooltip.enchantment_fusion.melee_wear_guard": "主手持有耐久近戰武器：每次間隔不超過 4 秒，連續造成至少 3 次合格近擊後主動護器，10 秒內抵消該武器真實磨損。亡靈和節肢方向只計對應敵人。",
+  "tooltip.enchantment_fusion.melee_wear_edge": "該武器的耐久附魔真實免耗累積鋒屑；主動消耗至少 2 屑，5 秒內下一次合格近擊增傷。亡靈和節肢方向只作用於對應敵人。",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "舊載體保留舊效果；新方向要求有耐久的近戰武器。",
+  "message.enchantment_fusion.melee_wear_guard_active": "護器仍有效，不會重複消耗連斬。",
+  "message.enchantment_fusion.melee_wear_guard_need": "需要連續 3 次合格近擊，每次間隔不超過 4 秒；目前 %s/3。",
+  "message.enchantment_fusion.melee_wear_guard_set": "護器已準備：最多抵消 %s 點真實磨損，持續 10 秒。",
+  "message.enchantment_fusion.melee_wear_guard_ready": "連斬已達標，可主動準備護器。",
+  "message.enchantment_fusion.melee_wear_edge_active": "鋒屑斬仍已準備，不會重複消耗鋒屑。",
+  "message.enchantment_fusion.melee_wear_edge_need": "需要至少 2 點真實免耗產生的鋒屑；目前 %s/2。",
+  "message.enchantment_fusion.melee_wear_edge_set": "已消耗 %s 點鋒屑，5 秒內下一次合格近擊將增強。",
+  "message.enchantment_fusion.melee_wear_edge_ready": "鋒屑已足夠，可主動準備強化近擊。"
 }

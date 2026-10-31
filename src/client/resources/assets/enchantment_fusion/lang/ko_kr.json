@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "이미 수압 참격이 준비되어 산소를 더 쓰지 않았습니다.",
   "message.enchantment_fusion.water_pressure_air": "수압 참격을 준비할 산소가 부족합니다.",
   "message.enchantment_fusion.water_pressure_paid": "수압 참격 준비 완료. 산소 %s틱 소비.",
-  "message.enchantment_fusion.water_pressure_underwater": "수압 참격을 준비하려면 눈까지 물에 잠겨야 합니다."
+  "message.enchantment_fusion.water_pressure_underwater": "수압 참격을 준비하려면 눈까지 물에 잠겨야 합니다.",
+  "skill.enchantment_fusion.melee_wear_guard": "연격 수호",
+  "skill.enchantment_fusion.melee_wear_edge": "절약한 날",
+  "tooltip.enchantment_fusion.melee_wear_guard": "내구도가 있는 근접 무기를 주 손에 들고 유효한 공격을 4초 이내 간격으로 3회 이상 맞히면 발동 후 10초 동안 그 무기의 실제 마모를 막습니다. 강타와 살충은 해당 적에게만 적용됩니다.",
+  "tooltip.enchantment_fusion.melee_wear_edge": "이 무기의 내구성 마법이 실제로 막은 마모가 날 조각이 됩니다. 2개 이상을 소비해 5초 안의 다음 유효한 근접 공격을 강화합니다. 강타와 살충은 해당 적에게만 적용됩니다.",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 방향에는 내구도가 있는 근접 무기가 필요합니다.",
+  "message.enchantment_fusion.melee_wear_guard_active": "수호가 아직 활성화되어 연격을 소비하지 않았습니다.",
+  "message.enchantment_fusion.melee_wear_guard_need": "4초 이내 간격의 유효한 공격 3회가 필요합니다: %s/3.",
+  "message.enchantment_fusion.melee_wear_guard_set": "수호 준비: 10초 동안 실제 마모를 최대 %s만큼 막습니다.",
+  "message.enchantment_fusion.melee_wear_guard_ready": "연격 준비 완료. 수호를 발동할 수 있습니다.",
+  "message.enchantment_fusion.melee_wear_edge_active": "강화 공격이 이미 준비되어 조각을 소비하지 않았습니다.",
+  "message.enchantment_fusion.melee_wear_edge_need": "실제로 막은 마모에서 얻은 조각 2개가 필요합니다: %s/2.",
+  "message.enchantment_fusion.melee_wear_edge_set": "조각 %s개 소비. 5초 안의 다음 유효한 근접 공격을 강화합니다.",
+  "message.enchantment_fusion.melee_wear_edge_ready": "날 조각이 충분합니다. 강화 공격을 발동하세요."
 }

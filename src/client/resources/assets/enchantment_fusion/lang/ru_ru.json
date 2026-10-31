@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "Клинок уже подготовлен; дополнительный воздух не потрачен.",
   "message.enchantment_fusion.water_pressure_air": "Недостаточно воздуха для клинка.",
   "message.enchantment_fusion.water_pressure_paid": "Клинок подготовлен; потрачено %s тактов воздуха.",
-  "message.enchantment_fusion.water_pressure_underwater": "Погрузитесь с головой в воду, чтобы подготовить клинок давления."
+  "message.enchantment_fusion.water_pressure_underwater": "Погрузитесь с головой в воду, чтобы подготовить клинок давления.",
+  "skill.enchantment_fusion.melee_wear_guard": "Защита серии",
+  "skill.enchantment_fusion.melee_wear_edge": "Сбережённое лезвие",
+  "tooltip.enchantment_fusion.melee_wear_guard": "Держите оружие ближнего боя с прочностью. После 3 подходящих ударов с промежутком не более 4 секунд включите защиту от реального износа на 10 секунд. Небесная кара и Бич членистоногих требуют соответствующих врагов.",
+  "tooltip.enchantment_fusion.melee_wear_edge": "Реальный износ, предотвращённый Прочностью этого оружия, создаёт осколки лезвия. Потратьте не менее 2, чтобы усилить следующий подходящий удар в течение 5 секунд. Специализация требует соответствующих врагов.",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "Старый предмет сохраняет прежний эффект; новому направлению нужно оружие ближнего боя с прочностью.",
+  "message.enchantment_fusion.melee_wear_guard_active": "Защита ещё действует; серия не потрачена.",
+  "message.enchantment_fusion.melee_wear_guard_need": "Нужны 3 подходящих удара с промежутком не более 4 секунд: %s/3.",
+  "message.enchantment_fusion.melee_wear_guard_set": "Защита готова: предотвратит до %s единиц реального износа за 10 секунд.",
+  "message.enchantment_fusion.melee_wear_guard_ready": "Серия готова; включите защиту.",
+  "message.enchantment_fusion.melee_wear_edge_active": "Усиленный удар уже готов; осколки не потрачены.",
+  "message.enchantment_fusion.melee_wear_edge_need": "Нужны 2 осколка реально предотвращённого износа: %s/2.",
+  "message.enchantment_fusion.melee_wear_edge_set": "Потрачено осколков: %s; следующий подходящий удар усилен на 5 секунд.",
+  "message.enchantment_fusion.melee_wear_edge_ready": "Осколков достаточно; подготовьте усиленный удар."
 }

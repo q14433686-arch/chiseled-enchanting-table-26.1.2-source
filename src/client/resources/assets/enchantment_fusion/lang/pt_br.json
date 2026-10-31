@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "A lâmina já está pronta; nenhum ar extra foi gasto.",
   "message.enchantment_fusion.water_pressure_air": "Ar insuficiente para preparar a lâmina.",
   "message.enchantment_fusion.water_pressure_paid": "Lâmina pronta; %s ticks de ar gastos.",
-  "message.enchantment_fusion.water_pressure_underwater": "Mergulhe os olhos para preparar a lâmina de pressão."
+  "message.enchantment_fusion.water_pressure_underwater": "Mergulhe os olhos para preparar a lâmina de pressão.",
+  "skill.enchantment_fusion.melee_wear_guard": "Guarda de combo",
+  "skill.enchantment_fusion.melee_wear_edge": "Fio poupado",
+  "tooltip.enchantment_fusion.melee_wear_guard": "Segure uma arma corpo a corpo com durabilidade. Após pelo menos 3 acertos válidos com até 4 segundos entre eles, ative uma guarda contra desgaste real por 10 segundos. Julgamento e Ruína exigem inimigos correspondentes.",
+  "tooltip.enchantment_fusion.melee_wear_edge": "O desgaste realmente evitado por Inquebrável nesta arma gera fragmentos de fio. Gaste ao menos 2 para fortalecer o próximo golpe válido por 5 segundos. Julgamento e Ruína exigem inimigos correspondentes.",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "O suporte antigo mantém o efeito anterior; esta direção exige uma arma corpo a corpo com durabilidade.",
+  "message.enchantment_fusion.melee_wear_guard_active": "A guarda ainda está ativa; nenhum combo foi gasto.",
+  "message.enchantment_fusion.melee_wear_guard_need": "São necessários 3 golpes válidos com até 4 segundos entre eles: %s/3.",
+  "message.enchantment_fusion.melee_wear_guard_set": "Guarda pronta: evita até %s pontos de desgaste real por 10 segundos.",
+  "message.enchantment_fusion.melee_wear_guard_ready": "Combo pronto; ative a guarda.",
+  "message.enchantment_fusion.melee_wear_edge_active": "O golpe fortalecido já está pronto; nenhum fragmento foi gasto.",
+  "message.enchantment_fusion.melee_wear_edge_need": "São necessários 2 fragmentos de desgaste realmente evitado: %s/2.",
+  "message.enchantment_fusion.melee_wear_edge_set": "%s fragmentos gastos; o próximo golpe válido fica fortalecido por 5 segundos.",
+  "message.enchantment_fusion.melee_wear_edge_ready": "Fragmentos suficientes; ative o golpe fortalecido."
 }

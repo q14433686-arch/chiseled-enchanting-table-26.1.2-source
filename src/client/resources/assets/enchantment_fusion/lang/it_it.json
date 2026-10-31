@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "Lama già pronta; nessuna altra aria consumata.",
   "message.enchantment_fusion.water_pressure_air": "Aria insufficiente per preparare la lama.",
   "message.enchantment_fusion.water_pressure_paid": "Lama pronta; consumati %s tick d’aria.",
-  "message.enchantment_fusion.water_pressure_underwater": "Immergi gli occhi per preparare la lama di pressione."
+  "message.enchantment_fusion.water_pressure_underwater": "Immergi gli occhi per preparare la lama di pressione.",
+  "skill.enchantment_fusion.melee_wear_guard": "Guardia a combo",
+  "skill.enchantment_fusion.melee_wear_edge": "Filo risparmiato",
+  "tooltip.enchantment_fusion.melee_wear_guard": "Impugna un’arma da mischia con durabilità. Dopo almeno 3 colpi validi distanziati di massimo 4 secondi, attiva una guardia che annulla l’usura reale per 10 secondi. Anatema e Rovina richiedono nemici adatti.",
+  "tooltip.enchantment_fusion.melee_wear_edge": "L’usura realmente evitata da Indistruttibilità su quest’arma genera schegge. Spendine almeno 2 per potenziare il prossimo colpo valido entro 5 secondi. Anatema e Rovina richiedono nemici adatti.",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "Il vecchio supporto conserva l’effetto precedente; questa direzione richiede un’arma da mischia con durabilità.",
+  "message.enchantment_fusion.melee_wear_guard_active": "La guardia è ancora attiva; nessuna combo consumata.",
+  "message.enchantment_fusion.melee_wear_guard_need": "Servono 3 colpi validi distanziati di massimo 4 secondi: %s/3.",
+  "message.enchantment_fusion.melee_wear_guard_set": "Guardia pronta: annulla fino a %s punti di usura reale per 10 secondi.",
+  "message.enchantment_fusion.melee_wear_guard_ready": "Combo pronta; attiva la guardia.",
+  "message.enchantment_fusion.melee_wear_edge_active": "Il colpo potenziato è già pronto; nessuna scheggia consumata.",
+  "message.enchantment_fusion.melee_wear_edge_need": "Servono 2 schegge da usura realmente evitata: %s/2.",
+  "message.enchantment_fusion.melee_wear_edge_set": "Consumate %s schegge; il prossimo colpo valido è potenziato per 5 secondi.",
+  "message.enchantment_fusion.melee_wear_edge_ready": "Schegge sufficienti; attiva il colpo potenziato."
 }

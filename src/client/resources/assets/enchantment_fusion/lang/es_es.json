@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "La hoja ya está preparada; no se gastó más aire.",
   "message.enchantment_fusion.water_pressure_air": "No hay suficiente aire para preparar la hoja.",
   "message.enchantment_fusion.water_pressure_paid": "Hoja preparada; se gastaron %s ticks de aire.",
-  "message.enchantment_fusion.water_pressure_underwater": "Sumerge los ojos para preparar la hoja de presión."
+  "message.enchantment_fusion.water_pressure_underwater": "Sumerge los ojos para preparar la hoja de presión.",
+  "skill.enchantment_fusion.melee_wear_guard": "Protección de combo",
+  "skill.enchantment_fusion.melee_wear_edge": "Filo ahorrado",
+  "tooltip.enchantment_fusion.melee_wear_guard": "Con un arma cuerpo a cuerpo con durabilidad en la mano principal, asesta al menos 3 golpes válidos con menos de 4 segundos entre ellos y activa la protección contra desgaste real durante 10 segundos. Castigo y Perdición requieren enemigos compatibles.",
+  "tooltip.enchantment_fusion.melee_wear_edge": "El desgaste realmente evitado por Irrompibilidad en esta arma genera fragmentos de filo. Gasta al menos 2 para potenciar el siguiente golpe válido durante 5 segundos. Castigo y Perdición requieren enemigos compatibles.",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "El objeto antiguo conserva su efecto; esta dirección requiere un arma cuerpo a cuerpo con durabilidad.",
+  "message.enchantment_fusion.melee_wear_guard_active": "La protección sigue activa; no se gastó el combo.",
+  "message.enchantment_fusion.melee_wear_guard_need": "Necesitas 3 golpes válidos con menos de 4 segundos entre ellos: %s/3.",
+  "message.enchantment_fusion.melee_wear_guard_set": "Protección preparada: evita hasta %s puntos de desgaste real durante 10 segundos.",
+  "message.enchantment_fusion.melee_wear_guard_ready": "Combo listo; activa la protección.",
+  "message.enchantment_fusion.melee_wear_edge_active": "El golpe potenciado ya está preparado; no se gastaron fragmentos.",
+  "message.enchantment_fusion.melee_wear_edge_need": "Necesitas 2 fragmentos de desgaste realmente evitado: %s/2.",
+  "message.enchantment_fusion.melee_wear_edge_set": "Gastados %s fragmentos; el siguiente golpe válido estará potenciado durante 5 segundos.",
+  "message.enchantment_fusion.melee_wear_edge_ready": "Hay suficientes fragmentos; activa el golpe potenciado."
 }

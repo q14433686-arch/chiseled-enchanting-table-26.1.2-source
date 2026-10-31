@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "水圧斬は準備済み。酸素は追加消費されない。",
   "message.enchantment_fusion.water_pressure_air": "水圧斬を準備する酸素が足りない。",
   "message.enchantment_fusion.water_pressure_paid": "水圧斬を準備。酸素を%sティック消費。",
-  "message.enchantment_fusion.water_pressure_underwater": "水圧斬を準備するには目まで水に浸かる必要がある。"
+  "message.enchantment_fusion.water_pressure_underwater": "水圧斬を準備するには目まで水に浸かる必要がある。",
+  "skill.enchantment_fusion.melee_wear_guard": "連撃の護具",
+  "skill.enchantment_fusion.melee_wear_edge": "免耗の刃",
+  "tooltip.enchantment_fusion.melee_wear_guard": "耐久力のある近接武器を利き手に持ち、各攻撃の間隔を4秒以内にして対象に3回以上有効打を与えると、発動後10秒間その武器の実際の摩耗を防ぐ。アンデッドと虫の特効は対応する敵のみ。",
+  "tooltip.enchantment_fusion.melee_wear_edge": "この武器で耐久力のエンチャントが実際に防いだ摩耗から刃片を蓄える。2個以上を消費して、5秒以内の次の有効な近接攻撃を強化する。特効は対応する敵のみ。",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "旧アイテムは旧効果を維持する。新しい組み合わせには耐久力のある近接武器が必要。",
+  "message.enchantment_fusion.melee_wear_guard_active": "護具は有効中のため、連撃を消費しなかった。",
+  "message.enchantment_fusion.melee_wear_guard_need": "4秒以内の間隔で有効打が3回必要：%s/3。",
+  "message.enchantment_fusion.melee_wear_guard_set": "護具を準備：10秒間、実際の摩耗を最大 %s 防ぐ。",
+  "message.enchantment_fusion.melee_wear_guard_ready": "連撃が準備完了。護具を発動できる。",
+  "message.enchantment_fusion.melee_wear_edge_active": "強化攻撃は準備済みのため、刃片を消費しなかった。",
+  "message.enchantment_fusion.melee_wear_edge_need": "実際に防いだ摩耗から刃片が2個必要：%s/2。",
+  "message.enchantment_fusion.melee_wear_edge_set": "刃片を %s 個消費。5秒以内の次の有効な近接攻撃を強化する。",
+  "message.enchantment_fusion.melee_wear_edge_ready": "刃片が揃った。強化攻撃を発動できる。"
 }

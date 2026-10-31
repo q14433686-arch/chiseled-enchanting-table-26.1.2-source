@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.signatures.DurabilityEconomy;
 import enchantment_fusion.mechanics.signatures.DurabilityEconomyMath;
 import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
+import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.model.FusedPair;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
@@ -27,18 +28,21 @@ public abstract class ItemStackDurabilityFusionMixin {
         int vanilla = original.call(level, stack, amount);
         int postEconomy = player != null && DurabilityEconomy.actuallyEquipped(player, stack)
             ? DurabilityEconomy.nonNativeUnbreaking(level, stack, vanilla) : vanilla;
-        return DurabilityReserveSkills.applyNonNative(level, stack, postEconomy, player);
+        int postReserve = DurabilityReserveSkills.applyNonNative(level, stack, postEconomy, player);
+        return MeleeWearSkills.applyNonNative(level, stack, postReserve, player);
     }
 
     @WrapMethod(method = "processDurabilityChange")
     private int ef$reserveRealWear(int amount, ServerLevel level, @Nullable ServerPlayer player, Operation<Integer> original) {
         ItemStack stack = (ItemStack) (Object) this;
+        MeleeWearSkills.WearFrame melee = MeleeWearSkills.beginWear(stack, player);
         DurabilityReserveSkills.WearFrame frame = DurabilityReserveSkills.begin(stack, player);
         try {
             int result = original.call(amount, level, player);
-            return DurabilityReserveSkills.finish(frame, amount, result);
+            return MeleeWearSkills.finishWear(melee, amount, DurabilityReserveSkills.finish(frame, amount, result));
         } finally {
             DurabilityReserveSkills.abort(frame);
+            MeleeWearSkills.endWear(melee);
         }
     }
 

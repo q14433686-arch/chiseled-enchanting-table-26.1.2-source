@@ -1029,5 +1029,18 @@
   "message.enchantment_fusion.water_pressure_ready": "Pressure blade is already prepared; no more air was spent.",
   "message.enchantment_fusion.water_pressure_air": "Not enough air to prepare a pressure blade.",
   "message.enchantment_fusion.water_pressure_paid": "Pressure blade prepared; spent %s air ticks.",
-  "message.enchantment_fusion.water_pressure_underwater": "Submerge your eyes to prepare a pressure blade."
+  "message.enchantment_fusion.water_pressure_underwater": "Submerge your eyes to prepare a pressure blade.",
+  "skill.enchantment_fusion.melee_wear_guard": "Combo Guard",
+  "skill.enchantment_fusion.melee_wear_edge": "Saved Edge",
+  "tooltip.enchantment_fusion.melee_wear_guard": "Hold a durable melee weapon. Land at least 3 qualifying hits within 4 seconds between hits, then activate to block real wear on that weapon for 10 seconds. Smite and Bane require matching enemies.",
+  "tooltip.enchantment_fusion.melee_wear_edge": "Real wear prevented by Unbreaking on this weapon creates edge shards. Spend at least 2 to enhance the next qualifying melee hit within 5 seconds. Smite and Bane require matching enemies.",
+  "tooltip.enchantment_fusion.legacy_melee_wear_carrier": "Legacy carrier keeps its old effect; this new direction requires a durable melee weapon.",
+  "message.enchantment_fusion.melee_wear_guard_active": "The wear guard is still active; no combo was spent.",
+  "message.enchantment_fusion.melee_wear_guard_need": "Land 3 qualifying hits within 4 seconds between hits: %s/3.",
+  "message.enchantment_fusion.melee_wear_guard_set": "Guard ready: prevent up to %s points of real wear for 10 seconds.",
+  "message.enchantment_fusion.melee_wear_guard_ready": "Combo ready; activate the wear guard.",
+  "message.enchantment_fusion.melee_wear_edge_active": "The enhanced strike is already prepared; no shards were spent.",
+  "message.enchantment_fusion.melee_wear_edge_need": "Need at least 2 shards from real Unbreaking savings: %s/2.",
+  "message.enchantment_fusion.melee_wear_edge_set": "Spent %s shards; the next qualifying melee hit is enhanced for 5 seconds.",
+  "message.enchantment_fusion.melee_wear_edge_ready": "Enough edge shards; activate the enhanced strike."
 }
