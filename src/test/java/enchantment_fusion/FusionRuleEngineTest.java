@@ -495,6 +495,7 @@ final class FusionRuleEngineTest {
     void diveOnlyTargetsOurThinPathAndNeverReplacesIceWithWater() throws Exception {
         String frost = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/TemporaryFrostEffects.java"));
         String armor = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/signatures/ArmorCurseSignatures.java"));
+        String wakeDive = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/signatures/FrostWakeDiveSkills.java"));
         int start = frost.indexOf("private static boolean removeDivePathAt(");
         int end = frost.indexOf("/** Small CRYO matrix patch", start);
         assertTrue(start >= 0 && end > start, "Dive helper must remain identifiable");
@@ -504,13 +505,15 @@ final class FusionRuleEngineTest {
         assertTrue(helper.contains("Blocks.AIR.defaultBlockState()"));
         assertFalse(helper.contains("BlockTags.ICE"));
         assertFalse(helper.contains("Blocks.WATER"));
-        int caseStart = armor.indexOf("case \"tide_breaker_dive\"");
-        int caseEnd = armor.indexOf("case \"permafrost_wake\"", caseStart);
-        assertTrue(caseStart >= 0 && caseEnd > caseStart);
-        String diveCase = armor.substring(caseStart, caseEnd);
+        int caseStart = wakeDive.indexOf("if (DIVE.equals(equipped.sigId()))");
+        int caseEnd = wakeDive.indexOf("} else if (WAKE.equals(equipped.sigId()))", caseStart);
+        assertTrue(caseStart >= 0 && caseEnd > caseStart, "Dive handler must remain identifiable");
+        String diveCase = wakeDive.substring(caseStart, caseEnd);
         assertTrue(diveCase.contains("TemporaryFrostEffects.removeDivePath(level, player)"));
         assertFalse(diveCase.contains("Blocks.WATER"));
         assertFalse(diveCase.contains("BlockTags.ICE"));
+        assertTrue(armor.contains("FrostWakeDiveSkills.tick(level, player, eq, selectedWaterBoots)"),
+            "The equipped signature dispatch must still call the extracted handler");
     }
 
     @Test
