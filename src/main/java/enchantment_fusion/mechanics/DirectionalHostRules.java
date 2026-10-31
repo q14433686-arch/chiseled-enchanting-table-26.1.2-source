@@ -23,6 +23,7 @@ import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
+import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.model.FusedPair;
@@ -127,6 +128,9 @@ public final class DirectionalHostRules {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (FireThornsSkills.matches(pair, signature) && !FireThornsSkills.supportsHost(host)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
+        if (RetainedVolleyHosts.matches(pair, signature) && !RetainedVolleyHosts.supportsHost(host, signature)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (pair.primaryId().equals("minecraft:fire_aspect") && pair.secondaryId().equals("minecraft:aqua_affinity")

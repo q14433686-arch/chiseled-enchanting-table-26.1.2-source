@@ -288,7 +288,7 @@
   "signature.enchantment_fusion.triple_excavate.title": "Triple Excavate",
   "signature.enchantment_fusion.triple_excavate.desc": "Mines up to two matching blocks beside the original using the normal tool and durability; skips block entities. Sneak to mine only one.",
   "signature.enchantment_fusion.rapid_bowstring.title": "Rapid Bowstring",
-  "signature.enchantment_fusion.rapid_bowstring.desc": "Infuses ranged shots with rhythmic Haste for brisk follow-up volleys.",
+  "signature.enchantment_fusion.rapid_bowstring.desc": "In der Haupthand regelmäßig Eile II zum Abbau, nicht zum schnelleren Spannen oder Laden. Projektiltreffer können die alte Streureaktion auslösen.",
   "signature.enchantment_fusion.land_water_dragon.title": "Land Water-Dragon",
   "signature.enchantment_fusion.land_water_dragon.desc": "A charged or sprinting hit dashes forward in a water-dragon surge, even on dry land.",
   "signature.enchantment_fusion.shield_piercer.title": "Shield Piercer",
@@ -995,5 +995,6 @@
   "message.enchantment_fusion.soul_pressure": "Seelendruck: %s / %s. Mit einem vollen Treffer auslösen.",
   "message.enchantment_fusion.soul_released": "Seelendruck freigesetzt.",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Alter Träger behält seinen Effekt; die neuen Fähigkeiten benötigen eine Nahkampfwaffe in der Haupthand.",
-  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Alter Träger behält seinen Effekt; nötig sind beschädigbare Rüstung oder ein gehaltener Schild."
+  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Alter Träger behält seinen Effekt; nötig sind beschädigbare Rüstung oder ein gehaltener Schild.",
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Alte Träger behalten ihre Wirkung; neue benötigen je nach Richtung Bogen/Armbrust oder Abbauwerkzeug."
 }

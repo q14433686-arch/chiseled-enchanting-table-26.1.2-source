@@ -288,7 +288,7 @@
   "signature.enchantment_fusion.triple_excavate.title": "三裂掘進",
   "signature.enchantment_fusion.triple_excavate.desc": "額外正常挖掘兩側最多兩個同類方塊並消耗工具耐久，跳過方塊實體；潛行時只挖一個。",
   "signature.enchantment_fusion.rapid_bowstring.title": "疾速連弦",
-  "signature.enchantment_fusion.rapid_bowstring.desc": "工巧之力加持弓弦，遠程射擊後賦予急迫连射韻律。",
+  "signature.enchantment_fusion.rapid_bowstring.desc": "主手持握時週期獲得急迫Ⅱ（加快採掘，不加快拉弓或裝填）；彈體命中時可觸發舊版散射反應。",
   "signature.enchantment_fusion.land_water_dragon.title": "陸行水龍閃",
   "signature.enchantment_fusion.land_water_dragon.desc": "滿蓄或衝刺命中時化作水龍向前衝刺，陸地也能觸發。",
   "signature.enchantment_fusion.shield_piercer.title": "破盾貫日",
@@ -995,5 +995,6 @@
   "message.enchantment_fusion.soul_pressure": "魂壓：%s / %s；蓄滿後用滿蓄攻擊釋放。",
   "message.enchantment_fusion.soul_released": "魂壓已釋放。",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "舊載體保留原效果；新魂網技能需要主手近戰武器。",
-  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "舊載體保留原效果；新荊棘技能適合可損傷護甲或手持盾牌。"
+  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "舊載體保留原效果；新荊棘技能適合可損傷護甲或手持盾牌。",
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "舊載體保留原效果；新裝載按方向使用弓／弩或採掘工具。"
 }

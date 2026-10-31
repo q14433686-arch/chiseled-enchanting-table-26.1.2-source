@@ -36,6 +36,8 @@ final class AcceptanceReport {
         plan("18-bane-smite", "Bane ▷ Smite: confirmed arthropod hits, pressure release and primary-effect fixture", "Not reached if setup fails.");
         plan("19-thorns-fire", "Thorns ▷ Fire Protection: real cancelled/accepted melee and delayed retaliation fixture", "Not reached if setup fails.");
         plan("19-fire-thorns", "Fire Protection ▷ Thorns: shield protection and fire curtain fixture", "Not reached if setup fails.");
+        plan("20-efficiency-multishot", "Efficiency ▷ Multishot: retained real-arrow scatter and station fixture", "Not reached if setup fails.");
+        plan("20-multishot-efficiency", "Multishot ▷ Efficiency: retained mining, silk, crouch and cancellation fixture", "Not reached if setup fails.");
         plan("05-mending-unbreaking", "Mending ▷ Unbreaking: real orb repair and permanent growth fixture", "Not reached if setup fails.");
         plan("05-unbreaking-mending", "Unbreaking ▷ Mending: real wear, XP conversion and break rescue fixture", "Not reached if setup fails.");
         plan("16-blast-protection", "Blast Protection ▷ Protection: armor calculation and counter fixture", "Not reached if setup fails.");
@@ -77,6 +79,7 @@ final class AcceptanceReport {
         plan("17-runtime-compat", "17 actual key input, armor damage mods, shields, multiple pieces, PvP and protection plugins", "Not covered by the prepared single-player server fixtures.");
         plan("18-runtime-compat", "18 natural attack timing, spear thrust, blocked/lethal hits, PvP and third-party protection", "Not covered by the prepared single-player server fixtures.");
         plan("19-runtime-compat", "19 vanilla thorns odds, projectiles, lethal/totem ordering, PvP and third-party damage/claims", "Not covered by the prepared single-player server fixtures.");
+        plan("20-runtime-compat", "20 held Haste timing, all ranged launchers, legacy scatter targets, multiplayer and claims", "Not covered by the prepared single-player server fixtures.");
         plan("multiplayer-protection", "Real multiplayer, third-party protection plugins and modded projectile compatibility", "Requires additional clients/mods; not covered by these probes.");
         plan("dedicated-server-compat", "Dedicated-server-only loading and external server integration", "Not covered by the single integrated-client game process.");
         plan("remaining-directions", "All other redesigned directions and single-enchantment variants", "Many are not yet implemented or individually exercised; theoretical catalog coverage is not a pass.");

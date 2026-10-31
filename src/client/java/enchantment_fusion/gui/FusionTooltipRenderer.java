@@ -29,6 +29,7 @@ import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
+import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -201,6 +202,8 @@ public final class FusionTooltipRenderer {
                 && SoulThreadSkills.matches(pair, sigOpt.get().id()) && !SoulThreadSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyFireThornsCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && FireThornsSkills.matches(pair, sigOpt.get().id()) && !FireThornsSkills.applies(pair, stack, sigOpt.get().id());
+            boolean legacyRetainedVolleyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && RetainedVolleyHosts.matches(pair, sigOpt.get().id()) && !RetainedVolleyHosts.supportsHost(stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ((GlazedStrikeEffect.isPair(pair) && GlazedStrikeEffect.SIGNATURE.equals(sigOpt.get().id())
                         && !GlazedStrikeEffect.applies(pair, stack, sigOpt.get().id()))
@@ -330,6 +333,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacyFireThornsCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_fire_thorns_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyRetainedVolleyCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_retained_volley_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyGlazeAmberCarrier) {

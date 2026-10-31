@@ -288,7 +288,7 @@
   "signature.enchantment_fusion.triple_excavate.title": "Triple Excavate",
   "signature.enchantment_fusion.triple_excavate.desc": "Mines up to two matching blocks beside the original using the normal tool and durability; skips block entities. Sneak to mine only one.",
   "signature.enchantment_fusion.rapid_bowstring.title": "Rapid Bowstring",
-  "signature.enchantment_fusion.rapid_bowstring.desc": "Infuses ranged shots with rhythmic Haste for brisk follow-up volleys.",
+  "signature.enchantment_fusion.rapid_bowstring.desc": "주 손에 들면 채굴용 성급함 II를 주기적으로 얻으며 활 당기기나 쇠뇌 장전은 빨라지지 않습니다. 투사체 명중 시 기존 확산 반응이 일어날 수 있습니다.",
   "signature.enchantment_fusion.land_water_dragon.title": "Land Water-Dragon",
   "signature.enchantment_fusion.land_water_dragon.desc": "A charged or sprinting hit dashes forward in a water-dragon surge, even on dry land.",
   "signature.enchantment_fusion.shield_piercer.title": "Shield Piercer",
@@ -995,5 +995,6 @@
   "message.enchantment_fusion.soul_pressure": "영혼 압력: %s / %s. 완충 공격으로 해방.",
   "message.enchantment_fusion.soul_released": "영혼 압력이 해방되었습니다.",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 주 손의 근접 무기가 필요합니다.",
-  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 내구도 있는 방어구나 손에 든 방패가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 내구도 있는 방어구나 손에 든 방패가 필요합니다.",
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "기존 장비의 효과는 유지됩니다. 새로 부착하려면 방향에 맞는 활/쇠뇌 또는 채굴 도구가 필요합니다."
 }

@@ -288,7 +288,7 @@
   "signature.enchantment_fusion.triple_excavate.title": "Triple Excavate",
   "signature.enchantment_fusion.triple_excavate.desc": "Mines up to two matching blocks beside the original using the normal tool and durability; skips block entities. Sneak to mine only one.",
   "signature.enchantment_fusion.rapid_bowstring.title": "Rapid Bowstring",
-  "signature.enchantment_fusion.rapid_bowstring.desc": "Infuses ranged shots with rhythmic Haste for brisk follow-up volleys.",
+  "signature.enchantment_fusion.rapid_bowstring.desc": "While held in the main hand, grants Haste II for mining, not faster bow draw or crossbow loading. Projectile impacts can trigger the legacy scatter reaction.",
   "signature.enchantment_fusion.land_water_dragon.title": "Land Water-Dragon",
   "signature.enchantment_fusion.land_water_dragon.desc": "A charged or sprinting hit dashes forward in a water-dragon surge, even on dry land.",
   "signature.enchantment_fusion.shield_piercer.title": "Shield Piercer",
@@ -995,5 +995,6 @@
   "message.enchantment_fusion.soul_pressure": "Soul pressure: %s / %s. Finish with a full-strength hit.",
   "message.enchantment_fusion.soul_released": "Soul pressure released.",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "This legacy carrier keeps its old effect; the new soul skills require a held melee weapon.",
-  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Legacy carrier keeps its old effect; the new thorn skills use damageable armor or a held shield."
+  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Legacy carrier keeps its old effect; the new thorn skills use damageable armor or a held shield.",
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "This legacy carrier keeps its old effects; new installations require a bow/crossbow or a mining tool for the matching direction."
 }

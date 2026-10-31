@@ -37,6 +37,8 @@ DIRECTION_FIXTURES = {
     ("bane_of_arthropods", "smite"): ("18-bane-smite", True),
     ("thorns", "fire_protection"): ("19-thorns-fire", True),
     ("fire_protection", "thorns"): ("19-fire-thorns", True),
+    ("efficiency", "multishot"): ("20-efficiency-multishot", True),
+    ("multishot", "efficiency"): ("20-multishot-efficiency", True),
     ("loyalty", "riptide"): ("15-loyalty-riptide", False),
     ("riptide", "loyalty"): ("15-loyalty-riptide", False),
     ("blast_protection", "protection"): ("16-blast-protection", True),
