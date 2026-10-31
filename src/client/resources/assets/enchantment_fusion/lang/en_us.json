@@ -853,5 +853,7 @@
   "gui.enchantment_fusion.tip.risk_repulsive": "Exclusive instability: %s%% (Failure creates an aberration; ordinary stabilizers stop at a %s%% floor)",
   "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)",
   "message.enchantment_fusion.harvest_limit": "Too many drops: excess left unchanged.",
-  "message.enchantment_fusion.smelt_overflow": "Smelting output exceeds a stack; original drop preserved."
+  "message.enchantment_fusion.smelt_overflow": "Smelting output exceeds a stack; original drop preserved.",
+  "gui.enchantment_fusion.reject.select_single_for_consumable": "This item accepts one enchantment; choose single mode.",
+  "gui.enchantment_fusion.picker.single_book_tip": "Shift+left-click selects one book enchantment to upgrade; right-click restores pair selection."
 }

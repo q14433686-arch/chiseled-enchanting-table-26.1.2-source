@@ -853,5 +853,7 @@
   "gui.enchantment_fusion.tip.risk_repulsive": "Exclusive instability: %s%% (Failure creates an aberration; ordinary stabilizers stop at a %s%% floor)",
   "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)",
   "message.enchantment_fusion.harvest_limit": "Слишком много добычи: лишнее осталось без изменений.",
-  "message.enchantment_fusion.smelt_overflow": "Результат плавки больше стака; исходный предмет сохранён."
+  "message.enchantment_fusion.smelt_overflow": "Результат плавки больше стака; исходный предмет сохранён.",
+  "gui.enchantment_fusion.reject.select_single_for_consumable": "Предмет принимает одно зачарование; выберите одиночный режим.",
+  "gui.enchantment_fusion.picker.single_book_tip": "Shift+левый клик выбирает одно зачарование для улучшения; правый возвращает выбор пары."
 }

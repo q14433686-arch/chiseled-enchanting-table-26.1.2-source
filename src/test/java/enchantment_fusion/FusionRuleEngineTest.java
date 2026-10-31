@@ -70,6 +70,20 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void singleSelectionKeepsTheSelectedDonorAndPairModeKeepsBoth() {
+        var first = new FusionStationOperations.EnchantCandidate(0, null, "minecraft:mending", 1, 1);
+        var second = new FusionStationOperations.EnchantCandidate(1, null, "minecraft:efficiency", 5, 5);
+        var candidates = List.of(first, second);
+        var single = FusionStationOperations.resolveSelection(candidates, 1, -1, true);
+        assertEquals(second, single.primary());
+        assertNull(single.secondary());
+        assertTrue(single.buildSelectionToken().startsWith("1:minecraft:efficiency:5|"));
+        var pair = FusionStationOperations.resolveSelection(candidates, -1, -1, false);
+        assertEquals(first, pair.primary());
+        assertEquals(second, pair.secondary());
+    }
+
+    @Test
     void onlyTheConfirmedFireKnockbackPairReplacesVanillaPrimary() {
         FusedPair forward = FusedPair.clean("minecraft:fire_aspect", 2, "minecraft:knockback", 2);
         FusedPair reverse = forward.flipped();

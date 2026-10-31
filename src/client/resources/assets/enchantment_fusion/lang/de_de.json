@@ -853,5 +853,7 @@
   "gui.enchantment_fusion.tip.risk_repulsive": "Exclusive instability: %s%% (Failure creates an aberration; ordinary stabilizers stop at a %s%% floor)",
   "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)",
   "message.enchantment_fusion.harvest_limit": "Zu viele Beutestücke: Überschuss bleibt unverändert.",
-  "message.enchantment_fusion.smelt_overflow": "Schmelzergebnis überschreitet Stapelgrenze; Beute bleibt erhalten."
+  "message.enchantment_fusion.smelt_overflow": "Schmelzergebnis überschreitet Stapelgrenze; Beute bleibt erhalten.",
+  "gui.enchantment_fusion.reject.select_single_for_consumable": "Dieser Gegenstand nimmt nur eine Verzauberung auf; Einzelmodus wählen.",
+  "gui.enchantment_fusion.picker.single_book_tip": "Umschalt+Linksklick wählt eine Verzauberung zum Aufwerten; Rechtsklick wählt wieder ein Paar."
 }

@@ -853,5 +853,7 @@
   "gui.enchantment_fusion.tip.risk_repulsive": "Exclusive instability: %s%% (Failure creates an aberration; ordinary stabilizers stop at a %s%% floor)",
   "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)",
   "message.enchantment_fusion.harvest_limit": "ドロップが多すぎるため、超過分は変更されません。",
-  "message.enchantment_fusion.smelt_overflow": "精錬結果がスタック上限を超えるため、元のドロップを保持しました。"
+  "message.enchantment_fusion.smelt_overflow": "精錬結果がスタック上限を超えるため、元のドロップを保持しました。",
+  "gui.enchantment_fusion.reject.select_single_for_consumable": "このアイテムは単一エンチャント専用です。単一モードを選択してください。",
+  "gui.enchantment_fusion.picker.single_book_tip": "Shift+左クリックで強化する一つを選択。右クリックで二つの選択に戻ります。"
 }

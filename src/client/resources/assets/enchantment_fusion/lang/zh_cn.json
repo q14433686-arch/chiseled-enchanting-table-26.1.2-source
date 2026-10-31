@@ -853,5 +853,7 @@
   "gui.enchantment_fusion.tip.risk_repulsive": "互斥失稳风险：%s%%（失败会生成畸变词条；普通稳定晶减免最低至 %s%%）",
   "gui.enchantment_fusion.tip.risk_conversion": "化形失稳风险：%s%%（失败会消耗附魔书并对装备施加消失诅咒）",
   "message.enchantment_fusion.harvest_limit": "本次掉落过多，超出部分保留原样。",
-  "message.enchantment_fusion.smelt_overflow": "熔炼产物超过堆叠上限，原掉落已保留。"
+  "message.enchantment_fusion.smelt_overflow": "熔炼产物超过堆叠上限，原掉落已保留。",
+  "gui.enchantment_fusion.reject.select_single_for_consumable": "该物品只能化形单附魔，请切换单附魔模式。",
+  "gui.enchantment_fusion.picker.single_book_tip": "按住 Shift+左键选择一条用于补强；右键恢复双附魔选择。"
 }

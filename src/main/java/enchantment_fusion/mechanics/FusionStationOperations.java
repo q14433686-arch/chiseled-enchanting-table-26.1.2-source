@@ -350,7 +350,7 @@ public final class FusionStationOperations {
             }
 
             // 3. Top-up an existing socketed pair on Gear using a higher-level book in Slot 0/1
-            Optional<StationPreview> topUp = checkTopUp(sTarget, targetFusions, sPrimary, sSecondary, sel, manageXp, eco, snap);
+            Optional<StationPreview> topUp = checkTopUp(sTarget, targetFusions, sel, manageXp, eco, snap);
             if (topUp.isPresent()) {
                 return topUp.get();
             }
@@ -398,16 +398,8 @@ public final class FusionStationOperations {
                     runtimeIncompatPair, incompatHost
                 );
                 if (!eval.valid()) {
-                    EnchantCandidate bookCand = p.sourceSlot() != SLOT_TARGET ? p : (s.sourceSlot() != SLOT_TARGET ? s : null);
-                    if (bookCand != null) {
-                        Optional<StationPreview> fallbackSingle = evaluateSingleCrossDomain(
-                            sTarget, targetFusions, gearSel, bookCand, sCatalyst, manageXp, eco
-                        );
-                        if (fallbackSingle.isPresent() && fallbackSingle.get().executable()) {
-                            return fallbackSingle.get();
-                        }
-                    }
-                    return new StationPreview(OperationKind.INVALID, false, eval.rejectReason(), null, false, 0.0, 0, gearSel, manageXp);
+                    // An explicitly selected pair must never silently become a one-enchantment inscription.
+                    return new StationPreview(OperationKind.INVALID, false, eval.rejectReason(), proposed, false, 0.0, 0, gearSel, manageXp);
                 }
                 int stabCount = FusionEconomyRules.countStabilizers(sCatalyst);
                 boolean isSig = SignaturePairs.resolve(eval.resultingPair()).isPresent();
@@ -432,6 +424,10 @@ public final class FusionStationOperations {
                 return new StationPreview(OperationKind.INVALID, false, RejectReason.STACK_MUST_BE_SINGLE, null, false, 0.0, 0, sel, manageXp);
             }
             EnchantCandidate p = sel.primary();
+            if (p != null && sel.secondary() != null) {
+                return new StationPreview(OperationKind.INVALID, false, RejectReason.SELECT_SINGLE_FOR_CONSUMABLE,
+                    null, false, 0.0, 0, sel, manageXp);
+            }
             if (p != null && p.sourceSlot() != SLOT_TARGET) {
                 Optional<StationPreview> specialSingle = evaluateSingleCrossDomain(
                     sTarget, FusedEnchantmentList.EMPTY, sel, p, sCatalyst, manageXp, eco
@@ -446,7 +442,7 @@ public final class FusionStationOperations {
         // === TAB 0: Book Fusion -> Output Fused Enchanted Book into Slot 3 ===
         if (sTarget.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
             FusedEnchantmentList bookFusions = sTarget.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-            Optional<StationPreview> topUp = checkTopUp(sTarget, bookFusions, sPrimary, sSecondary, sel, manageXp, eco, snap);
+            Optional<StationPreview> topUp = checkTopUp(sTarget, bookFusions, sel, manageXp, eco, snap);
             if (topUp.isPresent()) {
                 return topUp.get();
             }
@@ -622,20 +618,17 @@ public final class FusionStationOperations {
     private static Optional<StationPreview> checkTopUp(
         ItemStack sTarget,
         FusedEnchantmentList targetFusions,
-        ItemStack sPrimary,
-        ItemStack sSecondary,
         ResolvedSelection sel,
         int manageXp,
         EconomyConfig eco,
         FusionMatrixRegistry.Snapshot snap
     ) {
-        if (targetFusions.isEmpty()) {
+        if (targetFusions.isEmpty() || sel.secondary() != null) {
             return Optional.empty();
         }
-        List<EnchantCandidate> donors = new ArrayList<>();
-        appendBookEnchantments(sPrimary, SLOT_PRIMARY, donors);
-        appendBookEnchantments(sSecondary, SLOT_SECONDARY, donors);
-        for (EnchantCandidate donor : donors) {
+        EnchantCandidate selected = sel.primary();
+        if (selected == null || selected.sourceSlot() == SLOT_TARGET) return Optional.empty();
+        for (EnchantCandidate donor : List.of(selected)) {
             int clampedDonor = Math.min(donor.maxLevel(), donor.level());
             for (FusedPair existing : targetFusions.pairs()) {
                 if (existing.isAberrant()) continue;
@@ -919,12 +912,13 @@ public final class FusionStationOperations {
                 }
             }
             case TOP_UP_LEVEL -> {
-                List<EnchantCandidate> donors = new ArrayList<>();
-                appendBookEnchantments(sPrimary, SLOT_PRIMARY, donors);
-                appendBookEnchantments(sSecondary, SLOT_SECONDARY, donors);
+                EnchantCandidate selected = preview.selection().primary();
+                if (selected == null || preview.selection().secondary() != null || selected.sourceSlot() == SLOT_TARGET) {
+                    return ActionResult.failed(RejectReason.MISSING_INPUT);
+                }
                 FusedEnchantmentList list = sTarget.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
                 boolean upgradedAny = false;
-                for (EnchantCandidate donor : donors) {
+                for (EnchantCandidate donor : List.of(selected)) {
                     if (upgradedAny) break;
                     int nextLvl = Math.min(donor.maxLevel(), donor.level());
                     for (int i = 0; i < list.size(); i++) {

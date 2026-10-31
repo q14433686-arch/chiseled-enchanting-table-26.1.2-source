@@ -940,8 +940,11 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                 if (fitted.truncated()) {
                     lines.add(fullLabel.copy().withStyle(isA ? ChatFormatting.GOLD : (isB ? ChatFormatting.AQUA : ChatFormatting.WHITE)));
                     lines.add(Component.translatable("gui.enchantment_fusion.picker.click_ab_tip").withStyle(ChatFormatting.GRAY));
-                    return true;
                 }
+                if (!gearMode && this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET).is(FusionItems.FUSED_ENCHANTED_BOOK)) {
+                    lines.add(Component.translatable("gui.enchantment_fusion.picker.single_book_tip").withStyle(ChatFormatting.GRAY));
+                }
+                if (!lines.isEmpty()) return true;
             }
         }
         return false;
@@ -1272,7 +1275,8 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                 if (rowBox.containsAt(this.leftPos, this.topPos, mx, my)) {
                     FusionRitualDirector.cancel();
                     FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_CLUSTER_STEP, btn == 1 ? 1.25F : 1.0F, 0.7F);
-                    if (btn == 0 && gearMode && FusionGuiSkin.isShiftDown()) {
+                    if (btn == 0 && FusionGuiSkin.isShiftDown()
+                        && (gearMode || this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET).is(FusionItems.FUSED_ENCHANTED_BOOK))) {
                         if (!this.menu.singleOnlyMode()) {
                             sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
                         }

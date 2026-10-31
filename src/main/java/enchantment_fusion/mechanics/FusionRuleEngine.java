@@ -27,6 +27,7 @@ public final class FusionRuleEngine {
         INSUFFICIENT_XP("gui.enchantment_fusion.reject.insufficient_xp"),
         INSUFFICIENT_REAGENTS("gui.enchantment_fusion.reject.insufficient_reagents"),
         TRANSMUTE_CAP_FULL("gui.enchantment_fusion.reject.transmute_cap_full"),
+        SELECT_SINGLE_FOR_CONSUMABLE("gui.enchantment_fusion.reject.select_single_for_consumable"),
         UNSUPPORTED_DIRECTION_HOST("gui.enchantment_fusion.reject.unsupported_direction_host"),
         UNCLASSIFIED_ENCHANTMENT("gui.enchantment_fusion.reject.unclassified_enchantment");
 

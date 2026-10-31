@@ -853,5 +853,7 @@
   "gui.enchantment_fusion.tip.risk_repulsive": "Exclusive instability: %s%% (Failure creates an aberration; ordinary stabilizers stop at a %s%% floor)",
   "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)",
   "message.enchantment_fusion.harvest_limit": "Trop de butin : le surplus reste intact.",
-  "message.enchantment_fusion.smelt_overflow": "La fonte dépasse la limite de pile ; le butin initial est conservé."
+  "message.enchantment_fusion.smelt_overflow": "La fonte dépasse la limite de pile ; le butin initial est conservé.",
+  "gui.enchantment_fusion.reject.select_single_for_consumable": "Cet objet accepte un enchantement ; choisissez le mode individuel.",
+  "gui.enchantment_fusion.picker.single_book_tip": "Maj+clic gauche sélectionne un enchantement à renforcer ; clic droit rétablit la paire."
 }

@@ -853,5 +853,7 @@
   "gui.enchantment_fusion.tip.risk_repulsive": "Exclusive instability: %s%% (Failure creates an aberration; ordinary stabilizers stop at a %s%% floor)",
   "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)",
   "message.enchantment_fusion.harvest_limit": "Itens demais: o excedente permanece intacto.",
-  "message.enchantment_fusion.smelt_overflow": "A fundição excede o limite da pilha; o item original foi preservado."
+  "message.enchantment_fusion.smelt_overflow": "A fundição excede o limite da pilha; o item original foi preservado.",
+  "gui.enchantment_fusion.reject.select_single_for_consumable": "Este item aceita um encantamento; escolha o modo individual.",
+  "gui.enchantment_fusion.picker.single_book_tip": "Shift+clique esquerdo seleciona um encantamento para melhorar; clique direito restaura o par."
 }

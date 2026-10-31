@@ -167,6 +167,11 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
             this.uiState.set(DATA_PRIMARY_IDX, NO_SELECTION);
             this.uiState.set(DATA_SECONDARY_IDX, NO_SELECTION);
         }
+        // Book synthesis has no single-mode control. Do not leave it stuck in a hidden
+        // mode after a fused book was removed or after switching away from equipment.
+        if (desired == FusionStationOperations.TAB_FUSE && !host.is(FusionItems.FUSED_ENCHANTED_BOOK)) {
+            this.uiState.set(DATA_SINGLE_MODE, 0);
+        }
     }
 
     @Override
