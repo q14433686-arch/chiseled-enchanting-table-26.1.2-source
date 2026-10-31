@@ -851,5 +851,7 @@
   "config.enchantment_fusion.property.exclusive_groups": "互斥組",
   "config.enchantment_fusion.cooldown": "冷卻：%s",
   "gui.enchantment_fusion.tip.risk_repulsive": "互斥失穩風險：%s%%（失敗會產生畸變詞條；普通穩定晶減免最低至 %s%%）",
-  "gui.enchantment_fusion.tip.risk_conversion": "化形失穩風險：%s%%（失敗會消耗附魔書並對裝備施加消失詛咒）"
+  "gui.enchantment_fusion.tip.risk_conversion": "化形失穩風險：%s%%（失敗會消耗附魔書並對裝備施加消失詛咒）",
+  "message.enchantment_fusion.harvest_limit": "本次掉落過多，超出部分保留原樣。",
+  "message.enchantment_fusion.smelt_overflow": "熔煉產物超過堆疊上限，原掉落已保留。"
 }

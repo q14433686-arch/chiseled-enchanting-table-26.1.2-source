@@ -851,5 +851,7 @@
   "config.enchantment_fusion.property.exclusive_groups": "Exclusive groups",
   "config.enchantment_fusion.cooldown": "Cooldown: %s",
   "gui.enchantment_fusion.tip.risk_repulsive": "Exclusive instability: %s%% (Failure creates an aberration; ordinary stabilizers stop at a %s%% floor)",
-  "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)"
+  "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)",
+  "message.enchantment_fusion.harvest_limit": "드롭이 너무 많아 초과분은 그대로 둡니다.",
+  "message.enchantment_fusion.smelt_overflow": "제련 결과가 묶음 한도를 넘어 원래 드롭을 보존했습니다."
 }

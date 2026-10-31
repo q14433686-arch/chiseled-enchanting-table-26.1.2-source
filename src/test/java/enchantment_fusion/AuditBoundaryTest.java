@@ -7,6 +7,7 @@ import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
 import enchantment_fusion.mechanics.DirectionalHostRules;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
+import enchantment_fusion.mechanics.HarvestDropCapture;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.transmute.TransmuteCatalog;
 import enchantment_fusion.menu.FusionNetworking;
@@ -23,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import net.minecraft.network.FriendlyByteBuf;
 import org.junit.jupiter.api.Test;
 
@@ -168,6 +170,17 @@ class AuditBoundaryTest {
             assertFalse(decoded.profiles().get("example:legacy").classifiedForFusion());
             assertEquals(0, old.readableBytes());
         } finally { modern.release(); old.release(); }
+    }
+
+    @Test
+    void capturedHarvestOwnershipRejectsBothConflictingThrowerAndPickupTarget() {
+        UUID miner = UUID.randomUUID(), other = UUID.randomUUID();
+        assertTrue(HarvestDropCapture.ownerCompatible(miner, null, null));
+        assertTrue(HarvestDropCapture.ownerCompatible(miner, miner, miner));
+        assertFalse(HarvestDropCapture.ownerCompatible(miner, other, null));
+        assertFalse(HarvestDropCapture.ownerCompatible(miner, null, other));
+        assertFalse(HarvestDropCapture.ownerCompatible(miner, miner, other));
+        assertFalse(HarvestDropCapture.ownerCompatible(null, null, null));
     }
 
     @Test

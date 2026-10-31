@@ -851,5 +851,7 @@
   "config.enchantment_fusion.property.exclusive_groups": "Exclusive groups",
   "config.enchantment_fusion.cooldown": "Cooldown: %s",
   "gui.enchantment_fusion.tip.risk_repulsive": "Exclusive instability: %s%% (Failure creates an aberration; ordinary stabilizers stop at a %s%% floor)",
-  "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)"
+  "gui.enchantment_fusion.tip.risk_conversion": "Transmutation instability: %s%% (Failure consumes the book and applies Curse of Vanishing)",
+  "message.enchantment_fusion.harvest_limit": "Too many drops: excess left unchanged.",
+  "message.enchantment_fusion.smelt_overflow": "Smelting output exceeds a stack; original drop preserved."
 }

@@ -19,6 +19,7 @@
     "PlayerExperienceFusionMixin",
     "PlayerMiningFusionMixin",
     "ProjectileImpactFusionMixin",
+    "ServerLevelHarvestCaptureMixin",
     "ServerPlayerGameModeHarvestMixin"
   ],
   "client": [

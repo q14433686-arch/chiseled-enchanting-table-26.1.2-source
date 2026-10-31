@@ -202,33 +202,52 @@ public final class ClientSmoke implements ClientModInitializer {
             BlockPos testDrops = tablePos.above(13);
             ItemStack pick = new ItemStack(Items.DIAMOND_PICKAXE);
             pick.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:fire_aspect", 2));
+            var unrelated = new net.minecraft.world.entity.item.ItemEntity(level, testDrops.getX() + 0.5, testDrops.getY(),
+                testDrops.getZ() + 0.5, new ItemStack(Items.RAW_IRON));
+            level.addFreshEntity(unrelated); spawned.add(unrelated);
             var raw = new net.minecraft.world.entity.item.ItemEntity(level, testDrops.getX() + 0.5, testDrops.getY(),
                 testDrops.getZ() + 0.5, new ItemStack(Items.RAW_IRON));
-            level.addFreshEntity(raw); spawned.add(raw);
-            sp.setShiftKeyDown(true);
-            enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
-                level, sp, testDrops, Blocks.IRON_ORE.defaultBlockState(), pick);
-            require(raw.getItem().is(Items.RAW_IRON), "Sneaking must pause pickaxe auto-smelting");
-            sp.setShiftKeyDown(false);
-            enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
-                level, sp, testDrops, Blocks.IRON_ORE.defaultBlockState(), pick);
-            require(raw.getItem().is(Items.IRON_INGOT), "Pickaxe auto-smelting must resume when not sneaking");
-            raw.discard();
+            var reserved = new net.minecraft.world.entity.item.ItemEntity(level, testDrops.getX() + 0.5, testDrops.getY(),
+                testDrops.getZ() + 0.5, new ItemStack(Items.RAW_IRON));
+            reserved.setTarget(java.util.UUID.randomUUID());
+            try (var capture = enchantment_fusion.mechanics.HarvestDropCapture.begin(level, sp, testDrops)) {
+                enchantment_fusion.mechanics.HarvestDropCapture.enterPlayerDestroy(level, sp, testDrops);
+                try { level.addFreshEntity(raw); spawned.add(raw); level.addFreshEntity(reserved); spawned.add(reserved); }
+                finally { enchantment_fusion.mechanics.HarvestDropCapture.leavePlayerDestroy(level, sp, testDrops); }
+                sp.setShiftKeyDown(true);
+                enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
+                    level, sp, testDrops, Blocks.IRON_ORE.defaultBlockState(), pick);
+                require(raw.getItem().is(Items.RAW_IRON), "Sneaking must pause pickaxe auto-smelting");
+                sp.setShiftKeyDown(false);
+                enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
+                    level, sp, testDrops, Blocks.IRON_ORE.defaultBlockState(), pick);
+                require(raw.getItem().is(Items.IRON_INGOT), "Pickaxe auto-smelting must resume when not sneaking");
+                require(unrelated.getItem().is(Items.RAW_IRON), "Previously existing nearby drops must never be smelted");
+                require(reserved.getItem().is(Items.RAW_IRON), "Another player's reserved drop must never be smelted");
+                require(!enchantment_fusion.mechanics.HarvestDropCapture.claimTransform(level, testDrops, raw),
+                    "The same actual drop must not be transformed twice");
+                raw.discard();
+            }
+            unrelated.discard(); reserved.discard();
 
             ItemStack axe = new ItemStack(Items.DIAMOND_AXE);
             axe.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:fire_aspect", 2));
             var log = new net.minecraft.world.entity.item.ItemEntity(level, testDrops.getX() + 0.5, testDrops.getY(),
                 testDrops.getZ() + 0.5, new ItemStack(Items.OAK_LOG));
-            level.addFreshEntity(log); spawned.add(log);
-            sp.setShiftKeyDown(true);
-            enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
-                level, sp, testDrops, Blocks.OAK_LOG.defaultBlockState(), axe);
-            require(log.getItem().is(Items.OAK_LOG), "Sneaking must pause axe charcoal production");
-            sp.setShiftKeyDown(false);
-            enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
-                level, sp, testDrops, Blocks.OAK_LOG.defaultBlockState(), axe);
-            require(log.getItem().is(Items.CHARCOAL), "Axe charcoal production must resume when not sneaking");
-            log.discard();
+            try (var capture = enchantment_fusion.mechanics.HarvestDropCapture.begin(level, sp, testDrops)) {
+                enchantment_fusion.mechanics.HarvestDropCapture.enterPlayerDestroy(level, sp, testDrops);
+                try { level.addFreshEntity(log); spawned.add(log); }
+                finally { enchantment_fusion.mechanics.HarvestDropCapture.leavePlayerDestroy(level, sp, testDrops); }
+                sp.setShiftKeyDown(true);
+                enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
+                    level, sp, testDrops, Blocks.OAK_LOG.defaultBlockState(), axe);
+                require(log.getItem().is(Items.OAK_LOG), "Sneaking must pause axe charcoal production");
+                sp.setShiftKeyDown(false);
+                enchantment_fusion.mechanics.transmute.MiningFishingTransmutes.onPostDestroyBlockDrops(
+                    level, sp, testDrops, Blocks.OAK_LOG.defaultBlockState(), axe);
+                require(log.getItem().is(Items.CHARCOAL), "Axe charcoal production must resume when not sneaking");
+                log.discard();
+            }
 
             BlockPos feet = tablePos.above(16);
             sp.teleportTo(feet.getX() + 0.5, feet.getY(), feet.getZ() + 0.5);
@@ -1053,6 +1072,10 @@ public final class ClientSmoke implements ClientModInitializer {
                             CrossDomainTransmutations.resolveSmeltedStack(sp.level(), new ItemStack(Items.IRON_INGOT, 2), Blocks.IRON_ORE) == null,
                             "Already-smelted ingots must not re-smelt"
                         );
+                        require(
+                            CrossDomainTransmutations.resolveSmeltedStack(null, new ItemStack(Items.DIAMOND), Blocks.IRON_ORE) == null,
+                            "An unrelated byproduct must not turn into an ingot merely because iron ore was broken"
+                        );
 
                         // 0.6.0: Verify Vanilla Anvil strictly blocks Cross-Domain Inscription even when Creative instabuild == true
                         boolean savedInstabuild = sp.getAbilities().instabuild;
@@ -1153,6 +1176,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         ThirdPartyCarrierProbe.exercise(sp);
                         ReplenishProbe.exercise(sp);
                         DroppedItemSafetyProbe.exercise(sp);
+                        HarvestProvenanceProbe.exercise(sp, tablePos.above(39));
                         exerciseExtraMining(sp);
                         exerciseLifelineAnchors(sp);
                         exerciseLoyaltyRiptide(sp);

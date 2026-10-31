@@ -5,6 +5,7 @@ import static enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport.*;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.ExtraBlockHarvest;
+import enchantment_fusion.mechanics.HarvestDropCapture;
 import enchantment_fusion.mechanics.ProjectilePathTracker;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -310,11 +311,12 @@ public final class MiningFishingSignatures {
 
         if (pullDropsToPlayer) {
             AABB box = AABB.ofSize(Vec3.atCenterOf(pos), 6.0D, 6.0D, 6.0D);
-            for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, box, Entity::isAlive)) {
+            for (ItemEntity item : HarvestDropCapture.items(level, pos, box)) {
+                item.setTarget(player.getUUID());
                 item.setNoPickUpDelay();
                 item.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
             }
-            for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, box, Entity::isAlive)) {
+            for (ExperienceOrb orb : HarvestDropCapture.orbs(level, pos, box)) {
                 orb.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
             }
         }

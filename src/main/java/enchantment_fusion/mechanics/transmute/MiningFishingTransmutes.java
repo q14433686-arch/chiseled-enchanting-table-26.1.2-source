@@ -6,6 +6,7 @@ import static enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport.*;
 
 import enchantment_fusion.mechanics.AberrantRegistry;
 import enchantment_fusion.mechanics.ExtraBlockHarvest;
+import enchantment_fusion.mechanics.HarvestDropCapture;
 import enchantment_fusion.mechanics.TemporaryFrostEffects;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.SmeltOutcome;
 import enchantment_fusion.mechanics.SignaturePairs;
@@ -118,11 +119,15 @@ public final class MiningFishingTransmutes {
             if (state.is(BlockTags.LOGS)) {
                 float charcoalChance = axeLv >= 2 ? 1.0F : 0.65F;
                 boolean charred = false;
-                for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
+                for (ItemEntity ie : HarvestDropCapture.items(level, pos, dropBox)) {
                     if (ie.getItem().is(ItemTags.LOGS) && rng.nextFloat() < charcoalChance) {
-                        int outCount = ie.getItem().getCount() + (axeLv >= 2 && rng.nextFloat() < 0.25F ? 1 : 0);
-                        ie.setItem(new ItemStack(Items.CHARCOAL, outCount));
-                        charred = true;
+                        long outCount = (long) ie.getItem().getCount() + (axeLv >= 2 && rng.nextFloat() < 0.25F ? 1 : 0);
+                        if (outCount > new ItemStack(Items.CHARCOAL).getMaxStackSize()) {
+                            HarvestDropCapture.warnSmeltOverflow(level);
+                        } else if (HarvestDropCapture.claimTransform(level, pos, ie)) {
+                            ie.setItem(new ItemStack(Items.CHARCOAL, (int) outCount));
+                            charred = true;
+                        }
                     }
                 }
                 if (charred) {
@@ -133,15 +138,22 @@ public final class MiningFishingTransmutes {
                 || state.is(BlockTags.WOODEN_STAIRS) || state.is(BlockTags.WOODEN_FENCES)) {
                 float ashChance = axeLv >= 2 ? 0.20F : 0.40F;
                 float charcoalThreshold = axeLv >= 2 ? 0.85F : 0.78F;
-                for (ItemEntity ie : level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2)) {
+                for (ItemEntity ie : HarvestDropCapture.items(level, pos, dropBox)) {
+                    // Only the broken wood's own block drop, not an unrelated byproduct.
+                    if (!ie.getItem().is(state.getBlock().asItem())) continue;
                     float roll = rng.nextFloat();
-                    if (roll < ashChance) {
+                    if (roll < ashChance && HarvestDropCapture.claimTransform(level, pos, ie)) {
                         ie.discard();
                         level.sendParticles(ParticleTypes.LARGE_SMOKE, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 8, 0.25D, 0.25D, 0.25D, 0.03D);
                         level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.35F, 1.3F);
-                    } else if (roll < charcoalThreshold) {
-                        ie.setItem(new ItemStack(Items.CHARCOAL, 1));
-                        level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 5, 0.2D, 0.2D, 0.2D, 0.02D);
+                    } else if (roll >= ashChance && roll < charcoalThreshold) {
+                        int outCount = ie.getItem().getCount();
+                        if (outCount > new ItemStack(Items.CHARCOAL).getMaxStackSize()) {
+                            HarvestDropCapture.warnSmeltOverflow(level);
+                        } else if (HarvestDropCapture.claimTransform(level, pos, ie)) {
+                            ie.setItem(new ItemStack(Items.CHARCOAL, outCount));
+                            level.sendParticles(ParticleTypes.FLAME, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 5, 0.2D, 0.2D, 0.2D, 0.02D);
+                        }
                     }
                 }
             }
@@ -156,13 +168,17 @@ public final class MiningFishingTransmutes {
             || getTransmutedLevel(tool, "auto_loot_return") > 0
             || SignaturePairs.stackHasSignature(tool, "magnetic_pick")
             || SignaturePairs.playerHasEquippedSignature(player, "magnetic_pick");
-        if (magnetActive) {
+        boolean soulXp = getTransmutedLevel(tool, "soul_excavator") > 0;
+        if (magnetActive || soulXp) {
             AABB pullBox = new AABB(pos).inflate(2.4D);
-            for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, pullBox, e -> e.isAlive() && e.getAge() <= 3)) {
-                drop.setNoPickUpDelay();
-                drop.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+            if (magnetActive) {
+                for (ItemEntity drop : HarvestDropCapture.items(level, pos, pullBox)) {
+                    drop.setTarget(player.getUUID());
+                    drop.setNoPickUpDelay();
+                    drop.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
+                }
             }
-            for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, pullBox, Entity::isAlive)) {
+            for (ExperienceOrb orb : HarvestDropCapture.orbs(level, pos, pullBox)) {
                 orb.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
             }
         }
@@ -175,7 +191,7 @@ public final class MiningFishingTransmutes {
         float xpMultiplier
     ) {
         AABB dropBox = new AABB(pos).inflate(1.9D);
-        List<ItemEntity> drops = level.getEntitiesOfClass(ItemEntity.class, dropBox, e -> e.isAlive() && e.getAge() <= 2);
+        List<ItemEntity> drops = HarvestDropCapture.items(level, pos, dropBox);
         if (drops.isEmpty()) return false;
         boolean smeltedAny = false;
         float totalXp = 0.0F;
@@ -183,7 +199,7 @@ public final class MiningFishingTransmutes {
             ItemStack rawStack = ie.getItem();
             if (rawStack.isEmpty()) continue;
             SmeltOutcome outcome = resolveSmeltedStack(level, rawStack, brokenState.getBlock());
-            if (outcome != null && !outcome.result().isEmpty()) {
+            if (outcome != null && !outcome.result().isEmpty() && HarvestDropCapture.claimTransform(level, pos, ie)) {
                 ie.setItem(outcome.result());
                 smeltedAny = true;
                 totalXp += outcome.xp();
@@ -207,14 +223,22 @@ public final class MiningFishingTransmutes {
                 SmeltingRecipe recipe = recipeOpt.get().value();
                 ItemStack assembled = recipe.assemble(singleInput);
                 if (!assembled.isEmpty() && !ItemStack.isSameItem(assembled, rawStack)) {
-                    int outCount = Math.min(99, inputCount * Math.max(1, assembled.getCount()));
-                    return new SmeltOutcome(assembled.copyWithCount(outCount), Math.max(0.2F, recipe.experience()) * inputCount);
+                    long outCount = (long) inputCount * assembled.getCount();
+                    if (outCount > assembled.getMaxStackSize()) {
+                        HarvestDropCapture.warnSmeltOverflow(level);
+                        return null; // Never truncate a multi-output recipe or create an oversized stack.
+                    }
+                    return new SmeltOutcome(assembled.copyWithCount((int) outCount), Math.max(0.2F, recipe.experience()) * inputCount);
                 }
             }
+            // In a live world, datapack recipes are authoritative, including an absent recipe.
+            return null;
         }
         Item fallback = mapItemAutoSmeltFallback(rawStack.getItem(), brokenBlock);
         if (fallback != null && !rawStack.is(fallback)) {
-            return new SmeltOutcome(new ItemStack(fallback, inputCount), 0.7F * inputCount);
+            ItemStack result = new ItemStack(fallback);
+            if (inputCount > result.getMaxStackSize()) return null;
+            return new SmeltOutcome(result.copyWithCount(inputCount), 0.7F * inputCount);
         }
         return null;
     }
@@ -237,9 +261,7 @@ public final class MiningFishingTransmutes {
         int soulExcLv = getTransmutedLevel(tool, "soul_excavator");
         if (soulExcLv > 0) {
             grantEffect(player, "speed", 50 + 15 * soulExcLv, Math.min(1, soulExcLv - 1));
-            for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, AABB.ofSize(Vec3.atCenterOf(pos), 8.0D, 6.0D, 8.0D), Entity::isAlive)) {
-                orb.teleportTo(player.getX(), player.getY() + 0.4D, player.getZ());
-            }
+            // XP generated by this break is pulled after playerDestroy, once its provenance is known.
             level.sendParticles(ParticleTypes.SOUL, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 5, 0.2D, 0.2D, 0.2D, 0.02D);
         }
         int briarLv = getTransmutedLevel(tool, "briar_mattock");
@@ -461,12 +483,7 @@ public final class MiningFishingTransmutes {
         if (rawItem == Items.WET_SPONGE) return Items.SPONGE;
         if (rawItem == Items.CACTUS) return Items.GREEN_DYE;
         if (rawItem == Items.KELP) return Items.DRIED_KELP;
-        if (brokenBlock != null) {
-            if (brokenBlock == Blocks.IRON_ORE || brokenBlock == Blocks.DEEPSLATE_IRON_ORE) return Items.IRON_INGOT;
-            if (brokenBlock == Blocks.GOLD_ORE || brokenBlock == Blocks.DEEPSLATE_GOLD_ORE) return Items.GOLD_INGOT;
-            if (brokenBlock == Blocks.COPPER_ORE || brokenBlock == Blocks.DEEPSLATE_COPPER_ORE) return Items.COPPER_INGOT;
-            if (brokenBlock == Blocks.ANCIENT_DEBRIS) return Items.NETHERITE_SCRAP;
-        }
+        // The broken block is not evidence that an arbitrary byproduct is one of its ores.
         return null;
     }
 }
