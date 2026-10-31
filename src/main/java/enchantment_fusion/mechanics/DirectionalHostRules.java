@@ -4,6 +4,7 @@ import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
+import enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteCatalog;
@@ -49,6 +50,11 @@ public final class DirectionalHostRules {
         boolean frostFallRedesign = (FrostFallSkills.isWavePair(pair) && signature.equals(FrostFallSkills.WAVE_SIGNATURE))
             || (FrostFallSkills.isStepPair(pair) && signature.equals(FrostFallSkills.STEP_SIGNATURE));
         if (frostFallRedesign && !FrostFallSkills.supportsCarrier(actual)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
+        boolean frostWakeDive = (FrostWakeDiveSkills.isWakePair(pair) && signature.equals(FrostWakeDiveSkills.WAKE))
+            || (FrostWakeDiveSkills.isDivePair(pair) && signature.equals(FrostWakeDiveSkills.DIVE));
+        if (frostWakeDive && !FrostWakeDiveSkills.supportsCarrier(actual)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (pair.primaryId().equals("minecraft:fire_aspect") && pair.secondaryId().equals("minecraft:aqua_affinity")

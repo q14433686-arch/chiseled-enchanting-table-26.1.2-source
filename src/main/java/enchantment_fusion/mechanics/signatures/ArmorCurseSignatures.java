@@ -3,10 +3,10 @@ package enchantment_fusion.mechanics.signatures;
 import static enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport.*;
 
 import enchantment_fusion.mechanics.AberrantRegistry;
-import enchantment_fusion.mechanics.TemporaryFrostEffects;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog.EquippedSignature;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.registry.FusionBlocks;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -396,9 +396,16 @@ public final class ArmorCurseSignatures {
             return;
         }
 
-        for (EquippedSignature eq : SignatureCatalog.collectUniqueEquippedSignatures(player).values()) {
+        Map<String, EquippedSignature> signatures = new LinkedHashMap<>(SignatureCatalog.collectUniqueEquippedSignatures(player));
+        EquippedSignature wake = FrostWakeDiveSkills.select(player, true);
+        EquippedSignature dive = FrostWakeDiveSkills.select(player, false);
+        if (wake == null) signatures.remove(FrostWakeDiveSkills.WAKE); else signatures.put(FrostWakeDiveSkills.WAKE, wake);
+        if (dive == null) signatures.remove(FrostWakeDiveSkills.DIVE); else signatures.put(FrostWakeDiveSkills.DIVE, dive);
+        for (EquippedSignature eq : signatures.values()) {
             String sigId = eq.sigId();
             EquipmentSlot slot = eq.slot();
+            boolean selectedWaterBoots = FrostWakeDiveSkills.applies(eq.pair(), eq.stack(), sigId);
+            if (selectedWaterBoots && slot != EquipmentSlot.FEET) continue;
 
             switch (sigId) {
                 case "loyal_lifeline" -> {
@@ -423,23 +430,7 @@ public final class ArmorCurseSignatures {
                         mob.setTicksFrozen(Math.min(200, mob.getTicksFrozen() + 25));
                     }
                 }
-                case "tide_breaker_dive" -> {
-                    if (player.isShiftKeyDown()) {
-                        TemporaryFrostEffects.removeDivePath(level, player);
-                    }
-                    if (player.isInWater() && player.isShiftKeyDown()) {
-                        Vec3 dive = player.getLookAngle().normalize().scale(0.28D);
-                        player.push(dive.x, dive.y * 0.5D, dive.z);
-                        player.hurtMarked = true;
-                    }
-                }
-                case "permafrost_wake" -> {
-                    TemporaryFrostEffects.placeWake(level, player, eq.pair().primaryLevel());
-                    player.clearFire();
-                    for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 2.8D, null)) {
-                        mob.setTicksFrozen(Math.min(300, mob.getTicksFrozen() + 50));
-                    }
-                }
+                case "tide_breaker_dive", "permafrost_wake" -> FrostWakeDiveSkills.tick(level, player, eq, selectedWaterBoots);
                 case "magma_basalt_step" -> {
                     if (player.mayBuild() && !player.isShiftKeyDown()) {
                         BlockPos feet = player.blockPosition();

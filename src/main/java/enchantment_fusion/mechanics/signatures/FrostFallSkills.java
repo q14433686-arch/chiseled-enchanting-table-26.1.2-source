@@ -45,7 +45,6 @@ public final class FrostFallSkills {
     public static final String DEPTH = "minecraft:depth_strider";
     public static final String WAVE_SIGNATURE = "frost_meteor_fall";
     public static final String STEP_SIGNATURE = "feather_rime_glide";
-    private static final String WAKE_SIGNATURE = "permafrost_wake";
     private static final int CHARGE_LIFETIME = 400;
     private static final int STEP_LIMIT = 3;
     private static final int STEP_COOLDOWN = 30;
@@ -137,7 +136,7 @@ public final class FrostFallSkills {
         for (FusedPair pair : item.itemStack().getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
             String sig = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
             if ((isStepPair(pair) && STEP_SIGNATURE.equals(sig))
-                || (FROST.equals(pair.primaryId()) && DEPTH.equals(pair.secondaryId()) && WAKE_SIGNATURE.equals(sig))) return true;
+                || (FrostWakeDiveSkills.isWakePair(pair) && FrostWakeDiveSkills.WAKE.equals(sig))) return true;
         }
         return false;
     }

@@ -210,9 +210,9 @@
   "signature.enchantment_fusion.sniper_thorns.title": "追魂反刺",
   "signature.enchantment_fusion.sniper_thorns.desc": "遭远程偷袭时向攻击者精准回敬一支高速光灵箭。",
   "signature.enchantment_fusion.tide_breaker_dive.title": "破浪潜行",
-  "signature.enchantment_fusion.tide_breaker_dive.desc": "潜行时震碎脚下冰面开辟潜入孔，并在水中潜行时向前推进潜泳。",
+  "signature.enchantment_fusion.tide_breaker_dive.desc": "穿戴靴子时，潜行只移除脚下本模组薄冰（不生成水、不改原版冰）；在水中潜行时向视线方向推进。保留原版深海探索者及已有落地加成。",
   "signature.enchantment_fusion.permafrost_wake.title": "玄冰凝海",
-  "signature.enchantment_fusion.permafrost_wake.desc": "未潜行、未浸水时，在周围水源上方的空气生成临时薄冰，避开活体；同时为自己灭火并冻结附近非友方生物。",
+  "signature.enchantment_fusion.permafrost_wake.desc": "穿戴靴子、未潜行且未浸水时，在源水上方空气铺临时薄冰；灭火并寒冷附近合格敌人。原水不被替换；保留原版行走伤害免疫，冻水效果被替代。",
   "signature.enchantment_fusion.magma_basalt_step.title": "踏火玄武",
   "signature.enchantment_fusion.magma_basalt_step.desc": "行经熔岩表面时将其瞬间冷却为安全玄武岩，免疫岩浆烫伤！",
   "signature.enchantment_fusion.frost_meteor_fall.title": "霜势缓冲",
@@ -889,5 +889,6 @@
   "tooltip.enchantment_fusion.legacy_frost_fall_carrier": "旧载体：保留原有效果，不能在此载体新装空中霜阶或霜势缓冲。",
   "tooltip.enchantment_fusion.active_skill_keys": "释放：%1$s · 切换已装备技能：%2$s",
   "gui.enchantment_fusion.retained.selected": "第 %1$s/%2$s 项：%3$s",
-  "gui.enchantment_fusion.retained.wait_sync": "等待服务器同步目标装备版本；若一直等待，请更新服务端。"
+  "gui.enchantment_fusion.retained.wait_sync": "等待服务器同步目标装备版本；若一直等待，请更新服务端。",
+  "tooltip.enchantment_fusion.legacy_frost_wake_carrier": "旧载体：保留旧冰路/潜泳效果；新融合仅可安装在穿戴的靴子上。"
 }

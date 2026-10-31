@@ -117,6 +117,23 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void frostWakeAndDiveKeepTheirOrderAndRequireFootArmorForNewApplications() {
+        var wake = FusedPair.clean("minecraft:frost_walker", 2, "minecraft:depth_strider", 3);
+        var dive = wake.flipped();
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills.isWakePair(wake));
+        assertFalse(enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills.isWakePair(dive));
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills.isDivePair(dive));
+        assertEquals("permafrost_wake", SignaturePairs.resolve(wake).orElseThrow().id());
+        assertEquals("tide_breaker_dive", SignaturePairs.resolve(dive).orElseThrow().id());
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills.supportsCarrier(
+            Set.of(enchantment_fusion.model.FusionCarrier.FOOT_ARMOR)));
+        for (var role : List.of(enchantment_fusion.model.FusionCarrier.SHIELD,
+            enchantment_fusion.model.FusionCarrier.SWORD, enchantment_fusion.model.FusionCarrier.HEAD_ARMOR)) {
+            assertFalse(enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills.supportsCarrier(Set.of(role)), role.name());
+        }
+    }
+
+    @Test
     void frostAttributionUsesOnlyTheActualMarginalProtectionAfterVanillasCap() {
         assertEquals(4.8F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 5.2F, 12, 12), 0.0001F);
         assertEquals(2.0F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 2, 25, 10), 0.0001F,

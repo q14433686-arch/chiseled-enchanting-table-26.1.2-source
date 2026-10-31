@@ -6,6 +6,7 @@ import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
+import enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
@@ -238,6 +239,17 @@ public final class MatrixEffectExecutor {
             || firedTriggers.contains(TriggerType.ON_TRIDENT_CHANNEL);
 
         for (FusedPair pair : list.pairs()) {
+            Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
+            boolean waterBoots = sigOpt.isPresent() && FrostWakeDiveSkills.applies(pair, hostStack, sigOpt.get().id());
+            if (waterBoots && player.getItemBySlot(EquipmentSlot.FEET) != hostStack) continue;
+            boolean waterDirection = sigOpt.isPresent()
+                && ((FrostWakeDiveSkills.isWakePair(pair) && FrostWakeDiveSkills.WAKE.equals(sigOpt.get().id()))
+                    || (FrostWakeDiveSkills.isDivePair(pair) && FrostWakeDiveSkills.DIVE.equals(sigOpt.get().id())));
+            if (waterDirection) {
+                var preferred = FrostWakeDiveSkills.select(player, FrostWakeDiveSkills.isWakePair(pair));
+                if (preferred != null && FrostWakeDiveSkills.applies(preferred.pair(), preferred.stack(), preferred.sigId())
+                    && preferred.stack() != hostStack) continue;
+            }
             String dedupKey = pair.primaryId() + ">" + pair.secondaryId();
             if (!seenPairKeys.add(dedupKey)) {
                 continue;
@@ -259,7 +271,6 @@ public final class MatrixEffectExecutor {
                 continue;
             }
 
-            Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
             // These redesigned skills have dedicated triggers; generic dispatch would grant
             // unrelated bonuses and/or spend a cooldown before their real action happens.
             if (sigOpt.isPresent() && LoyaltyGuard.matches(pair, sigOpt.get().id())) continue;
@@ -336,7 +347,8 @@ public final class MatrixEffectExecutor {
                     * Math.clamp(chargeScale, 0.6F, 1.0F);
                 float scale = Math.clamp(lawScale, 0.55F, 2.6F);
                 executeDirectionalSynergy(
-                    level, player, hostStack, hostForm, primaryProfile.trigger(), payload, scale, targetEntity, originPos, trajectoryEvent
+                    level, player, hostStack, hostForm, primaryProfile.trigger(), payload, scale, targetEntity, originPos,
+                    trajectoryEvent, waterBoots && FrostWakeDiveSkills.isDivePair(pair)
                 );
             } finally {
                 IN_EXECUTION.set(Boolean.FALSE);
@@ -379,7 +391,8 @@ public final class MatrixEffectExecutor {
         float scale,
         @Nullable LivingEntity target,
         Vec3 pos,
-        boolean trajectoryEvent
+        boolean trajectoryEvent,
+        boolean filterDiveCryoTargets
     ) {
         boolean utility = (hostForm == HostForm.TOOL || hostForm == HostForm.ARMOR);
         boolean wideCatalyst = (catalystTrigger == TriggerType.ON_SWEEP_OR_CLEAVE
@@ -428,15 +441,20 @@ public final class MatrixEffectExecutor {
                     ProjectilePathTracker.applyPathTrailEffect(level, player, cachedPath, PathTrailStyle.CRYO_WAKE, scale * 0.75F);
                 }
                 if (target != null) {
-                    boolean wasChilled = target.getTicksFrozen() >= 60;
-                    target.setTicksFrozen(Math.min(350, target.getTicksFrozen() + Math.round(105 * scale)));
-                    grantEffect(target, "slowness", Math.round(65 * scale), 1);
-                    if (wasChilled) {
-                        target.hurtServer(level, level.damageSources().magic(), 2.6F * scale);
-                        level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.75F, 1.65F);
+                    if (!filterDiveCryoTargets || (LoyaltyGuard.eligibleTarget(player, target)
+                        && level.mayInteract(player, target.blockPosition()))) {
+                        boolean wasChilled = target.getTicksFrozen() >= 60;
+                        target.setTicksFrozen(Math.min(350, target.getTicksFrozen() + Math.round(105 * scale)));
+                        grantEffect(target, "slowness", Math.round(65 * scale), 1);
+                        if (wasChilled) {
+                            target.hurtServer(level, level.damageSources().magic(), 2.6F * scale);
+                            level.playSound(null, BlockPos.containing(pos), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.75F, 1.65F);
+                        }
                     }
                 } else if (hostForm == HostForm.ARMOR) {
                     for (LivingEntity adj : nearbyHostiles(level, player, pos, aoeRadius, null)) {
+                        if (filterDiveCryoTargets && (!LoyaltyGuard.eligibleTarget(player, adj)
+                            || !level.mayInteract(player, adj.blockPosition()))) continue;
                         adj.setTicksFrozen(Math.min(300, adj.getTicksFrozen() + 95));
                         grantEffect(adj, "slowness", 60, 1);
                     }

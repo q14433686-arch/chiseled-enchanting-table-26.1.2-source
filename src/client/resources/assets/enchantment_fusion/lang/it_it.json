@@ -210,9 +210,9 @@
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",
   "signature.enchantment_fusion.sniper_thorns.desc": "Retaliates against distant attackers with a high-velocity spectral counter-bolt.",
   "signature.enchantment_fusion.tide_breaker_dive.title": "Tide-Breaker Dive",
-  "signature.enchantment_fusion.tide_breaker_dive.desc": "Sneaking shatters surface ice underfoot into a dive opening and propels submerged dives forward.",
+  "signature.enchantment_fusion.tide_breaker_dive.desc": "While worn, sneaking removes only this mod’s thin ice below you without producing water or altering vanilla ice; sneak underwater to swim in your look direction. Native Depth Strider and the previous landing bonus remain.",
   "signature.enchantment_fusion.permafrost_wake.title": "Permafrost Wake",
-  "signature.enchantment_fusion.permafrost_wake.desc": "While not sneaking or submerged, places temporary thin ice in air above nearby source water, leaving occupied spaces clear. Also extinguishes you and freezes nearby non-allied creatures.",
+  "signature.enchantment_fusion.permafrost_wake.desc": "While worn and not sneaking or immersed, place temporary thin ice in air above source water; extinguish yourself and chill eligible enemies. Original water is preserved. Native stepping-damage immunity remains; water freezing is replaced.",
   "signature.enchantment_fusion.magma_basalt_step.title": "Magma Basalt Step",
   "signature.enchantment_fusion.magma_basalt_step.desc": "Cools nearby surface lava into solid basalt underfoot and guards from magma.",
   "signature.enchantment_fusion.frost_meteor_fall.title": "Frostfall Reserve",
@@ -889,5 +889,6 @@
   "tooltip.enchantment_fusion.legacy_frost_fall_carrier": "Legacy carrier: previous behavior remains; the new frost-fall skill cannot be installed here.",
   "tooltip.enchantment_fusion.active_skill_keys": "Activate: %1$s · Switch equipped skills: %2$s",
   "gui.enchantment_fusion.retained.selected": "Entry %1$s/%2$s: %3$s",
-  "gui.enchantment_fusion.retained.wait_sync": "Waiting for the server to sync the target item revision; update the server if this persists."
+  "gui.enchantment_fusion.retained.wait_sync": "Waiting for the server to sync the target item revision; update the server if this persists.",
+  "tooltip.enchantment_fusion.legacy_frost_wake_carrier": "Legacy carrier: previous ice-path/dive behavior remains; new fusions require worn boots."
 }

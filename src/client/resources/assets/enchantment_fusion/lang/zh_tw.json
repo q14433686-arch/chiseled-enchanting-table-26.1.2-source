@@ -210,9 +210,9 @@
   "signature.enchantment_fusion.sniper_thorns.title": "追魂反刺",
   "signature.enchantment_fusion.sniper_thorns.desc": "遭遠程偷襲時向攻擊者精準回敬一支高速光靈箭。",
   "signature.enchantment_fusion.tide_breaker_dive.title": "破浪潛行",
-  "signature.enchantment_fusion.tide_breaker_dive.desc": "潛行時震碎腳下冰面開闢潛入孔，並在水中潛行時向前推進潛泳。",
+  "signature.enchantment_fusion.tide_breaker_dive.desc": "While worn, sneaking removes only this mod’s thin ice below you without producing water or altering vanilla ice; sneak underwater to swim in your look direction. Native Depth Strider and the previous landing bonus remain.",
   "signature.enchantment_fusion.permafrost_wake.title": "玄冰凝海",
-  "signature.enchantment_fusion.permafrost_wake.desc": "未潛行、未浸水時，在周圍水源上方的空氣生成暫時薄冰，避開活體；同時為自己滅火並凍結附近非友方生物。",
+  "signature.enchantment_fusion.permafrost_wake.desc": "While worn and not sneaking or immersed, place temporary thin ice in air above source water; extinguish yourself and chill eligible enemies. Original water is preserved. Native stepping-damage immunity remains; water freezing is replaced.",
   "signature.enchantment_fusion.magma_basalt_step.title": "踏火玄武",
   "signature.enchantment_fusion.magma_basalt_step.desc": "行經熔岩表面時将其瞬間冷卻为安全玄武岩，免疫岩漿燙傷！",
   "signature.enchantment_fusion.frost_meteor_fall.title": "Frostfall Reserve",
@@ -889,5 +889,6 @@
   "tooltip.enchantment_fusion.legacy_frost_fall_carrier": "Legacy carrier: previous behavior remains; the new frost-fall skill cannot be installed here.",
   "tooltip.enchantment_fusion.active_skill_keys": "Activate: %1$s · Switch equipped skills: %2$s",
   "gui.enchantment_fusion.retained.selected": "Entry %1$s/%2$s: %3$s",
-  "gui.enchantment_fusion.retained.wait_sync": "Waiting for the server to sync the target item revision; update the server if this persists."
+  "gui.enchantment_fusion.retained.wait_sync": "Waiting for the server to sync the target item revision; update the server if this persists.",
+  "tooltip.enchantment_fusion.legacy_frost_wake_carrier": "Legacy carrier: previous ice-path/dive behavior remains; new fusions require worn boots."
 }
