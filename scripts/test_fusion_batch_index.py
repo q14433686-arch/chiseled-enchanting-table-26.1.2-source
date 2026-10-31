@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Design grouping / default signature precedence only; never a gameplay test."""
+import re
 import unittest
 
 from fusion_batch_index import build_index, default_resolution, default_signature_maps
+from verify_fusion_designs import ROOT, parse_coverage, read_doc
 
 
 class FusionBatchIndexTest(unittest.TestCase):
@@ -11,6 +13,14 @@ class FusionBatchIndexTest(unittest.TestCase):
         self.assertEqual(1806, len(rows))
         self.assertEqual(1806, len({(row['primary'], row['secondary']) for row in rows}))
         self.assertTrue(all(row['design_category'] and row['family'] for row in rows))
+
+    def test_abstract_profiles_cover_every_default_enchantment_once(self):
+        _, names = parse_coverage(read_doc('FUSION_MATRIX_COVERAGE.md'))
+        document = (ROOT / 'docs/FUSION_BATCH_IMPLEMENTATION.md').read_text(encoding='utf-8')
+        section = document.split('## 43 种原版附魔', 1)[1].split('## 潜行选中模板', 1)[0]
+        found = re.findall(r'^\| `([^`]+)`', section, re.MULTILINE)
+        self.assertEqual(43, len(found))
+        self.assertEqual(set(names), set(found))
 
     def test_selected_melee_families_find_six_directions_each(self):
         rows = build_index()
