@@ -19,6 +19,8 @@ from verify_fusion_designs import ROOT, category, parse_coverage, read_doc
 # Shared probes run multiple directions and cannot attribute a failure to either;
 # neither kind of probe presently establishes a *complete* direction PASS.
 DIRECTION_FIXTURES = {
+    ("fire_aspect", "sweeping_edge"): ("02-fire-sweep", True),
+    ("sweeping_edge", "fire_aspect"): ("02-sweep-fire", True),
     ("fire_aspect", "knockback"): ("01-fire-knockback", False),
     ("knockback", "fire_aspect"): ("01-fire-knockback", False),
     ("mending", "unbreaking"): ("05-mending-unbreaking", True),

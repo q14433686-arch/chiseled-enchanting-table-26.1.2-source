@@ -23,6 +23,7 @@ import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
+import enchantment_fusion.mechanics.signatures.FireSweepSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
@@ -125,6 +126,9 @@ public final class DirectionalHostRules {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (SoulThreadSkills.matches(pair, signature) && !SoulThreadSkills.supportsCarrier(actual)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
+        if (FireSweepSkills.matches(pair, signature) && !FireSweepSkills.supportsCarrier(actual, signature)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (FireThornsSkills.matches(pair, signature) && !FireThornsSkills.supportsHost(host)) {

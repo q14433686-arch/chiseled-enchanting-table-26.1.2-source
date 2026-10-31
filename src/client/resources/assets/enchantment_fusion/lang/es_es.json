@@ -135,10 +135,10 @@
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
   "signature.enchantment_fusion.blazing_furrow.desc": "A fully charged hit launches the target. Its next second of travel leaves a 3-second wake that ignites and pushes other enemies along the path. No fire blocks are placed.",
-  "signature.enchantment_fusion.wildfire_arc.title": "Wildfire Arc",
-  "signature.enchantment_fusion.wildfire_arc.desc": "Sweeping strikes unleash a wide arc of wildfire that ignites every foe hit.",
-  "signature.enchantment_fusion.soulburn_detonate.title": "Soulburn Detonate",
-  "signature.enchantment_fusion.soulburn_detonate.desc": "Striking a burning enemy detonates their flames into an AoE blast.",
+  "signature.enchantment_fusion.wildfire_arc.title": "Límite de brasas",
+  "signature.enchantment_fusion.wildfire_arc.desc": "[Aspecto ígneo ▷ Barrido] Un golpe cuerpo a cuerpo cargado y efectivo traza una breve línea virtual; los enemigos que la cruzan arden, sin colocar fuego.",
+  "signature.enchantment_fusion.soulburn_detonate.title": "Mechas de incendio",
+  "signature.enchantment_fusion.soulburn_detonate.desc": "[Barrido ▷ Aspecto ígneo] Un barrido real de espada marca a los enemigos heridos. Golpear otra vez a uno enciende una cadena de marcas cercanas.",
   "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
   "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
   "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
@@ -996,5 +996,6 @@
   "message.enchantment_fusion.soul_released": "Presión anímica liberada.",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "El objeto antiguo conserva su efecto; la nueva habilidad requiere un arma cuerpo a cuerpo en la mano principal.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades requieren armadura dañable o escudo en mano.",
-  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Los objetos antiguos conservan sus efectos; los nuevos requieren arco/ballesta o herramienta de minería según la dirección."
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Los objetos antiguos conservan sus efectos; los nuevos requieren arco/ballesta o herramienta de minería según la dirección.",
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "El objeto antiguo conserva su efecto; el límite usa armas cuerpo a cuerpo y la mecha requiere barrido de espada."
 }

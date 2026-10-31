@@ -135,10 +135,10 @@
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
   "signature.enchantment_fusion.blazing_furrow.desc": "A fully charged hit launches the target. Its next second of travel leaves a 3-second wake that ignites and pushes other enemies along the path. No fire blocks are placed.",
-  "signature.enchantment_fusion.wildfire_arc.title": "Wildfire Arc",
-  "signature.enchantment_fusion.wildfire_arc.desc": "Sweeping strikes unleash a wide arc of wildfire that ignites every foe hit.",
-  "signature.enchantment_fusion.soulburn_detonate.title": "Soulburn Detonate",
-  "signature.enchantment_fusion.soulburn_detonate.desc": "Striking a burning enemy detonates their flames into an AoE blast.",
+  "signature.enchantment_fusion.wildfire_arc.title": "Граница углей",
+  "signature.enchantment_fusion.wildfire_arc.desc": "[Заговор огня ▷ Разящий клинок] Полностью заряженный успешный удар создаёт короткую виртуальную линию; пересекающие её враги загораются, блоки огня не ставятся.",
+  "signature.enchantment_fusion.soulburn_detonate.title": "Огненные фитили",
+  "signature.enchantment_fusion.soulburn_detonate.desc": "[Разящий клинок ▷ Заговор огня] Настоящий размашистый удар мечом помечает раненых врагов. Следующий удар по метке последовательно взрывает соседние.",
   "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
   "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
   "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
@@ -996,5 +996,6 @@
   "message.enchantment_fusion.soul_released": "Давление душ выпущено.",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Старый предмет сохраняет эффект; новые умения требуют оружие ближнего боя в основной руке.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Старый предмет сохраняет эффект; нужны изнашиваемая броня или щит в руке.",
-  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Старые предметы сохраняют эффекты; для новых нужны лук/арбалет или инструмент добычи согласно направлению."
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Старые предметы сохраняют эффекты; для новых нужны лук/арбалет или инструмент добычи согласно направлению.",
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "Старый предмет сохраняет эффект; границе нужно оружие ближнего боя, фитилям — размашистый удар мечом."
 }

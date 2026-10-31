@@ -135,10 +135,10 @@
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
   "signature.enchantment_fusion.blazing_furrow.desc": "A fully charged hit launches the target. Its next second of travel leaves a 3-second wake that ignites and pushes other enemies along the path. No fire blocks are placed.",
-  "signature.enchantment_fusion.wildfire_arc.title": "Wildfire Arc",
-  "signature.enchantment_fusion.wildfire_arc.desc": "Sweeping strikes unleash a wide arc of wildfire that ignites every foe hit.",
-  "signature.enchantment_fusion.soulburn_detonate.title": "Soulburn Detonate",
-  "signature.enchantment_fusion.soulburn_detonate.desc": "Striking a burning enemy detonates their flames into an AoE blast.",
+  "signature.enchantment_fusion.wildfire_arc.title": "Frontière de braises",
+  "signature.enchantment_fusion.wildfire_arc.desc": "[Aura de feu ▷ Affilage] Un coup de mêlée chargé et effectif trace une courte ligne virtuelle. Les ennemis qui la traversent brûlent, sans bloc de feu.",
+  "signature.enchantment_fusion.soulburn_detonate.title": "Mèches incendiaires",
+  "signature.enchantment_fusion.soulburn_detonate.desc": "[Affilage ▷ Aura de feu] Un vrai balayage d’épée marque les ennemis blessés. Frapper une marque déclenche une chaîne parmi les marques voisines.",
   "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
   "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
   "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
@@ -996,5 +996,6 @@
   "message.enchantment_fusion.soul_released": "Pression spirituelle libérée.",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "L’ancien support conserve son effet ; la nouvelle capacité exige une arme de mêlée en main principale.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "L’ancien support conserve son effet ; les nouvelles capacités exigent une armure endommageable ou un bouclier tenu.",
-  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Les anciens supports gardent leurs effets ; les nouveaux exigent un arc/une arbalète ou un outil de minage selon le sens."
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "Les anciens supports gardent leurs effets ; les nouveaux exigent un arc/une arbalète ou un outil de minage selon le sens.",
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "L’ancien support garde son effet ; la frontière utilise une arme de mêlée, la mèche un balayage d’épée."
 }

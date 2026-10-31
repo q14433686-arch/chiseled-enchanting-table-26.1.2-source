@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
+import enchantment_fusion.mechanics.signatures.FireSweepSkills;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -30,11 +31,14 @@ public abstract class PlayerAmberAttackMixin {
         try {
             SoulThreadSkills.Swing soulSwing = SoulThreadSkills.beginSwing(player, target);
             try {
-                HeavyCrushSkill.Swing heavySwing = HeavyCrushSkill.beginSwing(player, target);
+                FireSweepSkills.Swing fireSweep = FireSweepSkills.beginSwing(player);
                 try {
-                    MomentumSealSkills.Attack momentum = MomentumSealSkills.beginAttack(player, player.getWeaponItem(), target);
-                    try { original.call(target); } finally { MomentumSealSkills.endAttack(momentum); }
-                } finally { HeavyCrushSkill.endSwing(heavySwing); }
+                    HeavyCrushSkill.Swing heavySwing = HeavyCrushSkill.beginSwing(player, target);
+                    try {
+                        MomentumSealSkills.Attack momentum = MomentumSealSkills.beginAttack(player, player.getWeaponItem(), target);
+                        try { original.call(target); } finally { MomentumSealSkills.endAttack(momentum); }
+                    } finally { HeavyCrushSkill.endSwing(heavySwing); }
+                } finally { FireSweepSkills.endSwing(fireSweep); }
             } finally { SoulThreadSkills.endSwing(soulSwing); }
         } finally { GlazedStrikeEffect.endSwing(swing); }
     }
@@ -61,18 +65,22 @@ public abstract class PlayerAmberAttackMixin {
         boolean succeeded = false;
         try {
             ItemStack weapon = player.getWeaponItem();
-            SoulThreadSkills.Hit soulHit = SoulThreadSkills.beginHit(player, weapon, target, source,
-                SoulThreadSkills.swingFull(player, weapon, target));
+            boolean full = SoulThreadSkills.swingFull(player, weapon, target);
+            FireSweepSkills.Hit fireSweep = FireSweepSkills.beginHit(player, weapon, target, source, full);
+            SoulThreadSkills.Hit soulHit = SoulThreadSkills.beginHit(player, weapon, target, source, full);
             try {
                 HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginMelee(player, weapon, target, source, false);
                 try {
                     succeeded = original.call(target, source, damage);
                     return succeeded;
                 } finally {
-                    try { FireThornsSkills.afterAttack(thorns, player, target, source, succeeded); }
+                    try { FireSweepSkills.endHit(fireSweep, succeeded); }
                     finally {
-                        try { MomentumSealSkills.damageResult(player, target, source, succeeded); }
-                        finally { HeavyCrushSkill.endHit(heavyHit, succeeded); }
+                        try { FireThornsSkills.afterAttack(thorns, player, target, source, succeeded); }
+                        finally {
+                            try { MomentumSealSkills.damageResult(player, target, source, succeeded); }
+                            finally { HeavyCrushSkill.endHit(heavyHit, succeeded); }
+                        }
                     }
                 }
             } finally { SoulThreadSkills.endHit(soulHit, succeeded); }
@@ -91,18 +99,22 @@ public abstract class PlayerAmberAttackMixin {
         boolean succeeded = false;
         try {
             ItemStack weapon = player.getItemBySlot(slot);
-            SoulThreadSkills.Hit soulHit = SoulThreadSkills.beginHit(player, weapon, target, source,
-                SoulThreadSkills.stabFull(player, slot, weapon));
+            boolean full = SoulThreadSkills.stabFull(player, slot, weapon);
+            FireSweepSkills.Hit fireSweep = FireSweepSkills.beginHit(player, weapon, target, source, full);
+            SoulThreadSkills.Hit soulHit = SoulThreadSkills.beginHit(player, weapon, target, source, full);
             try {
                 HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginMelee(player, weapon, target, source, true);
                 try {
                     succeeded = original.call(target, source, damage);
                     return succeeded;
                 } finally {
-                    try { FireThornsSkills.afterAttack(thorns, player, target, source, succeeded); }
+                    try { FireSweepSkills.endHit(fireSweep, succeeded); }
                     finally {
-                        try { MomentumSealSkills.damageResult(player, target, source, succeeded); }
-                        finally { HeavyCrushSkill.endHit(heavyHit, succeeded); }
+                        try { FireThornsSkills.afterAttack(thorns, player, target, source, succeeded); }
+                        finally {
+                            try { MomentumSealSkills.damageResult(player, target, source, succeeded); }
+                            finally { HeavyCrushSkill.endHit(heavyHit, succeeded); }
+                        }
                     }
                 }
             } finally { SoulThreadSkills.endHit(soulHit, succeeded); }
@@ -114,6 +126,16 @@ public abstract class PlayerAmberAttackMixin {
     private void ef$soulThreadPostAttack(ServerLevel level, Entity victim, DamageSource source, ItemStack weapon, Operation<Void> original) {
         original.call(level, victim, source, weapon);
         SoulThreadSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
+        FireSweepSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
+    }
+
+    @WrapOperation(method = "doSweepAttack", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
+    private boolean ef$recordRealSweep(LivingEntity victim, ServerLevel level, DamageSource source, float damage, Operation<Boolean> original) {
+        float health = victim.getHealth(), absorption = victim.getAbsorptionAmount();
+        boolean accepted = original.call(victim, level, source, damage);
+        FireSweepSkills.afterSweep((Player) (Object) this, victim, source, health, absorption, accepted);
+        return accepted;
     }
 
     @WrapOperation(method = {"attack", "stabAttack"}, at = @At(value = "INVOKE",

@@ -135,10 +135,10 @@
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
   "signature.enchantment_fusion.blazing_furrow.desc": "A fully charged hit launches the target. Its next second of travel leaves a 3-second wake that ignites and pushes other enemies along the path. No fire blocks are placed.",
-  "signature.enchantment_fusion.wildfire_arc.title": "Wildfire Arc",
-  "signature.enchantment_fusion.wildfire_arc.desc": "Sweeping strikes unleash a wide arc of wildfire that ignites every foe hit.",
-  "signature.enchantment_fusion.soulburn_detonate.title": "Soulburn Detonate",
-  "signature.enchantment_fusion.soulburn_detonate.desc": "Striking a burning enemy detonates their flames into an AoE blast.",
+  "signature.enchantment_fusion.wildfire_arc.title": "Confine di braci",
+  "signature.enchantment_fusion.wildfire_arc.desc": "[Aspetto di fuoco ▷ Lama sferzante] Un colpo da mischia completamente carico ed efficace traccia una breve linea virtuale; chi la attraversa brucia, senza blocchi di fuoco.",
+  "signature.enchantment_fusion.soulburn_detonate.title": "Micce di incendio",
+  "signature.enchantment_fusion.soulburn_detonate.desc": "[Lama sferzante ▷ Aspetto di fuoco] Una vera spazzata di spada marca i nemici feriti. Colpirne uno innesca in sequenza le micce vicine.",
   "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
   "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
   "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
@@ -996,5 +996,6 @@
   "message.enchantment_fusion.soul_released": "Pressione spirituale liberata.",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Il vecchio oggetto mantiene l’effetto; la nuova abilità richiede un’arma da mischia nella mano principale.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Il vecchio oggetto conserva l’effetto; servono armatura danneggiabile o scudo impugnato.",
-  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "I vecchi oggetti mantengono gli effetti; per quelli nuovi servono arco/balestra o attrezzo da scavo secondo la direzione."
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "I vecchi oggetti mantengono gli effetti; per quelli nuovi servono arco/balestra o attrezzo da scavo secondo la direzione.",
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "I vecchi oggetti mantengono gli effetti; il confine usa armi da mischia, le micce una spazzata di spada."
 }

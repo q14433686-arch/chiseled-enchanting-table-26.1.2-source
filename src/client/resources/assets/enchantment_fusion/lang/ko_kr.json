@@ -135,10 +135,10 @@
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
   "signature.enchantment_fusion.blazing_furrow.desc": "A fully charged hit launches the target. Its next second of travel leaves a 3-second wake that ignites and pushes other enemies along the path. No fire blocks are placed.",
-  "signature.enchantment_fusion.wildfire_arc.title": "Wildfire Arc",
-  "signature.enchantment_fusion.wildfire_arc.desc": "Sweeping strikes unleash a wide arc of wildfire that ignites every foe hit.",
-  "signature.enchantment_fusion.soulburn_detonate.title": "Soulburn Detonate",
-  "signature.enchantment_fusion.soulburn_detonate.desc": "Striking a burning enemy detonates their flames into an AoE blast.",
+  "signature.enchantment_fusion.wildfire_arc.title": "잔불 경계",
+  "signature.enchantment_fusion.wildfire_arc.desc": "【발화 ▷ 휩쓸기】완전 충전 근접 공격으로 실제 피해를 주면 짧은 가상 잔불 선을 그립니다. 적이 통과하면 점화되며 불 블록은 생기지 않습니다.",
+  "signature.enchantment_fusion.soulburn_detonate.title": "들불 도화선",
+  "signature.enchantment_fusion.soulburn_detonate.desc": "【휩쓸기 ▷ 발화】검의 실제 휩쓸기로 피해를 입은 적에게 도화선을 남깁니다. 표시된 적을 다시 맞히면 주변 도화선이 차례로 폭발합니다.",
   "signature.enchantment_fusion.cyclone_repulse.title": "Cyclone Repulse",
   "signature.enchantment_fusion.cyclone_repulse.desc": "Turns sweeping attacks into a 360-degree shockwave that repels surrounding mobs.",
   "signature.enchantment_fusion.gale_vortex.title": "Gale Vortex",
@@ -996,5 +996,6 @@
   "message.enchantment_fusion.soul_released": "영혼 압력이 해방되었습니다.",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 주 손의 근접 무기가 필요합니다.",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 내구도 있는 방어구나 손에 든 방패가 필요합니다.",
-  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "기존 장비의 효과는 유지됩니다. 새로 부착하려면 방향에 맞는 활/쇠뇌 또는 채굴 도구가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "기존 장비의 효과는 유지됩니다. 새로 부착하려면 방향에 맞는 활/쇠뇌 또는 채굴 도구가 필요합니다.",
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "기존 장비는 기존 효과를 유지합니다. 새 경계는 근접 무기, 도화선은 검의 휩쓸기가 필요합니다."
 }

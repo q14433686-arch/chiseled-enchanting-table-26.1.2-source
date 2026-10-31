@@ -135,10 +135,10 @@
   "signature.enchantment_fusion.blast_flare.desc": "滿蓄命中後點燃並擊退目標；2 秒內撞牆會引爆熱浪，傷害附近敵人。不破壞方塊。",
   "signature.enchantment_fusion.blazing_furrow.title": "燃風軌跡",
   "signature.enchantment_fusion.blazing_furrow.desc": "滿蓄命中後擊退目標，其隨後 1 秒的移動路徑留下 3 秒燃風；其他敵人穿過時被點燃並順風推走。不放置火。",
-  "signature.enchantment_fusion.wildfire_arc.title": "燎原火刃",
-  "signature.enchantment_fusion.wildfire_arc.desc": "橫掃劍氣化为扇形烈焰弧光，将前方整片敵群一並點燃。",
-  "signature.enchantment_fusion.soulburn_detonate.title": "燃魂爆裂",
-  "signature.enchantment_fusion.soulburn_detonate.desc": "命中已处于燃燒狀態的目標時立即引爆餘燼，炸伤周圍敵群。",
+  "signature.enchantment_fusion.wildfire_arc.title": "餘燼界",
+  "signature.enchantment_fusion.wildfire_arc.desc": "【火焰附加 ▷ 橫掃之刃】滿蓄近戰造成有效傷害後畫出短暫虛擬餘燼線；敵人穿過時被點燃，不放火方塊。",
+  "signature.enchantment_fusion.soulburn_detonate.title": "燎原引信",
+  "signature.enchantment_fusion.soulburn_detonate.desc": "【橫掃之刃 ▷ 火焰附加】劍的真實橫掃為受傷敵人留下引信；再次命中其中一個，沿附近引信依次引爆。",
   "signature.enchantment_fusion.cyclone_repulse.title": "旋风震退",
   "signature.enchantment_fusion.cyclone_repulse.desc": "橫掃化作360度环形氣浪，将貼身圍攻的怪物盡數震開。",
   "signature.enchantment_fusion.gale_vortex.title": "聚风劍渦",
@@ -996,5 +996,6 @@
   "message.enchantment_fusion.soul_released": "魂壓已釋放。",
   "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "舊載體保留原效果；新魂網技能需要主手近戰武器。",
   "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "舊載體保留原效果；新荊棘技能適合可損傷護甲或手持盾牌。",
-  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "舊載體保留原效果；新裝載按方向使用弓／弩或採掘工具。"
+  "tooltip.enchantment_fusion.legacy_retained_volley_carrier": "舊載體保留原效果；新裝載按方向使用弓／弩或採掘工具。",
+  "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "舊載體保留原效果；新餘燼界使用近戰武器，引信需要劍的真實橫掃。"
 }

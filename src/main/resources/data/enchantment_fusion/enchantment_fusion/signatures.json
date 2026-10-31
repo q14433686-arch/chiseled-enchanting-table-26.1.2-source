@@ -50,12 +50,20 @@
     "wildfire_arc": {
       "primary": "minecraft:fire_aspect",
       "secondary": "minecraft:sweeping_edge",
-      "domain": "melee"
+      "domain": "melee",
+      "lifetime_ticks": 100,
+      "half_length_tenths": 25,
+      "ignition_seconds": 3
     },
     "soulburn_detonate": {
       "primary": "minecraft:sweeping_edge",
       "secondary": "minecraft:fire_aspect",
-      "domain": "melee"
+      "domain": "melee",
+      "fuse_lifetime_ticks": 120,
+      "first_delay_ticks": 10,
+      "step_delay_ticks": 3,
+      "link_range_tenths": 40,
+      "ignition_seconds": 3
     },
     "cyclone_repulse": {
       "primary": "minecraft:knockback",
