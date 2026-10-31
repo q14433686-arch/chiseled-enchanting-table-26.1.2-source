@@ -55,6 +55,14 @@ class AuditBoundaryTest {
     void retainedSecondariesHaveStrictAndMatchingPersistentAndNetworkCodecs() {
         RetainedEnchant kept = new RetainedEnchant("protection", 4);
         assertEquals("minecraft:protection", kept.id());
+        String one = RetainedEnchant.selectionToken(List.of(kept), 0);
+        String two = RetainedEnchant.selectionToken(List.of(kept, kept), 0);
+        assertTrue(one.startsWith("retained:0:") && one.length() < 128);
+        assertNotEquals(one, two, "A replay after removing the first of two identical entries must go stale");
+        assertNotEquals(two, RetainedEnchant.selectionToken(List.of(kept, kept), 1));
+        assertNotEquals(one, RetainedEnchant.selectionToken(List.of(new RetainedEnchant("protection", 3)), 0));
+        assertEquals("", RetainedEnchant.selectionToken(List.of(kept), 1));
+        assertEquals(FusionNetworking.StationAction.EXTRACT_RETAINED, FusionNetworking.StationAction.fromWireId(22));
         var encoded = RetainedEnchant.CODEC.encodeStart(JsonOps.INSTANCE, kept).result().orElseThrow();
         assertEquals(kept, RetainedEnchant.CODEC.parse(JsonOps.INSTANCE, encoded).result().orElseThrow());
         assertTrue(RetainedEnchant.CODEC.parse(JsonOps.INSTANCE,

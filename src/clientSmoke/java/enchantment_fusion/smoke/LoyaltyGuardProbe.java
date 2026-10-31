@@ -1,7 +1,10 @@
 package enchantment_fusion.smoke;
 
 import enchantment_fusion.mechanics.FusionStationOperations;
+import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
+import enchantment_fusion.menu.EnchantmentFusionMenu;
+import enchantment_fusion.menu.FusionNetworking.StationAction;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.RetainedEnchant;
@@ -12,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -19,7 +23,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,7 +55,8 @@ final class LoyaltyGuardProbe {
         Holder<Enchantment> loyalty = enchant(level, "loyalty");
         Holder<Enchantment> protection = enchant(level, "protection");
         Holder<Enchantment> unbreaking = enchant(level, "unbreaking");
-        exerciseData(level, loyalty, protection, unbreaking);
+        exerciseData(player, level, loyalty, protection, unbreaking);
+        exerciseIndependentSecondaryPreservation(player, unbreaking);
 
         List<ItemStack> savedSlots = new ArrayList<>();
         for (EquipmentSlot slot : SLOTS) savedSlots.add(player.getItemBySlot(slot));
@@ -142,8 +149,8 @@ final class LoyaltyGuardProbe {
         }
     }
 
-    private static void exerciseData(ServerLevel level, Holder<Enchantment> loyalty, Holder<Enchantment> protection,
-                                     Holder<Enchantment> unbreaking) {
+    private static void exerciseData(ServerPlayer player, ServerLevel level, Holder<Enchantment> loyalty,
+                                     Holder<Enchantment> protection, Holder<Enchantment> unbreaking) {
         ItemStack trident = new ItemStack(Items.TRIDENT);
         trident.enchant(unbreaking, 3);
         FusionStationOperations.applyFusedPairToGear(trident, GUARD, level.registryAccess());
@@ -174,10 +181,113 @@ final class LoyaltyGuardProbe {
         List<RetainedEnchant> retained = kept.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.of());
         require(retained.size() == 1 && retained.getFirst().level() == 4,
             "A conflicting secondary must be kept separately at its exact level");
+        exerciseRetainedExtraction(player, kept.copy(), protection, unbreaking);
         FusionStationOperations.removeGearVanillaEnchant(kept, "minecraft:protection");
         require(LoyaltyGuard.materializeRetained(kept, level.registryAccess()) && enchantLevel(kept, protection) == 4
             && kept.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.of()).isEmpty(),
             "A preserved secondary should restore once its collision is gone");
+    }
+
+    private static void exerciseIndependentSecondaryPreservation(ServerPlayer player, Holder<Enchantment> unbreaking) {
+        var registries = player.level().registryAccess();
+        SimpleContainer inv = new SimpleContainer(4);
+        ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
+        FusedPair old = FusedPair.clean("minecraft:sharpness", 3, "minecraft:unbreaking", 3);
+        sword.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(old));
+        sword.enchant(unbreaking, 2); // An independent legacy same-name secondary.
+        inv.setItem(FusionStationOperations.SLOT_TARGET, sword);
+        inv.setItem(FusionStationOperations.SLOT_CATALYST, new ItemStack(Items.AMETHYST_SHARD));
+        require(FusionStationOperations.executeUnsocketOrSplitWithReason(inv, player, registries, 0, old.fingerprint()).success(),
+            "A valid legacy fusion should be extractable");
+        require(enchantLevel(sword, unbreaking) == 2 && inv.getItem(FusionStationOperations.SLOT_PRIMARY).is(enchantment_fusion.registry.FusionItems.FUSED_ENCHANTED_BOOK),
+            "Extracting a fusion must not delete an independent native secondary");
+
+        SimpleContainer shared = new SimpleContainer(4);
+        ItemStack sword2 = new ItemStack(Items.DIAMOND_SWORD);
+        FusedPair first = FusedPair.clean("minecraft:unbreaking", 2, "minecraft:sharpness", 3);
+        FusedPair remaining = FusedPair.clean("minecraft:mending", 1, "minecraft:unbreaking", 2);
+        sword2.enchant(unbreaking, 2);
+        sword2.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(first).append(remaining));
+        shared.setItem(FusionStationOperations.SLOT_TARGET, sword2);
+        shared.setItem(FusionStationOperations.SLOT_CATALYST, new ItemStack(Items.AMETHYST_SHARD));
+        require(FusionStationOperations.executeUnsocketOrSplitWithReason(shared, player, registries, 0, first.fingerprint()).success()
+            && enchantLevel(sword2, unbreaking) == 2
+            && sword2.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().equals(List.of(remaining)),
+            "A primary referenced by another legacy fusion must not be erased on extraction");
+
+        SimpleContainer changed = new SimpleContainer(4);
+        ItemStack sword3 = new ItemStack(Items.DIAMOND_SWORD);
+        sword3.enchant(unbreaking, 3); // Different from the pair's level; not an untouched projection.
+        sword3.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(first));
+        changed.setItem(FusionStationOperations.SLOT_TARGET, sword3);
+        changed.setItem(FusionStationOperations.SLOT_CATALYST, new ItemStack(Items.AMETHYST_SHARD));
+        require(FusionStationOperations.executeUnsocketOrSplitWithReason(changed, player, registries, 0, first.fingerprint()).success()
+            && enchantLevel(sword3, unbreaking) == 3,
+            "A native primary changed to another level must not be erased as a projection");
+    }
+
+    private static void exerciseRetainedExtraction(ServerPlayer player, ItemStack target,
+                                                   Holder<Enchantment> protection, Holder<Enchantment> unbreaking) {
+        SimpleContainer inv = new SimpleContainer(4);
+        inv.setItem(FusionStationOperations.SLOT_TARGET, target);
+        inv.setItem(FusionStationOperations.SLOT_CATALYST, new ItemStack(Items.AMETHYST_SHARD, 2));
+        RetainedEnchant retained = target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).getFirst();
+        EnchantmentFusionMenu menu = new EnchantmentFusionMenu(0, player.getInventory(), inv,
+            ContainerLevelAccess.NULL, BlockPos.ZERO);
+        try {
+            require(!menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, "stale")
+                && target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).size() == 1,
+                "A stale preserved-entry token must do nothing");
+            inv.setItem(FusionStationOperations.SLOT_PRIMARY, new ItemStack(Items.BOOK));
+            var occupied = menu.performActionWithResult(player, StationAction.EXTRACT_RETAINED, 0, 0, RetainedEnchant.selectionToken(List.of(retained), 0));
+            require(!occupied.success() && occupied.reason() == RejectReason.RETAINED_OUTPUT_OCCUPIED
+                && inv.getItem(FusionStationOperations.SLOT_CATALYST).getCount() == 2,
+                "An occupied output must reject before taking payment or modifying the item");
+            inv.setItem(FusionStationOperations.SLOT_PRIMARY, ItemStack.EMPTY);
+            RetainedEnchant missing = new RetainedEnchant("missing:unloaded_enchantment", 4);
+            target.set(FusionDataComponents.RETAINED_ENCHANTS, List.of(missing));
+            var absent = menu.performActionWithResult(player, StationAction.EXTRACT_RETAINED, 0, 0, RetainedEnchant.selectionToken(List.of(missing), 0));
+            require(!absent.success() && absent.reason() == RejectReason.RETAINED_ENCHANTMENT_UNAVAILABLE
+                && target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).equals(List.of(missing))
+                && inv.getItem(FusionStationOperations.SLOT_CATALYST).getCount() == 2,
+                "A missing mod enchantment must remain preserved without payment");
+            target.set(FusionDataComponents.RETAINED_ENCHANTS, List.of(retained));
+            require(menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, RetainedEnchant.selectionToken(List.of(retained), 0)),
+                "The preserved secondary should be extractable through the station menu");
+            ItemStack book = inv.getItem(FusionStationOperations.SLOT_PRIMARY);
+            require(book.is(Items.ENCHANTED_BOOK)
+                && book.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(protection) == 4,
+                "The extracted book must retain the exact secondary level");
+            require(enchantLevel(target, protection) == 2 && enchantLevel(target, unbreaking) == 3
+                && target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).isEmpty()
+                && inv.getItem(FusionStationOperations.SLOT_CATALYST).getCount() == 1,
+                "Extraction must preserve independent enchantments and deduct exactly one catalyst");
+            require(!menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, RetainedEnchant.selectionToken(List.of(retained), 0))
+                && inv.getItem(FusionStationOperations.SLOT_PRIMARY) == book,
+                "Replaying an extraction cannot create another book");
+
+            // A delayed duplicate packet must not accidentally consume a second identical entry.
+            inv.setItem(FusionStationOperations.SLOT_PRIMARY, ItemStack.EMPTY);
+            target.set(FusionDataComponents.RETAINED_ENCHANTS, List.of(retained, retained));
+            inv.setItem(FusionStationOperations.SLOT_CATALYST, new ItemStack(Items.AMETHYST_SHARD, 2));
+            String twoToken = RetainedEnchant.selectionToken(List.of(retained, retained), 0);
+            require(menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, twoToken),
+                "The first of two identical preserved entries must be extractable");
+            ItemStack firstBook = inv.getItem(FusionStationOperations.SLOT_PRIMARY);
+            inv.setItem(FusionStationOperations.SLOT_PRIMARY, ItemStack.EMPTY);
+            require(!menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, twoToken)
+                && target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).size() == 1
+                && inv.getItem(FusionStationOperations.SLOT_CATALYST).getCount() == 1,
+                "An old token must not consume the remaining identical entry");
+            require(menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0,
+                    RetainedEnchant.selectionToken(List.of(retained), 0))
+                && inv.getItem(FusionStationOperations.SLOT_PRIMARY) != firstBook
+                && inv.getItem(FusionStationOperations.SLOT_PRIMARY).getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY)
+                    .getLevel(protection) == 4,
+                "The second entry requires a fresh selection and keeps its exact level");
+        } finally {
+            menu.removed(player);
+        }
     }
 
     private static FusedPair pair(ItemStack stack) {

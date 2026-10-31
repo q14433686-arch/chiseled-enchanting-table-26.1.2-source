@@ -29,7 +29,9 @@ public final class FusionRuleEngine {
         TRANSMUTE_CAP_FULL("gui.enchantment_fusion.reject.transmute_cap_full"),
         SELECT_SINGLE_FOR_CONSUMABLE("gui.enchantment_fusion.reject.select_single_for_consumable"),
         UNSUPPORTED_DIRECTION_HOST("gui.enchantment_fusion.reject.unsupported_direction_host"),
-        UNCLASSIFIED_ENCHANTMENT("gui.enchantment_fusion.reject.unclassified_enchantment");
+        UNCLASSIFIED_ENCHANTMENT("gui.enchantment_fusion.reject.unclassified_enchantment"),
+        RETAINED_OUTPUT_OCCUPIED("gui.enchantment_fusion.reject.retained_output_occupied"),
+        RETAINED_ENCHANTMENT_UNAVAILABLE("gui.enchantment_fusion.reject.retained_enchantment_unavailable");
 
         private final String langKey;
 

@@ -20,6 +20,7 @@ import enchantment_fusion.menu.FusionNetworking.StationActionPayload;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.HostForm;
+import enchantment_fusion.model.RetainedEnchant;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
 import java.util.ArrayList;
@@ -78,6 +79,8 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     // Interactive HitBoxes (relative to leftPos, topPos)
     public static final HitBox SWAP_BTN = new HitBox(38, 29, 20, 20);
     public static final HitBox GRIMOIRE_BTN = new HitBox(279, 8, 18, 16);
+    /** Visible on equipment with a collision-preserved secondary, even if both sockets are occupied. */
+    public static final HitBox RETAINED_BTN = new HitBox(237, 8, 14, 16);
     public static final HitBox EXEC_BTN = new HitBox(193, 96, 102, 18);
 
     // Book Synthesis Mode HitBoxes
@@ -452,13 +455,22 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         ItemStack host = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
         int maxSlots = VesselCapacityRules.getMaxVesselSlots(host);
         FusedEnchantmentList socketed = host.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        List<RetainedEnchant> retained = host.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of());
 
         FusionGuiSkin.drawLeftBoundedText(
             ctx, this.font,
             "\u25C6 " + Component.translatable("gui.enchantment_fusion.tab.socket").getString(),
-            left + RIGHT_INNER_X, top + 12, 58,
+            left + RIGHT_INNER_X, top + 12, retained.isEmpty() ? 58 : 42,
             0.58F, FusionGuiSkin.COLOR_GOLD
         );
+        if (!retained.isEmpty()) {
+            boolean canAct = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty()
+                && (this.menu.viewer().getAbilities().instabuild || this.menu.viewer().experienceLevel >= preview.manageXpCost())
+                && !FusionRitualDirector.isChanneling();
+            FusionGuiSkin.drawButtonBox(ctx, this.font, left, top, RETAINED_BTN,
+                canAct, RETAINED_BTN.containsAt(left, top, mouseX, mouseY),
+                "\u21e7", 0.52F, FusionGuiSkin.COLOR_GOLD);
+        }
 
         for (int idx = 0; idx < 2; idx++) {
             int cy = top + 27 + idx * 17;
@@ -775,7 +787,23 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             return;
         }
 
-        if (lines.isEmpty() && GRIMOIRE_BTN.containsAt(left, top, mouseX, mouseY)) {
+        ItemStack retainedHost = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
+        List<RetainedEnchant> retainedEntries = retainedHost.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of());
+        if (lines.isEmpty() && gearMode && !retainedEntries.isEmpty() && RETAINED_BTN.containsAt(left, top, mouseX, mouseY)) {
+            RetainedEnchant first = retainedEntries.getFirst();
+            lines.add(Component.translatable("gui.enchantment_fusion.retained.title", retainedEntries.size()).withStyle(ChatFormatting.GOLD));
+            lines.add(FusionTooltipRenderer.formatEnchantmentWithLevel(registries, first.id(), first.level()).copy().withStyle(ChatFormatting.AQUA));
+            lines.add(Component.translatable("gui.enchantment_fusion.retained.extract_help").withStyle(ChatFormatting.GRAY));
+            if (!this.menu.stationContainer().getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty()) {
+                lines.add(Component.translatable(RejectReason.RETAINED_OUTPUT_OCCUPIED.langKey()).withStyle(ChatFormatting.RED));
+            } else if (FusionStationOperations.lookupEnchantment(registries, first.id()).isEmpty()) {
+                lines.add(Component.translatable(RejectReason.RETAINED_ENCHANTMENT_UNAVAILABLE.langKey()).withStyle(ChatFormatting.RED));
+            } else if (!this.menu.viewer().getAbilities().instabuild && this.menu.viewer().experienceLevel < preview.manageXpCost()) {
+                lines.add(Component.translatable("gui.enchantment_fusion.tip.manage_need_xp", preview.manageXpCost()).withStyle(ChatFormatting.RED));
+            } else {
+                lines.add(Component.translatable("gui.enchantment_fusion.preview.xp_cost", preview.manageXpCost()).withStyle(ChatFormatting.GREEN));
+            }
+        } else if (lines.isEmpty() && GRIMOIRE_BTN.containsAt(left, top, mouseX, mouseY)) {
             lines.add(Component.translatable("item.enchantment_fusion.fusion_grimoire").withStyle(ChatFormatting.GOLD));
             lines.add(Component.translatable("gui.enchantment_fusion.tip.grimoire_btn").withStyle(ChatFormatting.GRAY));
         } else if (lines.isEmpty() && SWAP_BTN.containsAt(left, top, mouseX, mouseY)) {
@@ -1155,6 +1183,19 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             this::openEmbeddedGrimoire
         )) {
             return true;
+        }
+
+        // Extract the first collision-preserved secondary. The server revalidates the token,
+        // registry, output slot, cost and current item; repeated clicks cannot duplicate it.
+        if (gearMode && RETAINED_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
+            ItemStack host = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
+            List<RetainedEnchant> retained = host.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of());
+            if (!retained.isEmpty()) {
+                if (btn == 0 && !FusionRitualDirector.isChanneling()) {
+                    sendAction(StationAction.EXTRACT_RETAINED, 0, RetainedEnchant.selectionToken(retained, 0));
+                }
+                return true;
+            }
         }
 
         // 2. Top-Right Embedded Grimoire Button

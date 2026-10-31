@@ -867,5 +867,10 @@
   "key.category.enchantment_fusion.abilities": "Enchantment Fusion",
   "key.enchantment_fusion.activate_skill": "Activate fusion skill",
   "message.enchantment_fusion.breath_not_enough": "Not enough air to activate; a breathing reserve is required.",
-  "tooltip.enchantment_fusion.legacy_underwater_carrier": "Legacy carrier: previous behavior remains; the new mining skill cannot be installed here."
+  "tooltip.enchantment_fusion.legacy_underwater_carrier": "Legacy carrier: previous behavior remains; the new mining skill cannot be installed here.",
+  "gui.enchantment_fusion.retained.title": "Preserved enchantments (%d)",
+  "gui.enchantment_fusion.retained.extract_help": "Click to extract the first entry into an enchanted book in the empty left input. Uses the normal removal fee.",
+  "gui.enchantment_fusion.reject.retained_output_occupied": "Clear the left input slot before extracting the preserved enchantment.",
+  "gui.enchantment_fusion.reject.retained_enchantment_unavailable": "This preserved enchantment is not registered. Restore its data pack or mod before extracting it.",
+  "tooltip.enchantment_fusion.retained_recovery": "At the fusion table, use the ⇧ button to recover a preserved entry as an enchanted book."
 }

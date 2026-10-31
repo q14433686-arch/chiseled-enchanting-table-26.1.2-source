@@ -410,6 +410,13 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 changed = split.success();
                 failReason = split.reason();
             }
+            case EXTRACT_RETAINED -> {
+                ActionResult extract = FusionStationOperations.extractRetainedWithReason(
+                    stationInv, actor, registries, paramA, expectedToken
+                );
+                changed = extract.success();
+                failReason = extract.reason();
+            }
         }
 
         if (changed) {

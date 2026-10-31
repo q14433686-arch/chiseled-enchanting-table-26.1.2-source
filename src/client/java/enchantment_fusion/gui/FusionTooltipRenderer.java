@@ -78,9 +78,13 @@ public final class FusionTooltipRenderer {
         }
 
         boolean shift = isShiftHeld();
-        for (RetainedEnchant retained : stack.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of())) {
+        List<RetainedEnchant> retainedEntries = stack.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of());
+        for (RetainedEnchant retained : retainedEntries) {
             lines.add(Component.translatable("tooltip.enchantment_fusion.retained_enchantment",
                 formatEnchantmentWithLevel(registries, retained.id(), retained.level())).withStyle(ChatFormatting.GOLD));
+        }
+        if (!retainedEntries.isEmpty()) {
+            lines.add(Component.translatable("tooltip.enchantment_fusion.retained_recovery").withStyle(ChatFormatting.GRAY));
         }
         FusedEnchantmentList list = stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         boolean hasCrossTransmute = renderCrossDomainEnchantmentLines(stack, registries, list, lines, shift);

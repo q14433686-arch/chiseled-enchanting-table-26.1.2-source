@@ -12,6 +12,7 @@ import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.model.RetainedEnchant;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -1100,8 +1101,11 @@ public final class FusionStationOperations {
         target.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(socketIndex, flipped));
 
         if (VesselCapacityRules.isPotentialEquipmentHost(target)) {
-            if (!LoyaltyGuard.isPair(oldPair)
-                || LoyaltyGuard.hasUnambiguousProjection(target, oldPair, list.removeAt(socketIndex))) {
+            FusedEnchantmentList otherFusions = list.removeAt(socketIndex);
+            if (!otherFusions.containsEnchantmentId(oldPair.primaryId())
+                && (LoyaltyGuard.isPair(oldPair)
+                    ? LoyaltyGuard.hasUnambiguousProjection(target, oldPair, otherFusions)
+                    : mayBeLegacyPrimaryProjection(target, oldPair))) {
                 removeGearVanillaEnchant(target, oldPair.primaryId());
             }
             if (LoyaltyGuard.isPair(oldPair)) target.remove(FusionDataComponents.LOYALTY_GUARD_PROJECTION);
@@ -1204,8 +1208,12 @@ public final class FusionStationOperations {
                 target.remove(FusionDataComponents.LOYALTY_GUARD_PROJECTION);
                 // Protection is a virtual secondary, not a native projection of this fusion.
             } else {
-                removeGearVanillaEnchant(target, oldPair.primaryId());
-                removeGearVanillaEnchant(target, oldPair.secondaryId());
+                // The normal gear path projects only the primary. The secondary may be an
+                // independent enchantment or belong to another legacy fusion; deleting it
+                // when extracting this pair would destroy data that was not projected here.
+                if (!remaining.containsEnchantmentId(oldPair.primaryId()) && mayBeLegacyPrimaryProjection(target, oldPair)) {
+                    removeGearVanillaEnchant(target, oldPair.primaryId());
+                }
             }
             syncGlintOverride(target);
 
@@ -1218,6 +1226,51 @@ public final class FusionStationOperations {
         } else if (!player.getAbilities().instabuild && xpCost > 0) {
             player.giveExperienceLevels(-xpCost);
         }
+        inv.setChanged();
+        emitStationRitualEffect(inv, player, enchantment_fusion.menu.FusionNetworking.VISUAL_SPLIT_EXTRACT);
+        return ActionResult.ok();
+    }
+
+    /**
+     * Extract one separately preserved enchantment into a book without touching another
+     * same-name native enchantment or any fusion. Always use the target slot, and require
+     * a free primary output slot so a full player inventory cannot silently drop the book.
+     * A stale selection, missing registry entry, or insufficient payment changes nothing.
+     */
+    public static ActionResult extractRetainedWithReason(
+        Container inv, Player player, HolderLookup.Provider registries, int index, String expectedToken
+    ) {
+        ItemStack target = inv.getItem(SLOT_TARGET);
+        if (target.isEmpty() || target.getCount() != 1 || !VesselCapacityRules.isPotentialEquipmentHost(target)) {
+            return ActionResult.failed(RejectReason.MISSING_INPUT);
+        }
+        List<RetainedEnchant> retained = target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.of());
+        if (index < 0 || index >= retained.size()) return ActionResult.failed(RejectReason.MISSING_INPUT);
+        RetainedEnchant entry = retained.get(index);
+        if (expectedToken == null || !expectedToken.equals(RetainedEnchant.selectionToken(retained, index))) {
+            return ActionResult.failed(RejectReason.MISSING_INPUT);
+        }
+        if (!inv.getItem(SLOT_PRIMARY).isEmpty()) return ActionResult.failed(RejectReason.RETAINED_OUTPUT_OCCUPIED);
+        Optional<Holder<Enchantment>> holder = lookupEnchantment(registries, entry.id());
+        if (holder.isEmpty()) return ActionResult.failed(RejectReason.RETAINED_ENCHANTMENT_UNAVAILABLE);
+
+        ItemStack cat = inv.getItem(SLOT_CATALYST);
+        boolean freeByCat = CetSoftBridge.isSplitOrFlipCatalyst(cat);
+        int xpCost = freeByCat ? 0 : FusionMatrixRegistry.serverSnapshot().economy().manageFlipSplitXp();
+        if (!player.getAbilities().instabuild && player.experienceLevel < xpCost) {
+            return ActionResult.failed(RejectReason.INSUFFICIENT_XP);
+        }
+
+        // Prepare every output before mutating inputs; the station and payment live on the server thread.
+        ItemStack book = createSingleEnchantedBook(holder.get(), entry.level());
+        List<RetainedEnchant> remaining = new ArrayList<>(retained);
+        remaining.remove(index);
+        if (remaining.isEmpty()) target.remove(FusionDataComponents.RETAINED_ENCHANTS);
+        else target.set(FusionDataComponents.RETAINED_ENCHANTS, List.copyOf(remaining));
+        syncGlintOverride(target);
+        inv.setItem(SLOT_PRIMARY, book);
+        if (freeByCat) cat.shrink(1);
+        else if (!player.getAbilities().instabuild && xpCost > 0) player.giveExperienceLevels(-xpCost);
         inv.setChanged();
         emitStationRitualEffect(inv, player, enchantment_fusion.menu.FusionNetworking.VISUAL_SPLIT_EXTRACT);
         return ActionResult.ok();
@@ -1370,6 +1423,23 @@ public final class FusionStationOperations {
         ItemEnchantments.Mutable mut = new ItemEnchantments.Mutable(current);
         mut.set(holder, Math.max(current.getLevel(holder), level));
         EnchantmentHelper.setEnchantments(gear, mut.toImmutable());
+    }
+
+    /**
+     * Historical generic fusions have no primary-projection provenance. A different
+     * native level is definitely not an untouched projection, and replacement skills
+     * never project a primary at all. Equal levels remain ambiguous for legacy data;
+     * this conservative filter does not claim to solve that migration problem.
+     */
+    private static boolean mayBeLegacyPrimaryProjection(ItemStack gear, FusedPair pair) {
+        if (replacesNativePrimary(pair)) return false;
+        ItemEnchantments enchants = gear.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        for (Object2IntMap.Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
+            if (entry.getKey().unwrapKey().map(key -> key.identifier().toString().equals(pair.primaryId())).orElse(false)) {
+                return entry.getIntValue() == pair.primaryLevel();
+            }
+        }
+        return false;
     }
 
     public static void removeGearVanillaEnchant(ItemStack gear, String enchantId) {

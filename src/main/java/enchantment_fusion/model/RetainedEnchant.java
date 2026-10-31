@@ -6,6 +6,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.List;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
@@ -14,6 +19,26 @@ public record RetainedEnchant(String id, int level) {
     public RetainedEnchant {
         id = FusedPair.canonicalizeEnchantId(id);
         if (level < 1 || level > FusedPair.MAX_LEVEL) throw new IllegalArgumentException("Invalid retained level: " + level);
+    }
+
+    /**
+     * Bind the choice to the entire ordered preserved list, not just its first entry.
+     * Thus a delayed duplicate packet cannot consume a second identical entry after
+     * the first is extracted. The bounded digest also fits the station packet limit.
+     */
+    public static String selectionToken(List<RetainedEnchant> entries, int index) {
+        if (entries == null || index < 0 || index >= entries.size()) return "";
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            for (RetainedEnchant entry : entries) {
+                digest.update(entry.id().getBytes(StandardCharsets.UTF_8));
+                digest.update((byte) 0); // IDs cannot contain NUL.
+                digest.update((byte) entry.level());
+            }
+            return "retained:" + index + ":" + HexFormat.of().formatHex(digest.digest());
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 is required by Java", ex);
+        }
     }
 
     private static final Codec<String> ID_CODEC = Codec.STRING.comapFlatMap(raw -> {

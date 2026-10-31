@@ -867,5 +867,10 @@
   "key.category.enchantment_fusion.abilities": "融合附魔",
   "key.enchantment_fusion.activate_skill": "释放融合主动技能",
   "message.enchantment_fusion.breath_not_enough": "剩余氧气不足，需要保留一部分呼吸余量。",
-  "tooltip.enchantment_fusion.legacy_underwater_carrier": "旧载体：保留旧效果；无法在该装备上新装此方向的采掘技能。"
+  "tooltip.enchantment_fusion.legacy_underwater_carrier": "旧载体：保留旧效果；无法在该装备上新装此方向的采掘技能。",
+  "gui.enchantment_fusion.retained.title": "保留附魔（%d 条）",
+  "gui.enchantment_fusion.retained.extract_help": "点击将第一条取出为附魔书，放入空的左输入槽；费用与卸除融合相同。",
+  "gui.enchantment_fusion.reject.retained_output_occupied": "请先清空左输入槽，再取出保留附魔。",
+  "gui.enchantment_fusion.reject.retained_enchantment_unavailable": "此保留附魔未注册；请先恢复对应的数据包或模组。",
+  "tooltip.enchantment_fusion.retained_recovery": "在融合台点击 ⇧，可将保留附魔取出为附魔书。"
 }

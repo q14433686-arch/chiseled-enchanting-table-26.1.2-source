@@ -65,7 +65,8 @@ public final class FusionNetworking {
         SWAP_SLOTS(18),
         SKIP_RITUAL(19),
         CANCEL_RITUAL(20),
-        PICK_SINGLE_A(21);
+        PICK_SINGLE_A(21),
+        EXTRACT_RETAINED(22);
 
         private final int wireId;
 
@@ -496,10 +497,12 @@ public final class FusionNetworking {
                 boolean mutatesItem = action == StationAction.EXECUTE_PRIMARY
                     || action == StationAction.FLIP_SOCKET
                     || action == StationAction.UNSOCKET_OR_SPLIT
+                    || action == StationAction.EXTRACT_RETAINED
                     || action == StationAction.SKIP_RITUAL
                     || action == StationAction.CANCEL_RITUAL;
                 if ((action == StationAction.EXECUTE_PRIMARY || action == StationAction.FLIP_SOCKET
-                    || action == StationAction.UNSOCKET_OR_SPLIT) && payload.expectedToken().isEmpty()) {
+                    || action == StationAction.UNSOCKET_OR_SPLIT || action == StationAction.EXTRACT_RETAINED)
+                    && payload.expectedToken().isEmpty()) {
                     player.sendSystemMessage(
                         Component.translatable("message.enchantment_fusion.action_rejected").withStyle(ChatFormatting.RED),
                         true
