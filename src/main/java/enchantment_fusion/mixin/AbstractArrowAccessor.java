@@ -16,6 +16,9 @@ public interface AbstractArrowAccessor {
     @Invoker("setPierceLevel")
     void ef$setPierceLevel(byte pierceLevel);
 
+    @Invoker("isInGround")
+    boolean ef$isInGround();
+
     @Accessor("baseDamage")
     double ef$getBaseDamage();
 

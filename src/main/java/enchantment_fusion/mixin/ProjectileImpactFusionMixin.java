@@ -11,6 +11,7 @@ import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
+import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.model.TriggerType;
 import java.util.EnumSet;
 import java.util.Set;
@@ -135,6 +136,11 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
                 serverLevel, self, shooter, weapon, x, y, z, velocity, inaccuracy
             );
         }
+    }
+
+    @Inject(method = "applyOnProjectileSpawned", at = @At("TAIL"))
+    private void ef$nonNativeFlamePrimary(ServerLevel level, ItemStack ammunition, CallbackInfo ci) {
+        ThermalProjectileSkills.applyPrimarySpawn((Projectile) (Object) this);
     }
 
     @Unique

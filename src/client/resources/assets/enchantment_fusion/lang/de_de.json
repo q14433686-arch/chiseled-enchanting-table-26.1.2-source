@@ -171,10 +171,10 @@
   "signature.enchantment_fusion.converging_volley.desc": "A bow or crossbow fires its normal center arrow and two side phantoms; all use the secondary Piercing level. Phantoms cannot be picked up and vanish harmlessly on players, allies, tamed creatures, villagers or solid blocks. Reload the crossbow after applying.",
   "signature.enchantment_fusion.fission_warhead.title": "Fission Cluster",
   "signature.enchantment_fusion.fission_warhead.desc": "Each bow or crossbow shot has a 35% to 75% chance to carry a cluster. Its first successful hit releases two non-recoverable phantoms that home on the nearest hostile or neutral attacking you within 12 blocks, or fly straight if none exists. Phantoms vanish on protected creatures and solid blocks; the real arrow remains normal.",
-  "signature.enchantment_fusion.explosive_flare_arrow.title": "Explosive Flare Arrow",
-  "signature.enchantment_fusion.explosive_flare_arrow.desc": "The impact ignites and pushes nearby non-allied creatures.",
-  "signature.enchantment_fusion.meteor_streak.title": "Meteor Streak",
-  "signature.enchantment_fusion.meteor_streak.desc": "High-velocity arrows scorch targets along their knockback trajectory.",
+  "signature.enchantment_fusion.explosive_flare_arrow.title": "Hitzesperrfeil",
+  "signature.enchantment_fusion.explosive_flare_arrow.desc": "[Flamme ▷ Schlag] Ein echter mittlerer Pfeil lenkt sich nähernde feindliche Geschosse zur Seite, ohne sie zu übernehmen oder zu vervielfältigen.",
+  "signature.enchantment_fusion.meteor_streak.title": "Landungsfeuerwirbel",
+  "signature.enchantment_fusion.meteor_streak.desc": "[Schlag ▷ Flamme] Nach echtem Rückstoß erzeugt die Landung oder der Stillstand eines geeigneten Feindes einen kurzen virtuellen Feuerwirbel. Keine Feuerblöcke.",
   "signature.enchantment_fusion.swift_draw_burst.title": "Loaded Momentum",
   "signature.enchantment_fusion.swift_draw_burst.desc": "Crossbow only: real arrow reloads build momentum. Once loaded, use the active skill to arm or disarm one stronger central arrow. Ammunition and normal Quick Charge still apply.",
   "signature.enchantment_fusion.hydro_flying_sword.title": "Hydro Flying Sword",
@@ -982,5 +982,6 @@
   "message.enchantment_fusion.momentum_not_moving": "The target is no longer moving in the original push direction.",
   "tooltip.enchantment_fusion.legacy_momentum_carrier": "Legacy host keeps its old effect; the new directions need a sword, axe, spear or mace.",
   "message.enchantment_fusion.piercing_reload_ready": "Nächstes Nachladen um %s Ticks verkürzt.",
-  "tooltip.enchantment_fusion.legacy_piercing_chain_carrier": "Alte Träger behalten ihren Effekt; Folgeschuss braucht Bogen oder Armbrust, Nachladen eine Armbrust."
+  "tooltip.enchantment_fusion.legacy_piercing_chain_carrier": "Alte Träger behalten ihren Effekt; Folgeschuss braucht Bogen oder Armbrust, Nachladen eine Armbrust.",
+  "tooltip.enchantment_fusion.legacy_thermal_projectile_carrier": "Alte Träger behalten ihren Effekt; die neuen Fähigkeiten brauchen Bogen oder Armbrust."
 }

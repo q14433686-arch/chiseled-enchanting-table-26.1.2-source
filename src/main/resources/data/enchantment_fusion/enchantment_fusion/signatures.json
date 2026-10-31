@@ -160,12 +160,15 @@
     "explosive_flare_arrow": {
       "primary": "minecraft:flame",
       "secondary": "minecraft:punch",
-      "domain": "ranged"
+      "domain": "ranged",
+      "barrier_radius_tenths": 15
     },
     "meteor_streak": {
       "primary": "minecraft:punch",
       "secondary": "minecraft:flame",
-      "domain": "ranged"
+      "domain": "ranged",
+      "landing_wait_ticks": 80,
+      "vortex_lifetime_ticks": 60
     },
     "swift_draw_burst": {
       "primary": "minecraft:quick_charge",

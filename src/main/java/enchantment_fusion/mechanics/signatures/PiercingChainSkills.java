@@ -318,6 +318,13 @@ public final class PiercingChainSkills {
         }
         updateView(owner);
     }
+    public static void tickServer() {
+        FLIGHTS.entrySet().removeIf(entry -> !entry.getKey().isAlive()
+            || entry.getKey().level().getGameTime() >= entry.getValue().expires);
+    }
+    public static void onUnload(Entity entity) {
+        if (entity instanceof AbstractArrow arrow) FLIGHTS.remove(arrow);
+    }
     public static void onDisconnect(ServerPlayer player) {
         UUID id = player.getUUID();
         SEQUENCES.remove(id); HOLES.remove(id); RELOADS.remove(id);

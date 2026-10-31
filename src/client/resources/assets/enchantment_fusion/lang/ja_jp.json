@@ -171,10 +171,10 @@
   "signature.enchantment_fusion.converging_volley.desc": "A bow or crossbow fires its normal center arrow and two side phantoms; all use the secondary Piercing level. Phantoms cannot be picked up and vanish harmlessly on players, allies, tamed creatures, villagers or solid blocks. Reload the crossbow after applying.",
   "signature.enchantment_fusion.fission_warhead.title": "Fission Cluster",
   "signature.enchantment_fusion.fission_warhead.desc": "Each bow or crossbow shot has a 35% to 75% chance to carry a cluster. Its first successful hit releases two non-recoverable phantoms that home on the nearest hostile or neutral attacking you within 12 blocks, or fly straight if none exists. Phantoms vanish on protected creatures and solid blocks; the real arrow remains normal.",
-  "signature.enchantment_fusion.explosive_flare_arrow.title": "Explosive Flare Arrow",
-  "signature.enchantment_fusion.explosive_flare_arrow.desc": "The impact ignites and pushes nearby non-allied creatures.",
-  "signature.enchantment_fusion.meteor_streak.title": "Meteor Streak",
-  "signature.enchantment_fusion.meteor_streak.desc": "High-velocity arrows scorch targets along their knockback trajectory.",
+  "signature.enchantment_fusion.explosive_flare_arrow.title": "熱障の矢",
+  "signature.enchantment_fusion.explosive_flare_arrow.desc": "【火炎 ▷ 衝撃】本物の中央の矢が飛行中、近づく敵の飛翔体を横へそらす熱障を作る。所有者や弾薬は変わらない。",
+  "signature.enchantment_fusion.meteor_streak.title": "着地点の火渦",
+  "signature.enchantment_fusion.meteor_streak.desc": "【衝撃 ▷ 火炎】本物の矢で敵を押し返し、着地または停止すると短い虚像の火渦を作る。火ブロックは置かない。",
   "signature.enchantment_fusion.swift_draw_burst.title": "Loaded Momentum",
   "signature.enchantment_fusion.swift_draw_burst.desc": "Crossbow only: real arrow reloads build momentum. Once loaded, use the active skill to arm or disarm one stronger central arrow. Ammunition and normal Quick Charge still apply.",
   "signature.enchantment_fusion.hydro_flying_sword.title": "Hydro Flying Sword",
@@ -982,5 +982,6 @@
   "message.enchantment_fusion.momentum_not_moving": "The target is no longer moving in the original push direction.",
   "tooltip.enchantment_fusion.legacy_momentum_carrier": "Legacy host keeps its old effect; the new directions need a sword, axe, spear or mace.",
   "message.enchantment_fusion.piercing_reload_ready": "次の装填を %s tick 短縮。",
-  "tooltip.enchantment_fusion.legacy_piercing_chain_carrier": "旧装備は旧効果を維持。連射は弓かクロスボウ、貫通装填はクロスボウが必要。"
+  "tooltip.enchantment_fusion.legacy_piercing_chain_carrier": "旧装備は旧効果を維持。連射は弓かクロスボウ、貫通装填はクロスボウが必要。",
+  "tooltip.enchantment_fusion.legacy_thermal_projectile_carrier": "旧装備は旧効果を維持。新効果には弓またはクロスボウが必要。"
 }

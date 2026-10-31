@@ -19,6 +19,7 @@ import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
+import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.model.FusedPair;
@@ -111,6 +112,9 @@ public final class DirectionalHostRules {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (PiercingChainSkills.matches(pair, signature) && !PiercingChainSkills.supportsCarrier(pair, actual)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
+        if (ThermalProjectileSkills.matches(pair, signature) && !ThermalProjectileSkills.supportsCarrier(actual)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (pair.primaryId().equals("minecraft:fire_aspect") && pair.secondaryId().equals("minecraft:aqua_affinity")

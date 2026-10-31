@@ -7,10 +7,14 @@ import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
+import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ProjectileDeflection;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -27,6 +31,7 @@ public abstract class PhantomArrowMixin {
     private void ef$tickPhantom(CallbackInfo ci) {
         AbstractArrow arrow = (AbstractArrow) (Object) this;
         EchoPathSkills.sample(arrow);
+        ThermalProjectileSkills.tickArrow(arrow);
         if (!PhantomVolley.tick(arrow)) ci.cancel();
     }
 
@@ -52,6 +57,22 @@ public abstract class PhantomArrowMixin {
         // This return only ends AbstractArrow's current collision batch; it does not
         // invoke Projectile.deflect or alter owner/velocity.
         return stop && result == ProjectileDeflection.NONE ? ProjectileDeflection.REVERSE : result;
+    }
+
+    @WrapOperation(method = "doKnockback", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;modifyKnockback(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;F)F"))
+    private float ef$nonNativePunchPrimary(ServerLevel level, ItemStack weapon, Entity target, DamageSource source,
+                                           float base, Operation<Float> original) {
+        float result = original.call(level, weapon, target, source, base);
+        return ThermalProjectileSkills.primaryKnockback(level, weapon, target, source, result);
+    }
+
+    @WrapOperation(method = "doKnockback", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/LivingEntity;push(DDD)V"))
+    private void ef$trackActualArrowPush(LivingEntity target, double x, double y, double z, Operation<Void> original) {
+        Vec3 before = target.getDeltaMovement();
+        original.call(target, x, y, z);
+        ThermalProjectileSkills.knockedBack((AbstractArrow) (Object) this, target, before);
     }
 
     @WrapOperation(method = "onHitEntity", at = @At(value = "INVOKE",

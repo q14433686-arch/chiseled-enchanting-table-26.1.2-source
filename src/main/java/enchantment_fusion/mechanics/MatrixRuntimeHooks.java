@@ -20,6 +20,7 @@ import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
+import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -86,10 +87,13 @@ public final class MatrixRuntimeHooks {
             EchoPathSkills.clear();
             MomentumSealSkills.clear();
             PiercingChainSkills.clear(server);
+            ThermalProjectileSkills.clear();
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             AmberSealSkill.onEntityUnload(entity);
             HeavyCrushSkill.onUnload(entity);
+            PiercingChainSkills.onUnload(entity);
+            ThermalProjectileSkills.onUnload(entity);
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
@@ -129,6 +133,7 @@ public final class MatrixRuntimeHooks {
             EchoPathSkills.onDisconnect(pid);
             MomentumSealSkills.onDisconnect(handler.getPlayer());
             PiercingChainSkills.onDisconnect(handler.getPlayer());
+            ThermalProjectileSkills.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -325,6 +330,7 @@ public final class MatrixRuntimeHooks {
                 EchoPathSkills.onDisconnect(deadPlayer.getUUID());
                 MomentumSealSkills.onDisconnect(deadPlayer);
                 PiercingChainSkills.onDisconnect(deadPlayer);
+                ThermalProjectileSkills.onDisconnect(deadPlayer.getUUID());
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
@@ -351,6 +357,8 @@ public final class MatrixRuntimeHooks {
             FishingTideSkills.tickServer(server);
             EchoPathSkills.tickServer(server);
             MomentumSealSkills.tickServer(server);
+            PiercingChainSkills.tickServer();
+            ThermalProjectileSkills.tickServer(server);
             FlyingBladeManager.tickServer(server);
             ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);
