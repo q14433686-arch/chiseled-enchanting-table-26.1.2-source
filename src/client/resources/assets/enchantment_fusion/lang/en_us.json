@@ -127,10 +127,10 @@
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
   "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
-  "signature.enchantment_fusion.blight_halo.title": "Blight Halo",
-  "signature.enchantment_fusion.blight_halo.desc": "Strikes manifest a lingering blight cloud on the ground that slows, withers, and tethers nearby foes.",
-  "signature.enchantment_fusion.soul_cocoon.title": "Soul Cocoon",
-  "signature.enchantment_fusion.soul_cocoon.desc": "Binds the target in heavy slowness while leeching vitality back to you.",
+  "signature.enchantment_fusion.blight_halo.title": "Lingering Soul Web",
+  "signature.enchantment_fusion.blight_halo.desc": "[Smite ▷ Bane of Arthropods] Directly kill an undead mob to leave a temporary virtual web that slows visible enemies; places no blocks.",
+  "signature.enchantment_fusion.soul_cocoon.title": "Pressurized Soul Cocoon",
+  "signature.enchantment_fusion.soul_cocoon.desc": "[Bane of Arthropods ▷ Smite] Direct hits mark an arthropod and build pressure. Once charged, another full-strength hit releases a slowing, pulling soul burst.",
   "signature.enchantment_fusion.blast_flare.title": "Heat-Pressure Impact",
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
@@ -991,5 +991,8 @@
   "message.enchantment_fusion.fire_wave_no_heat": "Not enough stored heat, or its equipment is not equipped.",
   "message.enchantment_fusion.fire_wave_no_target": "No valid visible target; heat was kept.",
   "tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier": "Legacy carrier keeps its old effect; the new fire skills use damageable armor or a held shield.",
-  "message.enchantment_fusion.fire_heat_ready": "Stored heat: %s / %s."
+  "message.enchantment_fusion.fire_heat_ready": "Stored heat: %s / %s.",
+  "message.enchantment_fusion.soul_pressure": "Soul pressure: %s / %s. Finish with a full-strength hit.",
+  "message.enchantment_fusion.soul_released": "Soul pressure released.",
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "This legacy carrier keeps its old effect; the new soul skills require a held melee weapon."
 }

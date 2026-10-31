@@ -127,10 +127,10 @@
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
   "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
-  "signature.enchantment_fusion.blight_halo.title": "Blight Halo",
-  "signature.enchantment_fusion.blight_halo.desc": "Strikes manifest a lingering blight cloud on the ground that slows, withers, and tethers nearby foes.",
-  "signature.enchantment_fusion.soul_cocoon.title": "Soul Cocoon",
-  "signature.enchantment_fusion.soul_cocoon.desc": "Binds the target in heavy slowness while leeching vitality back to you.",
+  "signature.enchantment_fusion.blight_halo.title": "Паутина остаточных душ",
+  "signature.enchantment_fusion.blight_halo.desc": "[Небесная кара ▷ Бич членистоногих] Прямое убийство нежити оставляет временную виртуальную паутину, замедляющую видимых врагов; блоки не создаются.",
+  "signature.enchantment_fusion.soul_cocoon.title": "Давление душ в коконе",
+  "signature.enchantment_fusion.soul_cocoon.desc": "[Бич членистоногих ▷ Небесная кара] Прямые удары помечают членистоногое и накапливают давление. Полностью заряженный удар выпускает волну, притягивающую и замедляющую врагов.",
   "signature.enchantment_fusion.blast_flare.title": "Heat-Pressure Impact",
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
@@ -991,5 +991,8 @@
   "message.enchantment_fusion.fire_wave_no_heat": "Недостаточно тепла или исходный предмет не экипирован.",
   "message.enchantment_fusion.fire_wave_no_target": "Нет видимой цели; тепло сохранено.",
   "tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier": "Старый предмет сохраняет эффект; новые умения требуют изнашиваемую броню или щит в руке.",
-  "message.enchantment_fusion.fire_heat_ready": "Накоплено тепла: %s / %s."
+  "message.enchantment_fusion.fire_heat_ready": "Накоплено тепла: %s / %s.",
+  "message.enchantment_fusion.soul_pressure": "Давление душ: %s / %s. Выпустите заряженным ударом.",
+  "message.enchantment_fusion.soul_released": "Давление душ выпущено.",
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Старый предмет сохраняет эффект; новые умения требуют оружие ближнего боя в основной руке."
 }

@@ -23,6 +23,7 @@ import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
+import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -306,9 +307,11 @@ public final class MatrixEffectExecutor {
             boolean redesignedPiercingChain = sigOpt.isPresent() && PiercingChainSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedThermal = sigOpt.isPresent() && ThermalProjectileSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedFireTradeoff = sigOpt.isPresent() && FireTradeoffSkills.applies(pair, hostStack, sigOpt.get().id());
+            boolean redesignedSoulThread = sigOpt.isPresent() && SoulThreadSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
-                || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal || redesignedFireTradeoff;
+                || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal
+                || redesignedFireTradeoff || redesignedSoulThread;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

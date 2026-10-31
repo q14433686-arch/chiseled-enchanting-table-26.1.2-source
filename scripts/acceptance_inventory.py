@@ -33,6 +33,8 @@ DIRECTION_FIXTURES = {
     ("punch", "flame"): ("14-punch-flame", True),
     ("protection", "fire_protection"): ("17-protection-fire", True),
     ("fire_protection", "protection"): ("17-fire-protection", True),
+    ("smite", "bane_of_arthropods"): ("18-smite-bane", True),
+    ("bane_of_arthropods", "smite"): ("18-bane-smite", True),
     ("loyalty", "riptide"): ("15-loyalty-riptide", False),
     ("riptide", "loyalty"): ("15-loyalty-riptide", False),
     ("blast_protection", "protection"): ("16-blast-protection", True),

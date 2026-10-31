@@ -127,10 +127,10 @@
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
   "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
-  "signature.enchantment_fusion.blight_halo.title": "Blight Halo",
-  "signature.enchantment_fusion.blight_halo.desc": "Strikes manifest a lingering blight cloud on the ground that slows, withers, and tethers nearby foes.",
-  "signature.enchantment_fusion.soul_cocoon.title": "Soul Cocoon",
-  "signature.enchantment_fusion.soul_cocoon.desc": "Binds the target in heavy slowness while leeching vitality back to you.",
+  "signature.enchantment_fusion.blight_halo.title": "Red de almas residuales",
+  "signature.enchantment_fusion.blight_halo.desc": "[Castigo ▷ Perdición de artrópodos] Al matar directamente a un no muerto queda una red virtual temporal que ralentiza enemigos visibles; no coloca bloques.",
+  "signature.enchantment_fusion.soul_cocoon.title": "Capullo de presión anímica",
+  "signature.enchantment_fusion.soul_cocoon.desc": "[Perdición de artrópodos ▷ Castigo] Los golpes directos marcan al artrópodo y acumulan presión. Un golpe completamente cargado libera una onda que atrae y ralentiza.",
   "signature.enchantment_fusion.blast_flare.title": "Heat-Pressure Impact",
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
@@ -991,5 +991,8 @@
   "message.enchantment_fusion.fire_wave_no_heat": "Falta calor o no llevas el equipo de origen.",
   "message.enchantment_fusion.fire_wave_no_target": "Sin objetivo visible; se conserva el calor.",
   "tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier": "El objeto antiguo conserva su efecto; los nuevos efectos requieren armadura dañable o escudo en mano.",
-  "message.enchantment_fusion.fire_heat_ready": "Calor acumulado: %s / %s."
+  "message.enchantment_fusion.fire_heat_ready": "Calor acumulado: %s / %s.",
+  "message.enchantment_fusion.soul_pressure": "Presión anímica: %s / %s. Libera con un golpe cargado.",
+  "message.enchantment_fusion.soul_released": "Presión anímica liberada.",
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "El objeto antiguo conserva su efecto; la nueva habilidad requiere un arma cuerpo a cuerpo en la mano principal."
 }

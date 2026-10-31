@@ -22,6 +22,7 @@ import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
+import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -90,6 +91,7 @@ public final class MatrixRuntimeHooks {
             PiercingChainSkills.clear(server);
             ThermalProjectileSkills.clear();
             FireTradeoffSkills.clear();
+            SoulThreadSkills.clear();
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             AmberSealSkill.onEntityUnload(entity);
@@ -137,6 +139,7 @@ public final class MatrixRuntimeHooks {
             PiercingChainSkills.onDisconnect(handler.getPlayer());
             ThermalProjectileSkills.onDisconnect(pid);
             FireTradeoffSkills.onDisconnect(pid);
+            SoulThreadSkills.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -285,6 +288,7 @@ public final class MatrixRuntimeHooks {
         // Post-Damage Counter
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
             AmberSealSkill.afterDamage(entity, source, damageTaken, blocked);
+            SoulThreadSkills.afterDamage(entity, source, damageTaken, blocked);
             if (entity instanceof ServerPlayer player) FrostLandingCapture.confirm(player, source, blocked);
             if (!blocked && damageTaken > 0.0F && entity.level() instanceof ServerLevel level
                 && source.getEntity() instanceof ServerPlayer attacker && source.getDirectEntity() == attacker
@@ -318,6 +322,7 @@ public final class MatrixRuntimeHooks {
         // Entity Kill hooks
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             AmberSealSkill.afterDeath(entity, damageSource);
+            SoulThreadSkills.afterDeath(entity, damageSource);
             if (damageSource.getEntity() instanceof ServerPlayer attacker && entity.level() instanceof ServerLevel level) {
                 GlazedStrikeEffect.onConfirmedDeath(level, attacker, entity, damageSource);
             }
@@ -335,6 +340,7 @@ public final class MatrixRuntimeHooks {
                 PiercingChainSkills.onDisconnect(deadPlayer);
                 ThermalProjectileSkills.onDisconnect(deadPlayer.getUUID());
                 FireTradeoffSkills.onDisconnect(deadPlayer.getUUID());
+                SoulThreadSkills.onDisconnect(deadPlayer.getUUID());
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
@@ -352,6 +358,7 @@ public final class MatrixRuntimeHooks {
         // Movement / Landing + 3D Flying Blades + Trajectory Path Cache
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             FlameKineticEffects.tickServer(server);
+            SoulThreadSkills.tickServer(server);
             GlazedStrikeEffect.tickServer(server);
             AmberSealSkill.tickServer(server);
             UnderwaterMiningSkills.tickServer(server);

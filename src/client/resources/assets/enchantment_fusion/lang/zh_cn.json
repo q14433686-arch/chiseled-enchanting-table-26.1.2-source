@@ -127,10 +127,10 @@
   "signature.enchantment_fusion.hamstring_rend.desc": "止住目标并施加迟缓；目标原本移动或腾空时额外受到伤害。",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "神经剧毒",
   "signature.enchantment_fusion.neurotoxin_bleed.desc": "叠满3层蛛毒印记后引爆神经毒素，造成无视护甲的真实流血伤害。",
-  "signature.enchantment_fusion.blight_halo.title": "腐化圣环",
-  "signature.enchantment_fusion.blight_halo.desc": "命中处凝成滞留疫雾领域，持续迟缓凋零并向中心牵引敌怪。",
-  "signature.enchantment_fusion.soul_cocoon.title": "缚魂蛛茧",
-  "signature.enchantment_fusion.soul_cocoon.desc": "重度迟滞目标移速，并在命中时汲取微量生命反哺自身。",
+  "signature.enchantment_fusion.blight_halo.title": "残魂织网",
+  "signature.enchantment_fusion.blight_halo.desc": "【亡灵杀手 ▷ 节肢杀手】直接击杀亡灵生物后留下短暂虚拟魂网，牵制可见敌人；不放置方块。",
+  "signature.enchantment_fusion.soul_cocoon.title": "缚茧蓄压",
+  "signature.enchantment_fusion.soul_cocoon.desc": "【节肢杀手 ▷ 亡灵杀手】直接命中节肢生物附上魂茧，继续命中积攒魂压；积满后以满蓄攻击释放牵制并牵引附近敌人。",
   "signature.enchantment_fusion.blast_flare.title": "热压撞击",
   "signature.enchantment_fusion.blast_flare.desc": "满蓄命中后点燃并击退目标；2 秒内撞墙会引爆热浪，伤害附近敌人。不破坏方块。",
   "signature.enchantment_fusion.blazing_furrow.title": "燃风轨迹",
@@ -991,5 +991,8 @@
   "message.enchantment_fusion.fire_wave_no_heat": "余热不足，或来源装备未实际穿戴／持握。",
   "message.enchantment_fusion.fire_wave_no_target": "前方没有可见的合格目标，余热未消耗。",
   "tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier": "旧载体保留原效果；新火焰技能适合可损伤护甲或手持盾牌。",
-  "message.enchantment_fusion.fire_heat_ready": "当前余热：%s / %s。"
+  "message.enchantment_fusion.fire_heat_ready": "当前余热：%s / %s。",
+  "message.enchantment_fusion.soul_pressure": "魂压：%s / %s；蓄满后用满蓄攻击释放。",
+  "message.enchantment_fusion.soul_released": "魂压已释放。",
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "旧载体保留原效果；新魂网技能需要主手近战武器。"
 }

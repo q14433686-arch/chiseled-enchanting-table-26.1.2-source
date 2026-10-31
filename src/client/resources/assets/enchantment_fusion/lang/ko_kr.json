@@ -127,10 +127,10 @@
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
   "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
-  "signature.enchantment_fusion.blight_halo.title": "Blight Halo",
-  "signature.enchantment_fusion.blight_halo.desc": "Strikes manifest a lingering blight cloud on the ground that slows, withers, and tethers nearby foes.",
-  "signature.enchantment_fusion.soul_cocoon.title": "Soul Cocoon",
-  "signature.enchantment_fusion.soul_cocoon.desc": "Binds the target in heavy slowness while leeching vitality back to you.",
+  "signature.enchantment_fusion.blight_halo.title": "잔혼 거미줄",
+  "signature.enchantment_fusion.blight_halo.desc": "【강타 ▷ 살충】언데드를 직접 처치하면 보이는 적을 느리게 하는 일시적인 가상 영혼 거미줄을 남깁니다. 블록은 놓지 않습니다.",
+  "signature.enchantment_fusion.soul_cocoon.title": "영혼 고치 압력",
+  "signature.enchantment_fusion.soul_cocoon.desc": "【살충 ▷ 강타】절지동물을 직접 때려 고치를 붙이고 추가 타격으로 압력을 모읍니다. 충전 후 완충 공격으로 주변 적을 당기고 느리게 합니다.",
   "signature.enchantment_fusion.blast_flare.title": "Heat-Pressure Impact",
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
@@ -991,5 +991,8 @@
   "message.enchantment_fusion.fire_wave_no_heat": "열이 부족하거나 원래 장비를 착용하지 않았습니다.",
   "message.enchantment_fusion.fire_wave_no_target": "보이는 대상이 없어 열을 보존했습니다.",
   "tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 내구도 있는 방어구나 손에 든 방패가 필요합니다.",
-  "message.enchantment_fusion.fire_heat_ready": "저장된 열: %s / %s."
+  "message.enchantment_fusion.fire_heat_ready": "저장된 열: %s / %s.",
+  "message.enchantment_fusion.soul_pressure": "영혼 압력: %s / %s. 완충 공격으로 해방.",
+  "message.enchantment_fusion.soul_released": "영혼 압력이 해방되었습니다.",
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 주 손의 근접 무기가 필요합니다."
 }

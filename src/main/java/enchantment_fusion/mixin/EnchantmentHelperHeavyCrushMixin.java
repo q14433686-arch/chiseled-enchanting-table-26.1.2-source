@@ -3,6 +3,7 @@ package enchantment_fusion.mixin;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
+import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -13,6 +14,13 @@ import org.spongepowered.asm.mixin.Mixin;
 /** Keep the same native-effect ordering for both orientations of Density/Breach. */
 @Mixin(EnchantmentHelper.class)
 public abstract class EnchantmentHelperHeavyCrushMixin {
+    @WrapMethod(method = "modifyDamage")
+    private static float ef$soulThreadDamage(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source,
+                                              float value, Operation<Float> original) {
+        float vanilla = original.call(level, weapon, victim, source, value);
+        return SoulThreadSkills.nonNativeDamage(level, weapon, victim, source, vanilla);
+    }
+
     @WrapMethod(method = "modifyArmorEffectiveness")
     private static float ef$heavyArmor(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source,
                                        float value, Operation<Float> original) {

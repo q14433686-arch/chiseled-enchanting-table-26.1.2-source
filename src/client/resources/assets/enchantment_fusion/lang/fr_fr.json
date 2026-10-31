@@ -127,10 +127,10 @@
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
   "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
-  "signature.enchantment_fusion.blight_halo.title": "Blight Halo",
-  "signature.enchantment_fusion.blight_halo.desc": "Strikes manifest a lingering blight cloud on the ground that slows, withers, and tethers nearby foes.",
-  "signature.enchantment_fusion.soul_cocoon.title": "Soul Cocoon",
-  "signature.enchantment_fusion.soul_cocoon.desc": "Binds the target in heavy slowness while leeching vitality back to you.",
+  "signature.enchantment_fusion.blight_halo.title": "Toile des âmes résiduelles",
+  "signature.enchantment_fusion.blight_halo.desc": "[Châtiment ▷ Fléau des arthropodes] Tuer directement un mort-vivant laisse une toile virtuelle temporaire qui ralentit les ennemis visibles, sans placer de blocs.",
+  "signature.enchantment_fusion.soul_cocoon.title": "Cocon de pression spirituelle",
+  "signature.enchantment_fusion.soul_cocoon.desc": "[Fléau des arthropodes ▷ Châtiment] Les coups directs marquent un arthropode et accumulent de la pression. Un coup chargé libère une onde qui attire et ralentit.",
   "signature.enchantment_fusion.blast_flare.title": "Heat-Pressure Impact",
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
@@ -991,5 +991,8 @@
   "message.enchantment_fusion.fire_wave_no_heat": "Chaleur insuffisante ou équipement d’origine non porté.",
   "message.enchantment_fusion.fire_wave_no_target": "Aucune cible visible ; chaleur conservée.",
   "tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier": "L’ancien support conserve son effet ; les nouveaux exigent une armure endommageable ou un bouclier tenu.",
-  "message.enchantment_fusion.fire_heat_ready": "Chaleur stockée : %s / %s."
+  "message.enchantment_fusion.fire_heat_ready": "Chaleur stockée : %s / %s.",
+  "message.enchantment_fusion.soul_pressure": "Pression spirituelle : %s / %s. Libérez avec un coup chargé.",
+  "message.enchantment_fusion.soul_released": "Pression spirituelle libérée.",
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "L’ancien support conserve son effet ; la nouvelle capacité exige une arme de mêlée en main principale."
 }

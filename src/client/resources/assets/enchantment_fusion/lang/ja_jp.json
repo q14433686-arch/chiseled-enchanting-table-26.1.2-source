@@ -127,10 +127,10 @@
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
   "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
-  "signature.enchantment_fusion.blight_halo.title": "Blight Halo",
-  "signature.enchantment_fusion.blight_halo.desc": "Strikes manifest a lingering blight cloud on the ground that slows, withers, and tethers nearby foes.",
-  "signature.enchantment_fusion.soul_cocoon.title": "Soul Cocoon",
-  "signature.enchantment_fusion.soul_cocoon.desc": "Binds the target in heavy slowness while leeching vitality back to you.",
+  "signature.enchantment_fusion.blight_halo.title": "残魂の網",
+  "signature.enchantment_fusion.blight_halo.desc": "【聖なる力 ▷ 虫殺し】アンデッドを直接倒すと、見える敵を鈍らせる短命の仮想魂網を残す。ブロックは置かない。",
+  "signature.enchantment_fusion.soul_cocoon.title": "魂繭の蓄圧",
+  "signature.enchantment_fusion.soul_cocoon.desc": "【虫殺し ▷ 聖なる力】節足動物に直接当てて魂繭を付け、続く命中で圧力を蓄える。満蓄攻撃で周囲を鈍らせ引き寄せる。",
   "signature.enchantment_fusion.blast_flare.title": "Heat-Pressure Impact",
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
@@ -991,5 +991,8 @@
   "message.enchantment_fusion.fire_wave_no_heat": "熱が不足、または元の装備を使用していない。",
   "message.enchantment_fusion.fire_wave_no_target": "対象が見えないため熱は残った。",
   "tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier": "旧装備は旧効果を維持。新効果は耐久のある防具か手持ちの盾が必要。",
-  "message.enchantment_fusion.fire_heat_ready": "蓄えた熱：%s / %s。"
+  "message.enchantment_fusion.fire_heat_ready": "蓄えた熱：%s / %s。",
+  "message.enchantment_fusion.soul_pressure": "魂圧：%s / %s。満蓄攻撃で解放。",
+  "message.enchantment_fusion.soul_released": "魂圧を解放した。",
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "旧装備は旧効果を維持。新しい魂網はメインハンドの近接武器が必要。"
 }

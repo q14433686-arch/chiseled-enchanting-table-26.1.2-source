@@ -127,10 +127,10 @@
   "signature.enchantment_fusion.hamstring_rend.desc": "Stops and slows the target; targets that were moving or airborne take extra damage.",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "Neurotoxin Bleed",
   "signature.enchantment_fusion.neurotoxin_bleed.desc": "Stacks venom marks; at 3 stacks, detonates armor-piercing neurotoxin bleed.",
-  "signature.enchantment_fusion.blight_halo.title": "Blight Halo",
-  "signature.enchantment_fusion.blight_halo.desc": "Strikes manifest a lingering blight cloud on the ground that slows, withers, and tethers nearby foes.",
-  "signature.enchantment_fusion.soul_cocoon.title": "Soul Cocoon",
-  "signature.enchantment_fusion.soul_cocoon.desc": "Binds the target in heavy slowness while leeching vitality back to you.",
+  "signature.enchantment_fusion.blight_halo.title": "Nachhallendes Seelennetz",
+  "signature.enchantment_fusion.blight_halo.desc": "[Bann ▷ Nemesis der Gliederfüßer] Ein direkt getöteter Untoter hinterlässt ein kurzes virtuelles Netz, das sichtbare Feinde verlangsamt; keine Blöcke.",
+  "signature.enchantment_fusion.soul_cocoon.title": "Seelenkokon-Druck",
+  "signature.enchantment_fusion.soul_cocoon.desc": "[Nemesis ▷ Bann] Direkte Treffer markieren einen Gliederfüßer und bauen Druck auf. Ein voll aufgeladener Treffer löst einen verlangsamenden, heranziehenden Seelenstoß aus.",
   "signature.enchantment_fusion.blast_flare.title": "Heat-Pressure Impact",
   "signature.enchantment_fusion.blast_flare.desc": "A fully charged hit ignites and launches the target. If it hits a wall within 2 seconds, a heat burst damages nearby hostiles. No blocks are changed.",
   "signature.enchantment_fusion.blazing_furrow.title": "Searing Wake",
@@ -991,5 +991,8 @@
   "message.enchantment_fusion.fire_wave_no_heat": "Zu wenig Hitze oder Ausrüstung nicht angelegt.",
   "message.enchantment_fusion.fire_wave_no_target": "Kein sichtbares Ziel; Hitze bleibt erhalten.",
   "tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier": "Alte Träger behalten ihren Effekt; die neuen Fähigkeiten brauchen beschädigbare Rüstung oder einen gehaltenen Schild.",
-  "message.enchantment_fusion.fire_heat_ready": "Gespeicherte Hitze: %s / %s."
+  "message.enchantment_fusion.fire_heat_ready": "Gespeicherte Hitze: %s / %s.",
+  "message.enchantment_fusion.soul_pressure": "Seelendruck: %s / %s. Mit einem vollen Treffer auslösen.",
+  "message.enchantment_fusion.soul_released": "Seelendruck freigesetzt.",
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Alter Träger behält seinen Effekt; die neuen Fähigkeiten benötigen eine Nahkampfwaffe in der Haupthand."
 }

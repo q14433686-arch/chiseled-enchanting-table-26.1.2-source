@@ -25,12 +25,17 @@
     "blight_halo": {
       "primary": "minecraft:smite",
       "secondary": "minecraft:bane_of_arthropods",
-      "domain": "melee"
+      "domain": "melee",
+      "web_lifetime_ticks": 100,
+      "web_range_tenths": 25
     },
     "soul_cocoon": {
       "primary": "minecraft:bane_of_arthropods",
       "secondary": "minecraft:smite",
-      "domain": "melee"
+      "domain": "melee",
+      "pressure_hits": 2,
+      "cocoon_lifetime_ticks": 160,
+      "burst_range_tenths": 25
     },
     "blast_flare": {
       "primary": "minecraft:fire_aspect",

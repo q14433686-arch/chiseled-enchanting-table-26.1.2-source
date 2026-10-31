@@ -127,10 +127,10 @@
   "signature.enchantment_fusion.hamstring_rend.desc": "止住目標並施加緩速；目標原本移動或騰空時額外受到傷害。",
   "signature.enchantment_fusion.neurotoxin_bleed.title": "神經劇毒",
   "signature.enchantment_fusion.neurotoxin_bleed.desc": "疊滿3層蛛毒印記後引爆神經毒素，造成無視護甲的真實流血傷害。",
-  "signature.enchantment_fusion.blight_halo.title": "腐化聖環",
-  "signature.enchantment_fusion.blight_halo.desc": "命中處凝成滯留疫霧領域，持續遲緩凋零並向中心牽引敵怪。",
-  "signature.enchantment_fusion.soul_cocoon.title": "縛魂蛛茧",
-  "signature.enchantment_fusion.soul_cocoon.desc": "重度遲滯目標移速，並在命中時汲取微量生命反哺自身。",
+  "signature.enchantment_fusion.blight_halo.title": "殘魂織網",
+  "signature.enchantment_fusion.blight_halo.desc": "【不死剋星 ▷ 節肢殺手】直接擊殺不死生物後留下短暫虛擬魂網，牽制可見敵人；不放置方塊。",
+  "signature.enchantment_fusion.soul_cocoon.title": "縛繭蓄壓",
+  "signature.enchantment_fusion.soul_cocoon.desc": "【節肢殺手 ▷ 不死剋星】直接命中節肢生物附上魂繭，繼續命中積攢魂壓；積滿後以滿蓄攻擊釋放並牽制附近敵人。",
   "signature.enchantment_fusion.blast_flare.title": "熱壓撞擊",
   "signature.enchantment_fusion.blast_flare.desc": "滿蓄命中後點燃並擊退目標；2 秒內撞牆會引爆熱浪，傷害附近敵人。不破壞方塊。",
   "signature.enchantment_fusion.blazing_furrow.title": "燃風軌跡",
@@ -991,5 +991,8 @@
   "message.enchantment_fusion.fire_wave_no_heat": "餘熱不足，或來源裝備未實際穿戴／持握。",
   "message.enchantment_fusion.fire_wave_no_target": "前方沒有可見的合格目標，餘熱未消耗。",
   "tooltip.enchantment_fusion.legacy_fire_tradeoff_carrier": "舊載體保留原效果；新火焰技能適合可損傷護甲或手持盾牌。",
-  "message.enchantment_fusion.fire_heat_ready": "目前餘熱：%s / %s。"
+  "message.enchantment_fusion.fire_heat_ready": "目前餘熱：%s / %s。",
+  "message.enchantment_fusion.soul_pressure": "魂壓：%s / %s；蓄滿後用滿蓄攻擊釋放。",
+  "message.enchantment_fusion.soul_released": "魂壓已釋放。",
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "舊載體保留原效果；新魂網技能需要主手近戰武器。"
 }
