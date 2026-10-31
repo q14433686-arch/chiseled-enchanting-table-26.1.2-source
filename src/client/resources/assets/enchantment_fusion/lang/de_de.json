@@ -1042,5 +1042,8 @@
   "message.enchantment_fusion.melee_wear_edge_active": "Der verstärkte Treffer ist schon vorbereitet; keine Splitter verbraucht.",
   "message.enchantment_fusion.melee_wear_edge_need": "Mindestens 2 Splitter aus echtem verhindertem Verschleiß nötig: %s/2.",
   "message.enchantment_fusion.melee_wear_edge_set": "%s Splitter verbraucht; der nächste passende Nahkampftreffer ist 5 Sekunden lang verstärkt.",
-  "message.enchantment_fusion.melee_wear_edge_ready": "Genug Klingensplitter; verstärkten Treffer aktivieren."
+  "message.enchantment_fusion.melee_wear_edge_ready": "Genug Klingensplitter; verstärkten Treffer aktivieren.",
+  "tooltip.enchantment_fusion.melee_impulse_chase": "Nach einem gültigen Haupthandtreffer mit echtem Rückstoß den noch bewegten Gegner verfolgen und erneut treffen: Eine virtuelle Klinge folgt der Blickrichtung. Bann und Nemesis verlangen passende Gegner.",
+  "tooltip.enchantment_fusion.melee_impulse_transfer": "Trifft ein wirklich zurückgestoßenes Ziel auf seinem Weg einen weiteren gültigen Gegner, wird ein Teil des Schwungs übertragen; die Umgebung bleibt intakt. Bann und Nemesis verlangen passende Gegner. Nur bei nachweislich ruhendem Kontaktziel.",
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "Alter Träger behält den alten Effekt; diese Richtung benötigt eine Nahkampfwaffe."
 }

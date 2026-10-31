@@ -39,6 +39,13 @@ final class AcceptanceReport {
         plan("42.2-bane-breath", "Bane ▷ Respiration: underwater bubble and arthropod filtering", "Not reached if setup fails.");
         plan("42.2-breath-bane", "Respiration ▷ Bane: prepared helmet and arthropod filtering", "Not reached if setup fails.");
         plan("42.2-runtime-compat", "42.2 natural fluid updates, client key, multiplayer, datapacks and claims", "Not covered by the artificially refreshed fluid-state fixture.");
+        plan("42.5-sharp-knockback", "Sharpness ▷ Knockback: actual knockback with simulated pursuit and follow-up", "Not reached if setup fails.");
+        plan("42.5-knockback-sharp", "Knockback ▷ Sharpness: actual knockback and simulated swept contact", "Not reached if setup fails.");
+        plan("42.5-smite-knockback", "Smite ▷ Knockback: undead pursuit and attack-primary replay", "Not reached if setup fails.");
+        plan("42.5-knockback-smite", "Knockback ▷ Smite: undead contact and protected-target exclusion", "Not reached if setup fails.");
+        plan("42.5-bane-knockback", "Bane ▷ Knockback: arthropod pursuit and attack-primary replay", "Not reached if setup fails.");
+        plan("42.5-knockback-bane", "Knockback ▷ Bane: arthropod contact and protected-target exclusion", "Not reached if setup fails.");
+        plan("42.5-runtime-compat", "42.5 natural movement and collision, client motion packets, spear, multiplayer and protection mods", "Not covered by simulated single-player motion.");
         plan("42.3-sharp-swift", "Sharpness ▷ Swift Sneak: real hits and simulated imprint movement", "Not reached if setup fails.");
         plan("42.3-swift-sharp", "Swift Sneak ▷ Sharpness: worn leggings, simulated crouch and real hit", "Not reached if setup fails.");
         plan("42.3-smite-swift", "Smite ▷ Swift Sneak: real hits, undead filtering and simulated imprint movement", "Not reached if setup fails.");

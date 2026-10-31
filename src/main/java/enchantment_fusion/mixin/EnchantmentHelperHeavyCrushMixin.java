@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
+import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -26,7 +27,8 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
             SegmentThreadSkills.modifyDamage(level, weapon, victim, source,
                 SoulBladeSkills.modifyDamage(level, weapon, victim, source,
                     SoulThreadSkills.nonNativeDamage(level, weapon, victim, source, vanilla))));
-        return MeleeWearSkills.modifyDamage(level, weapon, victim, source, themed);
+        float knockbackPrimary = MeleeImpulseSkills.nonNativePrimaryDamage(level, weapon, victim, source, themed);
+        return MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
     }
 
     @WrapMethod(method = "modifyArmorEffectiveness")

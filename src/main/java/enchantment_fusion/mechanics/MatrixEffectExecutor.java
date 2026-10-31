@@ -32,6 +32,7 @@ import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
+import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
@@ -328,12 +329,13 @@ public final class MatrixEffectExecutor {
             boolean redesignedStealthBlade = StealthBladeSkills.applies(pair, hostStack);
             boolean redesignedWaterPressure = WaterPressureSkills.applies(pair, hostStack);
             boolean redesignedMeleeWear = MeleeWearSkills.applies(pair, hostStack);
+            boolean redesignedMeleeImpulse = MeleeImpulseSkills.applies(pair, hostStack);
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
                 || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal
                 || redesignedFireTradeoff || redesignedSoulThread || redesignedFireThorns || redesignedFireSweep || redesignedWindSweep
                 || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre || redesignedFortuneBank
-                || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear;
+                || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedMeleeImpulse;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

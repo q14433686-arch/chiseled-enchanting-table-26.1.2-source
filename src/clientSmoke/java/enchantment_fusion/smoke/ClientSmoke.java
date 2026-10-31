@@ -659,6 +659,12 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("42.2-breath-smite", () -> WaterPressureProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
         acceptance.run("42.2-bane-breath", () -> WaterPressureProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
         acceptance.run("42.2-breath-bane", () -> WaterPressureProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));
+        acceptance.run("42.5-sharp-knockback", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
+        acceptance.run("42.5-knockback-sharp", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
+        acceptance.run("42.5-smite-knockback", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));
+        acceptance.run("42.5-knockback-smite", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
+        acceptance.run("42.5-bane-knockback", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
+        acceptance.run("42.5-knockback-bane", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));
         acceptance.run("42.3-sharp-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("42.3-swift-sharp", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
         acceptance.run("42.3-smite-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));

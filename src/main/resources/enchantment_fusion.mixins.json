@@ -24,6 +24,7 @@
     "EnchantmentHeavyCrushMixin",
     "EnchantmentHelperHeavyCrushMixin",
     "EntityAmberPersistenceMixin",
+    "EntityImpulseMotionMixin",
     "ExperienceOrbDurabilityMixin",
     "FishingTideHookMixin",
     "FishingTideRodMixin",

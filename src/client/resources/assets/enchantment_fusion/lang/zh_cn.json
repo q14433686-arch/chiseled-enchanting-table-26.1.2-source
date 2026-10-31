@@ -1042,5 +1042,8 @@
   "message.enchantment_fusion.melee_wear_edge_active": "锋屑斩仍已准备，不会重复消耗锋屑。",
   "message.enchantment_fusion.melee_wear_edge_need": "需要至少 2 点真实免耗产生的锋屑；当前 %s/2。",
   "message.enchantment_fusion.melee_wear_edge_set": "已消耗 %s 点锋屑，下一次合格近击将在 5 秒内增强。",
-  "message.enchantment_fusion.melee_wear_edge_ready": "锋屑已足够，可主动准备增强近击。"
+  "message.enchantment_fusion.melee_wear_edge_ready": "锋屑已足够，可主动准备增强近击。",
+  "tooltip.enchantment_fusion.melee_impulse_chase": "主手近战有效命中并实际击退后，追近仍在移动的同一敌人再次有效命中，将动势化为沿视线的虚拟锋刃。亡灵和节肢方向只作用于对应敌人。",
+  "tooltip.enchantment_fusion.melee_impulse_transfer": "主手近战真实击退合格目标后，其实际行进轨迹撞到另一合格敌人时传递部分动量；不破坏地形。亡灵和节肢方向只作用于对应敌人。为确认碰撞，接收动量的敌人须保持静止。",
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "旧载体保留旧效果；新方向要求近战武器。"
 }

@@ -36,6 +36,7 @@ import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
+import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
@@ -238,6 +239,9 @@ public final class FusionTooltipRenderer {
             boolean meleeWearTemplate = MeleeWearSkills.matches(pair);
             boolean legacyMeleeWearCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeWearTemplate
                 && !MeleeWearSkills.applies(pair, stack);
+            boolean meleeImpulseTemplate = MeleeImpulseSkills.matches(pair);
+            boolean legacyMeleeImpulseCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeImpulseTemplate
+                && !MeleeImpulseSkills.applies(pair, stack);
             boolean legacyRetainedVolleyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && RetainedVolleyHosts.matches(pair, sigOpt.get().id()) && !RetainedVolleyHosts.supportsHost(stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
@@ -284,6 +288,11 @@ public final class FusionTooltipRenderer {
                         ? "tooltip.enchantment_fusion.melee_wear_guard"
                         : "tooltip.enchantment_fusion.melee_wear_edge").withStyle(ChatFormatting.AQUA));
                 }
+                if (shift && meleeImpulseTemplate && !legacyMeleeImpulseCarrier) {
+                    lines.add(Component.translatable(MeleeImpulseSkills.isAttackFirst(pair)
+                        ? "tooltip.enchantment_fusion.melee_impulse_chase"
+                        : "tooltip.enchantment_fusion.melee_impulse_transfer").withStyle(ChatFormatting.AQUA));
+                }
             } else if (sigOpt.isPresent()) {
                 Component sigTitle = Component.translatable(sigOpt.get().titleKey());
                 lines.add(Component.translatable(
@@ -321,6 +330,10 @@ public final class FusionTooltipRenderer {
                         lines.add(Component.translatable(MeleeWearSkills.isAttackFirst(pair)
                             ? "tooltip.enchantment_fusion.melee_wear_guard"
                             : "tooltip.enchantment_fusion.melee_wear_edge").withStyle(ChatFormatting.AQUA));
+                    } else if (meleeImpulseTemplate && !legacyMeleeImpulseCarrier) {
+                        lines.add(Component.translatable(MeleeImpulseSkills.isAttackFirst(pair)
+                            ? "tooltip.enchantment_fusion.melee_impulse_chase"
+                            : "tooltip.enchantment_fusion.melee_impulse_transfer").withStyle(ChatFormatting.AQUA));
                     } else {
                         lines.add(buildMatrixSentence(pair, hostForm).copy().withStyle(ChatFormatting.AQUA));
                     }
@@ -336,6 +349,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacyMeleeWearCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_wear_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyMeleeImpulseCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_impulse_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (shift && meleeWearTemplate && !legacyMeleeWearCarrier) {

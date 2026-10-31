@@ -1042,5 +1042,8 @@
   "message.enchantment_fusion.melee_wear_edge_active": "El golpe potenciado ya está preparado; no se gastaron fragmentos.",
   "message.enchantment_fusion.melee_wear_edge_need": "Necesitas 2 fragmentos de desgaste realmente evitado: %s/2.",
   "message.enchantment_fusion.melee_wear_edge_set": "Gastados %s fragmentos; el siguiente golpe válido estará potenciado durante 5 segundos.",
-  "message.enchantment_fusion.melee_wear_edge_ready": "Hay suficientes fragmentos; activa el golpe potenciado."
+  "message.enchantment_fusion.melee_wear_edge_ready": "Hay suficientes fragmentos; activa el golpe potenciado.",
+  "tooltip.enchantment_fusion.melee_impulse_chase": "Tras un golpe válido con empuje real, persigue y vuelve a golpear al mismo enemigo mientras se mueve para liberar un filo virtual hacia donde miras. Castigo y Perdición requieren enemigos compatibles.",
+  "tooltip.enchantment_fusion.melee_impulse_transfer": "Al empujar de verdad a un objetivo, parte de su impulso pasa al primer enemigo válido que contacte su trayectoria real; no daña el terreno. Castigo y Perdición requieren enemigos compatibles. El receptor debe estar quieto para confirmar el contacto.",
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "El objeto antiguo conserva su efecto; esta dirección requiere un arma cuerpo a cuerpo."
 }

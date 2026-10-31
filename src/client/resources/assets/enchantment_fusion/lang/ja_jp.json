@@ -1042,5 +1042,8 @@
   "message.enchantment_fusion.melee_wear_edge_active": "強化攻撃は準備済みのため、刃片を消費しなかった。",
   "message.enchantment_fusion.melee_wear_edge_need": "実際に防いだ摩耗から刃片が2個必要：%s/2。",
   "message.enchantment_fusion.melee_wear_edge_set": "刃片を %s 個消費。5秒以内の次の有効な近接攻撃を強化する。",
-  "message.enchantment_fusion.melee_wear_edge_ready": "刃片が揃った。強化攻撃を発動できる。"
+  "message.enchantment_fusion.melee_wear_edge_ready": "刃片が揃った。強化攻撃を発動できる。",
+  "tooltip.enchantment_fusion.melee_impulse_chase": "有効な利き手の攻撃で実際に敵を押し出した後、移動中の同じ敵を追って再び有効打を与えると、視線方向に仮想の刃を放つ。特効は対応する敵のみ。",
+  "tooltip.enchantment_fusion.melee_impulse_transfer": "利き手の攻撃で実際に押し出された対象が、その移動経路上で別の有効な敵に接触すると運動量の一部を伝える。地形は破壊しない。特効は対応する敵のみ。 接触を確かめるため、伝達先は静止している必要がある。",
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "旧アイテムは旧効果を維持する。新しい組み合わせには近接武器が必要。"
 }

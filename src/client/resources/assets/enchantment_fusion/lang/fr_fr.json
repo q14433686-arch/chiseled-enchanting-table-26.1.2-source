@@ -1042,5 +1042,8 @@
   "message.enchantment_fusion.melee_wear_edge_active": "Le coup renforcé est déjà prêt ; aucun éclat dépensé.",
   "message.enchantment_fusion.melee_wear_edge_need": "Il faut 2 éclats issus d’une usure réellement évitée : %s/2.",
   "message.enchantment_fusion.melee_wear_edge_set": "%s éclats dépensés ; le prochain coup valide est renforcé pendant 5 secondes.",
-  "message.enchantment_fusion.melee_wear_edge_ready": "Assez d’éclats ; activez le coup renforcé."
+  "message.enchantment_fusion.melee_wear_edge_ready": "Assez d’éclats ; activez le coup renforcé.",
+  "tooltip.enchantment_fusion.melee_impulse_chase": "Après un coup valide et un recul réel, poursuivez et frappez à nouveau le même ennemi encore en mouvement pour lancer une lame virtuelle vers votre regard. Châtiment et Fléau exigent des ennemis adaptés.",
+  "tooltip.enchantment_fusion.melee_impulse_transfer": "Après un recul réel, une partie de l’élan passe au premier ennemi valide touché sur la trajectoire réelle ; le terrain reste intact. Châtiment et Fléau exigent des ennemis adaptés. Le destinataire doit être immobile pour confirmer le contact.",
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "L’ancien support conserve son effet ; cette direction exige une arme de mêlée."
 }

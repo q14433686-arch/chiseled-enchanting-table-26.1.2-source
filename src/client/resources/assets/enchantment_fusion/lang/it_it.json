@@ -1042,5 +1042,8 @@
   "message.enchantment_fusion.melee_wear_edge_active": "Il colpo potenziato è già pronto; nessuna scheggia consumata.",
   "message.enchantment_fusion.melee_wear_edge_need": "Servono 2 schegge da usura realmente evitata: %s/2.",
   "message.enchantment_fusion.melee_wear_edge_set": "Consumate %s schegge; il prossimo colpo valido è potenziato per 5 secondi.",
-  "message.enchantment_fusion.melee_wear_edge_ready": "Schegge sufficienti; attiva il colpo potenziato."
+  "message.enchantment_fusion.melee_wear_edge_ready": "Schegge sufficienti; attiva il colpo potenziato.",
+  "tooltip.enchantment_fusion.melee_impulse_chase": "Dopo un colpo valido con vero contraccolpo, insegui e colpisci di nuovo lo stesso nemico ancora in movimento per lanciare una lama virtuale nella direzione dello sguardo. Anatema e Rovina richiedono nemici adatti.",
+  "tooltip.enchantment_fusion.melee_impulse_transfer": "Dopo un vero contraccolpo, parte dello slancio passa al primo nemico valido toccato dalla traiettoria reale; il terreno resta intatto. Anatema e Rovina richiedono nemici adatti. Il bersaglio ricevente deve restare fermo per confermare il contatto.",
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "Il vecchio supporto conserva l’effetto precedente; questa direzione richiede un’arma da mischia."
 }

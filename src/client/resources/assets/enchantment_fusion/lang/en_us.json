@@ -1042,5 +1042,8 @@
   "message.enchantment_fusion.melee_wear_edge_active": "The enhanced strike is already prepared; no shards were spent.",
   "message.enchantment_fusion.melee_wear_edge_need": "Need at least 2 shards from real Unbreaking savings: %s/2.",
   "message.enchantment_fusion.melee_wear_edge_set": "Spent %s shards; the next qualifying melee hit is enhanced for 5 seconds.",
-  "message.enchantment_fusion.melee_wear_edge_ready": "Enough edge shards; activate the enhanced strike."
+  "message.enchantment_fusion.melee_wear_edge_ready": "Enough edge shards; activate the enhanced strike.",
+  "tooltip.enchantment_fusion.melee_impulse_chase": "After a qualifying main-hand hit actually pushes an enemy, chase and hit that same enemy while it is still moving to release a virtual blade along your aim. Smite and Bane require matching enemies.",
+  "tooltip.enchantment_fusion.melee_impulse_transfer": "After real main-hand knockback, transfer part of the target’s momentum when its actual path contacts another eligible enemy; terrain is unharmed. Smite and Bane require matching enemies. The receiving enemy must be stationary for an unambiguous contact.",
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "Legacy carrier keeps its old effect; this direction requires a melee weapon."
 }
