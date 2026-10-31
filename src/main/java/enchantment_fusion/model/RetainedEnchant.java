@@ -41,6 +41,12 @@ public record RetainedEnchant(String id, int level) {
         }
     }
 
+    /** Bind the list selection to the shared table's session-only target version. */
+    public static String versionedSelectionToken(List<RetainedEnchant> entries, int index, long targetRevision) {
+        String listToken = selectionToken(entries, index);
+        return targetRevision <= 0 || listToken.isEmpty() ? "" : listToken + "@" + targetRevision;
+    }
+
     private static final Codec<String> ID_CODEC = Codec.STRING.comapFlatMap(raw -> {
         try { return DataResult.success(FusedPair.canonicalizeEnchantId(raw)); }
         catch (IllegalArgumentException | NullPointerException ex) { return DataResult.error(ex::getMessage); }

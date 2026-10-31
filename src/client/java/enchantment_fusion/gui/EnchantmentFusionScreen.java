@@ -92,6 +92,7 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
     public static final HitBox SINGLE_MODE_BTN = new HitBox(269, 63, 26, 15);
 
     private int candidateScroll = 0;
+    private int retainedIndex = 0;
     private @Nullable Boolean lastObservedGearMode = null;
     private final FusionContextDrawer contextDrawer = new FusionContextDrawer();
     private @Nullable FusionGrimoireScreen grimoireOverlay = null;
@@ -464,7 +465,10 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             0.58F, FusionGuiSkin.COLOR_GOLD
         );
         if (!retained.isEmpty()) {
-            boolean canAct = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty()
+            int selected = Math.clamp(this.retainedIndex, 0, retained.size() - 1);
+            boolean canAct = this.menu.retainedTargetRevision() > 0
+                && FusionStationOperations.lookupEnchantment(registries, retained.get(selected).id()).isPresent()
+                && this.menu.stationContainer().getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty()
                 && (this.menu.viewer().getAbilities().instabuild || this.menu.viewer().experienceLevel >= preview.manageXpCost())
                 && !FusionRitualDirector.isChanneling();
             FusionGuiSkin.drawButtonBox(ctx, this.font, left, top, RETAINED_BTN,
@@ -790,13 +794,17 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         ItemStack retainedHost = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
         List<RetainedEnchant> retainedEntries = retainedHost.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of());
         if (lines.isEmpty() && gearMode && !retainedEntries.isEmpty() && RETAINED_BTN.containsAt(left, top, mouseX, mouseY)) {
-            RetainedEnchant first = retainedEntries.getFirst();
+            int selected = Math.clamp(this.retainedIndex, 0, retainedEntries.size() - 1);
+            RetainedEnchant entry = retainedEntries.get(selected);
             lines.add(Component.translatable("gui.enchantment_fusion.retained.title", retainedEntries.size()).withStyle(ChatFormatting.GOLD));
-            lines.add(FusionTooltipRenderer.formatEnchantmentWithLevel(registries, first.id(), first.level()).copy().withStyle(ChatFormatting.AQUA));
+            lines.add(Component.translatable("gui.enchantment_fusion.retained.selected", selected + 1, retainedEntries.size(),
+                FusionTooltipRenderer.formatEnchantmentWithLevel(registries, entry.id(), entry.level())).withStyle(ChatFormatting.AQUA));
             lines.add(Component.translatable("gui.enchantment_fusion.retained.extract_help").withStyle(ChatFormatting.GRAY));
-            if (!this.menu.stationContainer().getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty()) {
+            if (this.menu.retainedTargetRevision() <= 0) {
+                lines.add(Component.translatable("gui.enchantment_fusion.retained.wait_sync").withStyle(ChatFormatting.RED));
+            } else if (!this.menu.stationContainer().getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty()) {
                 lines.add(Component.translatable(RejectReason.RETAINED_OUTPUT_OCCUPIED.langKey()).withStyle(ChatFormatting.RED));
-            } else if (FusionStationOperations.lookupEnchantment(registries, first.id()).isEmpty()) {
+            } else if (FusionStationOperations.lookupEnchantment(registries, entry.id()).isEmpty()) {
                 lines.add(Component.translatable(RejectReason.RETAINED_ENCHANTMENT_UNAVAILABLE.langKey()).withStyle(ChatFormatting.RED));
             } else if (!this.menu.viewer().getAbilities().instabuild && this.menu.viewer().experienceLevel < preview.manageXpCost()) {
                 lines.add(Component.translatable("gui.enchantment_fusion.tip.manage_need_xp", preview.manageXpCost()).withStyle(ChatFormatting.RED));
@@ -1185,14 +1193,19 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
             return true;
         }
 
-        // Extract the first collision-preserved secondary. The server revalidates the token,
-        // registry, output slot, cost and current item; repeated clicks cannot duplicate it.
+        // Right-click cycles every preserved entry, including missing registrations.
+        // Left-click sends both the complete-list token and the server's target revision.
         if (gearMode && RETAINED_BTN.containsAt(this.leftPos, this.topPos, mx, my)) {
             ItemStack host = this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET);
             List<RetainedEnchant> retained = host.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of());
             if (!retained.isEmpty()) {
-                if (btn == 0 && !FusionRitualDirector.isChanneling()) {
-                    sendAction(StationAction.EXTRACT_RETAINED, 0, RetainedEnchant.selectionToken(retained, 0));
+                this.retainedIndex = Math.clamp(this.retainedIndex, 0, retained.size() - 1);
+                if (btn == 1) {
+                    this.retainedIndex = (this.retainedIndex + 1) % retained.size();
+                } else if (btn == 0 && !FusionRitualDirector.isChanneling() && this.menu.retainedTargetRevision() > 0) {
+                    ClientPlayNetworking.send(new StationActionPayload(this.menu.containerId, StationAction.EXTRACT_RETAINED,
+                        this.retainedIndex, 0, RetainedEnchant.versionedSelectionToken(retained, this.retainedIndex,
+                            this.menu.retainedTargetRevision())));
                 }
                 return true;
             }

@@ -6,6 +6,7 @@ import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.FusionStationOperations;
+import enchantment_fusion.mechanics.StationTargetRevision;
 import enchantment_fusion.mechanics.FusionStationOperations.ActionResult;
 import enchantment_fusion.mechanics.FusionStationOperations.EnchantCandidate;
 import enchantment_fusion.mechanics.FusionStationOperations.ResolvedSelection;
@@ -17,6 +18,7 @@ import enchantment_fusion.registry.FusionBlocks;
 import enchantment_fusion.registry.FusionItems;
 import enchantment_fusion.registry.FusionMenus;
 import java.util.List;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.server.level.ServerPlayer;
@@ -76,6 +78,9 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
     private final Player player;
     private final BlockPos tablePos;
     private final ContainerData uiState = new SimpleContainerData(UI_DATA_COUNT);
+    private final StationTargetRevision fallbackTargetRevision = new StationTargetRevision();
+    private long sentTargetRevision;
+    private long clientTargetRevision;
 
     public EnchantmentFusionMenu(int syncId, Inventory playerInventory, OpenStationPayload payload) {
         // NET-04: Client menu uses an isolated SimpleContainer(4) synced strictly via menu slots!
@@ -145,6 +150,9 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
             public void setChanged() {
                 super.setChanged();
                 if (slotIndex == FusionStationOperations.SLOT_TARGET) {
+                    if (!EnchantmentFusionMenu.this.player.level().isClientSide()) {
+                        EnchantmentFusionMenu.this.serverTargetRevision();
+                    }
                     EnchantmentFusionMenu.this.syncAutoMorphMode();
                 }
                 if (affectsCandidates && !EnchantmentFusionMenu.this.player.level().isClientSide()) {
@@ -183,6 +191,13 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
             uiState.set(DATA_RITUAL_OWNER, be.ownsRitual(this.player.getUUID()) ? 1 : 0);
         }
         super.broadcastChanges();
+        if (this.player instanceof ServerPlayer serverPlayer && serverPlayer.containerMenu == this) {
+            long revision = serverTargetRevision();
+            if (revision != sentTargetRevision && ServerPlayNetworking.canSend(serverPlayer, FusionNetworking.StationTargetRevisionPayload.TYPE)) {
+                ServerPlayNetworking.send(serverPlayer, new FusionNetworking.StationTargetRevisionPayload(containerId, revision));
+                sentTargetRevision = revision;
+            }
+        }
     }
 
     private void pruneStaleSelectionIndices() {
@@ -219,6 +234,20 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
 
     public Player viewer() {
         return player;
+    }
+
+    private long serverTargetRevision() {
+        if (stationInv instanceof EnchantmentFusionTableBlockEntity be) return be.targetRevision();
+        return fallbackTargetRevision.observe(stationInv.getItem(FusionStationOperations.SLOT_TARGET));
+    }
+
+    /** Zero means that no compatible server revision has arrived yet. */
+    public long retainedTargetRevision() {
+        return player.level().isClientSide() ? clientTargetRevision : serverTargetRevision();
+    }
+
+    public void applyClientTargetRevision(long revision) {
+        if (player.level().isClientSide() && revision > 0) clientTargetRevision = revision;
     }
 
     public int activeTab() {
@@ -411,8 +440,16 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 failReason = split.reason();
             }
             case EXTRACT_RETAINED -> {
+                // The shared revision changes even if another viewer replaces the target
+                // with an identical-looking stack. Reject delayed packets before payment.
+                String revisionSuffix = "@" + serverTargetRevision();
+                if (expectedToken == null || !expectedToken.endsWith(revisionSuffix)
+                    || expectedToken.length() <= revisionSuffix.length()) {
+                    return ActionResult.failed(RejectReason.MISSING_INPUT);
+                }
+                String listToken = expectedToken.substring(0, expectedToken.length() - revisionSuffix.length());
                 ActionResult extract = FusionStationOperations.extractRetainedWithReason(
-                    stationInv, actor, registries, paramA, expectedToken
+                    stationInv, actor, registries, paramA, listToken
                 );
                 changed = extract.success();
                 failReason = extract.reason();

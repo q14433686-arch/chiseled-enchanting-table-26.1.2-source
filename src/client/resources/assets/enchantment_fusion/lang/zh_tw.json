@@ -869,7 +869,7 @@
   "message.enchantment_fusion.breath_not_enough": "Not enough air to activate; a breathing reserve is required.",
   "tooltip.enchantment_fusion.legacy_underwater_carrier": "Legacy carrier: previous behavior remains; the new mining skill cannot be installed here.",
   "gui.enchantment_fusion.retained.title": "Preserved enchantments (%d)",
-  "gui.enchantment_fusion.retained.extract_help": "Click to extract the first entry into an enchanted book in the empty left input. Uses the normal removal fee.",
+  "gui.enchantment_fusion.retained.extract_help": "Right-click to choose an entry; left-click to extract it into the empty left input for the normal fee.",
   "gui.enchantment_fusion.reject.retained_output_occupied": "Clear the left input slot before extracting the preserved enchantment.",
   "gui.enchantment_fusion.reject.retained_enchantment_unavailable": "This preserved enchantment is not registered. Restore its data pack or mod before extracting it.",
   "tooltip.enchantment_fusion.retained_recovery": "At the fusion table, use the ⇧ button to recover a preserved entry as an enchanted book.",
@@ -887,5 +887,7 @@
   "message.enchantment_fusion.frost_step_limit": "Frost steps are cooling down or this airborne journey has used all three.",
   "message.enchantment_fusion.frost_step_no_space": "No permitted empty air below you; no frost step was used.",
   "tooltip.enchantment_fusion.legacy_frost_fall_carrier": "Legacy carrier: previous behavior remains; the new frost-fall skill cannot be installed here.",
-  "tooltip.enchantment_fusion.active_skill_keys": "Activate: %1$s · Switch equipped skills: %2$s"
+  "tooltip.enchantment_fusion.active_skill_keys": "Activate: %1$s · Switch equipped skills: %2$s",
+  "gui.enchantment_fusion.retained.selected": "Entry %1$s/%2$s: %3$s",
+  "gui.enchantment_fusion.retained.wait_sync": "Waiting for the server to sync the target item revision; update the server if this persists."
 }

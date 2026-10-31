@@ -226,6 +226,10 @@ final class LoyaltyGuardProbe {
             "A native primary changed to another level must not be erased as a projection");
     }
 
+    private static String selection(EnchantmentFusionMenu menu, List<RetainedEnchant> entries, int index) {
+        return RetainedEnchant.versionedSelectionToken(entries, index, menu.retainedTargetRevision());
+    }
+
     private static void exerciseRetainedExtraction(ServerPlayer player, ItemStack target,
                                                    Holder<Enchantment> protection, Holder<Enchantment> unbreaking) {
         SimpleContainer inv = new SimpleContainer(4);
@@ -235,24 +239,34 @@ final class LoyaltyGuardProbe {
         EnchantmentFusionMenu menu = new EnchantmentFusionMenu(0, player.getInventory(), inv,
             ContainerLevelAccess.NULL, BlockPos.ZERO);
         try {
+            String oldSelection = selection(menu, List.of(retained), 0);
+            ItemStack identicalReplacement = target.copy();
+            inv.setItem(FusionStationOperations.SLOT_TARGET, identicalReplacement);
+            require(!menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, oldSelection)
+                && inv.getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty()
+                && identicalReplacement.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).equals(List.of(retained))
+                && inv.getItem(FusionStationOperations.SLOT_CATALYST).getCount() == 2,
+                "A delayed request must not extract from an identical replacement target");
+            inv.setItem(FusionStationOperations.SLOT_TARGET, target);
             require(!menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, "stale")
                 && target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).size() == 1,
                 "A stale preserved-entry token must do nothing");
             inv.setItem(FusionStationOperations.SLOT_PRIMARY, new ItemStack(Items.BOOK));
-            var occupied = menu.performActionWithResult(player, StationAction.EXTRACT_RETAINED, 0, 0, RetainedEnchant.selectionToken(List.of(retained), 0));
+            var occupied = menu.performActionWithResult(player, StationAction.EXTRACT_RETAINED, 0, 0, selection(menu, List.of(retained), 0));
             require(!occupied.success() && occupied.reason() == RejectReason.RETAINED_OUTPUT_OCCUPIED
                 && inv.getItem(FusionStationOperations.SLOT_CATALYST).getCount() == 2,
                 "An occupied output must reject before taking payment or modifying the item");
             inv.setItem(FusionStationOperations.SLOT_PRIMARY, ItemStack.EMPTY);
             RetainedEnchant missing = new RetainedEnchant("missing:unloaded_enchantment", 4);
             target.set(FusionDataComponents.RETAINED_ENCHANTS, List.of(missing));
-            var absent = menu.performActionWithResult(player, StationAction.EXTRACT_RETAINED, 0, 0, RetainedEnchant.selectionToken(List.of(missing), 0));
+            var absent = menu.performActionWithResult(player, StationAction.EXTRACT_RETAINED, 0, 0, selection(menu, List.of(missing), 0));
             require(!absent.success() && absent.reason() == RejectReason.RETAINED_ENCHANTMENT_UNAVAILABLE
                 && target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).equals(List.of(missing))
                 && inv.getItem(FusionStationOperations.SLOT_CATALYST).getCount() == 2,
                 "A missing mod enchantment must remain preserved without payment");
             target.set(FusionDataComponents.RETAINED_ENCHANTS, List.of(retained));
-            require(menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, RetainedEnchant.selectionToken(List.of(retained), 0)),
+            String oneToken = selection(menu, List.of(retained), 0);
+            require(menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, oneToken),
                 "The preserved secondary should be extractable through the station menu");
             ItemStack book = inv.getItem(FusionStationOperations.SLOT_PRIMARY);
             require(book.is(Items.ENCHANTED_BOOK)
@@ -262,15 +276,14 @@ final class LoyaltyGuardProbe {
                 && target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).isEmpty()
                 && inv.getItem(FusionStationOperations.SLOT_CATALYST).getCount() == 1,
                 "Extraction must preserve independent enchantments and deduct exactly one catalyst");
-            require(!menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, RetainedEnchant.selectionToken(List.of(retained), 0))
+            require(!menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, oneToken)
                 && inv.getItem(FusionStationOperations.SLOT_PRIMARY) == book,
                 "Replaying an extraction cannot create another book");
 
-            // A delayed duplicate packet must not accidentally consume a second identical entry.
             inv.setItem(FusionStationOperations.SLOT_PRIMARY, ItemStack.EMPTY);
             target.set(FusionDataComponents.RETAINED_ENCHANTS, List.of(retained, retained));
             inv.setItem(FusionStationOperations.SLOT_CATALYST, new ItemStack(Items.AMETHYST_SHARD, 2));
-            String twoToken = RetainedEnchant.selectionToken(List.of(retained, retained), 0);
+            String twoToken = selection(menu, List.of(retained, retained), 0);
             require(menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, twoToken),
                 "The first of two identical preserved entries must be extractable");
             ItemStack firstBook = inv.getItem(FusionStationOperations.SLOT_PRIMARY);
@@ -279,14 +292,49 @@ final class LoyaltyGuardProbe {
                 && target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).size() == 1
                 && inv.getItem(FusionStationOperations.SLOT_CATALYST).getCount() == 1,
                 "An old token must not consume the remaining identical entry");
-            require(menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0,
-                    RetainedEnchant.selectionToken(List.of(retained), 0))
+            require(menu.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, selection(menu, List.of(retained), 0))
                 && inv.getItem(FusionStationOperations.SLOT_PRIMARY) != firstBook
                 && inv.getItem(FusionStationOperations.SLOT_PRIMARY).getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY)
                     .getLevel(protection) == 4,
                 "The second entry requires a fresh selection and keeps its exact level");
+
+            inv.setItem(FusionStationOperations.SLOT_PRIMARY, ItemStack.EMPTY);
+            inv.setItem(FusionStationOperations.SLOT_CATALYST, new ItemStack(Items.AMETHYST_SHARD));
+            target.set(FusionDataComponents.RETAINED_ENCHANTS, List.of(missing, retained));
+            require(menu.performAction(player, StationAction.EXTRACT_RETAINED, 1, 0, selection(menu, List.of(missing, retained), 1))
+                && target.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).equals(List.of(missing)),
+                "A registered later entry must be extractable without destroying an unavailable first entry");
+            exerciseSharedRevision(player, target, retained);
         } finally {
             menu.removed(player);
+        }
+    }
+
+    private static void exerciseSharedRevision(ServerPlayer player, ItemStack source, RetainedEnchant retained) {
+        var table = new enchantment_fusion.block.EnchantmentFusionTableBlockEntity(BlockPos.ZERO,
+            enchantment_fusion.registry.FusionBlocks.ENCHANTMENT_FUSION_TABLE.defaultBlockState());
+        ItemStack first = source.copy();
+        first.set(FusionDataComponents.RETAINED_ENCHANTS, List.of(retained));
+        table.setItem(FusionStationOperations.SLOT_TARGET, first);
+        table.setItem(FusionStationOperations.SLOT_CATALYST, new ItemStack(Items.AMETHYST_SHARD));
+        var viewerA = new EnchantmentFusionMenu(71, player.getInventory(), table, ContainerLevelAccess.NULL, BlockPos.ZERO);
+        var viewerB = new EnchantmentFusionMenu(72, player.getInventory(), table, ContainerLevelAccess.NULL, BlockPos.ZERO);
+        try {
+            long firstRevision = viewerA.retainedTargetRevision();
+            require(firstRevision == viewerB.retainedTargetRevision(), "Viewers must use the same table-owned target revision");
+            String stale = selection(viewerA, List.of(retained), 0);
+            table.setItem(FusionStationOperations.SLOT_TARGET, first.copy());
+            require(!viewerA.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, stale)
+                && table.getItem(FusionStationOperations.SLOT_PRIMARY).isEmpty(),
+                "A stale viewer must not extract from another viewer's identical replacement");
+            long nextRevision = viewerB.retainedTargetRevision();
+            require(nextRevision != firstRevision && nextRevision == viewerA.retainedTargetRevision(),
+                "Every viewer must observe the same replacement revision");
+            require(viewerB.performAction(player, StationAction.EXTRACT_RETAINED, 0, 0, selection(viewerB, List.of(retained), 0)),
+                "A fresh viewer can extract once after replacement");
+        } finally {
+            viewerA.removed(player);
+            viewerB.removed(player);
         }
     }
 

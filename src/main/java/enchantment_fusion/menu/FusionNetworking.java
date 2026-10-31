@@ -100,6 +100,17 @@ public final class FusionNetworking {
         }
     }
 
+    /** Optional clientbound revision of the shared target slot; zero is never sent. */
+    public record StationTargetRevisionPayload(int containerId, long revision) implements CustomPacketPayload {
+        public static final Type<StationTargetRevisionPayload> TYPE = new Type<>(EnchantmentFusion.id("station_target_revision"));
+        public static final StreamCodec<ByteBuf, StationTargetRevisionPayload> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT, StationTargetRevisionPayload::containerId,
+            ByteBufCodecs.VAR_LONG, StationTargetRevisionPayload::revision,
+            StationTargetRevisionPayload::new
+        );
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
     public record StationActionPayload(
         int containerId,
         int actionWireId,
@@ -460,6 +471,7 @@ public final class FusionNetworking {
 
     public static void init() {
         PayloadTypeRegistry.serverboundPlay().register(StationActionPayload.TYPE, StationActionPayload.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(StationTargetRevisionPayload.TYPE, StationTargetRevisionPayload.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CompendiumSyncPayload.TYPE, CompendiumSyncPayload.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CompendiumDeltaPayload.TYPE, CompendiumDeltaPayload.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MatrixSyncPayload.TYPE, MatrixSyncPayload.STREAM_CODEC);

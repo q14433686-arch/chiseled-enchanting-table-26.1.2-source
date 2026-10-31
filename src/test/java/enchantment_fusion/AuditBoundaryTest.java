@@ -62,7 +62,20 @@ class AuditBoundaryTest {
         assertNotEquals(two, RetainedEnchant.selectionToken(List.of(kept, kept), 1));
         assertNotEquals(one, RetainedEnchant.selectionToken(List.of(new RetainedEnchant("protection", 3)), 0));
         assertEquals("", RetainedEnchant.selectionToken(List.of(kept), 1));
+        assertEquals("", RetainedEnchant.versionedSelectionToken(List.of(kept), 0, 0));
+        assertEquals("", RetainedEnchant.versionedSelectionToken(List.of(kept), 1, 9));
+        assertNotEquals(RetainedEnchant.versionedSelectionToken(List.of(kept), 0, 9),
+            RetainedEnchant.versionedSelectionToken(List.of(kept), 0, 10),
+            "An identical list on a different target revision must require a fresh request");
+        assertTrue(RetainedEnchant.versionedSelectionToken(List.of(kept), 0, Long.MAX_VALUE).length() < 512);
         assertEquals(FusionNetworking.StationAction.EXTRACT_RETAINED, FusionNetworking.StationAction.fromWireId(22));
+        var revisionBytes = Unpooled.buffer();
+        try {
+            var revision = new FusionNetworking.StationTargetRevisionPayload(42, Long.MAX_VALUE);
+            FusionNetworking.StationTargetRevisionPayload.STREAM_CODEC.encode(revisionBytes, revision);
+            assertEquals(revision, FusionNetworking.StationTargetRevisionPayload.STREAM_CODEC.decode(revisionBytes));
+            assertEquals(0, revisionBytes.readableBytes());
+        } finally { revisionBytes.release(); }
         var encoded = RetainedEnchant.CODEC.encodeStart(JsonOps.INSTANCE, kept).result().orElseThrow();
         assertEquals(kept, RetainedEnchant.CODEC.parse(JsonOps.INSTANCE, encoded).result().orElseThrow());
         assertTrue(RetainedEnchant.CODEC.parse(JsonOps.INSTANCE,

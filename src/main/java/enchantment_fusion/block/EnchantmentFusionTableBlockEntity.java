@@ -5,6 +5,7 @@ import enchantment_fusion.config.FusionConfigStore;
 import enchantment_fusion.mechanics.FusionEconomyRules;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.FusionStationOperations;
+import enchantment_fusion.mechanics.StationTargetRevision;
 import enchantment_fusion.mechanics.FusionStationOperations.ActionResult;
 import enchantment_fusion.mechanics.FusionStationOperations.StationPreview;
 import enchantment_fusion.data.FusionMatrixRegistry;
@@ -49,6 +50,7 @@ public final class EnchantmentFusionTableBlockEntity extends BlockEntity impleme
     public static final int CONTAINER_SIZE = 4;
 
     private final NonNullList<ItemStack> items = NonNullList.withSize(CONTAINER_SIZE, ItemStack.EMPTY);
+    private final StationTargetRevision targetRevision = new StationTargetRevision();
     private @Nullable Component customName;
     private long lastSyncedVisualHash = Long.MIN_VALUE;
     public int animTicks;
@@ -288,8 +290,14 @@ public final class EnchantmentFusionTableBlockEntity extends BlockEntity impleme
         }
     }
 
+    /** Shared by every viewer; re-observing also catches in-place changes before a request. */
+    public long targetRevision() {
+        return targetRevision.observe(items.get(FusionStationOperations.SLOT_TARGET));
+    }
+
     @Override
     public void setChanged() {
+        targetRevision();
         super.setChanged();
         if (this.level != null && !this.level.isClientSide()) {
             long nextVisual = computeVisualHash();

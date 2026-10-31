@@ -13,6 +13,7 @@ import enchantment_fusion.gui.FusionTooltipRenderer;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.menu.FusionSkillNetworking;
+import enchantment_fusion.menu.EnchantmentFusionMenu;
 import enchantment_fusion.menu.FusionNetworking.CompendiumDeltaPayload;
 import enchantment_fusion.menu.FusionNetworking.CompendiumSyncPayload;
 import enchantment_fusion.menu.FusionNetworking.FusionVisualEventPayload;
@@ -89,6 +90,12 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
             }
         });
 
+        ClientPlayNetworking.registerGlobalReceiver(FusionNetworking.StationTargetRevisionPayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> {
+                if (ctx.client().player != null && ctx.client().player.containerMenu instanceof EnchantmentFusionMenu menu
+                    && menu.containerId == payload.containerId()) menu.applyClientTargetRevision(payload.revision());
+            });
+        });
         ClientPlayNetworking.registerGlobalReceiver(CompendiumSyncPayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> CompendiumDiscoveryTracker.applyClientSync(payload.unlockedPairs()));
         });
