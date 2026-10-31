@@ -319,6 +319,7 @@ public final class MatrixEffectExecutor {
             boolean redesignedWindSweep = sigOpt.isPresent() && WindSweepSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedSoulBlade = sigOpt.isPresent() && SoulBladeSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedSegmentThread = sigOpt.isPresent() && SegmentThreadSkills.applies(pair, hostStack, sigOpt.get().id());
+            boolean redesignedSealedOre = sigOpt.isPresent() && SealedOreSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
                 || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal
