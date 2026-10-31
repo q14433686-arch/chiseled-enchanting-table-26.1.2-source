@@ -63,12 +63,15 @@ public final class PhantomVolley {
         Flight withKind(int next) { return new Flight(next, owner, born, target); }
     }
 
-    // Persistent so unloading an arrow cannot strip its non-pickup/protected-target identity.
-    private static final AttachmentType<Flight> FLIGHT = AttachmentRegistry.create(
-        EnchantmentFusion.id("phantom_volley_flight"), builder -> builder.persistent(Flight.CODEC));
+    // Fabric's registry is mixin-backed and cannot initialize in plain JUnit. Defer it
+    // while keeping pure carrier/probability rules independently testable.
+    private static final class Attachments {
+        private static final AttachmentType<Flight> FLIGHT = AttachmentRegistry.create(
+            EnchantmentFusion.id("phantom_volley_flight"), builder -> builder.persistent(Flight.CODEC));
+    }
 
     private PhantomVolley() {}
-    public static void init() {}
+    public static void init() { java.util.Objects.requireNonNull(Attachments.FLIGHT); }
 
     public static boolean isVolley(@Nullable FusedPair pair) {
         return pair != null && MULTISHOT.equals(pair.primaryId()) && PIERCING.equals(pair.secondaryId());
@@ -103,21 +106,21 @@ public final class PhantomVolley {
         if (arrow.getPierceLevel() < wanted) ((AbstractArrowAccessor) arrow).ef$setPierceLevel((byte) wanted);
     }
     public static boolean isGhost(Projectile projectile) {
-        Flight flight = projectile.getAttached(FLIGHT);
+        Flight flight = projectile.getAttached(Attachments.FLIGHT);
         return flight != null && flight.kind() == GHOST;
     }
     public static void markGhost(AbstractArrow arrow, ServerPlayer owner, @Nullable LivingEntity target) {
         arrow.pickup = AbstractArrow.Pickup.DISALLOWED;
-        arrow.setAttached(FLIGHT, new Flight(GHOST, owner.getUUID().toString(), owner.level().getGameTime(),
+        arrow.setAttached(Attachments.FLIGHT, new Flight(GHOST, owner.getUUID().toString(), owner.level().getGameTime(),
             target == null ? "" : target.getUUID().toString()));
     }
     public static void markCluster(AbstractArrow arrow, ServerPlayer owner, boolean armed) {
-        if (arrow.getAttached(FLIGHT) != null) return;
-        arrow.setAttached(FLIGHT, new Flight(armed ? ARMED : MISSED_ROLL, owner.getUUID().toString(),
+        if (arrow.getAttached(Attachments.FLIGHT) != null) return;
+        arrow.setAttached(Attachments.FLIGHT, new Flight(armed ? ARMED : MISSED_ROLL, owner.getUUID().toString(),
             owner.level().getGameTime(), ""));
     }
     public static void rollCluster(AbstractArrow arrow, ServerPlayer owner, FusedPair pair) {
-        if (arrow.getAttached(FLIGHT) == null) {
+        if (arrow.getAttached(Attachments.FLIGHT) == null) {
             markCluster(arrow, owner, owner.getRandom().nextFloat() < clusterChance(pair.secondaryLevel()));
         }
     }
@@ -174,15 +177,15 @@ public final class PhantomVolley {
 
     /** Reserve before vanilla damage to avoid reentrant double fission. */
     public static boolean reserveImpact(AbstractArrow arrow) {
-        Flight flight = arrow.getAttached(FLIGHT);
+        Flight flight = arrow.getAttached(Attachments.FLIGHT);
         if (flight == null || flight.kind() != ARMED) return false;
-        arrow.setAttached(FLIGHT, flight.withKind(RESERVED));
+        arrow.setAttached(Attachments.FLIGHT, flight.withKind(RESERVED));
         return true;
     }
     public static void finishImpact(AbstractArrow arrow, Entity target, Vec3 hit, boolean succeeded) {
-        Flight flight = arrow.getAttached(FLIGHT);
+        Flight flight = arrow.getAttached(Attachments.FLIGHT);
         if (flight == null || flight.kind() != RESERVED) return;
-        arrow.setAttached(FLIGHT, flight.withKind(succeeded ? SPENT : ARMED));
+        arrow.setAttached(Attachments.FLIGHT, flight.withKind(succeeded ? SPENT : ARMED));
         if (!succeeded || !(arrow.level() instanceof ServerLevel level)) return;
         ServerPlayer owner = validOwner(arrow, flight);
         if (owner == null) return;
@@ -192,7 +195,7 @@ public final class PhantomVolley {
 
     /** A protected collision is stopped before vanilla damage or deflection can occur. */
     public static boolean protectedCollision(Projectile projectile, Entity target) {
-        Flight flight = projectile.getAttached(FLIGHT);
+        Flight flight = projectile.getAttached(Attachments.FLIGHT);
         if (flight == null || flight.kind() != GHOST) return false;
         ServerPlayer owner = validOwner(projectile, flight);
         return owner == null || (target instanceof LivingEntity living && isProtected(owner, living));
@@ -213,7 +216,7 @@ public final class PhantomVolley {
 
     /** Return false only if a ghost was discarded; the real cluster carrier remains an ordinary arrow. */
     public static boolean tick(AbstractArrow arrow) {
-        Flight flight = arrow.getAttached(FLIGHT);
+        Flight flight = arrow.getAttached(Attachments.FLIGHT);
         if (flight == null || !(arrow.level() instanceof ServerLevel level)) return true;
         if (flight.kind() != GHOST) {
             if (flight.kind() == ARMED && arrow.tickCount % 3 == 0) {
