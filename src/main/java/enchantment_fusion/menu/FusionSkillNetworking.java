@@ -14,6 +14,7 @@ import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
+import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,7 +69,8 @@ public final class FusionSkillNetworking {
         FIRE_COMPENSATION("skill.enchantment_fusion.fire_compensation"),
         FIRE_WAVE("skill.enchantment_fusion.fire_wave"),
         OPEN_SEALED_ORE("skill.enchantment_fusion.open_sealed_ore"),
-        FORTUNE_BANK("skill.enchantment_fusion.fortune_bank");
+        FORTUNE_BANK("skill.enchantment_fusion.fortune_bank"),
+        WATER_PRESSURE("skill.enchantment_fusion.water_pressure");
         final String translation;
         Skill(String translation) { this.translation = translation; }
     }
@@ -96,6 +98,7 @@ public final class FusionSkillNetworking {
         if (FireTradeoffSkills.hasEquipped(player, false)) skills.add(Skill.FIRE_WAVE);
         if (SealedOreSkills.hasOpenableSample(player)) skills.add(Skill.OPEN_SEALED_ORE);
         if (FortuneBankSkills.hasEquipped(player)) skills.add(Skill.FORTUNE_BANK);
+        if (WaterPressureSkills.hasEquipped(player)) skills.add(Skill.WATER_PRESSURE);
         return skills;
     }
 
@@ -154,6 +157,7 @@ public final class FusionSkillNetworking {
             case FIRE_WAVE -> FireTradeoffSkills.release(player);
             case OPEN_SEALED_ORE -> SealedOreSkills.openSample(player);
             case FORTUNE_BANK -> FortuneBankSkills.activate(player);
+            case WATER_PRESSURE -> WaterPressureSkills.activate(player);
         }
     }
 

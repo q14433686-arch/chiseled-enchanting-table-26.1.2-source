@@ -6,7 +6,7 @@ import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
-import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
+import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -21,7 +21,7 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
     private static float ef$soulThreadDamage(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source,
                                               float value, Operation<Float> original) {
         float vanilla = original.call(level, weapon, victim, source, value);
-        return StealthBladeSkills.nonNativeDamage(level, weapon, victim, source,
+        return MeleeAttackThemes.nonNativeDamage(level, weapon, victim, source,
             SegmentThreadSkills.modifyDamage(level, weapon, victim, source,
                 SoulBladeSkills.modifyDamage(level, weapon, victim, source,
                     SoulThreadSkills.nonNativeDamage(level, weapon, victim, source, vanilla))));

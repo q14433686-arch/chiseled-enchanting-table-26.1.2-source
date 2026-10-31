@@ -34,6 +34,7 @@ import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
+import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
@@ -230,6 +231,9 @@ public final class FusionTooltipRenderer {
             boolean stealthTemplate = StealthBladeSkills.matches(pair);
             boolean legacyStealthCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && stealthTemplate
                 && !StealthBladeSkills.applies(pair, stack);
+            boolean waterPressureTemplate = WaterPressureSkills.matches(pair);
+            boolean legacyWaterPressureCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && waterPressureTemplate
+                && !WaterPressureSkills.applies(pair, stack);
             boolean legacyRetainedVolleyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && RetainedVolleyHosts.matches(pair, sigOpt.get().id()) && !RetainedVolleyHosts.supportsHost(stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
@@ -266,6 +270,11 @@ public final class FusionTooltipRenderer {
                         ? "tooltip.enchantment_fusion.stealth_blade_weapon"
                         : "tooltip.enchantment_fusion.stealth_blade_legs").withStyle(ChatFormatting.AQUA));
                 }
+                if (shift && waterPressureTemplate && !legacyWaterPressureCarrier) {
+                    lines.add(Component.translatable(WaterPressureSkills.isAttackFirst(pair)
+                        ? "tooltip.enchantment_fusion.water_pressure_weapon"
+                        : "tooltip.enchantment_fusion.water_pressure_helmet").withStyle(ChatFormatting.AQUA));
+                }
             } else if (sigOpt.isPresent()) {
                 Component sigTitle = Component.translatable(sigOpt.get().titleKey());
                 lines.add(Component.translatable(
@@ -295,6 +304,10 @@ public final class FusionTooltipRenderer {
                         lines.add(Component.translatable(StealthBladeSkills.isAttackFirst(pair)
                             ? "tooltip.enchantment_fusion.stealth_blade_weapon"
                             : "tooltip.enchantment_fusion.stealth_blade_legs").withStyle(ChatFormatting.AQUA));
+                    } else if (waterPressureTemplate && !legacyWaterPressureCarrier) {
+                        lines.add(Component.translatable(WaterPressureSkills.isAttackFirst(pair)
+                            ? "tooltip.enchantment_fusion.water_pressure_weapon"
+                            : "tooltip.enchantment_fusion.water_pressure_helmet").withStyle(ChatFormatting.AQUA));
                     } else {
                         lines.add(buildMatrixSentence(pair, hostForm).copy().withStyle(ChatFormatting.AQUA));
                     }
@@ -303,6 +316,15 @@ public final class FusionTooltipRenderer {
             if (legacyStealthCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_stealth_blade_carrier")
                     .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyWaterPressureCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_water_pressure_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (shift && waterPressureTemplate && WaterPressureSkills.isBreathFirst(pair) && !legacyWaterPressureCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
+                    Component.keybind("key.enchantment_fusion.activate_skill"),
+                    Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
             }
             if (legacyUnderwaterCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_underwater_carrier")

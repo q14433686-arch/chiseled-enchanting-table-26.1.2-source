@@ -1021,5 +1021,12 @@
   "message.enchantment_fusion.fortune_bank_unverified": "Butin invérifiable ; la réserve et la cible sont conservées.",
   "tooltip.enchantment_fusion.stealth_blade_weapon": "Un coup de mêlée chargé laisse une marque. Passez dessus en vous accroupissant, puis touchez à nouveau pour libérer une courte lame. Châtiment et Fléau limitent les cibles.",
   "tooltip.enchantment_fusion.stealth_blade_legs": "Déplacez-vous accroupi avec des jambières équipées pour préparer un pas ; le prochain coup valide libère une lame. Châtiment et Fléau limitent les cibles.",
-  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "L’ancien support conserve son effet ; les nouvelles directions exigent une arme de mêlée ou des jambières portées."
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "L’ancien support conserve son effet ; les nouvelles directions exigent une arme de mêlée ou des jambières portées.",
+  "tooltip.enchantment_fusion.water_pressure_weapon": "Un coup valide sous l’eau laisse une bulle virtuelle ; un autre coup la fait éclater et touche les ennemis admissibles. Châtiment et Fléau limitent les cibles.",
+  "tooltip.enchantment_fusion.water_pressure_helmet": "Activez sous l’eau pour dépenser de l’air ; le prochain coup valide libère une lame de pression. Châtiment et Fléau limitent les cibles.",
+  "tooltip.enchantment_fusion.legacy_water_pressure_carrier": "L’ancien support conserve son effet ; les nouvelles directions exigent une arme de mêlée ou un casque porté.",
+  "skill.enchantment_fusion.water_pressure": "Lame de pression",
+  "message.enchantment_fusion.water_pressure_ready": "Lame déjà préparée ; aucun air supplémentaire dépensé.",
+  "message.enchantment_fusion.water_pressure_air": "Air insuffisant pour préparer la lame.",
+  "message.enchantment_fusion.water_pressure_paid": "Lame préparée ; %s ticks d’air dépensés."
 }

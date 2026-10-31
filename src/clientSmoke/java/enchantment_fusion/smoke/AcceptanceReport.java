@@ -25,6 +25,13 @@ final class AcceptanceReport {
         plan("06-runtime-compat", "06 actual key input, unusual loot functions and stack splitting, save/restart, multiplayer and protection mods", "Not covered by the prepared single-player fixture.");
         plan("10-sharpness-bane", "Sharpness ▷ Bane: real hit and simulated movement/mark age fixture", "Not reached if setup fails.");
         plan("10-bane-sharpness", "Bane ▷ Sharpness: real hit and simulated circling/protected-victim fixture", "Not reached if setup fails.");
+        plan("42.2-sharp-breath", "Sharpness ▷ Respiration: real underwater hits and simulated water state", "Not reached if setup fails.");
+        plan("42.2-breath-sharp", "Respiration ▷ Sharpness: prepared helmet, air payment and real underwater hit", "Not reached if setup fails.");
+        plan("42.2-smite-breath", "Smite ▷ Respiration: underwater bubble and undead filtering", "Not reached if setup fails.");
+        plan("42.2-breath-smite", "Respiration ▷ Smite: prepared helmet and undead filtering", "Not reached if setup fails.");
+        plan("42.2-bane-breath", "Bane ▷ Respiration: underwater bubble and arthropod filtering", "Not reached if setup fails.");
+        plan("42.2-breath-bane", "Respiration ▷ Bane: prepared helmet and arthropod filtering", "Not reached if setup fails.");
+        plan("42.2-runtime-compat", "42.2 natural fluid updates, client key, multiplayer, datapacks and claims", "Not covered by the artificially refreshed fluid-state fixture.");
         plan("42.3-sharp-swift", "Sharpness ▷ Swift Sneak: real hits and simulated imprint movement", "Not reached if setup fails.");
         plan("42.3-swift-sharp", "Swift Sneak ▷ Sharpness: worn leggings, simulated crouch and real hit", "Not reached if setup fails.");
         plan("42.3-smite-swift", "Smite ▷ Swift Sneak: real hits, undead filtering and simulated imprint movement", "Not reached if setup fails.");

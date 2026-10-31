@@ -1021,5 +1021,12 @@
   "message.enchantment_fusion.fortune_bank_unverified": "Bottino non verificabile; riserva e bersaglio restano invariati.",
   "tooltip.enchantment_fusion.stealth_blade_weapon": "Un colpo corpo a corpo caricato lascia un segno. Passaci sopra accovacciato e colpisci di nuovo per liberare un breve taglio. Anatema e Flagello limitano i bersagli.",
   "tooltip.enchantment_fusion.stealth_blade_legs": "Muoviti accovacciato con i gambali indossati per preparare un passo; il prossimo colpo valido libera un taglio. Anatema e Flagello limitano i bersagli.",
-  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "Il supporto precedente conserva il suo effetto; le nuove direzioni richiedono un’arma da mischia o gambali indossati."
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "Il supporto precedente conserva il suo effetto; le nuove direzioni richiedono un’arma da mischia o gambali indossati.",
+  "tooltip.enchantment_fusion.water_pressure_weapon": "Un colpo valido sott’acqua lascia una bolla virtuale; un altro colpo la fa scoppiare colpendo nemici idonei. Anatema e Flagello limitano i bersagli.",
+  "tooltip.enchantment_fusion.water_pressure_helmet": "Attiva sott’acqua consumando aria; il prossimo colpo valido libera una lama di pressione. Anatema e Flagello limitano i bersagli.",
+  "tooltip.enchantment_fusion.legacy_water_pressure_carrier": "Il supporto precedente conserva l’effetto; le nuove direzioni richiedono arma da mischia o elmo indossato.",
+  "skill.enchantment_fusion.water_pressure": "Lama di pressione",
+  "message.enchantment_fusion.water_pressure_ready": "Lama già pronta; nessuna altra aria consumata.",
+  "message.enchantment_fusion.water_pressure_air": "Aria insufficiente per preparare la lama.",
+  "message.enchantment_fusion.water_pressure_paid": "Lama pronta; consumati %s tick d’aria."
 }

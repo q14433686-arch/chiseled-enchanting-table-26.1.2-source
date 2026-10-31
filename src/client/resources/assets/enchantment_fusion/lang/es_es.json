@@ -1021,5 +1021,12 @@
   "message.enchantment_fusion.fortune_bank_unverified": "No se pudo verificar el botín; la reserva y el objetivo se conservan.",
   "tooltip.enchantment_fusion.stealth_blade_weapon": "Un golpe cuerpo a cuerpo cargado deja una marca. Pasa agachado sobre ella y acierta otro golpe válido para liberar un corte breve. Castigo y Perdición limitan los objetivos.",
   "tooltip.enchantment_fusion.stealth_blade_legs": "Muévete agachado con grebas equipadas para preparar un paso; el siguiente golpe válido libera un corte. Castigo y Perdición limitan los objetivos.",
-  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "El objeto antiguo conserva su efecto; las nuevas direcciones requieren un arma cuerpo a cuerpo o grebas equipadas, respectivamente."
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "El objeto antiguo conserva su efecto; las nuevas direcciones requieren un arma cuerpo a cuerpo o grebas equipadas, respectivamente.",
+  "tooltip.enchantment_fusion.water_pressure_weapon": "Un golpe válido bajo el agua deja una burbuja virtual; otro golpe la revienta y afecta a enemigos aptos. Castigo y Perdición limitan los objetivos.",
+  "tooltip.enchantment_fusion.water_pressure_helmet": "Activa bajo el agua para gastar aire; el siguiente golpe válido libera una hoja de presión. Castigo y Perdición limitan los objetivos.",
+  "tooltip.enchantment_fusion.legacy_water_pressure_carrier": "El soporte antiguo conserva su efecto; las nuevas direcciones requieren arma de combate o casco equipado.",
+  "skill.enchantment_fusion.water_pressure": "Hoja de presión",
+  "message.enchantment_fusion.water_pressure_ready": "La hoja ya está preparada; no se gastó más aire.",
+  "message.enchantment_fusion.water_pressure_air": "No hay suficiente aire para preparar la hoja.",
+  "message.enchantment_fusion.water_pressure_paid": "Hoja preparada; se gastaron %s ticks de aire."
 }

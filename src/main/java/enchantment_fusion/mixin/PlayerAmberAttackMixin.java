@@ -14,7 +14,7 @@ import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedMelee;
-import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
+import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -182,7 +182,7 @@ public abstract class PlayerAmberAttackMixin {
         SoulThreadSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
         SoulBladeSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
         SegmentThreadSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
-        StealthBladeSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
+        MeleeAttackThemes.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
         FireSweepSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
     }
 

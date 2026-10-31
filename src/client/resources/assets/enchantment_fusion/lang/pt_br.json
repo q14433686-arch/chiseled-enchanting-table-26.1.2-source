@@ -1021,5 +1021,12 @@
   "message.enchantment_fusion.fortune_bank_unverified": "Saque não verificável; a reserva e o alvo permanecem.",
   "tooltip.enchantment_fusion.stealth_blade_weapon": "Um golpe corpo a corpo carregado deixa uma marca. Passe agachado por ela e acerte outro golpe válido para liberar um corte curto. Julgamento e Ruína limitam os alvos.",
   "tooltip.enchantment_fusion.stealth_blade_legs": "Agache e mova-se com calças equipadas para preparar um passo; o próximo golpe válido libera um corte. Julgamento e Ruína limitam os alvos.",
-  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "O equipamento antigo mantém seu efeito; as novas direções exigem arma corpo a corpo ou calças equipadas, respectivamente."
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "O equipamento antigo mantém seu efeito; as novas direções exigem arma corpo a corpo ou calças equipadas, respectivamente.",
+  "tooltip.enchantment_fusion.water_pressure_weapon": "Um golpe válido debaixo d’água deixa uma bolha virtual; outro golpe a estoura e atinge inimigos elegíveis. Julgamento e Ruína limitam os alvos.",
+  "tooltip.enchantment_fusion.water_pressure_helmet": "Ative debaixo d’água para gastar ar; o próximo golpe válido libera uma lâmina de pressão. Julgamento e Ruína limitam os alvos.",
+  "tooltip.enchantment_fusion.legacy_water_pressure_carrier": "O equipamento antigo mantém o efeito; as novas direções exigem arma corpo a corpo ou capacete equipado.",
+  "skill.enchantment_fusion.water_pressure": "Lâmina de pressão",
+  "message.enchantment_fusion.water_pressure_ready": "A lâmina já está pronta; nenhum ar extra foi gasto.",
+  "message.enchantment_fusion.water_pressure_air": "Ar insuficiente para preparar a lâmina.",
+  "message.enchantment_fusion.water_pressure_paid": "Lâmina pronta; %s ticks de ar gastos."
 }

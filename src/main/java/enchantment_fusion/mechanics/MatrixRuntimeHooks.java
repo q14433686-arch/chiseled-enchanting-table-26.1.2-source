@@ -29,6 +29,7 @@ import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
+import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
@@ -105,6 +106,7 @@ public final class MatrixRuntimeHooks {
             SoulBladeSkills.clear();
             SegmentThreadSkills.clear();
             StealthBladeSkills.clearServer();
+            WaterPressureSkills.clearServer();
             FortuneBankSkills.clear();
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
@@ -160,6 +162,7 @@ public final class MatrixRuntimeHooks {
             SoulBladeSkills.onDisconnect(pid);
             SegmentThreadSkills.onDisconnect(pid);
             StealthBladeSkills.clearPlayer(pid);
+            WaterPressureSkills.clearPlayer(pid);
             FortuneBankSkills.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
@@ -367,6 +370,7 @@ public final class MatrixRuntimeHooks {
                 WindSweepSkills.onDisconnect(deadPlayer.getUUID());
                 SoulBladeSkills.onDisconnect(deadPlayer.getUUID());
                 StealthBladeSkills.clearPlayer(deadPlayer.getUUID());
+                WaterPressureSkills.clearPlayer(deadPlayer.getUUID());
                 FortuneBankSkills.onDisconnect(deadPlayer.getUUID());
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
@@ -392,6 +396,7 @@ public final class MatrixRuntimeHooks {
             SoulBladeSkills.tickServer(server);
             SegmentThreadSkills.tickServer(server);
             StealthBladeSkills.tickServer(server);
+            WaterPressureSkills.tickServer(server);
             FortuneBankSkills.tickServer(server);
             GlazedStrikeEffect.tickServer(server);
             AmberSealSkill.tickServer(server);

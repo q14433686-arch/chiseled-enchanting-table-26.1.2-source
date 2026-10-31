@@ -1021,5 +1021,12 @@
   "message.enchantment_fusion.fortune_bank_unverified": "This drop could not be safely verified; the reserve and target are unchanged.",
   "tooltip.enchantment_fusion.stealth_blade_weapon": "A full-strength melee hit leaves an imprint. Crouch across it, then land another valid hit to release a short cutting line. Smite and Bane affect only their respective enemies.",
   "tooltip.enchantment_fusion.stealth_blade_legs": "Crouch and move while wearing leggings to prepare a step; the next valid melee hit releases a cutting line. Smite and Bane restrict its targets.",
-  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "This legacy host keeps its old effect. The new directions require a melee weapon or worn leggings, respectively."
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "This legacy host keeps its old effect. The new directions require a melee weapon or worn leggings, respectively.",
+  "tooltip.enchantment_fusion.water_pressure_weapon": "Underwater melee damage leaves a virtual bubble by the enemy; a second valid hit bursts it, pressuring nearby eligible enemies. Smite and Bane restrict targets.",
+  "tooltip.enchantment_fusion.water_pressure_helmet": "Underwater, activate to spend air; the next valid melee hit releases a virtual pressure blade. Smite and Bane restrict targets.",
+  "tooltip.enchantment_fusion.legacy_water_pressure_carrier": "This legacy carrier keeps its old effect; the new directions require a melee weapon or a worn helmet.",
+  "skill.enchantment_fusion.water_pressure": "Pressure blade",
+  "message.enchantment_fusion.water_pressure_ready": "Pressure blade is already prepared; no more air was spent.",
+  "message.enchantment_fusion.water_pressure_air": "Not enough air to prepare a pressure blade.",
+  "message.enchantment_fusion.water_pressure_paid": "Pressure blade prepared; spent %s air ticks."
 }

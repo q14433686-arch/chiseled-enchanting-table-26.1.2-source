@@ -1021,5 +1021,12 @@
   "message.enchantment_fusion.fortune_bank_unverified": "Drop nicht sicher überprüfbar; Reserve und Ziel bleiben erhalten.",
   "tooltip.enchantment_fusion.stealth_blade_weapon": "Ein voll aufgeladener Nahkampftreffer hinterlässt eine Klingenmarke. Schleiche darüber und treffe erneut, um eine kurze Klinge freizusetzen. Bann und Nemesis beschränken die Ziele.",
   "tooltip.enchantment_fusion.stealth_blade_legs": "Mit getragenen Beinschienen schleichend bewegen, um einen Schritt vorzubereiten; der nächste gültige Nahkampftreffer löst eine Klinge aus. Bann und Nemesis beschränken die Ziele.",
-  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "Der alte Träger behält seinen Effekt. Die neuen Richtungen benötigen eine Nahkampfwaffe bzw. getragene Beinschienen."
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "Der alte Träger behält seinen Effekt. Die neuen Richtungen benötigen eine Nahkampfwaffe bzw. getragene Beinschienen.",
+  "tooltip.enchantment_fusion.water_pressure_weapon": "Ein gültiger Nahkampftreffer unter Wasser hinterlässt eine virtuelle Blase. Ein weiterer Treffer lässt sie platzen und trifft zulässige Gegner. Bann und Nemesis beschränken Ziele.",
+  "tooltip.enchantment_fusion.water_pressure_helmet": "Unter Wasser aktivieren und Luft bezahlen; der nächste gültige Nahkampftreffer entfesselt eine Druckklinge. Bann und Nemesis beschränken Ziele.",
+  "tooltip.enchantment_fusion.legacy_water_pressure_carrier": "Der alte Träger behält seinen Effekt; die neuen Richtungen benötigen Nahkampfwaffe bzw. getragenen Helm.",
+  "skill.enchantment_fusion.water_pressure": "Druckklinge",
+  "message.enchantment_fusion.water_pressure_ready": "Druckklinge bereits vorbereitet; keine weitere Luft verbraucht.",
+  "message.enchantment_fusion.water_pressure_air": "Nicht genug Luft für die Druckklinge.",
+  "message.enchantment_fusion.water_pressure_paid": "Druckklinge bereit; %s Luft-Ticks verbraucht."
 }

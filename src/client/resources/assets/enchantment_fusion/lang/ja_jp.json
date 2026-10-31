@@ -1021,5 +1021,12 @@
   "message.enchantment_fusion.fortune_bank_unverified": "ドロップを安全に確認できません。蓄積と対象は保持されます。",
   "tooltip.enchantment_fusion.stealth_blade_weapon": "十分に溜めた近接攻撃で刃の印を残す。スニークで踏み、次の有効な近接攻撃で短い斬撃を放つ。聖なる力と虫特効は対象を限定する。",
   "tooltip.enchantment_fusion.stealth_blade_legs": "脚防具を装着してスニーク移動すると伏歩が溜まり、次の有効な近接攻撃で斬撃を放つ。聖なる力と虫特効は対象を限定する。",
-  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "旧来の装備は旧効果を保持。新しい方向にはそれぞれ近接武器または装着した脚防具が必要。"
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "旧来の装備は旧効果を保持。新しい方向にはそれぞれ近接武器または装着した脚防具が必要。",
+  "tooltip.enchantment_fusion.water_pressure_weapon": "水中で有効な近接攻撃を当てると仮想の泡を残す。次の有効打で泡を割り、周囲の適格な敵に水圧を与える。聖なる力と虫特効は対象を限定する。",
+  "tooltip.enchantment_fusion.water_pressure_helmet": "水中で発動して酸素を消費し、次の有効な近接攻撃で水圧斬を放つ。聖なる力と虫特効は対象を限定する。",
+  "tooltip.enchantment_fusion.legacy_water_pressure_carrier": "旧来の装備は旧効果を保持。新しい方向にはそれぞれ近接武器または装着した頭防具が必要。",
+  "skill.enchantment_fusion.water_pressure": "水圧斬",
+  "message.enchantment_fusion.water_pressure_ready": "水圧斬は準備済み。酸素は追加消費されない。",
+  "message.enchantment_fusion.water_pressure_air": "水圧斬を準備する酸素が足りない。",
+  "message.enchantment_fusion.water_pressure_paid": "水圧斬を準備。酸素を%sティック消費。"
 }

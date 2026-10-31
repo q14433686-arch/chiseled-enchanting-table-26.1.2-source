@@ -1,38 +1,24 @@
 package enchantment_fusion.mechanics.signatures;
 
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
-import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.EntityTypeTags;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantedItemInUse;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentTarget;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -40,14 +26,10 @@ import org.jetbrains.annotations.Nullable;
  * Exact signatures (including data-pack changes) and secondary wildcards always win.
  */
 public final class StealthBladeSkills {
-    public static final String SHARP = "minecraft:sharpness", SMITE = "minecraft:smite";
-    public static final String BANE = "minecraft:bane_of_arthropods", SNEAK = "minecraft:swift_sneak";
-    private static final Set<String> ATTACK = Set.of(SHARP, SMITE, BANE);
-    private static final Set<FusionCarrier> WEAPONS = Set.of(FusionCarrier.SWORD, FusionCarrier.AXE,
-        FusionCarrier.SPEAR, FusionCarrier.MACE, FusionCarrier.TRIDENT);
+    public static final String SHARP = MeleeAttackThemes.SHARP, SMITE = MeleeAttackThemes.SMITE;
+    public static final String BANE = MeleeAttackThemes.BANE, SNEAK = "minecraft:swift_sneak";
     private static final int MAX_MARKS = 256, MAX_CHARGES = 256;
     private static final long MARK_TICKS = 120, READY_TICKS = 100, CHARGE_TICKS = 120;
-    private static final ThreadLocal<Boolean> PRIMARY_REPLAY = ThreadLocal.withInitial(() -> false);
     private record Gear(ItemStack stack, FusedPair pair) {}
     private static final class Mark {
         final UUID owner; final ResourceKey<Level> dimension; final Gear gear; final Vec3 position;
@@ -69,18 +51,21 @@ public final class StealthBladeSkills {
     private static final List<Charge> CHARGES = new ArrayList<>();
     private StealthBladeSkills() {}
 
-    public static void init() { ConfirmedMelee.register(StealthBladeSkills::onHit); }
+    public static void init() {
+        ConfirmedMelee.register(StealthBladeSkills::onHit);
+        MeleeAttackThemes.registerPrimaryTemplate("stealth_blade", (pair, stack) -> isAttackFirst(pair) && applies(pair, stack));
+    }
     public static boolean isAttackFirst(@Nullable FusedPair pair) {
-        return pair != null && ATTACK.contains(pair.primaryId()) && SNEAK.equals(pair.secondaryId());
+        return pair != null && MeleeAttackThemes.isAttack(pair.primaryId()) && SNEAK.equals(pair.secondaryId());
     }
     public static boolean isSneakFirst(@Nullable FusedPair pair) {
-        return pair != null && SNEAK.equals(pair.primaryId()) && ATTACK.contains(pair.secondaryId());
+        return pair != null && SNEAK.equals(pair.primaryId()) && MeleeAttackThemes.isAttack(pair.secondaryId());
     }
     public static boolean matches(@Nullable FusedPair pair) {
         return (isAttackFirst(pair) || isSneakFirst(pair)) && SignatureCatalog.resolve(pair).isEmpty();
     }
     public static boolean supportsCarrier(FusedPair pair, Set<FusionCarrier> roles) {
-        return roles != null && (isAttackFirst(pair) && roles.stream().anyMatch(WEAPONS::contains)
+        return roles != null && (isAttackFirst(pair) && MeleeAttackThemes.supportsWeapon(roles)
             || isSneakFirst(pair) && roles.contains(FusionCarrier.LEG_ARMOR));
     }
     public static boolean applies(@Nullable FusedPair pair, @Nullable ItemStack stack) {
@@ -98,16 +83,12 @@ public final class StealthBladeSkills {
     private static boolean ready(ServerPlayer player) {
         return player.isAlive() && !player.isSpectator();
     }
+    private static String attackId(FusedPair pair) { return isAttackFirst(pair) ? pair.primaryId() : pair.secondaryId(); }
     private static boolean category(FusedPair pair, LivingEntity target) {
-        String attack = isAttackFirst(pair) ? pair.primaryId() : pair.secondaryId();
-        if (SHARP.equals(attack)) return true;
-        var type = BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(target.getType());
-        return SMITE.equals(attack) && type.is(EntityTypeTags.UNDEAD)
-            || BANE.equals(attack) && type.is(EntityTypeTags.ARTHROPOD);
+        return MeleeAttackThemes.matchesTarget(attackId(pair), target);
     }
     private static boolean eligible(ServerPlayer owner, LivingEntity target, FusedPair pair) {
-        return target.level() == owner.level() && category(pair, target) && LoyaltyGuard.eligibleTarget(owner, target)
-            && owner.level().mayInteract(owner, target.blockPosition()) && (!(target instanceof Player other) || other.canHarmPlayer(owner));
+        return MeleeAttackThemes.eligible(owner, target, attackId(pair));
     }
     private static List<Gear> equipped(ItemStack stack, boolean attackFirst) {
         if (stack == null || stack.isEmpty()) return List.of();
@@ -165,43 +146,6 @@ public final class StealthBladeSkills {
         VirtualBlade.cast(owner, owner.getLookAngle(), directTarget, StealthBladeMath.range(sneak),
             StealthBladeMath.damage(attack, sneak), 8, target -> eligible(owner, target, pair), ParticleTypes.SWEEP_ATTACK);
         CompendiumDiscoveryTracker.recordDiscovery(owner, pair.primaryId(), pair.secondaryId());
-    }
-
-    /** Existing native primaries stay native. Replay only a missing primary on an allowed cross-carrier. */
-    public static float nonNativeDamage(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source, float value) {
-        if (Boolean.TRUE.equals(PRIMARY_REPLAY.get()) || !(source.getEntity() instanceof ServerPlayer owner)
-            || source.getDirectEntity() != owner || owner.getMainHandItem() != weapon) return value;
-        Set<String> processed = new HashSet<>(); float result = value;
-        for (Gear gear : equipped(weapon, true)) {
-            String id = gear.pair().primaryId();
-            if (!processed.add(id) || replayedEarlier(weapon, id)) continue;
-            Holder<Enchantment> enchantment = FusionStationOperations.lookupEnchantment(level.registryAccess(), id).orElse(null);
-            if (enchantment == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(enchantment) > 0) continue;
-            MutableFloat modified = new MutableFloat(result); PRIMARY_REPLAY.set(true);
-            try { enchantment.value().modifyDamage(level, gear.pair().primaryLevel(), weapon, victim, source, modified); }
-            finally { PRIMARY_REPLAY.remove(); }
-            if (Float.isFinite(modified.floatValue())) result = modified.floatValue();
-        }
-        return result;
-    }
-    public static void nonNativePostAttack(ServerLevel level, Player player, ItemStack weapon, Entity victim, DamageSource source) {
-        if (Boolean.TRUE.equals(PRIMARY_REPLAY.get()) || !(player instanceof ServerPlayer owner) || owner.getMainHandItem() != weapon
-            || source.getEntity() != owner || source.getDirectEntity() != owner) return;
-        Set<String> processed = new HashSet<>();
-        for (Gear gear : equipped(weapon, true)) {
-            String id = gear.pair().primaryId();
-            if (!processed.add(id) || replayedEarlier(weapon, id)) continue;
-            Holder<Enchantment> enchantment = FusionStationOperations.lookupEnchantment(level.registryAccess(), id).orElse(null);
-            if (enchantment == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(enchantment) > 0) continue;
-            PRIMARY_REPLAY.set(true);
-            try { enchantment.value().doPostAttack(level, gear.pair().primaryLevel(), new EnchantedItemInUse(weapon, EquipmentSlot.MAINHAND, owner),
-                EnchantmentTarget.ATTACKER, victim, source); }
-            finally { PRIMARY_REPLAY.remove(); }
-        }
-    }
-    private static boolean replayedEarlier(ItemStack weapon, String primary) {
-        return SoulThreadSkills.replaysPrimary(weapon, primary) || SoulBladeSkills.replaysPrimary(weapon, primary)
-            || SegmentThreadSkills.replaysPrimary(weapon, primary);
     }
 
     public static void tickServer(MinecraftServer server) {

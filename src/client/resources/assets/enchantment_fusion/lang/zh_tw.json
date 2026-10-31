@@ -1021,5 +1021,12 @@
   "message.enchantment_fusion.fortune_bank_unverified": "無法安全確認這次掉落；礦運與定標均保留。",
   "tooltip.enchantment_fusion.stealth_blade_weapon": "滿蓄近擊合格目標留下刀印；潛行踏過後，下次有效近擊沿視線釋放短暫鋒斬。亡靈殺手與節肢殺手只作用於對應敵人。",
   "tooltip.enchantment_fusion.stealth_blade_legs": "穿戴護腿潛行移動積攢伏步；下一次有效近擊釋放鋒斬。鋒斬只傷害合格敵人，亡靈和節肢附魔各有目標限制。",
-  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "舊載體保留舊效果；新方向分別要求近戰武器或實際穿戴的護腿。"
+  "tooltip.enchantment_fusion.legacy_stealth_blade_carrier": "舊載體保留舊效果；新方向分別要求近戰武器或實際穿戴的護腿。",
+  "tooltip.enchantment_fusion.water_pressure_weapon": "水下有效近擊在敵人旁留下虛擬氣泡；再次有效命中擊破氣泡，水壓衝擊周圍合格敵人。亡靈和節肢附魔各有目標限制。",
+  "tooltip.enchantment_fusion.water_pressure_helmet": "水下主動消耗氧氣，下一次有效近擊釋放虛擬水壓斬；亡靈和節肢附魔各有目標限制。",
+  "tooltip.enchantment_fusion.legacy_water_pressure_carrier": "舊載體保留舊效果；新方向分別要求近戰武器或實際穿戴的頭盔。",
+  "skill.enchantment_fusion.water_pressure": "水壓斬",
+  "message.enchantment_fusion.water_pressure_ready": "水壓斬已準備，不再扣除氧氣。",
+  "message.enchantment_fusion.water_pressure_air": "氧氣不足，無法準備水壓斬。",
+  "message.enchantment_fusion.water_pressure_paid": "水壓斬已準備，消耗 %s 刻氧氣。"
 }
