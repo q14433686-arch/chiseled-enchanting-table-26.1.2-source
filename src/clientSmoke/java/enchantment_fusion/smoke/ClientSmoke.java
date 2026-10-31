@@ -67,9 +67,11 @@ public final class ClientSmoke implements ClientModInitializer {
     private volatile Throwable serverFailure = null;
     private CompletableFuture<Void> resourceReloadFuture;
     private final FlameFusionProbe flameProbe = new FlameFusionProbe();
+    private final AcceptanceReport acceptance = new AcceptanceReport();
 
     @Override
     public void onInitializeClient() {
+        acceptance.checkpoint();
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (finished) {
                 return;
@@ -78,6 +80,7 @@ public final class ClientSmoke implements ClientModInitializer {
                 step(client);
             } catch (Throwable err) {
                 err.printStackTrace();
+                if (phase >= 40 && phase <= 57) acceptance.failed("01-fire-knockback", err);
                 finish(client, "CLIENT SMOKE FAIL: " + err);
             }
         });
@@ -580,21 +583,66 @@ public final class ClientSmoke implements ClientModInitializer {
         ItemStack reverse = new ItemStack(Items.TRIDENT);
         reverse.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(
             FusedPair.clean("minecraft:riptide", 3, "minecraft:loyalty", 3)));
-        sp.setShiftKeyDown(false);
-        require(!enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.canUse(sp, reverse),
-            "Normal use must remain vanilla");
-        sp.setShiftKeyDown(true);
-        net.minecraft.world.phys.Vec3 anchor = sp.position();
-        require(enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.use(sp.level(), sp, reverse),
-            "Sneak-use must set the anchor and dash");
-        sp.teleportTo(anchor.x + 3.0, anchor.y, anchor.z);
-        sp.getCooldowns().removeCooldown(sp.getCooldowns().getCooldownGroup(reverse));
-        require(enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.use(sp.level(), sp, reverse),
-            "Second sneak-use must return to a safe anchor");
-        require(sp.position().distanceToSqr(anchor) < 0.01, "Return must reach the anchor");
-        sp.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
-        sp.setShiftKeyDown(false);
-        sp.getCooldowns().removeCooldown(sp.getCooldowns().getCooldownGroup(reverse));
+        boolean previousSneak = sp.isShiftKeyDown();
+        net.minecraft.world.phys.Vec3 anchor = sp.position(), previousVelocity = sp.getDeltaMovement();
+        try {
+            sp.setShiftKeyDown(false);
+            require(!enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.canUse(sp, reverse),
+                "Normal use must remain vanilla");
+            sp.setShiftKeyDown(true);
+            require(enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.use(sp.level(), sp, reverse),
+                "Sneak-use must set the anchor and dash");
+            sp.teleportTo(anchor.x + 3.0, anchor.y, anchor.z);
+            sp.getCooldowns().removeCooldown(sp.getCooldowns().getCooldownGroup(reverse));
+            require(enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.use(sp.level(), sp, reverse),
+                "Second sneak-use must return to a safe anchor");
+            require(sp.position().distanceToSqr(anchor) < 0.01, "Return must reach the anchor");
+        } finally {
+            enchantment_fusion.mechanics.signatures.MirageSnapbackSkill.onPlayerDisconnect(sp.getUUID());
+            sp.teleportTo(anchor.x, anchor.y, anchor.z);
+            sp.setDeltaMovement(previousVelocity);
+            sp.setShiftKeyDown(previousSneak);
+            sp.getCooldowns().removeCooldown(sp.getCooldowns().getCooldownGroup(reverse));
+        }
+    }
+
+    private void runIndependentFixtures(ServerPlayer sp) {
+        var server = sp.level().getServer();
+        // Independent fixtures record their own result and clean up, so one failed
+        // assertion does not silently prevent unrelated checks in this process.
+        acceptance.run("compat-aberration", () -> AberrationCompatibilityProbe.exercise(sp));
+        acceptance.run("common-format", ClientSmoke::exerciseRiskFormatting);
+        acceptance.run("common-config", () -> {
+            Path path = net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir()
+                .resolve("enchantment_fusion/overrides.json");
+            byte[] original = Files.exists(path) ? Files.readAllBytes(path) : null;
+            try {
+                exerciseLiveConfig(sp);
+            } finally {
+                if (original == null) Files.deleteIfExists(path); else Files.write(path, original);
+                new enchantment_fusion.data.FusionDataLoader().onResourceManagerReload(server.getResourceManager());
+            }
+        });
+        acceptance.run("common-frost-smelt", () -> exerciseFrostAndSneakSmelt(sp));
+        acceptance.run("31.3-glaze", () -> GlazedStrikeProbe.exercise(sp));
+        acceptance.run("31.3-amber", () -> AmberSealProbe.exercise(sp, tablePos.above(48).west(16)));
+        acceptance.run("31.4-carrier", () -> WaterFireCarrierProbe.exercise(sp));
+        acceptance.run("21-underwater", () -> UnderwaterMiningProbe.exercise(sp));
+        acceptance.run("23-frost-fall", () -> FrostFallProbe.exercise(sp, tablePos.above(45).east(8)));
+        acceptance.run("22-frost-wake", () -> FrostWakeDiveProbe.exercise(sp));
+        acceptance.run("24.1-frost-fire", () -> FrostFireProbe.exercise(sp, tablePos.above(52).east(12)));
+        acceptance.run("11-multishot-piercing", () -> PhantomVolleyProbe.exerciseVolley(sp, tablePos.above(58).east(12)));
+        acceptance.run("11-piercing-multishot", () -> PhantomVolleyProbe.exerciseCluster(sp, tablePos.above(58).east(12)));
+        acceptance.run("09-efficiency-silk", () -> PrecisionConstructionProbe.exerciseSlice(sp, tablePos.above(64).east(12)));
+        acceptance.run("09-silk-efficiency", () -> PrecisionConstructionProbe.exerciseLine(sp, tablePos.above(64).east(12)));
+        acceptance.run("common-station-selection", () -> StationSelectionProbe.exercise(sp));
+        acceptance.run("25.3-loyalty", () -> LoyaltyGuardProbe.exercise(sp));
+        acceptance.run("common-third-party", () -> ThirdPartyCarrierProbe.exercise(sp));
+        acceptance.run("transmute-replenish", () -> ReplenishProbe.exercise(sp));
+        acceptance.run("transmute-dropped-item", () -> DroppedItemSafetyProbe.exercise(sp));
+        acceptance.run("common-harvest-provenance", () -> HarvestProvenanceProbe.exercise(sp, tablePos.above(39)));
+        acceptance.run("common-extra-mining", () -> exerciseExtraMining(sp));
+        acceptance.run("common-lifeline", () -> exerciseLifelineAnchors(sp));
     }
 
     private static Object configField(enchantment_fusion.gui.FusionConfigScreen screen, String name) throws Exception {
@@ -658,6 +706,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         tablePos = sp.blockPosition().offset(1, 0, 0);
                         BlockState state = FusionBlocks.ENCHANTMENT_FUSION_TABLE.defaultBlockState();
                         sp.level().setBlockAndUpdate(tablePos, state);
+                        runIndependentFixtures(sp);
 
                         var enchReg = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
                         Holder<Enchantment> sharp = enchReg.getOrThrow(
@@ -1168,27 +1217,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         }
                         enchantment_fusion.mechanics.ProjectilePathTracker.flushAll();
 
-                        exerciseRiskFormatting();
-                        exerciseLiveConfig(sp);
-                        exerciseFrostAndSneakSmelt(sp);
-                        GlazedStrikeProbe.exercise(sp);
-                        AmberSealProbe.exercise(sp, tablePos.above(48).west(16));
-                        WaterFireCarrierProbe.exercise(sp);
-                        UnderwaterMiningProbe.exercise(sp);
-                        FrostFallProbe.exercise(sp, tablePos.above(45).east(8));
-                        FrostWakeDiveProbe.exercise(sp);
-                        FrostFireProbe.exercise(sp, tablePos.above(52).east(12));
-                        PhantomVolleyProbe.exercise(sp, tablePos.above(58).east(12));
-                        PrecisionConstructionProbe.exercise(sp, tablePos.above(64).east(12));
-                        StationSelectionProbe.exercise(sp);
-                        LoyaltyGuardProbe.exercise(sp);
-                        ThirdPartyCarrierProbe.exercise(sp);
-                        ReplenishProbe.exercise(sp);
-                        DroppedItemSafetyProbe.exercise(sp);
-                        HarvestProvenanceProbe.exercise(sp, tablePos.above(39));
-                        exerciseExtraMining(sp);
-                        exerciseLifelineAnchors(sp);
-                        exerciseLoyaltyRiptide(sp);
+                        acceptance.run("15-loyalty-riptide", () -> exerciseLoyaltyRiptide(sp));
                         // Start another no-risk ritual with no menu open. It must finish on server ticks.
                         var enchantments = sp.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
                         var sharpness = enchantments.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.withDefaultNamespace("sharpness")));
@@ -1468,7 +1497,8 @@ public final class ClientSmoke implements ClientModInitializer {
             }
             case 57 -> {
                 if (!serverReadyFlag) return;
-                finish(client, "CLIENT SMOKE PASS: rituals, frost, live configuration, Grimoire and redesigned fire/knockback");
+                acceptance.passed("01-fire-knockback", "Multi-tick fixture passed; see fire/knockback document for other untested scenarios.");
+                finish(client, "CLIENT SMOKE PASS: prepared fixtures only; full redesign acceptance remains incomplete");
             }
             default -> throw new AssertionError("Unknown phase " + phase);
         }
@@ -1476,9 +1506,13 @@ public final class ClientSmoke implements ClientModInitializer {
 
     private void finish(Minecraft client, String message) {
         finished = true;
+        if (message.startsWith("CLIENT SMOKE PASS:") && acceptance.hasFailures()) {
+            message = "CLIENT SMOKE FAIL: one or more independent fixtures failed; see acceptance-report.md";
+        }
         System.out.println(message);
         try {
             Files.writeString(Path.of("client-smoke-result.txt"), message + "\n");
+            Files.writeString(Path.of("acceptance-report.md"), acceptance.markdown(message));
         } catch (Exception ex) {
             ex.printStackTrace();
         }

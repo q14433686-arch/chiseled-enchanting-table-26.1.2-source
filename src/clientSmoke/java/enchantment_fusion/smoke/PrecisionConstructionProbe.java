@@ -41,9 +41,12 @@ final class PrecisionConstructionProbe {
     private static final FusedPair LINE = SLICE.flipped();
     private PrecisionConstructionProbe() {}
 
-    static void exercise(ServerPlayer player, BlockPos origin) {
+    static void exerciseSlice(ServerPlayer player, BlockPos origin) { exercise(player, origin, SLICE); }
+    static void exerciseLine(ServerPlayer player, BlockPos origin) { exercise(player, origin, LINE); }
+
+    private static void exercise(ServerPlayer player, BlockPos origin, FusedPair selected) {
         ServerLevel level = player.level();
-        exerciseCarriers(level);
+        exerciseCarriers(level, selected);
         Vec3 oldPos = player.position();
         GameType oldMode = player.gameMode.getGameModeForPlayer();
         ItemStack oldMain = player.getMainHandItem(), oldOff = player.getOffhandItem();
@@ -65,63 +68,66 @@ final class PrecisionConstructionProbe {
                 require(previous.isAir(), "Fixture volume must be empty; do not overwrite existing world data");
                 saved.put(pos, previous);
             }
-            ItemStack tool = fused(level, SLICE);
-            player.setItemSlot(EquipmentSlot.MAINHAND, tool);
-            player.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
-            BlockPos center = origin.offset(3, 0, 0);
-            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
-                level.setBlockAndUpdate(center.offset(dx, 0, dz), Blocks.STONE.defaultBlockState());
+            if (PrecisionConstruction.isSlice(selected)) {
+                ItemStack tool = fused(level, SLICE);
+                player.setItemSlot(EquipmentSlot.MAINHAND, tool);
+                player.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+                BlockPos center = origin.offset(3, 0, 0);
+                for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                    level.setBlockAndUpdate(center.offset(dx, 0, dz), Blocks.STONE.defaultBlockState());
+                }
+                BlockPos chest = center.east(), water = center.offset(1, 0, -1), granite = center.offset(1, 0, 1);
+                BlockPos protectedSide = center.west(), above = center.above();
+                level.setBlockAndUpdate(chest, Blocks.CHEST.defaultBlockState());
+                level.setBlockAndUpdate(water, Blocks.WATER.defaultBlockState());
+                level.setBlockAndUpdate(granite, Blocks.GRANITE.defaultBlockState());
+                level.setBlockAndUpdate(above, Blocks.STONE.defaultBlockState());
+                PrecisionConstruction.cycleSlice(player); // horizontal
+                denied.add(center);
+                require(!player.gameMode.destroyBlock(center) && level.getBlockState(center).is(Blocks.STONE),
+                    "A cancelled center break cannot start a slice");
+                denied.clear(); denied.add(protectedSide);
+                require(player.gameMode.destroyBlock(center), "Center break should succeed");
+                require(level.getBlockState(protectedSide).is(Blocks.STONE) && level.getBlockState(chest).is(Blocks.CHEST)
+                    && level.getBlockState(water).is(Blocks.WATER) && level.getBlockState(granite).is(Blocks.GRANITE)
+                    && level.getBlockState(above).is(Blocks.STONE),
+                    "Slice must respect event cancellation, block entities, fluids, other state, and the selected plane");
+                require(level.getBlockState(center.north()).isAir() && level.getBlockState(center.south()).isAir()
+                    && level.getBlockState(center.offset(-1, 0, -1)).isAir() && level.getBlockState(center.offset(-1, 0, 1)).isAir(),
+                    "Connected identical cubes in the selected plane should use real extra breaks");
+                require(tool.getDamageValue() == 5, "Center and four successful additional breaks must each damage the real tool");
+                denied.clear();
+
+            } else {
+                ItemStack lineTool = fused(level, LINE);
+                player.setItemSlot(EquipmentSlot.MAINHAND, lineTool);
+                ItemStack material = new ItemStack(Items.STONE, 5);
+                player.setItemSlot(EquipmentSlot.OFFHAND, material);
+                BlockPos anchor = origin.offset(-2, 0, 0);
+                level.setBlockAndUpdate(anchor, Blocks.STONE.defaultBlockState());
+                require(PrecisionConstruction.sampleAt(player, anchor), "A plain reachable cube may be sampled");
+                int count = PrecisionConstruction.placeLine(player, hit(anchor, Direction.WEST));
+                require(count == 5 && material.isEmpty(), "Every placed block must consume one real offhand material");
+                for (int i = 1; i <= 5; i++) require(level.getBlockState(anchor.west(i)).is(Blocks.STONE), "Missing placed cube " + i);
+                require(level.getBlockState(anchor.west(6)).isAir(), "No block may be generated after materials run out");
+
+                BlockPos log = origin.offset(-2, 0, 1);
+                level.setBlockAndUpdate(log, Blocks.OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Y));
+                player.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.OAK_LOG, 3));
+                require(PrecisionConstruction.sampleAt(player, log), "A full cube with a state can be sampled");
+                require(PrecisionConstruction.placeLine(player, hit(log, Direction.WEST)) == 0
+                    && player.getOffhandItem().getCount() == 3 && level.getBlockState(log.west()).isAir(),
+                    "A mismatched placement axis must not consume material or change the world");
+                require(PrecisionConstruction.sampleAt(player, anchor), "Stone may be resampled");
+                player.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.STONE, 2));
+                level.setBlockAndUpdate(anchor.west(), Blocks.WATER.defaultBlockState());
+                require(PrecisionConstruction.placeLine(player, hit(anchor, Direction.WEST)) == 0
+                    && level.getBlockState(anchor.west()).is(Blocks.WATER) && player.getOffhandItem().getCount() == 2,
+                    "Line construction must not replace original water");
+                player.setGameMode(GameType.CREATIVE);
+                require(PrecisionConstruction.placeLine(player, hit(anchor, Direction.WEST)) == 0,
+                    "Infinite-material mode may not bypass the per-block cost");
             }
-            BlockPos chest = center.east(), water = center.offset(1, 0, -1), granite = center.offset(1, 0, 1);
-            BlockPos protectedSide = center.west(), above = center.above();
-            level.setBlockAndUpdate(chest, Blocks.CHEST.defaultBlockState());
-            level.setBlockAndUpdate(water, Blocks.WATER.defaultBlockState());
-            level.setBlockAndUpdate(granite, Blocks.GRANITE.defaultBlockState());
-            level.setBlockAndUpdate(above, Blocks.STONE.defaultBlockState());
-            PrecisionConstruction.cycleSlice(player); // horizontal
-            denied.add(center);
-            require(!player.gameMode.destroyBlock(center) && level.getBlockState(center).is(Blocks.STONE),
-                "A cancelled center break cannot start a slice");
-            denied.clear(); denied.add(protectedSide);
-            require(player.gameMode.destroyBlock(center), "Center break should succeed");
-            require(level.getBlockState(protectedSide).is(Blocks.STONE) && level.getBlockState(chest).is(Blocks.CHEST)
-                && level.getBlockState(water).is(Blocks.WATER) && level.getBlockState(granite).is(Blocks.GRANITE)
-                && level.getBlockState(above).is(Blocks.STONE),
-                "Slice must respect event cancellation, block entities, fluids, other state, and the selected plane");
-            require(level.getBlockState(center.north()).isAir() && level.getBlockState(center.south()).isAir()
-                && level.getBlockState(center.offset(-1, 0, -1)).isAir() && level.getBlockState(center.offset(-1, 0, 1)).isAir(),
-                "Connected identical cubes in the selected plane should use real extra breaks");
-            require(tool.getDamageValue() == 5, "Center and four successful additional breaks must each damage the real tool");
-            denied.clear();
-
-            ItemStack lineTool = fused(level, LINE);
-            player.setItemSlot(EquipmentSlot.MAINHAND, lineTool);
-            ItemStack material = new ItemStack(Items.STONE, 5);
-            player.setItemSlot(EquipmentSlot.OFFHAND, material);
-            BlockPos anchor = origin.offset(-2, 0, 0);
-            level.setBlockAndUpdate(anchor, Blocks.STONE.defaultBlockState());
-            require(PrecisionConstruction.sampleAt(player, anchor), "A plain reachable cube may be sampled");
-            int count = PrecisionConstruction.placeLine(player, hit(anchor, Direction.WEST));
-            require(count == 5 && material.isEmpty(), "Every placed block must consume one real offhand material");
-            for (int i = 1; i <= 5; i++) require(level.getBlockState(anchor.west(i)).is(Blocks.STONE), "Missing placed cube " + i);
-            require(level.getBlockState(anchor.west(6)).isAir(), "No block may be generated after materials run out");
-
-            BlockPos log = origin.offset(-2, 0, 1);
-            level.setBlockAndUpdate(log, Blocks.OAK_LOG.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Y));
-            player.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.OAK_LOG, 3));
-            require(PrecisionConstruction.sampleAt(player, log), "A full cube with a state can be sampled");
-            require(PrecisionConstruction.placeLine(player, hit(log, Direction.WEST)) == 0
-                && player.getOffhandItem().getCount() == 3 && level.getBlockState(log.west()).isAir(),
-                "A mismatched placement axis must not consume material or change the world");
-            require(PrecisionConstruction.sampleAt(player, anchor), "Stone may be resampled");
-            player.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.STONE, 2));
-            level.setBlockAndUpdate(anchor.west(), Blocks.WATER.defaultBlockState());
-            require(PrecisionConstruction.placeLine(player, hit(anchor, Direction.WEST)) == 0
-                && level.getBlockState(anchor.west()).is(Blocks.WATER) && player.getOffhandItem().getCount() == 2,
-                "Line construction must not replace original water");
-            player.setGameMode(GameType.CREATIVE);
-            require(PrecisionConstruction.placeLine(player, hit(anchor, Direction.WEST)) == 0,
-                "Infinite-material mode may not bypass the per-block cost");
         } finally {
             denied.clear();
             PrecisionConstruction.onDisconnect(player.getUUID());
@@ -144,9 +150,9 @@ final class PrecisionConstructionProbe {
         return new BlockHitResult(Vec3.atCenterOf(pos).add(direction.getStepX() * 0.5D,
             direction.getStepY() * 0.5D, direction.getStepZ() * 0.5D), direction, pos, false);
     }
-    private static void exerciseCarriers(ServerLevel level) {
+    private static void exerciseCarriers(ServerLevel level, FusedPair selected) {
         var registries = level.registryAccess();
-        for (FusedPair pair : new FusedPair[]{SLICE, LINE}) {
+        for (FusedPair pair : new FusedPair[]{selected}) {
             for (ItemStack tool : new ItemStack[]{new ItemStack(Items.IRON_PICKAXE), new ItemStack(Items.IRON_AXE),
                 new ItemStack(Items.IRON_SHOVEL), new ItemStack(Items.IRON_HOE), new ItemStack(Items.SHEARS)}) {
                 require(DirectionalHostRules.validateNewOrChanged(tool, pair) == RejectReason.NONE, "Suitable tool rejected");

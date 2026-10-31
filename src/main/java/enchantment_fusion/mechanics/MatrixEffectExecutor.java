@@ -280,8 +280,16 @@ public final class MatrixEffectExecutor {
             if (sigOpt.isPresent() && UnderwaterMiningSkills.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && FrostFallSkills.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && AmberSealSkill.applies(pair, hostStack, sigOpt.get().id())) continue;
-            if (sigOpt.isPresent() && PhantomVolley.applies(pair, hostStack, sigOpt.get().id())) continue;
-            if (sigOpt.isPresent() && PrecisionConstruction.applies(pair, hostStack, sigOpt.get().id())) continue;
+            boolean redesignedPhantom = sigOpt.isPresent() && PhantomVolley.applies(pair, hostStack, sigOpt.get().id());
+            boolean redesignedPrecision = sigOpt.isPresent() && PrecisionConstruction.applies(pair, hostStack, sigOpt.get().id());
+            boolean dedicatedAction = redesignedPhantom || redesignedPrecision;
+            if (dedicatedAction) {
+                // Dedicated hooks own the clean signature, but a pre-existing independent
+                // aberration still uses its normal trigger, real target and shared cooldown.
+                // Ghost arrows never reach this dispatcher (see ProjectileImpactFusionMixin).
+                CompendiumDiscoveryTracker.recordDiscovery(player, pair.primaryId(), pair.secondaryId());
+                if (!pair.isAberrant()) continue;
+            }
             if (sigOpt.isPresent() && GlazedStrikeEffect.applies(pair, hostStack, sigOpt.get().id())) {
                 // The real Player.attack / spear-stab damage calls prepare and confirm this skill.
                 // Pre-attack dispatch must not charge a cooldown or also execute the legacy path.
@@ -331,6 +339,9 @@ public final class MatrixEffectExecutor {
                 if (pair.isAberrant()) {
                     AberrantRegistry.executeAberration(level, player, pair.aberrationId(), targetEntity, originPos);
                 }
+                // Do not also run the retired generic signature or matrix payload. The pair
+                // retained its aberration; its dedicated ability is handled elsewhere.
+                if (dedicatedAction) continue;
 
                 if (sigOpt.isPresent()) {
                     boolean handled = SignaturePairs.executeSignatureCombat(

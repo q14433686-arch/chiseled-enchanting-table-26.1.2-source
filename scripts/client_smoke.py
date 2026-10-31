@@ -2,6 +2,7 @@
 """CI-only real client probe for Enchantment Fusion. Requires server_smoke.py's disposable saved world first."""
 from pathlib import Path
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -39,6 +40,9 @@ with log.open("w", encoding="utf-8") as output:
     )
     try:
         code = process.wait(timeout=600)
+    except subprocess.TimeoutExpired:
+        code = 124
+        output.write("\nCLIENT SMOKE INTERRUPTED: process exceeded 600 seconds\n")
     finally:
         if process.poll() is None:
             os.killpg(process.pid, signal.SIGTERM)
@@ -49,11 +53,25 @@ with log.open("w", encoding="utf-8") as output:
 
 log_text = log.read_text(errors="replace")
 print("\n".join(log_text.splitlines()[-100:]))
+result = run / "client-smoke-result.txt"
+report = run / "acceptance-report.md"
+if not report.exists():
+    # If the game cannot initialize its reporting class at all, retain an explicit
+    # skipped inventory rather than losing all evidence. This is not a gameplay result.
+    plan_source = (root / "src/clientSmoke/java/enchantment_fusion/smoke/AcceptanceReport.java").read_text(encoding="utf-8")
+    planned = re.findall(r'plan\("([^"\\]+)", "([^"\\]+)",', plan_source)
+    lines = ["# Integrated client smoke: startup interrupted", "", "The game did not initialize the result reporter; "
+             "all planned fixtures are skipped. Inspect client-smoke.log for the startup or timeout reason.", "",
+             "| Item | Scope | Status | Reason |", "| --- | --- | --- | --- |"]
+    lines += [f"| {item} | {scope} | SKIP | Game did not initialize the report. |" for item, scope in planned]
+    report.write_text("\n".join(lines) + "\n", encoding="utf-8")
+print(report.read_text(encoding="utf-8"))
 if "Missing resource enchantment_fusion:" in log_text:
     raise SystemExit("Client logged missing enchantment_fusion GUI/model resources; inspect client-smoke.log")
-result = run / "client-smoke-result.txt"
 if code != 0 or not result.exists() or not result.read_text(encoding="utf-8").startswith("CLIENT SMOKE PASS:"):
-    raise SystemExit("Real client smoke did not pass; inspect client-smoke.log")
+    raise SystemExit("Real client smoke did not pass; inspect client-smoke.log and acceptance-report.md")
+if not report.exists():
+    raise SystemExit("Missing scoped fixture result report")
 print(result.read_text(encoding="utf-8"))
 
 if not (run / "screenshots/fusion-ui-zh_cn.png").is_file():

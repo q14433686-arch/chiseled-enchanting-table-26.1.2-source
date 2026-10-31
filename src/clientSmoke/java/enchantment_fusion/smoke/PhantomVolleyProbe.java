@@ -48,15 +48,21 @@ final class PhantomVolleyProbe {
         EquipmentSlot.FEET, EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND};
     private PhantomVolleyProbe() {}
 
-    static void exercise(ServerPlayer player, BlockPos origin) {
+    static void exerciseVolley(ServerPlayer player, BlockPos origin) { exercise(player, origin, VOLLEY); }
+    static void exerciseCluster(ServerPlayer player, BlockPos origin) { exercise(player, origin, CLUSTER); }
+
+    private static void exercise(ServerPlayer player, BlockPos origin, FusedPair selected) {
         ServerLevel level = player.level();
-        exerciseCarriers(level);
+        exerciseCarriers(level, selected);
         ItemStack[] savedSlots = new ItemStack[SLOTS.length];
         for (int i = 0; i < SLOTS.length; i++) savedSlots[i] = player.getItemBySlot(SLOTS[i]);
         Vec3 oldPosition = player.position();
         GameType oldMode = player.gameMode.getGameModeForPlayer();
         Map<BlockPos, BlockState> savedBlocks = new LinkedHashMap<>();
         List<AbstractArrow> arrows = new ArrayList<>();
+        AABB fixtureRegion = new AABB(origin).inflate(18);
+        Set<java.util.UUID> existingArrows = level.getEntitiesOfClass(AbstractArrow.class, fixtureRegion).stream()
+            .map(AbstractArrow::getUUID).collect(Collectors.toSet());
         Villager villager = new Villager(EntityType.VILLAGER, level);
         Cow cow = new Cow(EntityType.COW, level);
         Wolf pet = new Wolf(EntityType.WOLF, level), neutral = new Wolf(EntityType.WOLF, level);
@@ -95,98 +101,110 @@ final class PhantomVolleyProbe {
             require(PhantomVolley.eligibleHomingTarget(player, neutral), "An attacking neutral may be selected");
             neutral.setTarget(null);
 
-            ItemStack crossbow = fused(level, new ItemStack(Items.CROSSBOW), VOLLEY);
-            Arrow center = new Arrow(level, player, new ItemStack(Items.ARROW), crossbow);
-            Arrow flank = new Arrow(level, player, new ItemStack(Items.ARROW), crossbow);
-            arrows.add(center); arrows.add(flank);
-            PhantomVolley.configureCrossbow(center, player, 0);
-            PhantomVolley.configureCrossbow(flank, player, 1);
-            require(!PhantomVolley.isGhost(center) && center.getPierceLevel() >= 3,
-                "The real crossbow center arrow remains normal and uses secondary Piercing");
-            require(PhantomVolley.isGhost(flank) && flank.getPierceLevel() >= 3 && flank.pickup == AbstractArrow.Pickup.DISALLOWED,
-                "A crossbow side arrow is non-recoverable and has real piercing");
-            TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
-            flank.saveWithoutId(output);
-            Arrow restored = new Arrow(EntityType.ARROW, level);
-            restored.load(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), output.buildResult()));
-            arrows.add(restored);
-            require(PhantomVolley.isGhost(restored) && restored.pickup == AbstractArrow.Pickup.DISALLOWED,
-                "Serialization must retain ghost identity and no-pickup mode");
+            if (PhantomVolley.isVolley(selected)) {
+                ItemStack crossbow = fused(level, new ItemStack(Items.CROSSBOW), VOLLEY);
+                Arrow center = new Arrow(level, player, new ItemStack(Items.ARROW), crossbow);
+                Arrow flank = new Arrow(level, player, new ItemStack(Items.ARROW), crossbow);
+                arrows.add(center); arrows.add(flank);
+                PhantomVolley.configureCrossbow(center, player, 0);
+                PhantomVolley.configureCrossbow(flank, player, 1);
+                require(!PhantomVolley.isGhost(center) && center.getPierceLevel() >= 3,
+                    "The real crossbow center arrow remains normal and uses secondary Piercing");
+                require(PhantomVolley.isGhost(flank) && flank.getPierceLevel() >= 3 && flank.pickup == AbstractArrow.Pickup.DISALLOWED,
+                    "A crossbow side arrow is non-recoverable and has real piercing");
+                TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+                flank.saveWithoutId(output);
+                Arrow restored = new Arrow(EntityType.ARROW, level);
+                restored.load(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), output.buildResult()));
+                arrows.add(restored);
+                require(PhantomVolley.isGhost(restored) && restored.pickup == AbstractArrow.Pickup.DISALLOWED,
+                    "Serialization must retain ghost identity and no-pickup mode");
 
-            ItemStack volleyBow = fused(level, new ItemStack(Items.BOW), VOLLEY);
-            player.setItemSlot(EquipmentSlot.MAINHAND, volleyBow);
-            AABB region = new AABB(origin).inflate(18);
-            Set<java.util.UUID> beforeVolley = level.getEntitiesOfClass(Arrow.class, region).stream()
-                .map(Arrow::getUUID).collect(Collectors.toSet());
-            Arrow bowCenter = new Arrow(level, player, new ItemStack(Items.ARROW), volleyBow);
-            arrows.add(bowCenter);
-            bowCenter.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
-            List<Arrow> bowSides = level.getEntitiesOfClass(Arrow.class, region,
-                a -> !beforeVolley.contains(a.getUUID()) && PhantomVolley.isGhost(a));
-            require(!PhantomVolley.isGhost(bowCenter) && bowCenter.getPierceLevel() >= 3 && bowSides.size() == 2
-                && bowSides.stream().allMatch(a -> a.getPierceLevel() >= 3 && a.pickup == AbstractArrow.Pickup.DISALLOWED),
-                "A real bow launch must generate two non-recoverable piercing side arrows");
-            for (Arrow side : bowSides) side.discard();
-            player.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+                ItemStack volleyBow = fused(level, new ItemStack(Items.BOW), VOLLEY);
+                player.setItemSlot(EquipmentSlot.MAINHAND, volleyBow);
+                AABB region = new AABB(origin).inflate(18);
+                Set<java.util.UUID> beforeVolley = level.getEntitiesOfClass(Arrow.class, region).stream()
+                    .map(Arrow::getUUID).collect(Collectors.toSet());
+                Arrow bowCenter = new Arrow(level, player, new ItemStack(Items.ARROW), volleyBow);
+                arrows.add(bowCenter);
+                bowCenter.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
+                List<Arrow> bowSides = level.getEntitiesOfClass(Arrow.class, region,
+                    a -> !beforeVolley.contains(a.getUUID()) && PhantomVolley.isGhost(a));
+                arrows.addAll(bowSides); // Even a failed assertion must not leak spawned projectiles into later fixtures.
+                require(!PhantomVolley.isGhost(bowCenter) && bowCenter.getPierceLevel() >= 3 && bowSides.size() == 2
+                    && bowSides.stream().allMatch(a -> a.getPierceLevel() >= 3 && a.pickup == AbstractArrow.Pickup.DISALLOWED),
+                    "A real bow launch must generate two non-recoverable piercing side arrows");
+                for (Arrow side : bowSides) side.discard();
+                player.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
 
-            Arrow ghost = new Arrow(level, player, new ItemStack(Items.ARROW), null);
-            arrows.add(ghost);
-            ghost.setPos(origin.getX() + 1.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
-            PhantomVolley.markGhost(ghost, player, null);
-            ghost.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
-            level.addFreshEntity(ghost);
-            float villagerBefore = villager.getHealth();
-            for (int i = 0; i < 3 && ghost.isAlive(); i++) ghost.tick();
-            require(!ghost.isAlive() && villager.getHealth() == villagerBefore,
-                "Real phantom collision with a villager must vanish before damage");
+                Arrow ghost = new Arrow(level, player, new ItemStack(Items.ARROW), null);
+                arrows.add(ghost);
+                ghost.setPos(origin.getX() + 1.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
+                PhantomVolley.markGhost(ghost, player, null);
+                ghost.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
+                level.addFreshEntity(ghost);
+                float villagerBefore = villager.getHealth();
+                for (int i = 0; i < 3 && ghost.isAlive(); i++) ghost.tick();
+                require(!ghost.isAlive() && villager.getHealth() == villagerBefore,
+                    "Real phantom collision with a villager must vanish before damage");
 
-            Arrow real = new Arrow(level, player, new ItemStack(Items.ARROW), crossbow);
-            arrows.add(real);
-            PhantomVolley.configureCrossbow(real, player, 0);
-            real.setPos(origin.getX() + 1.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
-            real.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
-            level.addFreshEntity(real);
-            for (int i = 0; i < 3 && real.isAlive() && villager.getHealth() == villagerBefore; i++) real.tick();
-            require(villager.getHealth() < villagerBefore, "The real center arrow still follows normal damage rules");
-            real.discard();
+                Arrow real = new Arrow(level, player, new ItemStack(Items.ARROW), crossbow);
+                arrows.add(real);
+                PhantomVolley.configureCrossbow(real, player, 0);
+                real.setPos(origin.getX() + 1.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
+                real.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
+                level.addFreshEntity(real);
+                for (int i = 0; i < 3 && real.isAlive() && villager.getHealth() == villagerBefore; i++) real.tick();
+                require(villager.getHealth() < villagerBefore, "The real center arrow still follows normal damage rules");
+                real.discard();
 
-            villager.setPos(origin.getX() + 4.5D, origin.getY(), origin.getZ() + 6.5D);
-            BlockPos wall = origin.offset(4, 1, 0);
-            level.setBlockAndUpdate(wall, Blocks.STONE.defaultBlockState());
-            Arrow blocked = new Arrow(level, player, new ItemStack(Items.ARROW), null);
-            arrows.add(blocked);
-            blocked.setPos(origin.getX() + 1.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
-            PhantomVolley.markGhost(blocked, player, null);
-            blocked.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
-            level.addFreshEntity(blocked);
-            for (int i = 0; i < 3 && blocked.isAlive(); i++) blocked.tick();
-            require(!blocked.isAlive() && level.getBlockState(wall).is(Blocks.STONE),
-                "A phantom stops at a solid block without damaging terrain");
-            level.setBlockAndUpdate(wall, Blocks.AIR.defaultBlockState());
+                villager.setPos(origin.getX() + 4.5D, origin.getY(), origin.getZ() + 6.5D);
+                BlockPos wall = origin.offset(4, 1, 0);
+                level.setBlockAndUpdate(wall, Blocks.STONE.defaultBlockState());
+                Arrow blocked = new Arrow(level, player, new ItemStack(Items.ARROW), null);
+                arrows.add(blocked);
+                blocked.setPos(origin.getX() + 1.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
+                PhantomVolley.markGhost(blocked, player, null);
+                blocked.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
+                level.addFreshEntity(blocked);
+                for (int i = 0; i < 3 && blocked.isAlive(); i++) blocked.tick();
+                require(!blocked.isAlive() && level.getBlockState(wall).is(Blocks.STONE),
+                    "A phantom stops at a solid block without damaging terrain");
+                level.setBlockAndUpdate(wall, Blocks.AIR.defaultBlockState());
 
-            first.setPos(origin.getX() + 4.5D, origin.getY(), origin.getZ() + 0.5D);
-            ItemStack bow = fused(level, new ItemStack(Items.BOW), CLUSTER);
-            player.setItemSlot(EquipmentSlot.MAINHAND, bow);
-            Arrow cluster = new Arrow(level, player, new ItemStack(Items.ARROW), bow);
-            arrows.add(cluster);
-            cluster.setPos(origin.getX() + 1.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
-            PhantomVolley.markCluster(cluster, player, true); // deterministic hit fixture, not a probability test
-            cluster.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
-            level.addFreshEntity(cluster);
-            float firstBefore = first.getHealth();
-            for (int i = 0; i < 3 && cluster.isAlive() && first.getHealth() == firstBefore; i++) cluster.tick();
-            require(first.getHealth() < firstBefore, "The cluster carrier must make a real successful hit");
-            List<Arrow> children = level.getEntitiesOfClass(Arrow.class, new AABB(origin).inflate(18), PhantomVolley::isGhost);
-            require(children.size() == 2 && children.stream().allMatch(a -> a.pickup == AbstractArrow.Pickup.DISALLOWED),
-                "A successful armed hit must produce exactly two non-recoverable ghost arrows");
-            arrows.addAll(children);
-            Arrow away = children.stream().min(java.util.Comparator.comparingDouble(a -> a.getDeltaMovement().z)).orElseThrow();
-            double oldZ = away.getDeltaMovement().normalize().z;
-            away.tick();
-            require(away.getDeltaMovement().normalize().z > oldZ,
-                "A splitting ghost should turn toward the closest eligible hostile rather than a neutral or villager");
+            } else {
+                villager.setPos(origin.getX() + 4.5D, origin.getY(), origin.getZ() + 6.5D);
+                first.setPos(origin.getX() + 4.5D, origin.getY(), origin.getZ() + 0.5D);
+                ItemStack bow = fused(level, new ItemStack(Items.BOW), CLUSTER);
+                player.setItemSlot(EquipmentSlot.MAINHAND, bow);
+                Arrow cluster = new Arrow(level, player, new ItemStack(Items.ARROW), bow);
+                arrows.add(cluster);
+                cluster.setPos(origin.getX() + 1.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
+                PhantomVolley.markCluster(cluster, player, true); // deterministic hit fixture, not a probability test
+                cluster.shoot(1.0D, 0.0D, 0.0D, 3.0F, 0.0F);
+                level.addFreshEntity(cluster);
+                float firstBefore = first.getHealth();
+                for (int i = 0; i < 3 && cluster.isAlive() && first.getHealth() == firstBefore; i++) cluster.tick();
+                require(first.getHealth() < firstBefore, "The cluster carrier must make a real successful hit");
+                List<Arrow> children = level.getEntitiesOfClass(Arrow.class, fixtureRegion,
+                    a -> !existingArrows.contains(a.getUUID()) && a.getOwner() == player && PhantomVolley.isGhost(a));
+                arrows.addAll(children);
+                require(children.size() == 2 && children.stream().allMatch(a -> a.pickup == AbstractArrow.Pickup.DISALLOWED),
+                    "A successful armed hit must produce exactly two non-recoverable ghost arrows");
+                Arrow away = children.stream().min(java.util.Comparator.comparingDouble(a -> a.getDeltaMovement().z)).orElseThrow();
+                double oldZ = away.getDeltaMovement().normalize().z;
+                away.tick();
+                require(away.getDeltaMovement().normalize().z > oldZ,
+                    "A splitting ghost should turn toward the closest eligible hostile rather than a neutral or villager");
+            }
         } finally {
             for (AbstractArrow arrow : arrows) arrow.discard();
+            // Capture any child created just before a failing assertion or callback; never touch
+            // pre-existing arrows. The fixture runs synchronously in the disposable game world.
+            for (AbstractArrow arrow : level.getEntitiesOfClass(AbstractArrow.class, fixtureRegion,
+                a -> !existingArrows.contains(a.getUUID()) && a.getOwner() == player && PhantomVolley.isGhost(a))) {
+                arrow.discard();
+            }
             for (var fixture : List.of(villager, cow, pet, neutral, first, other)) fixture.discard();
             for (Map.Entry<BlockPos, BlockState> entry : savedBlocks.entrySet()) level.setBlockAndUpdate(entry.getKey(), entry.getValue());
             for (int i = 0; i < SLOTS.length; i++) player.setItemSlot(SLOTS[i], savedSlots[i]);
@@ -195,9 +213,9 @@ final class PhantomVolleyProbe {
         }
     }
 
-    private static void exerciseCarriers(ServerLevel level) {
+    private static void exerciseCarriers(ServerLevel level, FusedPair selected) {
         Holder<Enchantment> multi = enchant(level, "multishot"), pierce = enchant(level, "piercing");
-        for (FusedPair pair : List.of(VOLLEY, CLUSTER)) {
+        for (FusedPair pair : List.of(selected)) {
             for (ItemStack weapon : List.of(new ItemStack(Items.BOW), new ItemStack(Items.CROSSBOW))) {
                 require(DirectionalHostRules.validateNewOrChanged(weapon, pair) == RejectReason.NONE, "Bow and crossbow must be supported");
                 for (boolean direct : List.of(false, true)) {

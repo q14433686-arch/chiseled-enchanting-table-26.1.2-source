@@ -56,6 +56,7 @@ jobs:
           python3 scripts/test_ci_diagnostics.py
           python3 scripts/check_repository_hygiene.py
           python3 scripts/test_ui_readability.py
+          python3 scripts/test_acceptance_report.py
 
       - name: 26.3 sync and 26.1.2 boundary regression checks
         run: python3 scripts/test_sync_26_1_2.py
@@ -170,6 +171,7 @@ jobs:
             build-reports/server-smoke.log
             build-reports/client-smoke.log
             run-client-smoke/client-smoke-result.txt
+            run-client-smoke/acceptance-report.md
             run/logs/latest.log
             run/crash-reports/**
           if-no-files-found: warn
