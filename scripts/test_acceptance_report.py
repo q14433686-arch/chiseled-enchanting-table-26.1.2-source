@@ -19,7 +19,7 @@ class AcceptancePlanTest(unittest.TestCase):
         self.assertTrue({"05-mending-unbreaking", "05-unbreaking-mending",
                          "16-blast-protection", "16-protection-blast",
                          "39.1-density-breach", "39.1-breach-density", "39.4-luck-lure", "39.4-lure-luck",
-                         "39.6-soul-swift", "39.6-swift-soul",
+                         "39.5-power-quick", "39.5-quick-power", "39.6-soul-swift", "39.6-swift-soul",
                          "09-efficiency-silk", "09-silk-efficiency", "11-multishot-piercing",
                          "11-piercing-multishot"}.issubset(exercised))
         self.assertIn('"SKIP"', plan)
@@ -46,6 +46,16 @@ class AcceptancePlanTest(unittest.TestCase):
         self.assertIn('client.getLevelSource().getBaseDir().resolve("audit-world")', client)
         self.assertIn('.enchantment-fusion-disposable', client)
         self.assertIn('.enchantment-fusion-disposable', script)
+        guard = (SMOKE / 'DisposableRun.java').read_text(encoding='utf-8')
+        self.assertIn('Files.isRegularFile(marker, NOFOLLOW)', guard)
+        self.assertIn('Files.isSymbolicLink', guard)
+        self.assertIn('Refusing existing probe output', guard)
+        initializer = client[client.index('public void onInitializeClient()'):client.index('private static void require')]
+        self.assertLess(initializer.index('DisposableRun.validate('), initializer.index('acceptance.checkpoint()'))
+        self.assertIn('disposableDirectory.resolve("client-smoke-result.txt")', client)
+        report = (SMOKE / 'AcceptanceReport.java').read_text(encoding='utf-8')
+        self.assertIn('if (outputDirectory == null) return', report)
+        self.assertIn('outputDirectory.resolve("acceptance-report.md")', report)
         self.assertNotIn('quickPlaySingleplayer', gradle)
         self.assertIn('run.exists() or run.is_symlink()', script)
         self.assertNotIn('copytree(', script)

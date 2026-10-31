@@ -46,6 +46,14 @@ class AcceptanceInventoryTest(unittest.TestCase):
         self.assertEqual("SKIP", scoped_status(("absent", True), results)[0])
         self.assertEqual("SKIP", scoped_status(None, results)[0])
 
+    def test_multi_direction_and_unrelated_checks_do_not_blame_one_item(self):
+        for pair in [("density", "breach"), ("breach", "density"),
+                     ("loyalty", "protection"), ("fire_aspect", "silk_touch")]:
+            fixture, unique = DIRECTION_FIXTURES[pair]
+            self.assertFalse(unique, f"{fixture} has shared assertions")
+            self.assertEqual("SKIP", scoped_status((fixture, unique), {fixture: ("FAIL", "first assertion failed")})[0])
+        self.assertFalse(VARIANT_FIXTURES["mending_replenish"][1], "fixture also checks XP bottle conversion")
+
     def test_markdown_escaped_pipes_and_duplicate_results(self):
         report = r"| example | a \| b | FAIL | reason \| detail |" + "\n"
         self.assertEqual("FAIL", parse_report(report)["example"][0])

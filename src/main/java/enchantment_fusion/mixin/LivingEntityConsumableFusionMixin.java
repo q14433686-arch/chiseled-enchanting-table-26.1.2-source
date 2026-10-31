@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.signatures.RangedCadenceMath;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -39,7 +40,7 @@ public abstract class LivingEntityConsumableFusionMixin {
     @Unique
     private boolean ef$drawCreditApplied;
     @Unique
-    private int ef$lastDrawGeneration, ef$ignoredActiveGeneration;
+    private int ef$lastDrawGeneration, ef$ignoredActiveGeneration, ef$recoverDrawGeneration;
 
     @WrapMethod(method = "startUsingItem")
     private void ef$startEarnedBowDraw(InteractionHand hand, Operation<Void> original) {
@@ -50,6 +51,7 @@ public abstract class LivingEntityConsumableFusionMixin {
         if (alreadyUsing || candidate.isEmpty() || this.useItem != candidate || !(self instanceof Player player)) return;
         this.ef$drawCreditApplied = false;
         this.ef$ignoredActiveGeneration = 0;
+        this.ef$recoverDrawGeneration = 0;
         int credit = 0;
         if (player instanceof ServerPlayer serverPlayer) {
             credit = RangedCadenceSkills.startBowDraw(serverPlayer, hand, candidate);
@@ -71,6 +73,19 @@ public abstract class LivingEntityConsumableFusionMixin {
         }
     }
 
+    @WrapMethod(method = "onSyncedDataUpdated")
+    private void ef$rememberResetDraw(EntityDataAccessor<?> accessor, Operation<Void> original) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        boolean hadUse = !this.useItem.isEmpty(), hadCredit = this.ef$drawCreditApplied;
+        original.call(accessor);
+        if (self.level().isClientSide() && self instanceof Player && hadUse && this.useItem.isEmpty() && hadCredit) {
+            // A delayed flags update can clear local use; if the same server draw is
+            // re-established, restore its credit once after vanilla resets its timer.
+            this.ef$recoverDrawGeneration = this.ef$lastDrawGeneration;
+            this.ef$drawCreditApplied = false;
+        }
+    }
+
     @Inject(method = "tick", at = @At("HEAD"))
     private void ef$syncLateBowDrawView(CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
@@ -82,11 +97,14 @@ public abstract class LivingEntityConsumableFusionMixin {
             || !(self instanceof Player player) || this.useItem.isEmpty()) return;
         int view = RangedCadenceSkills.clientDrawView(player, self.getUsedItemHand(), this.useItem);
         int generation = RangedCadenceMath.viewGeneration(view);
-        if (RangedCadenceMath.viewActive(view) && generation > 0 && generation != this.ef$lastDrawGeneration
+        boolean newGeneration = generation != this.ef$lastDrawGeneration;
+        boolean restoring = generation == this.ef$recoverDrawGeneration && generation != 0;
+        if (RangedCadenceMath.viewActive(view) && generation > 0 && (newGeneration || restoring)
             && generation != this.ef$ignoredActiveGeneration) {
             this.useItemRemaining = Math.max(1, this.useItemRemaining - RangedCadenceMath.viewTicks(view));
             this.ef$drawCreditApplied = true;
             this.ef$lastDrawGeneration = generation;
+            this.ef$recoverDrawGeneration = 0;
         }
     }
 

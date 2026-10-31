@@ -10,6 +10,7 @@ final class AcceptanceReport {
     @FunctionalInterface interface CheckedStep { void run() throws Exception; }
     private record Entry(String scope, String status, String detail) {}
     private final Map<String, Entry> entries = new LinkedHashMap<>();
+    private Path outputDirectory;
 
     AcceptanceReport() {
         plan("compat-aberration", "09/11 aberration dispatch, target and cooldown fixture", "Not reached if game setup fails.");
@@ -33,6 +34,8 @@ final class AcceptanceReport {
         plan("39.1-breach-density", "Breach ▷ Density: equal armor math, crater, arrow and direct rocket fixture", "Not reached if setup fails.");
         plan("39.4-luck-lure", "Luck of the Sea ▷ Lure: bite, simulated wait and native catch fixture", "Not reached if setup fails.");
         plan("39.4-lure-luck", "Lure ▷ Luck of the Sea: native catch, virtual school and next cast fixture", "Not reached if setup fails.");
+        plan("39.5-power-quick", "Power ▷ Quick Charge: manually timed real bow release and collision fixture", "Not reached if setup fails.");
+        plan("39.5-quick-power", "Quick Charge ▷ Power: manually timed real crossbow loading and firing fixture", "Not reached if setup fails.");
         plan("39.6-soul-swift", "Soul Speed ▷ Swift Sneak: simulated soul-step charge and movement vibrations", "Not reached if setup fails.");
         plan("39.6-swift-soul", "Swift Sneak ▷ Soul Speed: simulated soul form, legal crawl and wall collision", "Not reached if setup fails.");
         plan("09-efficiency-silk", "Efficiency ▷ Silk Touch: prepared server fixture", "Not reached if setup fails.");
@@ -51,6 +54,7 @@ final class AcceptanceReport {
         plan("16-runtime-compat", "16 natural blast push, multiplayer PvP, totems and protection-mod compatibility", "Not covered by the prepared single-player server fixture.");
         plan("39.1-runtime-compat", "39.1 real draw/throw, client rocket sync, multiplayer PvP, totems and protection mods", "Not covered by the prepared fixture.");
         plan("39.4-runtime-compat", "39.4 natural bite timing, loot distributions, multiplayer and fishing mods", "Not covered by the manually advanced fixture.");
+        plan("39.5-runtime-compat", "39.5 physical draw and input, latency, multiplayer, and modded projectiles", "Not covered by the manually timed server fixtures.");
         plan("39.6-runtime-compat", "39.6 real keyboard movement, client pose sync, sensors and multiplayer", "Not covered by the prepared server fixtures.");
         plan("09-input-config", "09 real client G/V input, configuration reload and multiplayer permissions", "Not covered by the prepared server fixture.");
         plan("11-shot-pvp", "11 real draw/reload, randomness, two-player PvP and natural save/unload", "Not covered by the prepared server fixture.");
@@ -95,11 +99,19 @@ final class AcceptanceReport {
 
     synchronized boolean hasFailures() { return entries.values().stream().anyMatch(e -> e.status().equals("FAIL")); }
 
+    synchronized void enableOutput(Path validatedDirectory) { this.outputDirectory = validatedDirectory; }
+
     /** Preserve completed rows if the game later crashes or is killed before the final phase. */
-    synchronized void checkpoint() {
+    synchronized void checkpoint() { writeReport("IN PROGRESS / INTERRUPTED"); }
+
+    synchronized void writeReport(String overall) {
+        if (outputDirectory == null) return; // Validation precedes every checkpoint.
         try {
-            Path temporary = Path.of("acceptance-report.md.tmp"), report = Path.of("acceptance-report.md");
-            Files.writeString(temporary, markdown("IN PROGRESS / INTERRUPTED"));
+            Path temporary = outputDirectory.resolve("acceptance-report.md.tmp");
+            Path report = outputDirectory.resolve("acceptance-report.md");
+            Files.writeString(temporary, markdown(overall), java.nio.file.StandardOpenOption.CREATE,
+                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING, java.nio.file.StandardOpenOption.WRITE,
+                java.nio.file.LinkOption.NOFOLLOW_LINKS);
             try {
                 Files.move(temporary, report, java.nio.file.StandardCopyOption.REPLACE_EXISTING,
                     java.nio.file.StandardCopyOption.ATOMIC_MOVE);

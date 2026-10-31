@@ -3,6 +3,7 @@ package enchantment_fusion.mechanics.signatures;
 import enchantment_fusion.EnchantmentFusion;
 import enchantment_fusion.config.FusionConfigStore;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
+import enchantment_fusion.mixin.AbstractArrowAccessor;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
@@ -264,7 +265,8 @@ public final class RangedCadenceSkills {
         if (loads == null || !loads.armed || loads.count <= 0 || frame.owner.level().getGameTime() >= loads.expires
             || !same(frame.weapon, loads.pair, loads.dimension, frame.owner) || !held(frame.owner, frame.weapon)) return;
         int percent = FusionConfigStore.signatureInt(CROSSBOW, "arrow_bonus_percent_per_stack_and_level", 8, 0, 50);
-        arrow.setBaseDamage(arrow.getBaseDamage() * RangedCadenceMath.arrowMultiplier(loads.count, loads.pair.secondaryLevel(), percent));
+        arrow.setBaseDamage(((AbstractArrowAccessor) arrow).ef$getBaseDamage()
+            * RangedCadenceMath.arrowMultiplier(loads.count, loads.pair.secondaryLevel(), percent));
         frame.loads = loads; frame.arrow = arrow;
     }
     public static void endCrossbowShot() {

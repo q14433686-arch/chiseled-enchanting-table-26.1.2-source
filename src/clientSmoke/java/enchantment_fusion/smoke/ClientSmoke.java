@@ -70,10 +70,21 @@ public final class ClientSmoke implements ClientModInitializer {
     private CompletableFuture<Void> resourceReloadFuture;
     private final FlameFusionProbe flameProbe = new FlameFusionProbe();
     private final AcceptanceReport acceptance = new AcceptanceReport();
+    private Path disposableDirectory;
 
     @Override
     public void onInitializeClient() {
-        acceptance.checkpoint();
+        try {
+            var loader = net.fabricmc.loader.api.FabricLoader.getInstance();
+            disposableDirectory = DisposableRun.validate(loader.getGameDir(), loader.getConfigDir());
+            acceptance.enableOutput(disposableDirectory);
+            acceptance.checkpoint();
+        } catch (Exception unsafe) {
+            // Do not even write the initial report into an unmarked or reused directory.
+            System.err.println("CLIENT SMOKE REFUSED: " + unsafe);
+            finished = true;
+            return;
+        }
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (finished) {
                 return;
@@ -643,6 +654,8 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("39.1-breach-density", () -> HeavyCrushProbe.exercise(sp, tablePos.above(90).east(12), true));
         acceptance.run("39.4-luck-lure", () -> FishingTideProbe.exercise(sp, tablePos.above(120).east(12), false));
         acceptance.run("39.4-lure-luck", () -> FishingTideProbe.exercise(sp, tablePos.above(120).east(12), true));
+        acceptance.run("39.5-power-quick", () -> RangedCadenceProbe.exercise(sp, tablePos.above(135).east(12), false));
+        acceptance.run("39.5-quick-power", () -> RangedCadenceProbe.exercise(sp, tablePos.above(135).east(12), true));
         acceptance.run("39.6-soul-swift", () -> SoulStepProbe.exercise(sp, tablePos.above(105).east(12), false));
         acceptance.run("39.6-swift-soul", () -> SoulStepProbe.exercise(sp, tablePos.above(105).east(12), true));
         acceptance.run("09-efficiency-silk", () -> PrecisionConstructionProbe.exerciseSlice(sp, tablePos.above(64).east(12)));
@@ -697,6 +710,11 @@ public final class ClientSmoke implements ClientModInitializer {
                     if (client.getOverlay() != null || !(client.screen instanceof TitleScreen)) return;
                     // Never open or modify an existing save or run against an unmarked
                     // configuration directory. The fixtures are intentionally destructive.
+                    require(client.gameDirectory.toPath().toRealPath().equals(disposableDirectory),
+                        "Game directory changed after disposable validation");
+                    Path saves = client.getLevelSource().getBaseDir().toAbsolutePath().normalize();
+                    require(saves.equals(disposableDirectory.resolve("saves")) && !Files.isSymbolicLink(saves),
+                        "Save directory is not inside the validated disposable game directory");
                     Path marker = client.gameDirectory.toPath().resolve(".enchantment-fusion-disposable");
                     require(Files.isRegularFile(marker, java.nio.file.LinkOption.NOFOLLOW_LINKS)
                             && "fresh-integrated-fixtures\n".equals(Files.readString(marker)),
@@ -1543,9 +1561,10 @@ public final class ClientSmoke implements ClientModInitializer {
             message = "CLIENT SMOKE FAIL: one or more independent fixtures failed; see acceptance-report.md";
         }
         System.out.println(message);
+        acceptance.writeReport(message);
         try {
-            Files.writeString(Path.of("client-smoke-result.txt"), message + "\n");
-            Files.writeString(Path.of("acceptance-report.md"), acceptance.markdown(message));
+            Files.writeString(disposableDirectory.resolve("client-smoke-result.txt"), message + "\n",
+                java.nio.file.StandardOpenOption.CREATE_NEW, java.nio.file.LinkOption.NOFOLLOW_LINKS);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

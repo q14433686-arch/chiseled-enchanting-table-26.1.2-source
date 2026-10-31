@@ -39,19 +39,25 @@ DIRECTION_FIXTURES = {
     ("frost_walker", "feather_falling"): ("23-frost-fall", False),
     ("frost_walker", "fire_protection"): ("24.1-frost-fire", False),
     ("fire_protection", "frost_walker"): ("24.1-frost-fire", False),
-    ("loyalty", "protection"): ("25.3-loyalty", True),
-    ("fire_aspect", "silk_touch"): ("31.3-glaze", True),
+    # These fixtures also test unrelated preservation/flip operations, so a
+    # first failure cannot be attributed to this direction alone.
+    ("loyalty", "protection"): ("25.3-loyalty", False),
+    ("fire_aspect", "silk_touch"): ("31.3-glaze", False),
     ("silk_touch", "fire_aspect"): ("31.3-amber", True),
     ("fire_aspect", "aqua_affinity"): ("31.4-carrier", False),
     ("aqua_affinity", "fire_aspect"): ("31.4-carrier", False),
-    ("density", "breach"): ("39.1-density-breach", True),
-    ("breach", "density"): ("39.1-breach-density", True),
+    # Each heavy-crush fixture explicitly compares both orders before its own actions.
+    ("density", "breach"): ("39.1-density-breach", False),
+    ("breach", "density"): ("39.1-breach-density", False),
     ("luck_of_the_sea", "lure"): ("39.4-luck-lure", True),
     ("lure", "luck_of_the_sea"): ("39.4-lure-luck", True),
+    ("power", "quick_charge"): ("39.5-power-quick", True),
+    ("quick_charge", "power"): ("39.5-quick-power", True),
     ("soul_speed", "swift_sneak"): ("39.6-soul-swift", True),
     ("swift_sneak", "soul_speed"): ("39.6-swift-soul", True),
 }
-VARIANT_FIXTURES = {"mending_replenish": ("transmute-replenish", True)}
+# This fixture also checks a distinct Mending-to-experience-bottle conversion.
+VARIANT_FIXTURES = {"mending_replenish": ("transmute-replenish", False)}
 
 # Read only rows with the exact reporter format, respecting escaped Markdown pipes.
 REPORT_ROW = re.compile(
@@ -133,7 +139,7 @@ def inventory(report_text: str) -> str:
         lines.append(f"| `{variant}` | `{esc(data['source'])}` | {status} | {esc(reason)} |")
     lines += ["", "## 单附魔跨种：来源—角色绑定", "", "| 变体 | 来源 | 角色 | 状态 | 原因 / 边界 |", "| --- | --- | --- | --- | --- |"]
     for variant, source, role in bindings:
-        # Current replenish probe is a partial test of its only default source/role.
+        # Fixture mapping is conservative at the variant and individual-binding levels.
         mapping = VARIANT_FIXTURES.get(variant)
         status, reason = scoped_status(mapping, results)
         lines.append(f"| `{variant}` | `{esc(source)}` | `{esc(role)}` | {status} | {esc(reason)} |")
