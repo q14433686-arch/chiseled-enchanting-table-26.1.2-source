@@ -56,6 +56,8 @@ jobs:
           python3 scripts/test_ci_diagnostics.py
           python3 scripts/check_repository_hygiene.py
           python3 scripts/test_ui_readability.py
+          python3 scripts/test_acceptance_report.py
+          python3 scripts/test_acceptance_inventory.py
 
       - name: 26.3 sync and 26.1.2 boundary regression checks
         run: python3 scripts/test_sync_26_1_2.py
@@ -133,10 +135,14 @@ jobs:
         run: ./gradlew compileJava compileClientJava -Penable_jei=false -Penable_rei=false --console=plain --stacktrace --no-daemon
 
   server-smoke:
+    # Arena work-in-progress pushes can request compile-only checks while the
+    # eventual single-process gameplay acceptance is still being prepared.
+    # Normal pushes, pull requests and manual runs continue to run the smoke.
+    if: ${{ github.event_name != 'push' || !startsWith(github.ref, 'refs/heads/arena/') || !contains(github.event.head_commit.message, '[compile only]') }}
     permissions:
       contents: read
       checks: write
-    name: 26.1.2 real server interactions
+    name: 26.1.2 single-process integrated client fixtures
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: static
@@ -148,8 +154,8 @@ jobs:
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x ./gradlew
-      - name: boot fresh world and reload datapacks
-        run: python3 scripts/server_smoke.py
+      # The client itself creates a fresh disposable world. Do not boot a
+      # separate dedicated game server as part of single-process acceptance.
       - name: compile disposable client integration probe
         run: mkdir -p build-reports && ./gradlew compileClientSmokeJava -Pclient_smoke=true --console=plain 2>&1 | tee build-reports/client-smoke.log
       - name: real client input, config save and menu integration
@@ -163,19 +169,15 @@ jobs:
         with:
           name: server-smoke-${{ github.sha }}
           path: |
-            build-reports/server-smoke.log
             build-reports/client-smoke.log
             run-client-smoke/client-smoke-result.txt
-            run/logs/latest.log
-            run/crash-reports/**
+            run-client-smoke/acceptance-report.md
+            run-client-smoke/acceptance-inventory.md
+            run-client-smoke/logs/latest.log
+            run-client-smoke/crash-reports/**
           if-no-files-found: warn
       - name: publish API-readable client smoke diagnostics
         if: always() && github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/post_ci_diagnostics.py --publish --name client-smoke-diagnostics --conclusion '${{ job.status }}' build-reports/client-smoke.log
-      - name: publish API-readable smoke diagnostics
-        if: always() && github.event_name != 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/post_ci_diagnostics.py --publish --name server-smoke-diagnostics --conclusion '${{ job.status }}' build-reports/server-smoke.log

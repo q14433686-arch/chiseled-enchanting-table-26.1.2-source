@@ -35,6 +35,24 @@ class AcceptancePlanTest(unittest.TestCase):
         self.assertIn('subprocess.TimeoutExpired', script)
         self.assertIn('Game did not initialize the report', script)
 
+    def test_one_process_run_creates_a_fresh_save_without_reusing_user_worlds(self):
+        client = (SMOKE / 'ClientSmoke.java').read_text(encoding='utf-8')
+        gradle = (ROOT / 'build.gradle').read_text(encoding='utf-8')
+        script = (ROOT / 'scripts/client_smoke.py').read_text(encoding='utf-8')
+        workflow = (ROOT / '.github/workflows/build.yml').read_text(encoding='utf-8')
+        self.assertIn('createWorldOpenFlows().createFreshLevel', client)
+        self.assertIn('LinkOption.NOFOLLOW_LINKS', client)
+        self.assertIn('Refusing an existing audit-world', client)
+        self.assertIn('client.getLevelSource().getBaseDir().resolve("audit-world")', client)
+        self.assertIn('.enchantment-fusion-disposable', client)
+        self.assertIn('.enchantment-fusion-disposable', script)
+        self.assertNotIn('quickPlaySingleplayer', gradle)
+        self.assertIn('run.exists() or run.is_symlink()', script)
+        self.assertNotIn('copytree(', script)
+        self.assertNotIn('scripts/server_smoke.py', workflow)
+        self.assertEqual(1, script.count('subprocess.Popen('), 'one game-launching command only')
+        self.assertIn("contains(github.event.head_commit.message, '[compile only]')", workflow)
+
     def test_prepared_fixtures_do_not_depend_on_gui_success(self):
         client = (SMOKE / 'ClientSmoke.java').read_text(encoding='utf-8')
         initial = client.index('case 0 ->')

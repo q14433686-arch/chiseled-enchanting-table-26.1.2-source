@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""CI-only real client probe for Enchantment Fusion. Requires server_smoke.py's disposable saved world first."""
+"""Disposable integrated-client probe; its fresh world is created in the same game process."""
 from pathlib import Path
+from acceptance_inventory import inventory
 import os
 import re
-import shutil
 import signal
 import subprocess
 
 root = Path(__file__).resolve().parents[1]
 run = root / "run-client-smoke"
-world = root / "run/audit-world"
-if run.exists() or not world.is_dir():
-    raise SystemExit("Refusing existing client run directory or missing disposable server-smoke world")
-
-shutil.copytree(world, run / "saves/audit-world")
+# Never delete, reuse or copy a user's save. ClientSmoke creates a new world
+# using the vanilla world-open API inside the one integrated client process.
+if run.exists() or run.is_symlink():
+    raise SystemExit("Refusing an existing client run directory; supply a fresh disposable checkout")
+run.mkdir()
+(run / ".enchantment-fusion-disposable").write_text("fresh-integrated-fixtures\n", encoding="utf-8")
 (run / "options.txt").write_text(
     "onboardAccessibility:false\nlang:zh_cn\nguiScale:2\nmaxFps:60\nenableVsync:false\n"
     "menuBackgroundBlurriness:5\n",
@@ -65,7 +66,14 @@ if not report.exists():
              "| Item | Scope | Status | Reason |", "| --- | --- | --- | --- |"]
     lines += [f"| {item} | {scope} | SKIP | Game did not initialize the report. |" for item, scope in planned]
     report.write_text("\n".join(lines) + "\n", encoding="utf-8")
-print(report.read_text(encoding="utf-8"))
+report_text = report.read_text(encoding="utf-8")
+print(report_text)
+# Detailed item inventory derives only from the scoped game report, including
+# interrupted/startup-failure cases. A partial fixture pass cannot become a
+# whole-direction pass. Do this before raising on a failed smoke process.
+index = run / "acceptance-inventory.md"
+index.write_text(inventory(report_text), encoding="utf-8")
+print(f"Detailed scoped inventory: {index}")
 if "Missing resource enchantment_fusion:" in log_text:
     raise SystemExit("Client logged missing enchantment_fusion GUI/model resources; inspect client-smoke.log")
 if code != 0 or not result.exists() or not result.read_text(encoding="utf-8").startswith("CLIENT SMOKE PASS:"):

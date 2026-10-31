@@ -163,8 +163,8 @@ if (providers.gradleProperty('client_smoke').orNull == 'true') {
             client()
             source sourceSets.clientSmoke
             runDir 'run-client-smoke'
-            programArg '--quickPlaySingleplayer'
-            programArg 'audit-world'
+            // The probe creates its own fresh world inside this client process.
+            // A dedicated-server bootstrap would be a second game process.
             programArg '--width'
             programArg '960'
             programArg '--height'

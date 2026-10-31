@@ -55,6 +55,7 @@ final class AcceptanceReport {
         plan("09-input-config", "09 real client G/V input, configuration reload and multiplayer permissions", "Not covered by the prepared server fixture.");
         plan("11-shot-pvp", "11 real draw/reload, randomness, two-player PvP and natural save/unload", "Not covered by the prepared server fixture.");
         plan("multiplayer-protection", "Real multiplayer, third-party protection plugins and modded projectile compatibility", "Requires additional clients/mods; not covered by these probes.");
+        plan("dedicated-server-compat", "Dedicated-server-only loading and external server integration", "Not covered by the single integrated-client game process.");
         plan("remaining-directions", "All other redesigned directions and single-enchantment variants", "Many are not yet implemented or individually exercised; theoretical catalog coverage is not a pass.");
     }
 

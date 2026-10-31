@@ -28,6 +28,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
@@ -61,6 +62,7 @@ public final class ClientSmoke implements ClientModInitializer {
     private int ticks = 0;
     private int delay = 0;
     private boolean finished = false;
+    private boolean worldCreationRequested = false;
     private BlockPos tablePos;
     private volatile boolean serverReadyFlag = false;
     private volatile boolean closedRitualFinished = false;
@@ -691,6 +693,27 @@ public final class ClientSmoke implements ClientModInitializer {
 
         switch (phase) {
             case 0 -> {
+                if (!worldCreationRequested) {
+                    if (client.getOverlay() != null || !(client.screen instanceof TitleScreen)) return;
+                    // Never open or modify an existing save or run against an unmarked
+                    // configuration directory. The fixtures are intentionally destructive.
+                    Path marker = client.gameDirectory.toPath().resolve(".enchantment-fusion-disposable");
+                    require(Files.isRegularFile(marker, java.nio.file.LinkOption.NOFOLLOW_LINKS)
+                            && "fresh-integrated-fixtures\n".equals(Files.readString(marker)),
+                        "Refusing an unmarked directory; launch through scripts/client_smoke.py");
+                    require(!Files.exists(client.getLevelSource().getBaseDir().resolve("audit-world"),
+                            java.nio.file.LinkOption.NOFOLLOW_LINKS),
+                        "Refusing an existing audit-world; use a fresh disposable run directory");
+                    worldCreationRequested = true;
+                    var settings = new net.minecraft.world.level.LevelSettings(
+                        "Disposable Fusion Acceptance", net.minecraft.world.level.GameType.SURVIVAL,
+                        net.minecraft.world.level.LevelSettings.DifficultySettings.DEFAULT, true,
+                        net.minecraft.world.level.WorldDataConfiguration.DEFAULT);
+                    client.createWorldOpenFlows().createFreshLevel("audit-world", settings,
+                        new net.minecraft.world.level.levelgen.WorldOptions(0L, false, false),
+                        net.minecraft.world.level.levelgen.presets.WorldPresets::createFlatWorldDimensions, client.screen);
+                    return;
+                }
                 if (client.player == null || client.getSingleplayerServer() == null || client.getOverlay() != null) {
                     return;
                 }
