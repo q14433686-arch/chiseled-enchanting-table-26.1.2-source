@@ -19,6 +19,7 @@ import enchantment_fusion.mechanics.signatures.FishingTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
+import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -298,9 +299,10 @@ public final class MatrixEffectExecutor {
             boolean redesignedCadence = sigOpt.isPresent() && RangedCadenceSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedReserve = sigOpt.isPresent() && DurabilityReserveSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedEcho = sigOpt.isPresent() && EchoPathSkills.applies(pair, hostStack, sigOpt.get().id());
+            boolean redesignedMomentum = sigOpt.isPresent() && MomentumSealSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
-                || redesignedReserve || redesignedEcho;
+                || redesignedReserve || redesignedEcho || redesignedMomentum;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

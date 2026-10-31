@@ -6,10 +6,13 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
+import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -21,11 +24,25 @@ public abstract class PlayerAmberAttackMixin {
         Player player = (Player) (Object) this;
         GlazedStrikeEffect.Swing swing = GlazedStrikeEffect.beginSwing(player, target);
         HeavyCrushSkill.Swing heavySwing = HeavyCrushSkill.beginSwing(player, target);
+        MomentumSealSkills.Attack momentum = MomentumSealSkills.beginAttack(player, player.getWeaponItem(), target);
         try {
             original.call(target);
         } finally {
+            MomentumSealSkills.endAttack(momentum);
             HeavyCrushSkill.endSwing(heavySwing);
             GlazedStrikeEffect.endSwing(swing);
+        }
+    }
+
+    @WrapMethod(method = "stabAttack")
+    private boolean ef$momentumStabFrame(EquipmentSlot slot, Entity target, float damage, boolean dealsDamage,
+                                          boolean dealsKnockback, boolean dismounts, Operation<Boolean> original) {
+        Player player = (Player) (Object) this;
+        MomentumSealSkills.Attack frame = MomentumSealSkills.beginAttack(player, player.getItemBySlot(slot), target);
+        try {
+            return original.call(slot, target, damage, dealsDamage, dealsKnockback, dismounts);
+        } finally {
+            MomentumSealSkills.endAttack(frame);
         }
     }
 
@@ -41,6 +58,7 @@ public abstract class PlayerAmberAttackMixin {
             succeeded = original.call(target, source, damage);
             return succeeded;
         } finally {
+            MomentumSealSkills.damageResult(player, target, source, succeeded);
             HeavyCrushSkill.endHit(heavyHit, succeeded);
             AmberSealSkill.endAttack(frame, succeeded);
         }
@@ -60,8 +78,28 @@ public abstract class PlayerAmberAttackMixin {
             succeeded = original.call(target, source, damage);
             return succeeded;
         } finally {
+            MomentumSealSkills.damageResult(player, target, source, succeeded);
             HeavyCrushSkill.endHit(heavyHit, succeeded);
             AmberSealSkill.endAttack(frame, succeeded);
         }
+    }
+
+    @WrapOperation(method = {"attack", "stabAttack"}, at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/player/Player;causeExtraKnockback(Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/phys/Vec3;)V"))
+    private void ef$momentumCause(Player player, Entity target, float amount, Vec3 oldMovement, Operation<Void> original) {
+        float adjusted = MomentumSealSkills.adjustKnockback(player, target, amount);
+        try {
+            original.call(player, target, adjusted, oldMovement);
+        } finally {
+            MomentumSealSkills.afterKnockbackCall(player, target);
+        }
+    }
+
+    @WrapOperation(method = "causeExtraKnockback", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/LivingEntity;knockback(DDD)V"))
+    private void ef$observeMomentum(LivingEntity target, double power, double x, double z, Operation<Void> original) {
+        Vec3 before = target.getDeltaMovement();
+        original.call(target, power, x, z);
+        MomentumSealSkills.afterLivingKnockback((Player) (Object) this, target, before);
     }
 }

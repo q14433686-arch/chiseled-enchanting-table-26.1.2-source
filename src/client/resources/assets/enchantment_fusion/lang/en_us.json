@@ -271,8 +271,8 @@
   "signature.enchantment_fusion.nether_soul_fire.desc": "Brands foes with azure soul-fire that burns persistently with magic damage.",
   "signature.enchantment_fusion.pristine_trophy.title": "Pristine Trophy",
   "signature.enchantment_fusion.pristine_trophy.desc": "Cleanly preserves monster essence, granting a chance to claim mob skulls!",
-  "signature.enchantment_fusion.crystal_snare.title": "Crystal Snare",
-  "signature.enchantment_fusion.crystal_snare.desc": "Crystallizes struck foes in place briefly, halting charges and attacks.",
+  "signature.enchantment_fusion.crystal_snare.title": "Directed Unsealing",
+  "signature.enchantment_fusion.crystal_snare.desc": "Silk Touch ▷ Knockback: a successful hit briefly holds its real knockback. Look horizontally and use the active skill to release the push in that direction.",
   "signature.enchantment_fusion.frost_spike_armor.title": "Frost-Spike Armor",
   "signature.enchantment_fusion.frost_spike_armor.desc": "Attackers striking your armor are impaled by frost spikes and deeply chilled.",
   "signature.enchantment_fusion.ice_thorn_trail.title": "Ice-Thorn Trail",
@@ -970,5 +970,15 @@
   "message.enchantment_fusion.reserve_not_ready": "No held or worn equipment has enough saved resilience.",
   "skill.enchantment_fusion.durability_reserve": "Saved Resilience",
   "skill.enchantment_fusion.path_echo": "Arrow-Path Echo",
-  "tooltip.enchantment_fusion.legacy_reserve_carrier": "Legacy host keeps its old effect; the new directions need a damageable bow/crossbow or damageable equipment."
+  "tooltip.enchantment_fusion.legacy_reserve_carrier": "Legacy host keeps its old effect; the new directions need a damageable bow/crossbow or damageable equipment.",
+  "signature.enchantment_fusion.momentum_vault.title": "Stored Momentum",
+  "signature.enchantment_fusion.momentum_vault.desc": "Knockback ▷ Silk Touch: after a real push, use the active skill to stop the moving target and save its remaining momentum. Activate again to release it in the original direction.",
+  "skill.enchantment_fusion.momentum_seal": "Momentum Seal",
+  "message.enchantment_fusion.momentum_ready": "Target pushed: activate the skill to capture its remaining momentum.",
+  "message.enchantment_fusion.momentum_captured": "Momentum captured; activate again to release in the original direction.",
+  "message.enchantment_fusion.momentum_direction": "Momentum sealed; look in the desired direction and activate to release.",
+  "message.enchantment_fusion.momentum_released": "Stored momentum released.",
+  "message.enchantment_fusion.momentum_not_ready": "No eligible target with momentum is ready.",
+  "message.enchantment_fusion.momentum_not_moving": "The target is no longer moving in the original push direction.",
+  "tooltip.enchantment_fusion.legacy_momentum_carrier": "Legacy host keeps its old effect; the new directions need a sword, axe, spear or mace."
 }

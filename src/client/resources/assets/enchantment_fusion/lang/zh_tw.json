@@ -271,8 +271,8 @@
   "signature.enchantment_fusion.nether_soul_fire.desc": "點燃难以熄灭的幽藍魂火，持續灼穿護甲造成魔法傷害。",
   "signature.enchantment_fusion.pristine_trophy.title": "完美標本",
   "signature.enchantment_fusion.pristine_trophy.desc": "精準剝離獵物精华，大幅提高怪物稀有遺物与頭顱掉落機率！",
-  "signature.enchantment_fusion.crystal_snare.title": "晶化封存",
-  "signature.enchantment_fusion.crystal_snare.desc": "重擊将目標短暫晶化定身，打斷其冲鋒与蓄力。",
+  "signature.enchantment_fusion.crystal_snare.title": "定向解封",
+  "signature.enchantment_fusion.crystal_snare.desc": "精準採集 ▷ 擊退：成功命中時短暫封存本次真實擊退；水平朝向所選方向並使用主動技能釋放推力。",
   "signature.enchantment_fusion.frost_spike_armor.title": "寒冰刺甲",
   "signature.enchantment_fusion.frost_spike_armor.desc": "任何膽敢觸碰甲冑的敵人都将被寒冰尖刺反傷並重度凍結。",
   "signature.enchantment_fusion.ice_thorn_trail.title": "冰棘之路",
@@ -970,5 +970,15 @@
   "message.enchantment_fusion.reserve_not_ready": "持握或穿戴的裝備尚無足夠餘韌。",
   "skill.enchantment_fusion.durability_reserve": "餘韌續用",
   "skill.enchantment_fusion.path_echo": "回聲取捨",
-  "tooltip.enchantment_fusion.legacy_reserve_carrier": "舊載體保留原效果；新方向分別需要可損耗的弓弩或有耐久裝備。"
+  "tooltip.enchantment_fusion.legacy_reserve_carrier": "舊載體保留原效果；新方向分別需要可損耗的弓弩或有耐久裝備。",
+  "signature.enchantment_fusion.momentum_vault.title": "動量封存",
+  "signature.enchantment_fusion.momentum_vault.desc": "擊退 ▷ 精準採集：真實推出目標後，使用主動技能停住目標並封存剩餘動量；再次使用沿原方向釋放。",
+  "skill.enchantment_fusion.momentum_seal": "動量封存 / 定向解封",
+  "message.enchantment_fusion.momentum_ready": "目標已被推出；使用主動技能可封存其剩餘動量。",
+  "message.enchantment_fusion.momentum_captured": "動量已封存；再次使用可沿原方向釋放。",
+  "message.enchantment_fusion.momentum_direction": "動量已封存；朝向所選方向並使用主動技能釋放。",
+  "message.enchantment_fusion.momentum_released": "已釋放封存的動量。",
+  "message.enchantment_fusion.momentum_not_ready": "沒有可操作的目標動量。",
+  "message.enchantment_fusion.momentum_not_moving": "目標已不再沿原擊退方向移動。",
+  "tooltip.enchantment_fusion.legacy_momentum_carrier": "舊載體保留原效果；新方向需要劍、斧、長矛或重錘。"
 }

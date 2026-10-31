@@ -23,6 +23,7 @@ import enchantment_fusion.mechanics.signatures.FishingTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
+import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -183,6 +184,8 @@ public final class FusionTooltipRenderer {
             boolean legacyReserveCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ((EchoPathSkills.matches(pair, sigOpt.get().id()) && !EchoPathSkills.applies(pair, stack, sigOpt.get().id()))
                     || (DurabilityReserveSkills.matches(pair, sigOpt.get().id()) && !DurabilityReserveSkills.applies(pair, stack, sigOpt.get().id())));
+            boolean legacyMomentumCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && MomentumSealSkills.matches(pair, sigOpt.get().id()) && !MomentumSealSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ((GlazedStrikeEffect.isPair(pair) && GlazedStrikeEffect.SIGNATURE.equals(sigOpt.get().id())
                         && !GlazedStrikeEffect.applies(pair, stack, sigOpt.get().id()))
@@ -223,7 +226,8 @@ public final class FusionTooltipRenderer {
                 if (shift && !legacyUnderwaterCarrier && !legacyFrostFallCarrier && !legacyFrostWakeCarrier
                     && !legacyFrostFireCarrier && !legacyPhantomCarrier && !legacyPrecisionCarrier
                     && !legacyDurabilityCarrier && !legacyBlastCarrier && !legacyHeavyCarrier && !legacySoulCarrier
-                    && !legacyFishingCarrier && !legacyGlazeAmberCarrier) {
+                    && !legacyFishingCarrier && !legacyCadenceCarrier && !legacyReserveCarrier
+                    && !legacyMomentumCarrier && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -288,6 +292,10 @@ public final class FusionTooltipRenderer {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_reserve_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
+            if (legacyMomentumCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_momentum_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
             if (legacyGlazeAmberCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_glaze_amber_carrier")
                     .withStyle(ChatFormatting.GOLD));
@@ -299,6 +307,7 @@ public final class FusionTooltipRenderer {
                     || (RangedCadenceSkills.CROSSBOW.equals(sigOpt.get().id()) && RangedCadenceSkills.applies(pair, stack, sigOpt.get().id()))
                     || DurabilityReserveSkills.applies(pair, stack, sigOpt.get().id())
                     || EchoPathSkills.applies(pair, stack, sigOpt.get().id())
+                    || MomentumSealSkills.applies(pair, stack, sigOpt.get().id())
                     || (UnderwaterMiningSkills.isSpendPair(pair) && UnderwaterMiningSkills.applies(pair, stack, sigOpt.get().id())))) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
                     Component.keybind("key.enchantment_fusion.activate_skill"),

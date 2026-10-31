@@ -300,7 +300,7 @@ final class FusionRuleEngineTest {
 
     @Test
     void allCuratedSignatureResonancesAreStrictlyUniqueAndDirectional() {
-        assertEquals(154, SignaturePairs.allUniqueSignatures().size(), "Expected 154 curated directional Signature Resonances");
+        assertEquals(155, SignaturePairs.allUniqueSignatures().size(), "Expected 155 curated directional Signature Resonances");
         Set<String> ids = new HashSet<>();
         for (SignatureEntry entry : SignaturePairs.allUniqueSignatures()) {
             assertTrue(ids.add(entry.id()), "Duplicate Signature ID forbidden: " + entry.id());
@@ -379,7 +379,7 @@ final class FusionRuleEngineTest {
     }
 
     @Test
-    void allElevenLocalesShareIdenticalTranslationKeySetIncludingAll154SignaturesAnd116Transmutes() throws Exception {
+    void allElevenLocalesShareIdenticalTranslationKeySetIncludingAll155SignaturesAnd116Transmutes() throws Exception {
         List<String> locales = List.of(
             "de_de", "en_us", "es_es", "fr_fr", "it_it", "ja_jp",
             "ko_kr", "pt_br", "ru_ru", "zh_cn", "zh_tw"
@@ -394,7 +394,7 @@ final class FusionRuleEngineTest {
                 if (baselineKeys == null) {
                     baselineKeys = keys;
                     assertTrue(keys.size() >= 750, "Expected comprehensive 0.6.0 curated translation key set");
-                    assertEquals(154, SignaturePairs.allUniqueSignatures().size());
+                    assertEquals(155, SignaturePairs.allUniqueSignatures().size());
                     for (var sig : SignaturePairs.allUniqueSignatures()) {
                         assertTrue(keys.contains(sig.titleKey()), "Missing signature title key: " + sig.titleKey());
                         assertTrue(keys.contains(sig.descKey()), "Missing signature desc key: " + sig.descKey());

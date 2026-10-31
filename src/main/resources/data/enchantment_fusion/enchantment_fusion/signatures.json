@@ -528,7 +528,8 @@
     "crystal_snare": {
       "primary": "minecraft:silk_touch",
       "secondary": "minecraft:knockback",
-      "domain": "melee"
+      "domain": "melee",
+      "control_ticks": 20
     },
     "frost_spike_armor": {
       "primary": "minecraft:thorns",
@@ -815,6 +816,13 @@
       "primary": "*",
       "secondary": "minecraft:vanishing_curse",
       "domain": "armor_curse"
+    },
+    "momentum_vault": {
+      "primary": "minecraft:knockback",
+      "secondary": "minecraft:silk_touch",
+      "domain": "melee",
+      "candidate_ticks": 40,
+      "control_ticks": 20
     }
   }
 }
