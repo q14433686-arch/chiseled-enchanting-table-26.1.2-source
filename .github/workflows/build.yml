@@ -58,6 +58,7 @@ jobs:
           python3 scripts/test_ui_readability.py
           python3 scripts/test_acceptance_report.py
           python3 scripts/test_acceptance_inventory.py
+          python3 scripts/test_fusion_batch_index.py
 
       - name: 26.3 sync and 26.1.2 boundary regression checks
         run: python3 scripts/test_sync_26_1_2.py
