@@ -94,6 +94,11 @@ public final class HarvestDropCapture {
         return new Scope(frame);
     }
 
+    /** Legacy/synthetic capture scopes do not supply a verifiable loot tool. */
+    public static void enterPlayerDestroy(ServerLevel level, ServerPlayer player, BlockPos pos) {
+        enterPlayerDestroy(level, player, pos, ItemStack.EMPTY, level.getBlockState(pos));
+    }
+
     /** The wrapper only enters this region for the target block's actual playerDestroy call. */
     public static void enterPlayerDestroy(ServerLevel level, ServerPlayer player, BlockPos pos, ItemStack lootTool, BlockState state) {
         Frame frame = current(level, pos);
