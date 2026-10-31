@@ -10,6 +10,7 @@ import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
+import enchantment_fusion.mechanics.signatures.PrecisionConstruction;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -82,6 +83,7 @@ public final class MatrixRuntimeHooks {
             MirageSnapbackSkill.clearRuntimeState();
             GlazedStrikeEffect.clear();
             FrostFallSkills.clear();
+            PrecisionConstruction.clear();
             FusionMatrixRegistry.setClientSnapshot(null);
         });
 
@@ -95,6 +97,7 @@ public final class MatrixRuntimeHooks {
             AmberSealSkill.onPlayerDisconnect(pid);
             FrostFallSkills.onPlayerDisconnect(pid);
             UnderwaterMiningSkills.onPlayerDisconnect(handler.getPlayer());
+            PrecisionConstruction.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -220,6 +223,8 @@ public final class MatrixRuntimeHooks {
                 ItemStack tool = serverPlayer.getMainHandItem();
                 UnderwaterMiningSkills.onMined(serverLevel, serverPlayer, pos);
                 SignaturePairs.onBlockHarvested(serverLevel, serverPlayer, tool, pos, state);
+                var slice = PrecisionConstruction.selected(tool, true);
+                if (slice != null) PrecisionConstruction.onHarvest(serverLevel, serverPlayer, tool, pos, state, slice);
                 MatrixEffectExecutor.dispatchAcrossEquippedSlots(
                     serverLevel, serverPlayer, tool,
                     EnumSet.of(TriggerType.ON_BLOCK_HARVEST, TriggerType.ON_UTILITY_CYCLE),

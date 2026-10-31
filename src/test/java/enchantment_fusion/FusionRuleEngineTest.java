@@ -158,6 +158,27 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void precisionConstructionUsesDirectionalToolsAndLevelScaledLimits() {
+        var slice = FusedPair.clean("minecraft:efficiency", 3, "minecraft:silk_touch", 1);
+        var line = slice.flipped();
+        assertTrue(enchantment_fusion.mechanics.signatures.PrecisionConstruction.isSlice(slice));
+        assertFalse(enchantment_fusion.mechanics.signatures.PrecisionConstruction.isSlice(line));
+        assertTrue(enchantment_fusion.mechanics.signatures.PrecisionConstruction.isLine(line));
+        assertEquals("vein_peel", SignaturePairs.resolve(slice).orElseThrow().id());
+        assertEquals("velvet_shear", SignaturePairs.resolve(line).orElseThrow().id());
+        assertTrue(enchantment_fusion.mechanics.signatures.PrecisionConstruction.supportsCarrier(
+            Set.of(enchantment_fusion.model.FusionCarrier.PICKAXE)));
+        assertTrue(enchantment_fusion.mechanics.signatures.PrecisionConstruction.supportsCarrier(
+            Set.of(enchantment_fusion.model.FusionCarrier.SHEARS)));
+        assertFalse(enchantment_fusion.mechanics.signatures.PrecisionConstruction.supportsCarrier(
+            Set.of(enchantment_fusion.model.FusionCarrier.SWORD)));
+        assertEquals(6, enchantment_fusion.mechanics.signatures.PrecisionConstruction.scaledLimit(1, 6, 64));
+        assertEquals(30, enchantment_fusion.mechanics.signatures.PrecisionConstruction.scaledLimit(5, 6, 64));
+        assertEquals(64, enchantment_fusion.mechanics.signatures.PrecisionConstruction.scaledLimit(255, 6, 64));
+        assertEquals(10, enchantment_fusion.mechanics.signatures.PrecisionConstruction.scaledLimit(5, 2, 64));
+    }
+
+    @Test
     void phantomVolleyIsDirectionalAndOnlyForBowOrCrossbow() {
         var volley = FusedPair.clean("minecraft:multishot", 1, "minecraft:piercing", 4);
         var cluster = volley.flipped();

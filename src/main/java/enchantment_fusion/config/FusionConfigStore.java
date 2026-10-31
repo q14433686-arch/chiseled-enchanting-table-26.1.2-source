@@ -58,6 +58,19 @@ public final class FusionConfigStore {
         return state.revision();
     }
 
+    /** Server-authoritative signature tuning, with safe fallbacks for old/partial datapacks. */
+    public static synchronized int signatureInt(String signature, String key, int fallback, int min, int max) {
+        JsonElement raw = getPath(state.effective(), "signatures", List.of("signatures", signature, key));
+        try {
+            if (raw == null || !raw.isJsonPrimitive() || !raw.getAsJsonPrimitive().isNumber()) return fallback;
+            double number = raw.getAsDouble();
+            if (!Double.isFinite(number) || number != Math.rint(number)) return fallback;
+            return (int) Math.clamp(number, min, max);
+        } catch (RuntimeException ex) {
+            return fallback;
+        }
+    }
+
     /** Stable across saves/restarts: a pending transaction must not use changed rules. */
     public static synchronized String rulesFingerprint() {
         try {
@@ -269,6 +282,8 @@ public final class FusionConfigStore {
             if (path.contains("trigger_cooldowns")) { min = 4; max = 1200; }
             else if (file.equals("transmutations") && path.contains("replenish_settings") && key.equals("xp_interval")) { min = 1; max = 10_000; }
             else if (file.equals("transmutations") && path.contains("replenish_settings") && key.equals("group_cap")) { min = 1; max = 256; }
+            else if (file.equals("signatures") && (key.equals("slice_extra_per_level") || key.equals("line_blocks_per_level"))) { min = 1; max = 32; }
+            else if (file.equals("signatures") && (key.equals("slice_extra_cap") || key.equals("line_blocks_cap"))) { min = 1; max = 256; }
             else if (key.equals("melee_min_charge")) { min = 0.05; max = 1; }
             else if (key.equals("melee_full_charge")) { min = 0.10; max = 1; }
             else if (key.startsWith("stabilizer_reduction_")) { min = 0.01; max = 1; }

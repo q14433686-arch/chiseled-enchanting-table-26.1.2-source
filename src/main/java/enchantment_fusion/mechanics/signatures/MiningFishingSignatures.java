@@ -194,7 +194,9 @@ public final class MiningFishingSignatures {
                     grantEffect(player, "resistance", 60, 0);
                     level.sendParticles(ParticleTypes.POOF, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 6, 0.25D, 0.25D, 0.25D, 0.03D);
                 }
-                case "velvet_shear" -> grantEffect(player, "haste", 80, 1);
+                case "velvet_shear" -> {
+                    if (!PrecisionConstruction.applies(pair, tool, sigId)) grantEffect(player, "haste", 80, 1);
+                }
                 case "pulse_prospect" -> {
                     grantEffect(player, "haste", 100, 1);
                     for (int dx = -4; dx <= 4; dx++) {
@@ -227,7 +229,21 @@ public final class MiningFishingSignatures {
                         player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 45));
                     }
                 }
-                case "rock_splitter_pick", "triple_excavate", "vein_peel" -> {
+                case "vein_peel" -> {
+                    // The redesigned slice is scheduled only from the confirmed AFTER event.
+                    if (!PrecisionConstruction.applies(pair, tool, sigId)
+                        && player.mayBuild() && !player.isShiftKeyDown() && !ExtraBlockHarvest.isActive()) {
+                        ExtraBlockHarvest.defer(() -> {
+                            Direction side = player.getDirection().getClockWise();
+                            for (int offset : new int[]{-1, 1}) {
+                                if (!ExtraBlockHarvest.hasOriginalTool(player, tool)) break;
+                                ExtraBlockHarvest.tryBreak(level, player, tool, pos.relative(side, offset),
+                                    st -> st.is(minedState.getBlock()));
+                            }
+                        });
+                    }
+                }
+                case "rock_splitter_pick", "triple_excavate" -> {
                     if (player.mayBuild() && !player.isShiftKeyDown() && !ExtraBlockHarvest.isActive()) {
                         ExtraBlockHarvest.defer(() -> {
                             Direction side = player.getDirection().getClockWise();
@@ -306,7 +322,8 @@ public final class MiningFishingSignatures {
                     }
                 }
                 case "velvet_shear" -> {
-                    if (minedState.is(BlockTags.LEAVES) && rng.nextFloat() < 0.30F) {
+                    if (!PrecisionConstruction.applies(pair, tool, sigId)
+                        && minedState.is(BlockTags.LEAVES) && rng.nextFloat() < 0.30F) {
                         spawnItem(level, Vec3.atCenterOf(pos), new ItemStack(Items.APPLE, 1));
                     }
                 }

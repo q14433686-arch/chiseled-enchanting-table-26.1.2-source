@@ -110,12 +110,16 @@
     "vein_peel": {
       "primary": "minecraft:efficiency",
       "secondary": "minecraft:silk_touch",
-      "domain": "mining_utility"
+      "domain": "mining_utility",
+      "slice_extra_per_level": 6,
+      "slice_extra_cap": 64
     },
     "velvet_shear": {
       "primary": "minecraft:silk_touch",
       "secondary": "minecraft:efficiency",
-      "domain": "mining_utility"
+      "domain": "mining_utility",
+      "line_blocks_per_level": 4,
+      "line_blocks_cap": 32
     },
     "overflow_plating": {
       "primary": "minecraft:mending",

@@ -67,8 +67,9 @@ final class PhantomVolleyProbe {
             player.teleportTo(origin.getX() + 0.5D, origin.getY(), origin.getZ() + 0.5D);
             for (int x = 0; x <= 14; x++) for (int y = 0; y <= 3; y++) for (int z = -1; z <= 3; z++) {
                 BlockPos pos = origin.offset(x, y, z);
-                savedBlocks.put(pos, level.getBlockState(pos));
-                level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+                BlockState previous = level.getBlockState(pos);
+                require(previous.isAir(), "Fixture volume must be empty; do not overwrite existing world data");
+                savedBlocks.put(pos, previous);
             }
             villager.setNoAi(true);
             cow.setNoAi(true);
