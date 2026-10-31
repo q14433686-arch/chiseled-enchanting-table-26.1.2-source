@@ -357,12 +357,17 @@
     "tidal_double_catch": {
       "primary": "minecraft:luck_of_the_sea",
       "secondary": "minecraft:lure",
-      "domain": "mining_utility"
+      "domain": "mining_utility",
+      "bite_extension_ticks": 20
     },
     "raging_hook": {
       "primary": "minecraft:lure",
       "secondary": "minecraft:luck_of_the_sea",
-      "domain": "mining_utility"
+      "domain": "mining_utility",
+      "school_lifetime_ticks": 400,
+      "school_base_reduction_percent": 15,
+      "school_reduction_per_level_percent": 5,
+      "school_max_reduction_percent": 50
     },
     "thunder_iaido": {
       "primary": "minecraft:sharpness",

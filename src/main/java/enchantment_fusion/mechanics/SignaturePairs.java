@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.MeleeBladeSignatures;
 import enchantment_fusion.mechanics.signatures.MeleeTacticsSignatures;
 import enchantment_fusion.mechanics.signatures.MiningFishingSignatures;
+import enchantment_fusion.mechanics.signatures.FishingTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedSignatures;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport;
@@ -124,6 +125,7 @@ public final class SignaturePairs {
             Optional<SignatureEntry> sigOpt = resolve(pair);
             if (sigOpt.isEmpty()) continue;
             String sid = sigOpt.get().id();
+            if (FishingTideSkills.applies(pair, rod, sid)) continue;
             if ("raging_hook".equals(sid) && hookedMob != null) {
                 executeSignatureCombat(level, player, rod, pair, sid, hookedMob, hookedMob.position(), true);
             } else if ("tidal_double_catch".equals(sid) && caughtFishOrLoot) {

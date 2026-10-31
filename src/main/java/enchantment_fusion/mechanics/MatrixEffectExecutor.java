@@ -15,6 +15,7 @@ import enchantment_fusion.mechanics.signatures.DurabilityEconomy;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.SoulStepSkills;
+import enchantment_fusion.mechanics.signatures.FishingTideSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -290,8 +291,9 @@ public final class MatrixEffectExecutor {
             boolean redesignedBlastDefense = sigOpt.isPresent() && BlastDefenseSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedHeavyCrush = sigOpt.isPresent() && HeavyCrushSkill.applies(pair, hostStack, sigOpt.get().id());
             boolean redesignedSoulStep = sigOpt.isPresent() && SoulStepSkills.applies(pair, hostStack, sigOpt.get().id());
+            boolean redesignedFishing = sigOpt.isPresent() && FishingTideSkills.applies(pair, hostStack, sigOpt.get().id());
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
-                || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep;
+                || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

@@ -227,10 +227,10 @@
   "signature.enchantment_fusion.abyssal_sight.desc": "水下穿戴头盔或手持镐、斧、锹、锄时，按融合技能键（默认 G，可在按键设置修改），消耗氧气换取短暂水下高速采掘。保留夜视和原版水下呼吸；旧的免费水下呼吸药水效果被替换。",
   "signature.enchantment_fusion.ocean_breath_mine.title": "掘出气泡",
   "signature.enchantment_fusion.ocean_breath_mine.desc": "穿戴头盔或使用镐、斧、锹、锄在水下真正挖掘后产生短暂上浮的虚拟气泡，游过去可补氧；气泡仅归采掘者，数量受限。保留旧采掘速度加成和原版水下速掘。",
-  "signature.enchantment_fusion.tidal_double_catch.title": "双鲤戏珠",
-  "signature.enchantment_fusion.tidal_double_catch.desc": "垂钓或采集时受海神眷顾，双倍馈赠宝藏与经验。",
-  "signature.enchantment_fusion.raging_hook.title": "怒海狂钩",
-  "signature.enchantment_fusion.raging_hook.desc": "强力牵引扯动猎物失衡，使其短暂浮空眩晕。",
+  "signature.enchantment_fusion.tidal_double_catch.title": "择波捕获",
+  "signature.enchantment_fusion.tidal_double_catch.desc": "使用钓鱼竿：咬钩时显示虚拟水纹。立即收线按原版结算；继续等可提高这一次的渔获幸运值，但错过咬钩仍会失败，不复制渔获。",
+  "signature.enchantment_fusion.raging_hook.title": "跟群打窝",
+  "signature.enchantment_fusion.raging_hook.desc": "使用钓鱼竿成功钓获后留下短暂移动的虚拟鱼群；追到附近并将下一钩抛向鱼群，可缩短一次咬钩等待，不生成额外渔获。",
   "signature.enchantment_fusion.thunder_iaido.title": "雷鸣拔刀",
   "signature.enchantment_fusion.thunder_iaido.desc": "满蓄近战或投射物命中目标时，露天降下闪电；头顶受遮挡时改为造成魔法伤害并击退。",
   "signature.enchantment_fusion.phantom_triple_slash.title": "幻影三连斩",
@@ -943,5 +943,9 @@
   "signature.enchantment_fusion.soul_crawl_slip.desc": "穿戴护腿，在灵魂沙土潜行移动准备魂形；朝向一格高入口并使用主动技能，暂时快速爬行。碰撞仍生效，再次使用可结束。",
   "tooltip.enchantment_fusion.legacy_soul_step_carrier": "旧载体保留原有效果；新魂步需要靴子，潜魂穿隙需要护腿。",
   "message.enchantment_fusion.soul_crawl_not_ready": "先在灵魂沙土潜行积势，再朝向可进入的一格高通道。",
-  "skill.enchantment_fusion.soul_crawl": "潜魂穿隙"
+  "skill.enchantment_fusion.soul_crawl": "潜魂穿隙",
+  "message.enchantment_fusion.tidal_bite": "鱼已咬钩：可立即收线，或稍等以提高渔获机会。",
+  "message.enchantment_fusion.tidal_school_created": "鱼群在水面留下轨迹；跟近后向鱼群抛竿。",
+  "message.enchantment_fusion.tidal_school_followed": "跟上鱼群：这次等待缩短。",
+  "tooltip.enchantment_fusion.legacy_fishing_carrier": "旧载体保留原有效果；新版择波与跟群需要钓鱼竿。"
 }

@@ -227,10 +227,10 @@
   "signature.enchantment_fusion.abyssal_sight.desc": "While wearing a helmet or holding a pickaxe, axe, shovel or hoe underwater, press the fusion skill key (G by default, rebindable) to spend air for faster underwater mining. Keeps night vision and native Respiration; the old free Water Breathing bonus is replaced.",
   "signature.enchantment_fusion.ocean_breath_mine.title": "Mining Air Bubbles",
   "signature.enchantment_fusion.ocean_breath_mine.desc": "With a worn helmet or the mining tool, real underwater mining releases a temporary rising bubble; swim into it to regain air. Bubbles belong to the miner and are limited. Existing mining-speed bonuses and native Aqua Affinity remain.",
-  "signature.enchantment_fusion.tidal_double_catch.title": "Tidal Double Catch",
-  "signature.enchantment_fusion.tidal_double_catch.desc": "Blesses your catches and harvests with bonus sea luck and twin spoils.",
-  "signature.enchantment_fusion.raging_hook.title": "Raging Hook",
-  "signature.enchantment_fusion.raging_hook.desc": "Yanks targets violently off-balance toward you, leaving them dazed.",
+  "signature.enchantment_fusion.tidal_double_catch.title": "Choose the Wave",
+  "signature.enchantment_fusion.tidal_double_catch.desc": "With a fishing rod, ripples mark a bite. Reel immediately for the normal catch, or wait to improve that catch’s luck; the bite can still be missed. No extra loot is created.",
+  "signature.enchantment_fusion.raging_hook.title": "Follow the Shoal",
+  "signature.enchantment_fusion.raging_hook.desc": "A successful catch with this fishing rod leaves a moving virtual shoal. Follow it and cast nearby to shorten the next wait; it creates no extra catch.",
   "signature.enchantment_fusion.thunder_iaido.title": "Thunder Iaido",
   "signature.enchantment_fusion.thunder_iaido.desc": "A fully charged melee or projectile hit on an entity summons lightning under open sky, or deals magic damage and knockback under cover.",
   "signature.enchantment_fusion.phantom_triple_slash.title": "Phantom Triple Slash",
@@ -943,5 +943,9 @@
   "signature.enchantment_fusion.soul_crawl_slip.desc": "Wear leggings and sneak-move on Soul Speed blocks to ready a soul form. Face a one-block-high entrance and activate the skill to crawl faster without passing through blocks; activate again to stop.",
   "tooltip.enchantment_fusion.legacy_soul_step_carrier": "Legacy host keeps its old effect; Soulstep requires boots and Soul-Crawl requires leggings.",
   "message.enchantment_fusion.soul_crawl_not_ready": "First sneak on Soul Speed blocks, then face a passable one-block-high entrance.",
-  "skill.enchantment_fusion.soul_crawl": "Soul-Crawl Slip"
+  "skill.enchantment_fusion.soul_crawl": "Soul-Crawl Slip",
+  "message.enchantment_fusion.tidal_bite": "A bite! Reel now, or wait briefly for a luckier catch.",
+  "message.enchantment_fusion.tidal_school_created": "A shoal is moving nearby; follow it and cast toward it.",
+  "message.enchantment_fusion.tidal_school_followed": "Following the shoal shortened this wait.",
+  "tooltip.enchantment_fusion.legacy_fishing_carrier": "Legacy host keeps its old effect; these new fishing actions require a fishing rod."
 }

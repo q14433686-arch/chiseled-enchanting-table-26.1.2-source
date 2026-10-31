@@ -19,6 +19,7 @@ import enchantment_fusion.mechanics.signatures.DurabilityEconomy;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.SoulStepSkills;
+import enchantment_fusion.mechanics.signatures.FishingTideSkills;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -172,6 +173,8 @@ public final class FusionTooltipRenderer {
                 && !HeavyCrushSkill.applies(pair, stack, sigOpt.get().id());
             boolean legacySoulCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && SoulStepSkills.matches(pair, sigOpt.get().id()) && !SoulStepSkills.applies(pair, stack, sigOpt.get().id());
+            boolean legacyFishingCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && FishingTideSkills.matches(pair, sigOpt.get().id()) && !FishingTideSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ((GlazedStrikeEffect.isPair(pair) && GlazedStrikeEffect.SIGNATURE.equals(sigOpt.get().id())
                         && !GlazedStrikeEffect.applies(pair, stack, sigOpt.get().id()))
@@ -212,7 +215,7 @@ public final class FusionTooltipRenderer {
                 if (shift && !legacyUnderwaterCarrier && !legacyFrostFallCarrier && !legacyFrostWakeCarrier
                     && !legacyFrostFireCarrier && !legacyPhantomCarrier && !legacyPrecisionCarrier
                     && !legacyDurabilityCarrier && !legacyBlastCarrier && !legacyHeavyCarrier && !legacySoulCarrier
-                    && !legacyGlazeAmberCarrier) {
+                    && !legacyFishingCarrier && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -263,6 +266,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacySoulCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_soul_step_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyFishingCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_fishing_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyGlazeAmberCarrier) {

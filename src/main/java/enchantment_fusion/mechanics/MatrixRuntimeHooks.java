@@ -14,6 +14,7 @@ import enchantment_fusion.mechanics.signatures.PrecisionConstruction;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.SoulStepSkills;
+import enchantment_fusion.mechanics.signatures.FishingTideSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -74,6 +75,7 @@ public final class MatrixRuntimeHooks {
             AmberSealSkill.clear();
             HeavyCrushSkill.clear();
             SoulStepSkills.clear(server);
+            FishingTideSkills.clear();
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             AmberSealSkill.onEntityUnload(entity);
@@ -111,6 +113,7 @@ public final class MatrixRuntimeHooks {
             BlastDefenseSkills.onDisconnect(pid);
             HeavyCrushSkill.onDisconnect(handler.getPlayer());
             SoulStepSkills.onDisconnect(handler.getPlayer());
+            FishingTideSkills.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -301,6 +304,7 @@ public final class MatrixRuntimeHooks {
                 FrostFallSkills.onPlayerDisconnect(deadPlayer.getUUID());
                 BlastDefenseSkills.onDisconnect(deadPlayer.getUUID());
                 SoulStepSkills.onDisconnect(deadPlayer);
+                FishingTideSkills.onDisconnect(deadPlayer.getUUID());
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
@@ -324,6 +328,7 @@ public final class MatrixRuntimeHooks {
             FrostFallSkills.tickServer(server);
             BlastDefenseSkills.tickServer(server);
             HeavyCrushSkill.tickServer(server);
+            FishingTideSkills.tickServer(server);
             FlyingBladeManager.tickServer(server);
             ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);

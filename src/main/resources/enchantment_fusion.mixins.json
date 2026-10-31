@@ -22,6 +22,8 @@
     "EnchantmentHelperHeavyCrushMixin",
     "EntityAmberPersistenceMixin",
     "ExperienceOrbDurabilityMixin",
+    "FishingTideHookMixin",
+    "FishingTideRodMixin",
     "GrindstoneAberrationGuardMixin",
     "ItemEntityProtectionMixin",
     "ItemStackDurabilityFusionMixin",

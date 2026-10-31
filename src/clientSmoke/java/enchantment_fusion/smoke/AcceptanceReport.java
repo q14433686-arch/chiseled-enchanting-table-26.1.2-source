@@ -31,6 +31,8 @@ final class AcceptanceReport {
         plan("16-protection-blast", "Protection ▷ Blast Protection: explosion and ordinary damage fixture", "Not reached if setup fails.");
         plan("39.1-density-breach", "Density ▷ Breach: equal armor math, crater, arrow and direct rocket fixture", "Not reached if setup fails.");
         plan("39.1-breach-density", "Breach ▷ Density: equal armor math, crater, arrow and direct rocket fixture", "Not reached if setup fails.");
+        plan("39.4-luck-lure", "Luck of the Sea ▷ Lure: bite, simulated wait and native catch fixture", "Not reached if setup fails.");
+        plan("39.4-lure-luck", "Lure ▷ Luck of the Sea: native catch, virtual school and next cast fixture", "Not reached if setup fails.");
         plan("39.6-soul-swift", "Soul Speed ▷ Swift Sneak: simulated soul-step charge and movement vibrations", "Not reached if setup fails.");
         plan("39.6-swift-soul", "Swift Sneak ▷ Soul Speed: simulated soul form, legal crawl and wall collision", "Not reached if setup fails.");
         plan("09-efficiency-silk", "Efficiency ▷ Silk Touch: prepared server fixture", "Not reached if setup fails.");
@@ -48,6 +50,7 @@ final class AcceptanceReport {
         plan("05-runtime-compat", "05 real restart, unusual item formats, external mod cancellation and multiplayer synchronization", "Not covered by the prepared single-player server fixture.");
         plan("16-runtime-compat", "16 natural blast push, multiplayer PvP, totems and protection-mod compatibility", "Not covered by the prepared single-player server fixture.");
         plan("39.1-runtime-compat", "39.1 real draw/throw, client rocket sync, multiplayer PvP, totems and protection mods", "Not covered by the prepared fixture.");
+        plan("39.4-runtime-compat", "39.4 natural bite timing, loot distributions, multiplayer and fishing mods", "Not covered by the manually advanced fixture.");
         plan("39.6-runtime-compat", "39.6 real keyboard movement, client pose sync, sensors and multiplayer", "Not covered by the prepared server fixtures.");
         plan("09-input-config", "09 real client G/V input, configuration reload and multiplayer permissions", "Not covered by the prepared server fixture.");
         plan("11-shot-pvp", "11 real draw/reload, randomness, two-player PvP and natural save/unload", "Not covered by the prepared server fixture.");

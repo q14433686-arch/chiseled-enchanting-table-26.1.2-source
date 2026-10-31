@@ -227,10 +227,10 @@
   "signature.enchantment_fusion.abyssal_sight.desc": "While wearing a helmet or holding a pickaxe, axe, shovel or hoe underwater, press the fusion skill key (G by default, rebindable) to spend air for faster underwater mining. Keeps night vision and native Respiration; the old free Water Breathing bonus is replaced.",
   "signature.enchantment_fusion.ocean_breath_mine.title": "Mining Air Bubbles",
   "signature.enchantment_fusion.ocean_breath_mine.desc": "With a worn helmet or the mining tool, real underwater mining releases a temporary rising bubble; swim into it to regain air. Bubbles belong to the miner and are limited. Existing mining-speed bonuses and native Aqua Affinity remain.",
-  "signature.enchantment_fusion.tidal_double_catch.title": "雙鯉戲珠",
-  "signature.enchantment_fusion.tidal_double_catch.desc": "垂釣或採集時受海神眷顧，雙倍饋贈寶藏与經驗。",
-  "signature.enchantment_fusion.raging_hook.title": "怒海狂鉤",
-  "signature.enchantment_fusion.raging_hook.desc": "強力牽引扯動獵物失衡，使其短暫浮空眩暈。",
+  "signature.enchantment_fusion.tidal_double_catch.title": "擇波捕獲",
+  "signature.enchantment_fusion.tidal_double_catch.desc": "使用釣魚竿：咬鉤時顯示虛擬水紋。立即收線按原版結算；繼續等可提高這一次的漁獲幸運值，但錯過咬鉤仍會失敗，不複製漁獲。",
+  "signature.enchantment_fusion.raging_hook.title": "跟群打窩",
+  "signature.enchantment_fusion.raging_hook.desc": "使用釣魚竿成功釣獲後留下短暫移動的虛擬魚群；追到附近並將下一鉤拋向魚群，可縮短一次咬鉤等待，不生成額外漁獲。",
   "signature.enchantment_fusion.thunder_iaido.title": "雷鳴拔刀",
   "signature.enchantment_fusion.thunder_iaido.desc": "滿蓄近戰或投射物命中目標時，露天降下閃電；頭頂受遮擋時改為造成魔法傷害並擊退。",
   "signature.enchantment_fusion.phantom_triple_slash.title": "幻影三連斬",
@@ -943,5 +943,9 @@
   "signature.enchantment_fusion.soul_crawl_slip.desc": "穿戴護腿，在靈魂沙土潛行移動準備魂形；朝向一格高入口並使用主動技能，暫時快速爬行。碰撞仍生效，再次使用可結束。",
   "tooltip.enchantment_fusion.legacy_soul_step_carrier": "舊載體保留原有效果；新魂步需要靴子，潛魂穿隙需要護腿。",
   "message.enchantment_fusion.soul_crawl_not_ready": "先在靈魂沙土潛行積勢，再朝向可進入的一格高通道。",
-  "skill.enchantment_fusion.soul_crawl": "潛魂穿隙"
+  "skill.enchantment_fusion.soul_crawl": "潛魂穿隙",
+  "message.enchantment_fusion.tidal_bite": "魚已咬鉤：可立即收線，或稍等以提高漁獲機會。",
+  "message.enchantment_fusion.tidal_school_created": "魚群在水面留下軌跡；跟近後向魚群拋竿。",
+  "message.enchantment_fusion.tidal_school_followed": "跟上魚群：這次等待縮短。",
+  "tooltip.enchantment_fusion.legacy_fishing_carrier": "舊載體保留原有效果；新版擇波與跟群需要釣魚竿。"
 }
