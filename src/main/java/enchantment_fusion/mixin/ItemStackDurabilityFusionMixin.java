@@ -51,7 +51,7 @@ public abstract class ItemStackDurabilityFusionMixin {
             if (restored > 0 && applied && !stack.isEmpty()) {
                 CompendiumDiscoveryTracker.recordDiscovery(player, pair.primaryId(), pair.secondaryId());
             }
-            if (crossing && applied) DurabilityEconomy.convertArmorWear(player, stack, pair, maximum);
+            if (crossing && applied) DurabilityEconomy.convertEquipmentWear(player, stack, pair, maximum);
         } finally {
             DurabilityEconomy.exit();
         }

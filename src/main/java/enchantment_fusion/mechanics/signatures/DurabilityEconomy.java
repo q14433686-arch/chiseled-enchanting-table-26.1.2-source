@@ -33,8 +33,6 @@ public final class DurabilityEconomy {
     public static final String UNBREAKING = "minecraft:unbreaking";
     private static final EquipmentSlot[] EQUIPPED = {EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
         EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
-    private static final EquipmentSlot[] ARMOR = {EquipmentSlot.HEAD, EquipmentSlot.CHEST,
-        EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final ThreadLocal<Boolean> ACTIVE = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     private DurabilityEconomy() {}
@@ -152,9 +150,9 @@ public final class DurabilityEconomy {
 
     /**
      * Called only after a real threshold-crossing wear operation. First verify and apportion the
-     * complete cost; insufficient armor causes no equipment mutation and no XP generation.
+     * complete cost; insufficient other held or worn equipment causes no mutation or XP.
      */
-    public static void convertArmorWear(ServerPlayer player, ItemStack source, FusedPair pair, int sourceMaximum) {
+    public static void convertEquipmentWear(ServerPlayer player, ItemStack source, FusedPair pair, int sourceMaximum) {
         if (!player.isAlive() || sourceMaximum <= 0 || !isRescue(pair)) return;
         int xp = DurabilityEconomyMath.conversionXp(sourceMaximum,
             FusionConfigStore.signatureInt(RESCUE, "conversion_xp_cap", 64, 1, 256));
@@ -162,12 +160,12 @@ public final class DurabilityEconomy {
         List<Wear> pieces = new ArrayList<>();
         Set<ItemStack> seen = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
         seen.add(source);
-        for (EquipmentSlot slot : ARMOR) {
-            ItemStack armor = player.getItemBySlot(slot);
-            if (!supportsCarrier(armor) || !seen.add(armor)) continue;
-            int max = armor.getMaxDamage(), before = armor.getDamageValue();
+        for (EquipmentSlot slot : EQUIPPED) {
+            ItemStack equipment = player.getItemBySlot(slot);
+            if (!supportsCarrier(equipment) || !seen.add(equipment)) continue;
+            int max = equipment.getMaxDamage(), before = equipment.getDamageValue();
             int safe = Math.max(0, max - before - 1); // never break another equipped item
-            if (safe > 0) pieces.add(new Wear(armor, before, max, safe));
+            if (safe > 0) pieces.add(new Wear(equipment, before, max, safe));
         }
         int[] caps = pieces.stream().mapToInt(Wear::capacity).toArray();
         int[] debits = DurabilityEconomyMath.splitWear(cost, caps);

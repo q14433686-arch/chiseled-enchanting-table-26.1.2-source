@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
 import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
 import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
+import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import enchantment_fusion.model.TriggerType;
 import java.util.EnumSet;
 import java.util.Set;
@@ -123,6 +124,7 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
             }
         }
         if (weapon != null && !weapon.isEmpty()) {
+            HeavyCrushProjectiles.markLaunch(self, weapon);
             CrossDomainTransmutations.onProjectileLaunched(
                 serverLevel, self, shooter, weapon, x, y, z, velocity, inaccuracy
             );

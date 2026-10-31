@@ -138,6 +138,24 @@ final class DurabilityEconomyProbe {
                 "A real 1% crossing must pay 4 armor durability per generated XP");
             for (ExperienceOrb orb : generated) orb.discard();
 
+            // A held offhand item is also equipment; it must work even without worn armor.
+            for (EquipmentSlot slot : ARMOR) player.setItemSlot(slot, ItemStack.EMPTY);
+            ItemStack shield = new ItemStack(Items.SHIELD);
+            ItemStack handFunded = fused(level, new ItemStack(Items.IRON_PICKAXE), RESCUE);
+            handFunded.setDamageValue(handFunded.getMaxDamage() - 3);
+            player.setItemSlot(EquipmentSlot.OFFHAND, shield);
+            player.setItemSlot(EquipmentSlot.MAINHAND, handFunded);
+            damageUntilChanged(player, handFunded);
+            generated = level.getEntitiesOfClass(ExperienceOrb.class, area, orb -> !existing.contains(orb.getUUID()));
+            require(shield.getDamageValue() == 8 && generated.size() == 1 && generated.getFirst().getValue() == 2,
+                "The other hand must safely fund the same conversion without worn armor");
+            for (ExperienceOrb orb : generated) orb.discard();
+            player.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+            player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
+            player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.IRON_CHESTPLATE));
+            player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.IRON_LEGGINGS));
+            player.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.IRON_BOOTS));
+
             // Four almost-broken pieces have only four safe points, below the cost of eight.
             ItemStack insufficient = fused(level, new ItemStack(Items.IRON_PICKAXE), RESCUE);
             insufficient.setDamageValue(insufficient.getMaxDamage() - 3);

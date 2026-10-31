@@ -2,6 +2,7 @@ package enchantment_fusion.mixin;
 
 import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.SignaturePairs;
+import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
@@ -94,7 +95,7 @@ public abstract class PlayerMiningFusionMixin {
     private void ef$adjustAttackStrengthDelay(CallbackInfoReturnable<Float> cir) {
         Player self = (Player) (Object) this;
         float base = cir.getReturnValueF();
-        float adjusted = CrossDomainTransmutations.modifyAttackDelay(self, base);
+        float adjusted = HeavyCrushSkill.attackDelay(self, CrossDomainTransmutations.modifyAttackDelay(self, base));
         if (Math.abs(adjusted - base) > 0.001F) {
             cir.setReturnValue(Math.max(1.0F, adjusted));
         }

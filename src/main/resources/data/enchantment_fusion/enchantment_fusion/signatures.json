@@ -210,6 +210,15 @@
     "armor_shatter": {
       "primary": "minecraft:density",
       "secondary": "minecraft:breach",
+      "domain": "spear_trident_mace",
+      "crater_min_damage": 6,
+      "crater_min_impact": 5,
+      "crater_radius": 1,
+      "crater_depth": 2
+    },
+    "armor_pressure": {
+      "primary": "minecraft:breach",
+      "secondary": "minecraft:density",
       "domain": "spear_trident_mace"
     },
     "ground_gust": {

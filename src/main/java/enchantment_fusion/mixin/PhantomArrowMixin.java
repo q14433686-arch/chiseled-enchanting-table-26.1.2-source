@@ -3,6 +3,7 @@ package enchantment_fusion.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
+import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -39,11 +40,13 @@ public abstract class PhantomArrowMixin {
                                             EntityHitResult hit) {
         AbstractArrow arrow = (AbstractArrow) (Object) this;
         boolean reserved = arrow.level() instanceof ServerLevel && PhantomVolley.reserveImpact(arrow);
+        HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginProjectile(arrow, target, source);
         boolean succeeded = false;
         try {
             succeeded = original.call(target, source, amount);
             return succeeded;
         } finally {
+            HeavyCrushSkill.endHit(heavyHit, succeeded);
             if (reserved) PhantomVolley.finishImpact(arrow, target, hit.getLocation(), succeeded);
         }
     }

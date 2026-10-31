@@ -295,6 +295,10 @@ public final class FusionConfigStore {
                 || key.equals("counter_damage_tenths") || key.equals("counter_damage_cap"))) { min = 1; max = 1_000; }
             else if (file.equals("signatures") && key.equals("counter_radius_cap")) { min = 1; max = 128; }
             else if (file.equals("signatures") && key.equals("counter_target_cap")) { min = 1; max = 1_024; }
+            else if (file.equals("signatures") && key.equals("crater_min_damage")) { min = 1; max = 1_000; }
+            else if (file.equals("signatures") && key.equals("crater_min_impact")) { min = 1; max = 100; }
+            else if (file.equals("signatures") && key.equals("crater_radius")) { min = 0; max = 2; }
+            else if (file.equals("signatures") && key.equals("crater_depth")) { min = 1; max = 3; }
             else if (key.equals("melee_min_charge")) { min = 0.05; max = 1; }
             else if (key.equals("melee_full_charge")) { min = 0.10; max = 1; }
             else if (key.startsWith("stabilizer_reduction_")) { min = 0.01; max = 1; }

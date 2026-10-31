@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
+import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -19,9 +20,11 @@ public abstract class PlayerAmberAttackMixin {
     private void ef$glazeSwing(Entity target, Operation<Void> original) {
         Player player = (Player) (Object) this;
         GlazedStrikeEffect.Swing swing = GlazedStrikeEffect.beginSwing(player, target);
+        HeavyCrushSkill.Swing heavySwing = HeavyCrushSkill.beginSwing(player, target);
         try {
             original.call(target);
         } finally {
+            HeavyCrushSkill.endSwing(heavySwing);
             GlazedStrikeEffect.endSwing(swing);
         }
     }
@@ -32,11 +35,13 @@ public abstract class PlayerAmberAttackMixin {
         Player player = (Player) (Object) this;
         GlazedStrikeEffect.prepareSwing(player, target);
         AmberSealSkill.AttackFrame frame = AmberSealSkill.beginAttack(player, player.getWeaponItem(), target, source);
+        HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginMelee(player, player.getWeaponItem(), target, source, false);
         boolean succeeded = false;
         try {
             succeeded = original.call(target, source, damage);
             return succeeded;
         } finally {
+            HeavyCrushSkill.endHit(heavyHit, succeeded);
             AmberSealSkill.endAttack(frame, succeeded);
         }
     }
@@ -49,11 +54,13 @@ public abstract class PlayerAmberAttackMixin {
         Player player = (Player) (Object) this;
         GlazedStrikeEffect.prepareStab(player, slot, target);
         AmberSealSkill.AttackFrame frame = AmberSealSkill.beginAttack(player, player.getItemBySlot(slot), target, source);
+        HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginMelee(player, player.getItemBySlot(slot), target, source, true);
         boolean succeeded = false;
         try {
             succeeded = original.call(target, source, damage);
             return succeeded;
         } finally {
+            HeavyCrushSkill.endHit(heavyHit, succeeded);
             AmberSealSkill.endAttack(frame, succeeded);
         }
     }

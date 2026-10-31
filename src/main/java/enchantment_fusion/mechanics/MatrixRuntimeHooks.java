@@ -12,6 +12,7 @@ import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.mechanics.signatures.PrecisionConstruction;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
+import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -70,8 +71,12 @@ public final class MatrixRuntimeHooks {
             ProjectilePathTracker.flushAll();
             UnderwaterMiningSkills.clear(server);
             AmberSealSkill.clear();
+            HeavyCrushSkill.clear();
         });
-        ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> AmberSealSkill.onEntityUnload(entity));
+        ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
+            AmberSealSkill.onEntityUnload(entity);
+            HeavyCrushSkill.onUnload(entity);
+        });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             MatrixEffectExecutor.clearCooldowns();
@@ -86,6 +91,7 @@ public final class MatrixRuntimeHooks {
             FrostFallSkills.clear();
             PrecisionConstruction.clear();
             BlastDefenseSkills.clear();
+            HeavyCrushSkill.clear();
             FusionMatrixRegistry.setClientSnapshot(null);
         });
 
@@ -101,6 +107,7 @@ public final class MatrixRuntimeHooks {
             UnderwaterMiningSkills.onPlayerDisconnect(handler.getPlayer());
             PrecisionConstruction.onDisconnect(pid);
             BlastDefenseSkills.onDisconnect(pid);
+            HeavyCrushSkill.onDisconnect(handler.getPlayer());
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -312,6 +319,7 @@ public final class MatrixRuntimeHooks {
             UnderwaterMiningSkills.tickServer(server);
             FrostFallSkills.tickServer(server);
             BlastDefenseSkills.tickServer(server);
+            HeavyCrushSkill.tickServer(server);
             FlyingBladeManager.tickServer(server);
             ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);
@@ -331,6 +339,7 @@ public final class MatrixRuntimeHooks {
                     }
                 }
                 if (normalized) player.getInventory().setChanged();
+                HeavyCrushSkill.tickPlayer(player);
                 SignaturePairs.tickServerPlayer(serverLevel, player);
                 CrossDomainTransmutations.tickServerPlayer(serverLevel, player);
 
