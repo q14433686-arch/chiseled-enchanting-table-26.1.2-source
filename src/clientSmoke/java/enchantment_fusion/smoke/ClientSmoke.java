@@ -252,6 +252,47 @@ public final class ClientSmoke implements ClientModInitializer {
             require(level.getBlockState(first.below()).is(Blocks.WATER), "Wake must preserve water sources");
             double height = level.getBlockState(first).getCollisionShape(level, first).max(net.minecraft.core.Direction.Axis.Y);
             require(Math.abs(height - 0.125) < 1e-6, "Ice path collision must match the two-pixel model");
+
+            // The dive is only allowed to remove our thin path, never the water under it or
+            // vanilla ice. These assertions are prepared for the eventual in-game run.
+            sp.teleportTo(first.getX() + 0.5, first.getY() + 0.125, first.getZ() + 0.5);
+            require(enchantment_fusion.mechanics.TemporaryFrostEffects.removeDivePath(level, sp),
+                "Dive must find the thin path in the player's feet cell");
+            require(level.getBlockState(first).isAir() && level.getBlockState(first.below()).is(Blocks.WATER),
+                "Dive must remove only the thin path, leaving the original water");
+            set.accept(first, FusionBlocks.TEMPORARY_FROST_PATH.defaultBlockState());
+            sp.teleportTo(first.getX() + 0.5, first.getY() + 1.0, first.getZ() + 0.5);
+            require(enchantment_fusion.mechanics.TemporaryFrostEffects.removeDivePath(level, sp),
+                "Dive must also find a thin path directly below the player");
+            require(level.getBlockState(first).isAir() && level.getBlockState(first.below()).is(Blocks.WATER),
+                "Dive below the feet must leave the original water intact");
+
+            BlockPos protectedCell = tablePos.above(20).east(4);
+            set.accept(protectedCell.above(), Blocks.AIR.defaultBlockState());
+            set.accept(protectedCell.below(), Blocks.AIR.defaultBlockState());
+            sp.teleportTo(protectedCell.getX() + 0.5, protectedCell.getY() + 0.125, protectedCell.getZ() + 0.5);
+            for (BlockState original : List.of(Blocks.ICE.defaultBlockState(), Blocks.PACKED_ICE.defaultBlockState(),
+                Blocks.BLUE_ICE.defaultBlockState(), Blocks.FROSTED_ICE.defaultBlockState(),
+                Blocks.WATER.defaultBlockState(), FusionBlocks.TEMPORARY_FROST.defaultBlockState())) {
+                set.accept(protectedCell, original);
+                require(!enchantment_fusion.mechanics.TemporaryFrostEffects.removeDivePath(level, sp),
+                    "Dive must not remove vanilla ice, water, or full-sized temporary frost");
+                require(level.getBlockState(protectedCell).equals(original),
+                    "Dive must not change any non-path block");
+            }
+            set.accept(protectedCell, FusionBlocks.TEMPORARY_FROST_PATH.defaultBlockState());
+            boolean couldBuild = sp.getAbilities().mayBuild;
+            try {
+                sp.getAbilities().mayBuild = false;
+                require(!enchantment_fusion.mechanics.TemporaryFrostEffects.removeDivePath(level, sp),
+                    "Dive must respect a player without build permission");
+                require(level.getBlockState(protectedCell).is(FusionBlocks.TEMPORARY_FROST_PATH),
+                    "A permission-denied dive must not change the path");
+            } finally {
+                sp.getAbilities().mayBuild = couldBuild;
+            }
+            sp.teleportTo(feet.getX() + 0.5, feet.getY(), feet.getZ() + 0.5);
+            set.accept(first, FusionBlocks.TEMPORARY_FROST_PATH.defaultBlockState());
             var walker = new net.minecraft.world.entity.monster.zombie.Zombie(level);
             walker.setPos(first.getX() + 0.5, first.getY() + 0.5, first.getZ() + 0.5);
             level.addFreshEntity(walker); spawned.add(walker);
@@ -1107,6 +1148,7 @@ public final class ClientSmoke implements ClientModInitializer {
                         exerciseRiskFormatting();
                         exerciseLiveConfig(sp);
                         exerciseFrostAndSneakSmelt(sp);
+                        GlazedStrikeProbe.exercise(sp);
                         exerciseExtraMining(sp);
                         exerciseLifelineAnchors(sp);
                         exerciseLoyaltyRiptide(sp);

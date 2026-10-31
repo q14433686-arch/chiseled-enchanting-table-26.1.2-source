@@ -424,11 +424,8 @@ public final class ArmorCurseSignatures {
                     }
                 }
                 case "tide_breaker_dive" -> {
-                    if (player.isShiftKeyDown() && player.mayBuild()) {
-                        BlockPos below = player.blockPosition().below();
-                        if (level.getBlockState(below).is(BlockTags.ICE)) {
-                            level.setBlockAndUpdate(below, Blocks.WATER.defaultBlockState());
-                        }
+                    if (player.isShiftKeyDown()) {
+                        TemporaryFrostEffects.removeDivePath(level, player);
                     }
                     if (player.isInWater() && player.isShiftKeyDown()) {
                         Vec3 dive = player.getLookAngle().normalize().scale(0.28D);

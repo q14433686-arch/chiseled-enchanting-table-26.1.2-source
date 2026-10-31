@@ -5,6 +5,7 @@ import enchantment_fusion.data.FusionMatrixRegistry.EconomyConfig;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.mechanics.signatures.MirageSnapbackSkill;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
+import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
@@ -70,6 +71,7 @@ public final class MatrixRuntimeHooks {
             PEAK_FALL_DISTANCE.clear();
             ACTIVE_RIPTIDE_SPINS.clear();
             MirageSnapbackSkill.clearRuntimeState();
+            GlazedStrikeEffect.clear();
             FusionMatrixRegistry.setClientSnapshot(null);
         });
 
@@ -79,6 +81,7 @@ public final class MatrixRuntimeHooks {
             PEAK_FALL_DISTANCE.remove(pid);
             ACTIVE_RIPTIDE_SPINS.remove(pid);
             MirageSnapbackSkill.onPlayerDisconnect(pid);
+            GlazedStrikeEffect.onPlayerDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -217,8 +220,10 @@ public final class MatrixRuntimeHooks {
             if (!blocked && damageTaken > 0.0F && entity.level() instanceof ServerLevel level
                 && source.getEntity() instanceof ServerPlayer attacker && source.getDirectEntity() == attacker
                 && !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
-                && !MatrixEffectExecutor.isExecuting() && !Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get())) {
+                && !MatrixEffectExecutor.isExecuting() && !GlazedStrikeEffect.isApplyingBonus()
+                && !Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get())) {
                 FlameKineticEffects.confirm(level, attacker, entity);
+                GlazedStrikeEffect.confirm(level, attacker, entity);
             }
             if (Boolean.TRUE.equals(IN_AFTER_DAMAGE.get())) {
                 return;
@@ -261,6 +266,7 @@ public final class MatrixRuntimeHooks {
         // Movement / Landing + 3D Flying Blades + Trajectory Path Cache
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             FlameKineticEffects.tickServer(server);
+            GlazedStrikeEffect.tickServer(server);
             FlyingBladeManager.tickServer(server);
             ProjectilePathTracker.tickServer(server);
             SignaturePairs.tickWorldDots(server);

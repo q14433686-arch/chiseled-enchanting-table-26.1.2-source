@@ -4,6 +4,7 @@ import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
 import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
+import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
@@ -64,6 +65,7 @@ public final class MatrixEffectExecutor {
     public static void clearCooldowns() {
         COOLDOWNS.clear();
         SignaturePairs.clearRuntimeState();
+        GlazedStrikeEffect.clear();
     }
 
     public static void onPlayerDisconnect(UUID playerId) {
@@ -244,6 +246,15 @@ public final class MatrixEffectExecutor {
             }
 
             Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
+            if (sigOpt.isPresent() && GlazedStrikeEffect.applies(pair, hostStack, sigOpt.get().id())) {
+                // Only the actual weapon used for the attack may prime this redesigned skill;
+                // an unrelated held/worn copy must not trigger it from a different host.
+                if (allowHostUniversalFallback && matchedTrigger == TriggerType.ON_MELEE_STRIKE
+                    && fullChargeMelee && chargeScale >= snapshot.economy().meleeFullCharge() && targetEntity != null) {
+                    GlazedStrikeEffect.prepare(level, player, hostStack, pair, sigOpt.get().id(), targetEntity);
+                }
+                continue;
+            }
             boolean redesignedMelee = sigOpt.isPresent() && FlameKineticEffects.matches(pair, sigOpt.get().id());
             // This confirmed design requires an actual full-charge melee hit, including
             // on aberrant pairs. Other triggers must not silently spend its cooldown.

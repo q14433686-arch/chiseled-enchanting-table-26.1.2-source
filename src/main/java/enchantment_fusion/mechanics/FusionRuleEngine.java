@@ -26,7 +26,8 @@ public final class FusionRuleEngine {
         NEED_PURIFY_STABILIZERS("gui.enchantment_fusion.reject.need_purify_stabilizers"),
         INSUFFICIENT_XP("gui.enchantment_fusion.reject.insufficient_xp"),
         INSUFFICIENT_REAGENTS("gui.enchantment_fusion.reject.insufficient_reagents"),
-        TRANSMUTE_CAP_FULL("gui.enchantment_fusion.reject.transmute_cap_full");
+        TRANSMUTE_CAP_FULL("gui.enchantment_fusion.reject.transmute_cap_full"),
+        UNSUPPORTED_DIRECTION_HOST("gui.enchantment_fusion.reject.unsupported_direction_host");
 
         private final String langKey;
 

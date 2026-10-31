@@ -237,7 +237,13 @@ def verify_baseline(ref: str, now: dict) -> None:
             check((old_state, old_scope) == (state, scope), f"baseline previously selected/design scope changed {key}")
     old_redesign = subprocess.check_output(["git", "show", f"{ref}:docs/{REDESIGN}"], cwd=ROOT, text=True)
     new_redesign = read_doc(REDESIGN)
-    check(old_redesign.split("## 助手代设计 47：", 1)[0] == new_redesign.split("## 助手代设计 47：", 1)[0],
+    # The historical decision text stays byte-for-byte protected. Allow only this
+    # exact implementation-status banner, which does not change any decision.
+    status_banner = ("> 本页保留各组讨论时的状态；开始编码后的实际进度和验证范围以 "
+        "[实现状态](FUSION_IMPLEMENTATION_STATUS.md) 为准。设计、代码编译和游戏实测是三个不同阶段。\n\n")
+    check(new_redesign.count(status_banner) <= 1, "duplicate implementation-status banner")
+    new_selected = new_redesign.replace(status_banner, "", 1).split("## 助手代设计 47：", 1)[0]
+    check(old_redesign.split("## 助手代设计 47：", 1)[0] == new_selected,
           "baseline: user-selected sections 01–46 or their numeric/safety constraints changed")
     marker, end = "## 用户本轮集中决定", "## 助手总设计与跨界草案"
     check(old_redesign.split(marker, 1)[1].split(end, 1)[0] == new_redesign.split(marker, 1)[1].split(end, 1)[0],

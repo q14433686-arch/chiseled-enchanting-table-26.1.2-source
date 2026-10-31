@@ -255,6 +255,9 @@ public final class MiningFishingSignatures {
             Optional<SignatureEntry> sigOpt = SignatureCatalog.resolve(pair);
             if (sigOpt.isEmpty()) continue;
             String sigId = sigOpt.get().id();
+            // On the newly selected weapon carriers the kiln effect is replaced by
+            // Burning Glaze Shatter. Old non-weapon carriers retain their legacy behavior.
+            if (GlazedStrikeEffect.applies(pair, tool, sigId)) continue;
 
             switch (sigId) {
                 case "raw_ore_geode" -> {

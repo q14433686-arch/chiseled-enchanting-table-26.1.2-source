@@ -376,6 +376,43 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void burningGlazeIsDirectionalAndWeaponOnly() {
+        var fireSilk = FusedPair.clean("minecraft:fire_aspect", 2, "minecraft:silk_touch", 1);
+        assertTrue(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.isPair(fireSilk));
+        assertFalse(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.isPair(fireSilk.flipped()));
+        for (TargetRole role : List.of(TargetRole.SWORD, TargetRole.AXE, TargetRole.SPEAR, TargetRole.MACE)) {
+            assertTrue(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.isEligibleRole(role), role.name());
+        }
+        for (TargetRole role : List.of(TargetRole.DIG_TOOL, TargetRole.BOW, TargetRole.CROSSBOW, TargetRole.TRIDENT,
+            TargetRole.HEAD_ARMOR, TargetRole.FOOT_ARMOR, TargetRole.SHIELD, TargetRole.CONSUMABLE)) {
+            assertFalse(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.isEligibleRole(role), role.name());
+        }
+        assertEquals("glazed_kiln_edge", SignaturePairs.resolve(fireSilk).orElseThrow().id());
+    }
+
+    @Test
+    void diveOnlyTargetsOurThinPathAndNeverReplacesIceWithWater() throws Exception {
+        String frost = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/TemporaryFrostEffects.java"));
+        String armor = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/signatures/ArmorCurseSignatures.java"));
+        int start = frost.indexOf("private static boolean removeDivePathAt(");
+        int end = frost.indexOf("/** Small CRYO matrix patch", start);
+        assertTrue(start >= 0 && end > start, "Dive helper must remain identifiable");
+        String helper = frost.substring(start, end);
+        assertTrue(helper.contains("mayModify(level, player, pos)"));
+        assertTrue(helper.contains("is(FusionBlocks.TEMPORARY_FROST_PATH)"));
+        assertTrue(helper.contains("Blocks.AIR.defaultBlockState()"));
+        assertFalse(helper.contains("BlockTags.ICE"));
+        assertFalse(helper.contains("Blocks.WATER"));
+        int caseStart = armor.indexOf("case \"tide_breaker_dive\"");
+        int caseEnd = armor.indexOf("case \"permafrost_wake\"", caseStart);
+        assertTrue(caseStart >= 0 && caseEnd > caseStart);
+        String diveCase = armor.substring(caseStart, caseEnd);
+        assertTrue(diveCase.contains("TemporaryFrostEffects.removeDivePath(level, player)"));
+        assertFalse(diveCase.contains("Blocks.WATER"));
+        assertFalse(diveCase.contains("BlockTags.ICE"));
+    }
+
+    @Test
     void trajectoryPathTrackerSegmentGeometryIsExact() {
         net.minecraft.world.phys.Vec3 a = new net.minecraft.world.phys.Vec3(0.0D, 1.0D, 0.0D);
         net.minecraft.world.phys.Vec3 b = new net.minecraft.world.phys.Vec3(10.0D, 1.0D, 0.0D);

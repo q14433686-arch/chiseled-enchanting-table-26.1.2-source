@@ -66,6 +66,27 @@ public final class TemporaryFrostEffects {
         }
     }
 
+    /**
+     * Make room for the depth-strider dive without treating vanilla or datapack ice tags as ours.
+     * Thin paths occupy the player's feet cell (their collision shape is only 2/16 high), while
+     * a player standing slightly higher may have one immediately below their feet. Do not turn
+     * either cell into water, and do not remove full-sized temporary frost cages or seals.
+     *
+     * This is a temporary-block removal rather than an extra harvest: it consumes no tool or
+     * drops. Vanilla world/permission checks are applied; modded protection integrations still
+     * need their own in-game compatibility verification.
+     */
+    public static boolean removeDivePath(ServerLevel level, ServerPlayer player) {
+        BlockPos feet = player.blockPosition();
+        return removeDivePathAt(level, player, feet) || removeDivePathAt(level, player, feet.below());
+    }
+
+    private static boolean removeDivePathAt(ServerLevel level, ServerPlayer player, BlockPos pos) {
+        if (!mayModify(level, player, pos)) return false;
+        if (!level.getBlockState(pos).is(FusionBlocks.TEMPORARY_FROST_PATH)) return false;
+        return level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+    }
+
     /** Small CRYO matrix patch around the event, without replacing water or trapping swimmers. */
     public static void placeSurfacePatch(ServerLevel level, ServerPlayer player, BlockPos center) {
         if (!player.mayBuild() || player.isShiftKeyDown()) return;
