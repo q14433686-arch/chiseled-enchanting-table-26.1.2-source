@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
+import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -278,6 +279,7 @@ public final class MatrixEffectExecutor {
             if (sigOpt.isPresent() && UnderwaterMiningSkills.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && FrostFallSkills.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && AmberSealSkill.applies(pair, hostStack, sigOpt.get().id())) continue;
+            if (sigOpt.isPresent() && PhantomVolley.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && GlazedStrikeEffect.applies(pair, hostStack, sigOpt.get().id())) {
                 // The real Player.attack / spear-stab damage calls prepare and confirm this skill.
                 // Pre-attack dispatch must not charge a cooldown or also execute the legacy path.

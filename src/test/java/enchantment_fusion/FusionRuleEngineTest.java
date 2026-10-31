@@ -158,6 +158,23 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void phantomVolleyIsDirectionalAndOnlyForBowOrCrossbow() {
+        var volley = FusedPair.clean("minecraft:multishot", 1, "minecraft:piercing", 4);
+        var cluster = volley.flipped();
+        assertTrue(enchantment_fusion.mechanics.signatures.PhantomVolley.isVolley(volley));
+        assertFalse(enchantment_fusion.mechanics.signatures.PhantomVolley.isVolley(cluster));
+        assertTrue(enchantment_fusion.mechanics.signatures.PhantomVolley.isCluster(cluster));
+        assertEquals("converging_volley", SignaturePairs.resolve(volley).orElseThrow().id());
+        assertEquals("fission_warhead", SignaturePairs.resolve(cluster).orElseThrow().id());
+        assertTrue(enchantment_fusion.mechanics.signatures.PhantomVolley.supportsCarrier(Set.of(enchantment_fusion.model.FusionCarrier.BOW)));
+        assertTrue(enchantment_fusion.mechanics.signatures.PhantomVolley.supportsCarrier(Set.of(enchantment_fusion.model.FusionCarrier.CROSSBOW)));
+        assertFalse(enchantment_fusion.mechanics.signatures.PhantomVolley.supportsCarrier(Set.of(enchantment_fusion.model.FusionCarrier.TRIDENT)));
+        assertFalse(enchantment_fusion.mechanics.signatures.PhantomVolley.supportsCarrier(Set.of(enchantment_fusion.model.FusionCarrier.SHIELD)));
+        assertEquals(0.35F, enchantment_fusion.mechanics.signatures.PhantomVolley.clusterChance(1), 1.0e-6F);
+        assertEquals(0.75F, enchantment_fusion.mechanics.signatures.PhantomVolley.clusterChance(255), 1.0e-6F);
+    }
+
+    @Test
     void frostAttributionUsesOnlyTheActualMarginalProtectionAfterVanillasCap() {
         assertEquals(4.8F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 5.2F, 12, 12), 0.0001F);
         assertEquals(2.0F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 2, 25, 10), 0.0001F,

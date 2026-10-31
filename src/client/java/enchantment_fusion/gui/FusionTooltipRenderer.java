@@ -13,6 +13,7 @@ import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.FrostWakeDiveSkills;
 import enchantment_fusion.mechanics.signatures.FrostFireSkills;
+import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -149,6 +150,9 @@ public final class FusionTooltipRenderer {
             boolean legacyFrostFireCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && FrostFireSkills.matches(pair, sigOpt.get().id())
                 && !FrostFireSkills.applies(pair, stack, sigOpt.get().id());
+            boolean legacyPhantomCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && PhantomVolley.matches(pair, sigOpt.get().id())
+                && !PhantomVolley.applies(pair, stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ((GlazedStrikeEffect.isPair(pair) && GlazedStrikeEffect.SIGNATURE.equals(sigOpt.get().id())
                         && !GlazedStrikeEffect.applies(pair, stack, sigOpt.get().id()))
@@ -187,7 +191,7 @@ public final class FusionTooltipRenderer {
                     secondaryLabel
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
                 if (shift && !legacyUnderwaterCarrier && !legacyFrostFallCarrier && !legacyFrostWakeCarrier
-                    && !legacyFrostFireCarrier && !legacyGlazeAmberCarrier) {
+                    && !legacyFrostFireCarrier && !legacyPhantomCarrier && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -214,6 +218,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacyFrostFireCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_frost_fire_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyPhantomCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_phantom_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyGlazeAmberCarrier) {

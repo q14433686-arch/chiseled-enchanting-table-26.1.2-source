@@ -167,10 +167,10 @@
   "signature.enchantment_fusion.starlight_quiver.desc": "双态星辉共鸣：器物完好时箭矢附带星芒穿透追伤；受损时每次命中自动引星辉修补耐久！",
   "signature.enchantment_fusion.spectral_condense.title": "灵矢凝华",
   "signature.enchantment_fusion.spectral_condense.desc": "吸收经验时有概率在背包中自动凝练光灵箭。",
-  "signature.enchantment_fusion.converging_volley.title": "万流归宗",
-  "signature.enchantment_fusion.converging_volley.desc": "射出的两侧副箭在飞行5刻后向准星射线内弧收束夹击，并牵引周围敌怪。",
-  "signature.enchantment_fusion.fission_warhead.title": "一叶分影",
-  "signature.enchantment_fusion.fission_warhead.desc": "箭矢穿透目标后在其背后裂解迸射出两支±14°实体子箭。",
+  "signature.enchantment_fusion.converging_volley.title": "贯矢齐发",
+  "signature.enchantment_fusion.converging_volley.desc": "弓或弩射箭时保留正常主箭和两支侧影；主箭与侧影均按穿透副位穿过实体。侧影不可拾取，遇玩家、盟友、驯服生物或村民无伤消失，碰实心方块停止。弩须重新装箭。",
+  "signature.enchantment_fusion.fission_warhead.title": "分影集束",
+  "signature.enchantment_fusion.fission_warhead.desc": "弓或弩每次发射有35%—75%概率蓄成集束箭；首次有效命中后分出两支不可拾取幻影，追踪12格内最近敌对生物或正在攻击你的中立生物，无目标则直飞。幻影遇玩家、盟友、驯服生物或村民无伤消失，不穿实心方块；主箭正常。",
   "signature.enchantment_fusion.explosive_flare_arrow.title": "爆裂火矢",
   "signature.enchantment_fusion.explosive_flare_arrow.desc": "命中时点燃并震退附近非友方生物。",
   "signature.enchantment_fusion.meteor_streak.title": "流星火痕",
@@ -898,5 +898,6 @@
   "message.enchantment_fusion.amber_sealed": "余火已封存：命中目标可碎封，再用技能可撤销。",
   "message.enchantment_fusion.amber_cancelled": "琥珀焰封已撤销；在安全条件下恢复自然剩余的燃烧时间。",
   "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "旧版载体：保留原有效果；新版碎釉与琥珀技能需要剑、斧、长矛或重锤。",
-  "tooltip.enchantment_fusion.legacy_frost_fire_carrier": "旧载体保留原有发动方式；玄武岩转换现逐格检查原版权限。"
+  "tooltip.enchantment_fusion.legacy_frost_fire_carrier": "旧载体保留原有发动方式；玄武岩转换现逐格检查原版权限。",
+  "tooltip.enchantment_fusion.legacy_phantom_carrier": "旧载体仍使用旧版散射效果，不使用新版幻影箭规则。"
 }

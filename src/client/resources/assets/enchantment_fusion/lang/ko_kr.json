@@ -167,10 +167,10 @@
   "signature.enchantment_fusion.starlight_quiver.desc": "Dual-state resonance: empowers shots with starlight pierce at high integrity, and repairs durability on hit when worn!",
   "signature.enchantment_fusion.spectral_condense.title": "Spectral Condense",
   "signature.enchantment_fusion.spectral_condense.desc": "Absorbing XP periodically condenses luminous Spectral Arrows into your quiver.",
-  "signature.enchantment_fusion.converging_volley.title": "Ten-Thousand Streams Converge",
-  "signature.enchantment_fusion.converging_volley.desc": "Fires flanking arrows that curve inward after launch to pincer the aimed target and drag nearby foes inward.",
-  "signature.enchantment_fusion.fission_warhead.title": "Splitting Leaf Mirage",
-  "signature.enchantment_fusion.fission_warhead.desc": "Pierces targets and splits into two angled child arrows erupting behind the struck enemy.",
+  "signature.enchantment_fusion.converging_volley.title": "Piercing Phantom Volley",
+  "signature.enchantment_fusion.converging_volley.desc": "A bow or crossbow fires its normal center arrow and two side phantoms; all use the secondary Piercing level. Phantoms cannot be picked up and vanish harmlessly on players, allies, tamed creatures, villagers or solid blocks. Reload the crossbow after applying.",
+  "signature.enchantment_fusion.fission_warhead.title": "Fission Cluster",
+  "signature.enchantment_fusion.fission_warhead.desc": "Each bow or crossbow shot has a 35% to 75% chance to carry a cluster. Its first successful hit releases two non-recoverable phantoms that home on the nearest hostile or neutral attacking you within 12 blocks, or fly straight if none exists. Phantoms vanish on protected creatures and solid blocks; the real arrow remains normal.",
   "signature.enchantment_fusion.explosive_flare_arrow.title": "Explosive Flare Arrow",
   "signature.enchantment_fusion.explosive_flare_arrow.desc": "The impact ignites and pushes nearby non-allied creatures.",
   "signature.enchantment_fusion.meteor_streak.title": "Meteor Streak",
@@ -898,5 +898,6 @@
   "message.enchantment_fusion.amber_sealed": "Flame sealed. Hit the target to shatter it, or use the skill again to cancel.",
   "message.enchantment_fusion.amber_cancelled": "Amber seal cancelled; any naturally remaining fire is restored where safe.",
   "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "Legacy carrier: the previous effect remains; the redesigned glaze and amber skills require a sword, axe, spear or mace.",
-  "tooltip.enchantment_fusion.legacy_frost_fire_carrier": "Legacy carrier retains its original activation; basalt conversion now checks vanilla permissions per block."
+  "tooltip.enchantment_fusion.legacy_frost_fire_carrier": "Legacy carrier retains its original activation; basalt conversion now checks vanilla permissions per block.",
+  "tooltip.enchantment_fusion.legacy_phantom_carrier": "Legacy carrier keeps its old volley behavior, not the redesigned phantom-arrow rules."
 }

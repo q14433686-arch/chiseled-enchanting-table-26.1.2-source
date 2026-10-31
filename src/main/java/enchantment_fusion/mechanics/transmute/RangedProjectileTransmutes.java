@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.FlyingBladeManager;
 import enchantment_fusion.mechanics.ProjectileLaunchWeaponAccess;
 import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport;
+import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.SignatureRuntimeSupport.ConvergingArrowState;
 import enchantment_fusion.mixin.AbstractArrowAccessor;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -60,17 +61,30 @@ public final class RangedProjectileTransmutes {
         float velocity,
         float inaccuracy
     ) {
-        if (weapon == null || weapon.isEmpty() || Boolean.TRUE.equals(IN_FAN_LAUNCH.get())) {
+        if (weapon == null || weapon.isEmpty() || Boolean.TRUE.equals(IN_FAN_LAUNCH.get()) || PhantomVolley.isGhost(proj)) {
             return;
         }
-        // Crossbows already invoke vanilla Multishot/Piercing if native, only apply non-native Bow/Trident hooks!
+        // Crossbow shot indices are handled in PhantomCrossbowMixin; bows need their
+        // own non-native multi-shot and piercing adapters below.
         boolean isCrossbow = weapon.getItem() instanceof CrossbowItem;
+        FusedPair selectedVolley = PhantomVolley.selectedPair(weapon, true);
+        FusedPair selectedCluster = PhantomVolley.selectedPair(weapon, false);
+        if (!isCrossbow && weapon.getItem() instanceof BowItem && proj instanceof AbstractArrow arrow) {
+            if (selectedVolley != null) PhantomVolley.ensurePiercing(arrow, selectedVolley.secondaryLevel());
+            if (selectedCluster != null) {
+                PhantomVolley.ensurePiercing(arrow, selectedCluster.primaryLevel());
+                PhantomVolley.rollCluster(arrow, shooter, selectedCluster);
+            }
+        }
 
         // 1. Apply real AbstractArrow pierce level for Bow sun_piercer & binary [minecraft:piercing ▷ X] pairs!
         if (!isCrossbow && proj instanceof AbstractArrow arrow && !(proj instanceof ThrownTrident)) {
             int pierceAdd = getTransmutedLevel(weapon, "sun_piercer");
             FusedEnchantmentList pairs = weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
             for (FusedPair p : pairs.pairs()) {
+                // The selected two-direction design already merges its Piercing level above.
+                // Other cross-domain and legacy pairs retain their previous rules.
+                if (p.equals(selectedVolley) || p.equals(selectedCluster)) continue;
                 if ("minecraft:piercing".equals(p.primaryId())) {
                     pierceAdd = Math.max(pierceAdd, p.primaryLevel());
                 } else if ("minecraft:piercing".equals(p.secondaryId())) {
@@ -88,6 +102,8 @@ public final class RangedProjectileTransmutes {
         boolean hasMultishotPair = false;
         FusedEnchantmentList pairs = weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         for (FusedPair p : pairs.pairs()) {
+            // Piercing ▷ Multishot reserves its two ghosts for a later successful hit.
+            if (p.equals(selectedCluster)) continue;
             if ("minecraft:multishot".equals(p.primaryId()) || "minecraft:multishot".equals(p.secondaryId())) {
                 hasMultishotPair = true;
                 break;
@@ -121,14 +137,19 @@ public final class RangedProjectileTransmutes {
             }
 
             if (weapon.getItem() instanceof BowItem && proj instanceof AbstractArrow mainArrow) {
-                boolean converging = SignaturePairs.stackHasSignature(weapon, "converging_volley");
-                for (float yawDeg : new float[]{-10.0F, 10.0F}) {
+                boolean converging = selectedVolley == null && SignaturePairs.stackHasSignature(weapon, "converging_volley");
+                int nativeCount = selectedVolley == null ? 0 : PhantomVolley.nativeBowBatchSize();
+                int extraSides = nativeCount == 0 ? 2 : Math.clamp(3 - nativeCount, 0, 2);
+                float[] angles = extraSides == 2 ? new float[]{-10.0F, 10.0F}
+                    : extraSides == 1 ? new float[]{10.0F} : new float[0];
+                for (float yawDeg : angles) {
                     Vec3 rotDir = baseAim.yRot((float) Math.toRadians(-yawDeg)).normalize();
                     AbstractArrow sideArrow = (mainArrow instanceof SpectralArrow)
                         ? new SpectralArrow(level, shooter, new ItemStack(Items.SPECTRAL_ARROW), weapon.copyWithCount(1))
                         : new Arrow(level, shooter, new ItemStack(Items.ARROW), weapon.copyWithCount(1));
                     sideArrow.setPos(mainArrow.getX(), mainArrow.getY(), mainArrow.getZ());
                     sideArrow.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
+                    if (selectedVolley != null) PhantomVolley.markGhost(sideArrow, shooter, null);
                     sideArrow.setCritArrow(mainArrow.isCritArrow());
                     sideArrow.setBaseDamage(1.8D);
                     if (mainArrow.getPierceLevel() > 0) {
@@ -156,7 +177,8 @@ public final class RangedProjectileTransmutes {
     }
 
     public static void onProjectileTick(ServerLevel level, Projectile proj, ServerPlayer shooter, ItemStack weapon) {
-        if (!proj.isAlive()) return;
+        // Secondary ghost arrows cannot independently refund ammo or override their protected-target steering.
+        if (!proj.isAlive() || PhantomVolley.isGhost(proj)) return;
         SignaturePairs.tickProjectile(level, proj);
         if (weapon.isEmpty()) return;
 

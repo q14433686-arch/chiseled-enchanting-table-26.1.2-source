@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.ProjectilePathTracker;
 import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
 import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
 import enchantment_fusion.mechanics.SignaturePairs;
+import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.model.TriggerType;
 import java.util.EnumSet;
 import java.util.Set;
@@ -16,6 +17,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.ProjectileDeflection;
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
@@ -32,6 +34,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Hooks {@link Projectile#onHit(HitResult)}, snapshots the firing weapon at owner-bind / launch,
@@ -144,6 +147,16 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
             || stack.getItem() instanceof TridentItem;
     }
 
+    @Inject(method = "hitTargetOrDeflectSelf", at = @At("HEAD"), cancellable = true)
+    private void ef$protectPhantomCollision(HitResult hit, CallbackInfoReturnable<ProjectileDeflection> cir) {
+        Projectile self = (Projectile) (Object) this;
+        if (self.level() instanceof ServerLevel && hit instanceof EntityHitResult entityHit
+            && PhantomVolley.protectedCollision(self, entityHit.getEntity())) {
+            self.discard();
+            cir.setReturnValue(ProjectileDeflection.NONE);
+        }
+    }
+
     @Inject(method = "onHit", at = @At("HEAD"))
     private void ef$refreshWeaponFromVanillaBeforeHit(HitResult hitResult, CallbackInfo ci) {
         Projectile self = (Projectile) (Object) this;
@@ -157,11 +170,17 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
 
     @Inject(method = "onHit", at = @At("TAIL"))
     private void ef$afterOnHit(HitResult hitResult, CallbackInfo ci) {
+        Projectile self = (Projectile) (Object) this;
+        if (self.level() instanceof ServerLevel && PhantomVolley.isGhost(self)) {
+            // The arrow still ran vanilla block collision, but never runs secondary fusion
+            // dispatch or leaves behind recoverable ammunition.
+            if (hitResult instanceof BlockHitResult) self.discard();
+            return;
+        }
         ItemStack weapon = this.ef$launchWeapon;
         if (weapon == null || weapon.isEmpty() || hitResult.getType() == HitResult.Type.MISS) {
             return;
         }
-        Projectile self = (Projectile) (Object) this;
         if (!(self.level() instanceof ServerLevel serverLevel) || !(self.getOwner() instanceof ServerPlayer shooter)) {
             return;
         }

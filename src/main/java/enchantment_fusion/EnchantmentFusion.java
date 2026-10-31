@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.FusionWorldLoot;
 import enchantment_fusion.mechanics.MatrixRuntimeHooks;
 import enchantment_fusion.mechanics.transmute.ReplenishTracker;
+import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.menu.FusionSkillNetworking;
 import enchantment_fusion.mixin.FusionMixinConfigPlugin;
@@ -35,6 +36,7 @@ public final class EnchantmentFusion implements ModInitializer {
     public void onInitialize() {
         FusionDataComponents.init();
         ReplenishTracker.init();
+        PhantomVolley.init();
         FusionBlocks.init();
         FusionItems.init();
         FusionBlockEntities.init();
