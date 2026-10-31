@@ -38,13 +38,15 @@
     "PlayerExperienceFusionMixin",
     "PlayerFrostLandingMixin",
     "PlayerMiningFusionMixin",
+    "PlayerSoulCrawlMixin",
     "ProjectileImpactFusionMixin",
     "RocketHeavyCrushMixin",
     "ServerExplosionBlastDefenseMixin",
     "ServerLevelHarvestCaptureMixin",
     "ServerPlayerGameModeHarvestMixin",
     "TridentChargeHeavyCrushMixin",
-    "TridentHeavyCrushMixin"
+    "TridentHeavyCrushMixin",
+    "VibrationSoulStepMixin"
   ],
   "client": [
     "CetCleanseListPopulateMixin",

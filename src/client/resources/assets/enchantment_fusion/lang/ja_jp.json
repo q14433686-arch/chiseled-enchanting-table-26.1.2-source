@@ -221,8 +221,8 @@
   "signature.enchantment_fusion.frost_meteor_fall.desc": "Worn boots store the fall damage actually prevented by their Feather Falling, up to a limit. Activate to release a forward-moving virtual frost wave that chills eligible enemies. The original Feather Falling remains; cancelled or lethal falls store nothing.",
   "signature.enchantment_fusion.soul_stride_landing.title": "Soul Stride Landing",
   "signature.enchantment_fusion.soul_stride_landing.desc": "Cushions landings into a burst of Soul Speed across any terrain.",
-  "signature.enchantment_fusion.phantom_assassin_step.title": "Phantom Assassin Step",
-  "signature.enchantment_fusion.phantom_assassin_step.desc": "Boosts sneaking mobility to swift assassin pace without alerting foes.",
+  "signature.enchantment_fusion.phantom_assassin_step.title": "Soulstep Across",
+  "signature.enchantment_fusion.phantom_assassin_step.desc": "Wear boots and sprint on Soul Speed blocks to gather soul energy. Sneak-move on ordinary ground to spend it for faster sneaking and muffled movement vibrations.",
   "signature.enchantment_fusion.abyssal_sight.title": "Breath-Fueled Mining",
   "signature.enchantment_fusion.abyssal_sight.desc": "While wearing a helmet or holding a pickaxe, axe, shovel or hoe underwater, press the fusion skill key (G by default, rebindable) to spend air for faster underwater mining. Keeps night vision and native Respiration; the old free Water Breathing bonus is replaced.",
   "signature.enchantment_fusion.ocean_breath_mine.title": "Mining Air Bubbles",
@@ -938,5 +938,10 @@
   "config.enchantment_fusion.property.crater_min_damage": "Crater minimum actual damage (health points)",
   "config.enchantment_fusion.property.crater_min_impact": "Crater minimum impact strength",
   "config.enchantment_fusion.property.crater_radius": "Crater radius (blocks)",
-  "config.enchantment_fusion.property.crater_depth": "Crater depth (blocks)"
+  "config.enchantment_fusion.property.crater_depth": "Crater depth (blocks)",
+  "signature.enchantment_fusion.soul_crawl_slip.title": "Soul-Crawl Slip",
+  "signature.enchantment_fusion.soul_crawl_slip.desc": "Wear leggings and sneak-move on Soul Speed blocks to ready a soul form. Face a one-block-high entrance and activate the skill to crawl faster without passing through blocks; activate again to stop.",
+  "tooltip.enchantment_fusion.legacy_soul_step_carrier": "Legacy host keeps its old effect; Soulstep requires boots and Soul-Crawl requires leggings.",
+  "message.enchantment_fusion.soul_crawl_not_ready": "First sneak on Soul Speed blocks, then face a passable one-block-high entrance.",
+  "skill.enchantment_fusion.soul_crawl": "Soul-Crawl Slip"
 }

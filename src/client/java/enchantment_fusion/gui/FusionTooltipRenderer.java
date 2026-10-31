@@ -18,6 +18,7 @@ import enchantment_fusion.mechanics.signatures.PrecisionConstruction;
 import enchantment_fusion.mechanics.signatures.DurabilityEconomy;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
+import enchantment_fusion.mechanics.signatures.SoulStepSkills;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -169,6 +170,8 @@ public final class FusionTooltipRenderer {
             boolean legacyHeavyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && HeavyCrushSkill.matches(pair, sigOpt.get().id())
                 && !HeavyCrushSkill.applies(pair, stack, sigOpt.get().id());
+            boolean legacySoulCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && SoulStepSkills.matches(pair, sigOpt.get().id()) && !SoulStepSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ((GlazedStrikeEffect.isPair(pair) && GlazedStrikeEffect.SIGNATURE.equals(sigOpt.get().id())
                         && !GlazedStrikeEffect.applies(pair, stack, sigOpt.get().id()))
@@ -208,7 +211,8 @@ public final class FusionTooltipRenderer {
                 ).withStyle(ChatFormatting.LIGHT_PURPLE));
                 if (shift && !legacyUnderwaterCarrier && !legacyFrostFallCarrier && !legacyFrostWakeCarrier
                     && !legacyFrostFireCarrier && !legacyPhantomCarrier && !legacyPrecisionCarrier
-                    && !legacyDurabilityCarrier && !legacyBlastCarrier && !legacyHeavyCarrier && !legacyGlazeAmberCarrier) {
+                    && !legacyDurabilityCarrier && !legacyBlastCarrier && !legacyHeavyCarrier && !legacySoulCarrier
+                    && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -257,6 +261,10 @@ public final class FusionTooltipRenderer {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_heavy_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
+            if (legacySoulCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_soul_step_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
             if (legacyGlazeAmberCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_glaze_amber_carrier")
                     .withStyle(ChatFormatting.GOLD));
@@ -264,6 +272,7 @@ public final class FusionTooltipRenderer {
             if (shift && !legacyFrostFallCarrier && !legacyUnderwaterCarrier && sigOpt.isPresent()
                 && (FrostFallSkills.applies(pair, stack, sigOpt.get().id())
                     || AmberSealSkill.applies(pair, stack, sigOpt.get().id())
+                    || (SoulStepSkills.REVERSE.equals(sigOpt.get().id()) && SoulStepSkills.applies(pair, stack, sigOpt.get().id()))
                     || (UnderwaterMiningSkills.isSpendPair(pair) && UnderwaterMiningSkills.applies(pair, stack, sigOpt.get().id())))) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
                     Component.keybind("key.enchantment_fusion.activate_skill"),

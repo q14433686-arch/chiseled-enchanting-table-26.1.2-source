@@ -221,8 +221,8 @@
   "signature.enchantment_fusion.frost_meteor_fall.desc": "Worn boots store the fall damage actually prevented by their Feather Falling, up to a limit. Activate to release a forward-moving virtual frost wave that chills eligible enemies. The original Feather Falling remains; cancelled or lethal falls store nothing.",
   "signature.enchantment_fusion.soul_stride_landing.title": "御魂輕功",
   "signature.enchantment_fusion.soul_stride_landing.desc": "無視地形觸發靈魂疾行，落地瞬間銜接近戰突進步伐。",
-  "signature.enchantment_fusion.phantom_assassin_step.title": "幽影刺客",
-  "signature.enchantment_fusion.phantom_assassin_step.desc": "潛行移速大幅躍升至奔跑水準，悄無聲息贴近獵物。",
+  "signature.enchantment_fusion.phantom_assassin_step.title": "魂步跨域",
+  "signature.enchantment_fusion.phantom_assassin_step.desc": "穿戴靴子，在靈魂沙土疾行積攢魂能；潛行移動於普通地面時消耗魂能加速潛行，並壓低自己的移動振動。",
   "signature.enchantment_fusion.abyssal_sight.title": "Breath-Fueled Mining",
   "signature.enchantment_fusion.abyssal_sight.desc": "While wearing a helmet or holding a pickaxe, axe, shovel or hoe underwater, press the fusion skill key (G by default, rebindable) to spend air for faster underwater mining. Keeps night vision and native Respiration; the old free Water Breathing bonus is replaced.",
   "signature.enchantment_fusion.ocean_breath_mine.title": "Mining Air Bubbles",
@@ -938,5 +938,10 @@
   "config.enchantment_fusion.property.crater_min_damage": "挖坑最低實際傷害（生命點）",
   "config.enchantment_fusion.property.crater_min_impact": "挖坑最低衝擊強度",
   "config.enchantment_fusion.property.crater_radius": "挖坑半徑（格）",
-  "config.enchantment_fusion.property.crater_depth": "挖坑深度（格）"
+  "config.enchantment_fusion.property.crater_depth": "挖坑深度（格）",
+  "signature.enchantment_fusion.soul_crawl_slip.title": "潛魂穿隙",
+  "signature.enchantment_fusion.soul_crawl_slip.desc": "穿戴護腿，在靈魂沙土潛行移動準備魂形；朝向一格高入口並使用主動技能，暫時快速爬行。碰撞仍生效，再次使用可結束。",
+  "tooltip.enchantment_fusion.legacy_soul_step_carrier": "舊載體保留原有效果；新魂步需要靴子，潛魂穿隙需要護腿。",
+  "message.enchantment_fusion.soul_crawl_not_ready": "先在靈魂沙土潛行積勢，再朝向可進入的一格高通道。",
+  "skill.enchantment_fusion.soul_crawl": "潛魂穿隙"
 }

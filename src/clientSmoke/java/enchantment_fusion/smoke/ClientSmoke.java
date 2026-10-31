@@ -639,6 +639,8 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("16-protection-blast", () -> BlastDefenseProbe.exerciseGuard(sp));
         acceptance.run("39.1-density-breach", () -> HeavyCrushProbe.exercise(sp, tablePos.above(90).east(12), false));
         acceptance.run("39.1-breach-density", () -> HeavyCrushProbe.exercise(sp, tablePos.above(90).east(12), true));
+        acceptance.run("39.6-soul-swift", () -> SoulStepProbe.exercise(sp, tablePos.above(105).east(12), false));
+        acceptance.run("39.6-swift-soul", () -> SoulStepProbe.exercise(sp, tablePos.above(105).east(12), true));
         acceptance.run("09-efficiency-silk", () -> PrecisionConstructionProbe.exerciseSlice(sp, tablePos.above(64).east(12)));
         acceptance.run("09-silk-efficiency", () -> PrecisionConstructionProbe.exerciseLine(sp, tablePos.above(64).east(12)));
         acceptance.run("common-station-selection", () -> StationSelectionProbe.exercise(sp));

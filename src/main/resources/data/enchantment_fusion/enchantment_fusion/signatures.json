@@ -333,7 +333,16 @@
     "phantom_assassin_step": {
       "primary": "minecraft:soul_speed",
       "secondary": "minecraft:swift_sneak",
-      "domain": "armor_curse"
+      "domain": "armor_curse",
+      "energy_capacity_ticks": 200,
+      "energy_lifetime_ticks": 400
+    },
+    "soul_crawl_slip": {
+      "primary": "minecraft:swift_sneak",
+      "secondary": "minecraft:soul_speed",
+      "domain": "armor_curse",
+      "form_window_ticks": 120,
+      "crawl_duration_ticks": 120
     },
     "abyssal_sight": {
       "primary": "minecraft:respiration",

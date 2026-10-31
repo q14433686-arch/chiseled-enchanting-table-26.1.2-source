@@ -221,8 +221,8 @@
   "signature.enchantment_fusion.frost_meteor_fall.desc": "穿戴靴子高处落地，按该装备的摔落保护实际减免量积攒有限霜势；主动释放向前扩散的虚拟霜波，寒冷合格敌人。保留原版摔落保护；被取消或致命的坠落不蓄势。",
   "signature.enchantment_fusion.soul_stride_landing.title": "御魂轻功",
   "signature.enchantment_fusion.soul_stride_landing.desc": "无视地形触发灵魂疾行，落地瞬间衔接近战突进步伐。",
-  "signature.enchantment_fusion.phantom_assassin_step.title": "幽影刺客",
-  "signature.enchantment_fusion.phantom_assassin_step.desc": "潜行移速大幅跃升至奔跑水准，悄无声息贴近猎物。",
+  "signature.enchantment_fusion.phantom_assassin_step.title": "魂步跨域",
+  "signature.enchantment_fusion.phantom_assassin_step.desc": "穿戴靴子，在灵魂沙土疾行积攒魂能；潜行移动于普通地面时消耗魂能加速潜行，并压低自己的移动振动。",
   "signature.enchantment_fusion.abyssal_sight.title": "耗息疾掘",
   "signature.enchantment_fusion.abyssal_sight.desc": "水下穿戴头盔或手持镐、斧、锹、锄时，按融合技能键（默认 G，可在按键设置修改），消耗氧气换取短暂水下高速采掘。保留夜视和原版水下呼吸；旧的免费水下呼吸药水效果被替换。",
   "signature.enchantment_fusion.ocean_breath_mine.title": "掘出气泡",
@@ -938,5 +938,10 @@
   "config.enchantment_fusion.property.crater_min_damage": "挖坑最低实际伤害（生命点）",
   "config.enchantment_fusion.property.crater_min_impact": "挖坑最低冲击强度",
   "config.enchantment_fusion.property.crater_radius": "挖坑半径（格）",
-  "config.enchantment_fusion.property.crater_depth": "挖坑深度（格）"
+  "config.enchantment_fusion.property.crater_depth": "挖坑深度（格）",
+  "signature.enchantment_fusion.soul_crawl_slip.title": "潜魂穿隙",
+  "signature.enchantment_fusion.soul_crawl_slip.desc": "穿戴护腿，在灵魂沙土潜行移动准备魂形；朝向一格高入口并使用主动技能，暂时快速爬行。碰撞仍生效，再次使用可结束。",
+  "tooltip.enchantment_fusion.legacy_soul_step_carrier": "旧载体保留原有效果；新魂步需要靴子，潜魂穿隙需要护腿。",
+  "message.enchantment_fusion.soul_crawl_not_ready": "先在灵魂沙土潜行积势，再朝向可进入的一格高通道。",
+  "skill.enchantment_fusion.soul_crawl": "潜魂穿隙"
 }

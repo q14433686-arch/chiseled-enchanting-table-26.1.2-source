@@ -13,6 +13,7 @@ import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.mechanics.signatures.PrecisionConstruction;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
+import enchantment_fusion.mechanics.signatures.SoulStepSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
@@ -72,6 +73,7 @@ public final class MatrixRuntimeHooks {
             UnderwaterMiningSkills.clear(server);
             AmberSealSkill.clear();
             HeavyCrushSkill.clear();
+            SoulStepSkills.clear(server);
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             AmberSealSkill.onEntityUnload(entity);
@@ -108,6 +110,7 @@ public final class MatrixRuntimeHooks {
             PrecisionConstruction.onDisconnect(pid);
             BlastDefenseSkills.onDisconnect(pid);
             HeavyCrushSkill.onDisconnect(handler.getPlayer());
+            SoulStepSkills.onDisconnect(handler.getPlayer());
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
             FlyingBladeManager.onPlayerDisconnect(pid);
@@ -297,6 +300,7 @@ public final class MatrixRuntimeHooks {
                 UnderwaterMiningSkills.onPlayerDisconnect(deadPlayer);
                 FrostFallSkills.onPlayerDisconnect(deadPlayer.getUUID());
                 BlastDefenseSkills.onDisconnect(deadPlayer.getUUID());
+                SoulStepSkills.onDisconnect(deadPlayer);
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
             if (damageSource.getEntity() instanceof ServerPlayer serverPlayer && serverPlayer.level() instanceof ServerLevel serverLevel) {
@@ -340,6 +344,7 @@ public final class MatrixRuntimeHooks {
                 }
                 if (normalized) player.getInventory().setChanged();
                 HeavyCrushSkill.tickPlayer(player);
+                SoulStepSkills.tick(player);
                 SignaturePairs.tickServerPlayer(serverLevel, player);
                 CrossDomainTransmutations.tickServerPlayer(serverLevel, player);
 

@@ -442,7 +442,8 @@ public final class ArmorCurseSignatures {
                     }
                 }
                 case "phantom_assassin_step" -> {
-                    if (player.isShiftKeyDown()) {
+                    // Keep the legacy passive only for old, unsupported carriers.
+                    if (!SoulStepSkills.applies(eq.pair(), eq.stack(), sigId) && player.isShiftKeyDown()) {
                         grantEffect(player, "speed", 30, 1);
                         grantEffect(player, "invisibility", 30, 0);
                     }

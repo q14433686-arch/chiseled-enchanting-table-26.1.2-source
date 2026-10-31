@@ -5,6 +5,7 @@ import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.PrecisionConstruction;
+import enchantment_fusion.mechanics.signatures.SoulStepSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,7 +43,8 @@ public final class FusionSkillNetworking {
         FROST_STEP("skill.enchantment_fusion.frost_step"),
         AMBER_SEAL("skill.enchantment_fusion.amber_seal"),
         SLICE_MODE("skill.enchantment_fusion.slice_mode"),
-        LINE_BUILD("skill.enchantment_fusion.line_build");
+        LINE_BUILD("skill.enchantment_fusion.line_build"),
+        SOUL_CRAWL("skill.enchantment_fusion.soul_crawl");
         final String translation;
         Skill(String translation) { this.translation = translation; }
     }
@@ -53,13 +55,14 @@ public final class FusionSkillNetworking {
     private FusionSkillNetworking() {}
 
     private static List<Skill> equippedSkills(ServerPlayer player) {
-        List<Skill> skills = new ArrayList<>(6);
+        List<Skill> skills = new ArrayList<>(7);
         if (UnderwaterMiningSkills.hasEquippedSpend(player)) skills.add(Skill.BREATH);
         if (FrostFallSkills.find(player, true) != null) skills.add(Skill.FROST_WAVE);
         if (FrostFallSkills.find(player, false) != null) skills.add(Skill.FROST_STEP);
         if (AmberSealSkill.hasEquipped(player)) skills.add(Skill.AMBER_SEAL);
         if (PrecisionConstruction.hasSlice(player)) skills.add(Skill.SLICE_MODE);
         if (PrecisionConstruction.hasLine(player)) skills.add(Skill.LINE_BUILD);
+        if (SoulStepSkills.hasEquippedCrawl(player)) skills.add(Skill.SOUL_CRAWL);
         return skills;
     }
 
@@ -109,6 +112,7 @@ public final class FusionSkillNetworking {
             case AMBER_SEAL -> AmberSealSkill.activate(player);
             case SLICE_MODE -> PrecisionConstruction.cycleSlice(player);
             case LINE_BUILD -> PrecisionConstruction.activateLine(player);
+            case SOUL_CRAWL -> SoulStepSkills.activateCrawl(player);
         }
     }
 
