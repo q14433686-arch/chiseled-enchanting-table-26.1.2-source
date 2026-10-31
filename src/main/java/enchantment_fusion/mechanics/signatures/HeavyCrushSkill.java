@@ -202,9 +202,16 @@ public final class HeavyCrushSkill {
         return new Hit(owner, living, pair, HeavyCrushMath.meleeImpact(charge, owner.fallDistance, owner.getDeltaMovement().length()));
     }
     public static @Nullable Hit beginProjectile(Projectile projectile, Entity target, DamageSource source) {
+        ItemStack weapon = projectile.getWeaponItem();
+        // Some version/mod combinations expose a thrown trident only through its pickup stack.
+        if ((weapon == null || weapon.isEmpty()) && projectile instanceof net.minecraft.world.entity.projectile.arrow.ThrownTrident trident) {
+            weapon = trident.getPickupItemStackOrigin();
+        }
+        return beginProjectile(projectile, weapon, target, source);
+    }
+    public static @Nullable Hit beginProjectile(Projectile projectile, @Nullable ItemStack weapon, Entity target, DamageSource source) {
         if (!(projectile.getOwner() instanceof ServerPlayer owner) || !(target instanceof LivingEntity living)
             || !eligibleSource(source, target) || PhantomVolley.isGhost(projectile)) return null;
-        ItemStack weapon = projectile.getWeaponItem();
         FusedPair pair = selected(weapon);
         return pair == null ? null : new Hit(owner, living, pair, HeavyCrushMath.projectileImpact(projectile.getDeltaMovement().length()));
     }

@@ -123,8 +123,12 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
                 this.ef$launchWeapon = weapon;
             }
         }
+        ItemStack exactLauncher = HeavyCrushProjectiles.exactLauncher(shooter);
+        ItemStack heavyLauncher = exactLauncher != null ? exactLauncher : weapon;
+        if (heavyLauncher != null && !heavyLauncher.isEmpty()) {
+            HeavyCrushProjectiles.markLaunch(self, heavyLauncher);
+        }
         if (weapon != null && !weapon.isEmpty()) {
-            HeavyCrushProjectiles.markLaunch(self, weapon);
             CrossDomainTransmutations.onProjectileLaunched(
                 serverLevel, self, shooter, weapon, x, y, z, velocity, inaccuracy
             );

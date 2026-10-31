@@ -4,6 +4,7 @@ import enchantment_fusion.item.FusedEnchantedBookItem;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
+import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import enchantment_fusion.model.FusedPair;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -31,7 +33,11 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.item.CrossbowItem;
+import net.minecraft.world.item.component.ChargedProjectiles;
+import net.minecraft.world.item.component.Fireworks;
+import net.minecraft.world.item.component.FireworkExplosion;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -56,6 +62,7 @@ final class HeavyCrushProbe {
         checkCarriers(level, pair);
         Vec3 savedPos = player.position();
         Vec3 savedVelocity = player.getDeltaMovement();
+        float savedYaw = player.getYRot(), savedPitch = player.getXRot();
         double savedFall = player.fallDistance;
         GameType savedMode = player.gameMode.getGameModeForPlayer();
         ItemStack savedMain = player.getMainHandItem(), savedOff = player.getOffhandItem();
@@ -67,11 +74,13 @@ final class HeavyCrushProbe {
         Map<BlockPos, BlockState> savedBlocks = new LinkedHashMap<>();
         Set<BlockPos> denied = new HashSet<>();
         AABB area = new AABB(origin).inflate(12.0D);
-        Set<UUID> beforeItems = new HashSet<>(), beforeOrbs = new HashSet<>();
+        Set<UUID> beforeItems = new HashSet<>(), beforeOrbs = new HashSet<>(), beforeRockets = new HashSet<>();
+        for (FireworkRocketEntity existing : level.getEntitiesOfClass(FireworkRocketEntity.class, area)) beforeRockets.add(existing.getUUID());
         for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, area)) beforeItems.add(item.getUUID());
         for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, area)) beforeOrbs.add(orb.getUUID());
-        Zombie target = new Zombie(level);
+        Zombie target = new Zombie(level), bystander = new Zombie(level);
         Arrow projectile = null, restored = null;
+        FireworkRocketEntity rocket = null, restoredRocket = null;
         PlayerBlockBreakEvents.BEFORE.register((world, breaker, pos, state, blockEntity) ->
             breaker != player || world != level || !denied.contains(pos));
         try {
@@ -152,19 +161,63 @@ final class HeavyCrushProbe {
             int heavyCharge = CrossbowItem.getChargeDuration(crossbow, player);
             require(heavyCharge == (int) Math.ceil(normalCharge * 1.5D),
                 "The fused crossbow must take longer to load");
+
+            // Fire a real crossbow rocket from offhand while an unrelated launcher occupies main hand.
+            // The directly hit target gets the new mechanics; vanilla blast bystanders do not.
+            ItemStack ammo = new ItemStack(Items.FIREWORK_ROCKET);
+            ammo.set(DataComponents.FIREWORKS, new Fireworks(1, List.of(FireworkExplosion.DEFAULT)));
+            crossbow.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.ofNonEmpty(List.of(ammo)));
+            player.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.CROSSBOW));
+            player.setItemSlot(EquipmentSlot.OFFHAND, crossbow);
+            player.setYRot(-90.0F); player.setXRot(0.0F);
+            target.setPos(origin.getX() + 3.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
+            target.setHealth(200.0F); target.invulnerableTime = 0; target.removeAllEffects();
+            target.getAttribute(Attributes.ARMOR).setBaseValue(20.0D);
+            bystander.setNoAi(true);
+            bystander.setPos(origin.getX() + 3.5D, origin.getY() + 1.0D, origin.getZ() + 2.5D);
+            bystander.getAttribute(Attributes.MAX_HEALTH).setBaseValue(200.0D);
+            bystander.getAttribute(Attributes.ARMOR).setBaseValue(20.0D);
+            bystander.setHealth(200.0F);
+            require(level.addFreshEntity(bystander), "Rocket bystander must enter the disposable world");
+            ((CrossbowItem) crossbow.getItem()).performShooting(level, player, net.minecraft.world.InteractionHand.OFF_HAND,
+                crossbow, 1.6F, 0.0F, null);
+            List<FireworkRocketEntity> rockets = level.getEntitiesOfClass(FireworkRocketEntity.class, area,
+                candidate -> candidate.getOwner() == player);
+            require(rockets.size() == 1, "The offhand crossbow must create exactly one real rocket");
+            rocket = rockets.getFirst();
+            require(Math.abs(HeavyCrushProjectiles.rocketDownwardAcceleration(rocket) - 0.025D) < 0.0001D,
+                "The real offhand heavy rocket must receive downward acceleration");
+            TagValueOutput rocketOutput = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+            rocket.saveWithoutId(rocketOutput);
+            restoredRocket = new FireworkRocketEntity(EntityType.FIREWORK_ROCKET, level);
+            restoredRocket.load(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), rocketOutput.buildResult()));
+            require(Math.abs(HeavyCrushProjectiles.rocketDownwardAcceleration(restoredRocket) - 0.025D) < 0.0001D,
+                "Rocket penalty must survive serialization");
+            player.teleportTo(origin.getX() - 12.0D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
+            for (int tick = 0; tick < 8 && rocket.isAlive(); tick++) rocket.tick();
+            require(target.getHealth() < 200.0F && target.hasEffect(MobEffects.SLOWNESS),
+                "The real direct rocket hit must apply damage and the slow");
+            require(bystander.getHealth() < 200.0F && !bystander.hasEffect(MobEffects.SLOWNESS),
+                "A vanilla blast bystander must not receive the new direct-hit effect");
         } finally {
             denied.clear();
             if (projectile != null) projectile.discard();
             if (restored != null) restored.discard();
+            if (rocket != null) rocket.discard();
+            if (restoredRocket != null) restoredRocket.discard();
             HeavyCrushSkill.onUnload(target);
-            target.discard();
+            HeavyCrushSkill.onUnload(bystander);
+            target.discard(); bystander.discard();
             HeavyCrushSkill.onDisconnect(player);
+            for (FireworkRocketEntity extra : level.getEntitiesOfClass(FireworkRocketEntity.class, area))
+                if (!beforeRockets.contains(extra.getUUID()) && extra.getOwner() == player) extra.discard();
             for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, area)) if (!beforeItems.contains(item.getUUID())) item.discard();
             for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, area)) if (!beforeOrbs.contains(orb.getUUID())) orb.discard();
             for (Map.Entry<BlockPos, BlockState> entry : savedBlocks.entrySet()) level.setBlockAndUpdate(entry.getKey(), entry.getValue());
             attackSpeed.setBaseValue(savedAttackSpeed); attackDamage.setBaseValue(savedAttackDamage);
             player.setItemSlot(EquipmentSlot.MAINHAND, savedMain); player.setItemSlot(EquipmentSlot.OFFHAND, savedOff);
             player.setGameMode(savedMode); player.teleportTo(savedPos.x, savedPos.y, savedPos.z);
+            player.setYRot(savedYaw); player.setXRot(savedPitch);
             player.setDeltaMovement(savedVelocity); player.fallDistance = savedFall;
         }
     }
