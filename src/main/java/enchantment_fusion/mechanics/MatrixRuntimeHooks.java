@@ -6,6 +6,7 @@ import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.mechanics.signatures.MirageSnapbackSkill;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
+import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
@@ -215,12 +216,22 @@ public final class MatrixRuntimeHooks {
             }
         });
 
+        // Vanilla-style lethal-damage interception: never consume a real totem, and run
+        // before death processing so secondary Vanishing Curse sees only genuine deaths.
+        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, damageAmount) -> {
+            if (entity instanceof ServerPlayer player && entity.level() instanceof ServerLevel level) {
+                return LoyaltyGuard.allowDeath(level, player, source);
+            }
+            return true;
+        });
+
         // Post-Damage Counter
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
             if (!blocked && damageTaken > 0.0F && entity.level() instanceof ServerLevel level
                 && source.getEntity() instanceof ServerPlayer attacker && source.getDirectEntity() == attacker
                 && !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
                 && !MatrixEffectExecutor.isExecuting() && !GlazedStrikeEffect.isApplyingBonus()
+                && !LoyaltyGuard.isExecuting()
                 && !Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get())) {
                 FlameKineticEffects.confirm(level, attacker, entity);
                 GlazedStrikeEffect.confirm(level, attacker, entity);

@@ -855,5 +855,13 @@
   "message.enchantment_fusion.harvest_limit": "本次掉落过多，超出部分保留原样。",
   "message.enchantment_fusion.smelt_overflow": "熔炼产物超过堆叠上限，原掉落已保留。",
   "gui.enchantment_fusion.reject.select_single_for_consumable": "该物品只能化形单附魔，请切换单附魔模式。",
-  "gui.enchantment_fusion.picker.single_book_tip": "按住 Shift+左键选择一条用于补强；右键恢复双附魔选择。"
+  "gui.enchantment_fusion.picker.single_book_tip": "按住 Shift+左键选择一条用于补强；右键恢复双附魔选择。",
+  "signature.enchantment_fusion.loyalty_guard.title": "忠诚护主",
+  "signature.enchantment_fusion.loyalty_guard.desc": "致命受击时消耗一级忠诚触发图腾救命，并处决半径内合格敌人。半径为 3 + 2×忠诚等级 + 0.5×保护等级，最多 24 格。忠诚耗尽移除融合，保留装备和保护等级。",
+  "tooltip.enchantment_fusion.retained_enchantment": "保留的副位（同名附魔空位可用时恢复）：%s",
+  "message.enchantment_fusion.guard_retention_full": "忠诚护主无法安全保留保护等级：这件物品保存的附魔过多。",
+  "message.enchantment_fusion.guard_damage_unavailable": "忠诚护主已救命，但处决伤害类型不可用。",
+  "death.attack.enchantment_fusion_loyalty_guard": "%1$s 被 %2$s 的忠诚护主处决了",
+  "death.attack.enchantment_fusion_loyalty_guard.item": "%1$s 被 %2$s 用 %3$s 的忠诚护主处决了",
+  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s 在与 %2$s 战斗时被忠诚护主处决了"
 }

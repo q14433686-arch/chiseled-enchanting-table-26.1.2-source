@@ -15,6 +15,7 @@ import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.menu.FusionNetworking.CompendiumDeltaPayload;
 import enchantment_fusion.menu.FusionNetworking.CompendiumSyncPayload;
 import enchantment_fusion.menu.FusionNetworking.FusionVisualEventPayload;
+import enchantment_fusion.menu.FusionNetworking.LoyaltyGuardActivationPayload;
 import enchantment_fusion.menu.FusionNetworking.MatrixSyncPayload;
 import enchantment_fusion.menu.FusionNetworking.OpenGrimoirePayload;
 import enchantment_fusion.registry.FusionBlockEntities;
@@ -79,6 +80,9 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
         });
         ClientPlayNetworking.registerGlobalReceiver(OpenGrimoirePayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> ctx.client().setScreen(new FusionGrimoireScreen(null, payload.initialChapter())));
+        });
+        ClientPlayNetworking.registerGlobalReceiver(LoyaltyGuardActivationPayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> ctx.client().gameRenderer.displayItemActivation(payload.item()));
         });
         ClientPlayNetworking.registerGlobalReceiver(FusionVisualEventPayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> {

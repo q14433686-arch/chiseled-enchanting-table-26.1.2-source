@@ -11,9 +11,9 @@ A Fabric enchanting mod with ordered fusion (`[A ▷ B]` is not necessarily `[B 
 - **[审计与建议 / Audit notes](docs/AUDIT_NOTES.md)** — verified fixes, remaining risks, hard-coded values and test coverage.
 - **[术语表 / Glossary](docs/GLOSSARY.md)**
 
-The bundled data has **150 signature entries** (147 exact ordered pairs and 3 wildcard rules) and **116 transmutation variants**. Other valid ordered pairs can use the trigger/payload matrix; not every reversed pair has its own signature. Datapacks and server overrides can change the active rules.
+The bundled data has **151 signature entries** (148 exact ordered pairs and 3 wildcard rules) and **116 transmutation variants**. Other valid ordered pairs can use the trigger/payload matrix; not every reversed pair has its own signature. Datapacks and server overrides can change the active rules.
 
-The first fully redesigned pair is **Fire Aspect × Knockback**: Fire ▷ Knockback converts a wall impact into a heat burst; Knockback ▷ Fire leaves a temporary wake along the target's actual movement. These two directions replace their vanilla primary effect rather than stacking it; other pairs retain their current rules. Existing equipment is normalized as it reaches a player's inventory, preserving the pair and levels. See the [design record](docs/FUSION_REDESIGN.md).
+The first redesigned pair is **Fire Aspect × Knockback**: Fire ▷ Knockback converts a wall impact into a heat burst; Knockback ▷ Fire leaves a temporary wake along the target's actual movement. These two directions replace their vanilla primary effect rather than stacking it. Existing equipment is normalized as it reaches a player's inventory, preserving the pair and levels. **Loyalty ▷ Protection** is also being implemented as a level-consuming lethal-damage rescue; its [data-preservation and target boundaries](docs/LOYALTY_GUARD_IMPLEMENTATION.md) have not yet been validated in this round's game acceptance. Other directions remain under implementation; see the [current status](docs/FUSION_IMPLEMENTATION_STATUS.md) and [design record](docs/FUSION_REDESIGN.md).
 
 ## Install / 安装
 

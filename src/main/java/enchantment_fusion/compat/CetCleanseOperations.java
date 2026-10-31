@@ -2,6 +2,7 @@ package enchantment_fusion.compat;
 
 import enchantment_fusion.item.FusedEnchantedBookItem;
 import enchantment_fusion.mechanics.FusionStationOperations;
+import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.registry.FusionDataComponents;
@@ -302,7 +303,12 @@ public final class CetCleanseOperations {
         } else {
             copy.set(FusionDataComponents.FUSED_PAIRS, next);
         }
-        if (!next.containsEnchantmentId(removed.primaryId())) {
+        if (LoyaltyGuard.isPair(removed)) {
+            if (LoyaltyGuard.hasUnambiguousProjection(copy, removed, next)) {
+                FusionStationOperations.removeGearVanillaEnchant(copy, removed.primaryId());
+            }
+            copy.remove(FusionDataComponents.LOYALTY_GUARD_PROJECTION);
+        } else if (!next.containsEnchantmentId(removed.primaryId())) {
             FusionStationOperations.removeGearVanillaEnchant(copy, removed.primaryId());
         }
         FusionStationOperations.syncGlintOverride(copy);

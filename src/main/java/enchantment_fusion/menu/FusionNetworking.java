@@ -28,11 +28,13 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -62,7 +64,8 @@ public final class FusionNetworking {
         TOGGLE_SINGLE_MODE(17),
         SWAP_SLOTS(18),
         SKIP_RITUAL(19),
-        CANCEL_RITUAL(20);
+        CANCEL_RITUAL(20),
+        PICK_SINGLE_A(21);
 
         private final int wireId;
 
@@ -442,6 +445,14 @@ public final class FusionNetworking {
         }
     }
 
+    /** A snapshot, rather than event 35, makes the actual equipped item appear in the activation animation. */
+    public record LoyaltyGuardActivationPayload(ItemStack item) implements CustomPacketPayload {
+        public static final Type<LoyaltyGuardActivationPayload> TYPE = new Type<>(EnchantmentFusion.id("loyalty_guard_activation"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, LoyaltyGuardActivationPayload> STREAM_CODEC =
+            ItemStack.STREAM_CODEC.map(LoyaltyGuardActivationPayload::new, LoyaltyGuardActivationPayload::item);
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
     private static final Map<UUID, long[]> ACTION_RATE_GUARD = new ConcurrentHashMap<>();
 
     private FusionNetworking() {}
@@ -453,6 +464,7 @@ public final class FusionNetworking {
         PayloadTypeRegistry.clientboundPlay().register(MatrixSyncPayload.TYPE, MatrixSyncPayload.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(OpenGrimoirePayload.TYPE, OpenGrimoirePayload.STREAM_CODEC);
         PayloadTypeRegistry.clientboundPlay().register(FusionVisualEventPayload.TYPE, FusionVisualEventPayload.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(LoyaltyGuardActivationPayload.TYPE, LoyaltyGuardActivationPayload.STREAM_CODEC);
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             ACTION_RATE_GUARD.remove(handler.getPlayer().getUUID());

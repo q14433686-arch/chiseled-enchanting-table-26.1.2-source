@@ -5,12 +5,14 @@ import com.mojang.serialization.DataResult;
 import enchantment_fusion.EnchantmentFusion;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.model.RetainedEnchant;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
@@ -119,6 +121,36 @@ public final class FusionDataComponents {
                     MAX_TRANSMUTED_ENCHANTS
                 ).map(FusionDataComponents::sanitizeTransmutedMap, m -> new HashMap<>(sanitizeTransmutedMap(m)))
             )
+            .build()
+    );
+
+    /** A shadowed secondary remains separate from any independent same-name enchantment. */
+    public static final int MAX_RETAINED_ENCHANTS = 64;
+    public static final DataComponentType<List<RetainedEnchant>> RETAINED_ENCHANTS = Registry.register(
+        BuiltInRegistries.DATA_COMPONENT_TYPE,
+        EnchantmentFusion.id("retained_enchants"),
+        DataComponentType.<List<RetainedEnchant>>builder()
+            .persistent(RetainedEnchant.CODEC.listOf(0, MAX_RETAINED_ENCHANTS).xmap(List::copyOf, List::copyOf))
+            .networkSynchronized(RetainedEnchant.STREAM_CODEC.apply(ByteBufCodecs.list(MAX_RETAINED_ENCHANTS))
+                .map(List::copyOf, List::copyOf))
+            .build()
+    );
+
+    /** Level of a vanilla Loyalty projection that this mod itself created for the guard fusion. */
+    public static final DataComponentType<Integer> LOYALTY_GUARD_PROJECTION = Registry.register(
+        BuiltInRegistries.DATA_COMPONENT_TYPE,
+        EnchantmentFusion.id("loyalty_guard_projection"),
+        DataComponentType.<Integer>builder()
+            .persistent(Codec.intRange(1, FusedPair.MAX_LEVEL))
+            .networkSynchronized(ByteBufCodecs.VAR_INT.map(
+                v -> {
+                    if (v < 1 || v > FusedPair.MAX_LEVEL) throw new DecoderException("Invalid projection level: " + v);
+                    return v;
+                },
+                v -> {
+                    if (v < 1 || v > FusedPair.MAX_LEVEL) throw new EncoderException("Invalid projection level: " + v);
+                    return v;
+                }))
             .build()
     );
 

@@ -497,6 +497,11 @@
       "secondary": "minecraft:loyalty",
       "domain": "armor_curse"
     },
+    "loyalty_guard": {
+      "primary": "minecraft:loyalty",
+      "secondary": "minecraft:protection",
+      "domain": "armor_curse"
+    },
     "homing_plume": {
       "primary": "minecraft:feather_falling",
       "secondary": "minecraft:loyalty",

@@ -1149,17 +1149,9 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         if (btn == 0 && this.contextDrawer.mouseClicked(
             mx, my, this.leftPos, this.topPos,
             preview.selection().candidates(),
-            (idx, secondary) -> sendAction(secondary ? StationAction.PICK_SECONDARY_B : StationAction.PICK_PRIMARY_A, idx, ""),
-            () -> {
-                if (gearMode && !this.menu.singleOnlyMode()) {
-                    sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
-                }
-            },
-            () -> {
-                if (this.menu.singleOnlyMode()) {
-                    sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
-                }
-            },
+            (idx, secondary) -> sendCandidateAction(secondary ? StationAction.PICK_SECONDARY_B : StationAction.PICK_PRIMARY_A,
+                idx, preview.selection().candidates()),
+            idx -> sendCandidateAction(StationAction.PICK_SINGLE_A, idx, preview.selection().candidates()),
             this::openEmbeddedGrimoire
         )) {
             return true;
@@ -1277,17 +1269,11 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
                     FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_CLUSTER_STEP, btn == 1 ? 1.25F : 1.0F, 0.7F);
                     if (btn == 0 && FusionGuiSkin.isShiftDown()
                         && (gearMode || this.menu.stationContainer().getItem(FusionStationOperations.SLOT_TARGET).is(FusionItems.FUSED_ENCHANTED_BOOK))) {
-                        if (!this.menu.singleOnlyMode()) {
-                            sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
-                        }
-                        sendAction(StationAction.PICK_PRIMARY_A, idx, "");
+                        sendCandidateAction(StationAction.PICK_SINGLE_A, idx, cands);
                     } else if (btn == 1) {
-                        if (this.menu.singleOnlyMode()) {
-                            sendAction(StationAction.TOGGLE_SINGLE_MODE, 0, "");
-                        }
-                        sendAction(StationAction.PICK_SECONDARY_B, idx, "");
+                        sendCandidateAction(StationAction.PICK_SECONDARY_B, idx, cands);
                     } else {
-                        sendAction(StationAction.PICK_PRIMARY_A, idx, "");
+                        sendCandidateAction(StationAction.PICK_PRIMARY_A, idx, cands);
                     }
                     return true;
                 }
@@ -1362,6 +1348,12 @@ public final class EnchantmentFusionScreen extends AbstractContainerScreen<Encha
         // The server transaction remains owned by the block entity.
         FusionRitualDirector.cancel();
         super.removed();
+    }
+
+    private void sendCandidateAction(StationAction action, int index, List<EnchantCandidate> candidates) {
+        if (index >= 0 && index < candidates.size()) {
+            sendAction(action, index, candidates.get(index).selectionToken());
+        }
     }
 
     private void sendAction(StationAction action, int index, String token) {

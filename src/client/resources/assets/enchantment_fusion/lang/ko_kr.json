@@ -855,5 +855,13 @@
   "message.enchantment_fusion.harvest_limit": "드롭이 너무 많아 초과분은 그대로 둡니다.",
   "message.enchantment_fusion.smelt_overflow": "제련 결과가 묶음 한도를 넘어 원래 드롭을 보존했습니다.",
   "gui.enchantment_fusion.reject.select_single_for_consumable": "이 아이템은 단일 마법만 가능합니다. 단일 모드를 선택하세요.",
-  "gui.enchantment_fusion.picker.single_book_tip": "Shift+왼쪽 클릭으로 강화할 하나를 선택합니다. 오른쪽 클릭으로 쌍 선택 복귀."
+  "gui.enchantment_fusion.picker.single_book_tip": "Shift+왼쪽 클릭으로 강화할 하나를 선택합니다. 오른쪽 클릭으로 쌍 선택 복귀.",
+  "signature.enchantment_fusion.loyalty_guard.title": "Loyalty’s Last Stand",
+  "signature.enchantment_fusion.loyalty_guard.desc": "A lethal hit consumes one Loyalty level for a totem rescue and executes eligible enemies within 3 + 2 × Loyalty + 0.5 × Protection blocks (maximum 24). The equipped item remains; Protection is preserved when the fusion runs out.",
+  "tooltip.enchantment_fusion.retained_enchantment": "Preserved secondary (waiting for a free enchantment slot): %s",
+  "message.enchantment_fusion.guard_retention_full": "Loyalty rescue cannot safely preserve Protection: this item has too many preserved enchantments.",
+  "message.enchantment_fusion.guard_damage_unavailable": "Loyalty rescue saved you, but its execution damage type is unavailable.",
+  "death.attack.enchantment_fusion_loyalty_guard": "%1$s was judged by %2$s’s last stand",
+  "death.attack.enchantment_fusion_loyalty_guard.item": "%1$s was judged by %2$s using %3$s",
+  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s was judged while fighting %2$s"
 }

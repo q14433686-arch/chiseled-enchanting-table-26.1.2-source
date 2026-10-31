@@ -3,6 +3,7 @@ package enchantment_fusion;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import enchantment_fusion.data.FusionMatrixRegistry;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TargetRole;
 import enchantment_fusion.mechanics.DirectionalHostRules;
@@ -16,6 +17,7 @@ import enchantment_fusion.menu.FusionNetworking.CompendiumSyncPayload;
 import enchantment_fusion.menu.FusionNetworking.MatrixSyncPayload;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
+import enchantment_fusion.model.RetainedEnchant;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.EncoderException;
@@ -30,6 +32,48 @@ import org.junit.jupiter.api.Test;
 
 class AuditBoundaryTest {
     private static FriendlyByteBuf buffer() { return new FriendlyByteBuf(Unpooled.buffer()); }
+
+    @Test
+    void loyaltyExecutionTagsAvoidDurabilityDamageWithoutBypassingTotemOrProtectionHooks() throws Exception {
+        var data = java.nio.file.Path.of("src/main/resources/data");
+        var damage = data.resolve("enchantment_fusion/damage_type/loyalty_guard.json");
+        assertTrue(java.nio.file.Files.isRegularFile(damage));
+        var tags = data.resolve("minecraft/tags/damage_type");
+        for (String tag : List.of("bypasses_armor", "bypasses_shield", "bypasses_resistance", "bypasses_cooldown")) {
+            var values = JsonParser.parseString(java.nio.file.Files.readString(tags.resolve(tag + ".json")))
+                .getAsJsonObject().getAsJsonArray("values");
+            assertTrue(values.toString().contains("enchantment_fusion:loyalty_guard"), tag);
+        }
+        for (String tag : List.of("bypasses_invulnerability", "bypasses_enchantments")) {
+            var path = tags.resolve(tag + ".json");
+            assertTrue(!java.nio.file.Files.exists(path)
+                || !java.nio.file.Files.readString(path).contains("enchantment_fusion:loyalty_guard"), tag);
+        }
+    }
+
+    @Test
+    void retainedSecondariesHaveStrictAndMatchingPersistentAndNetworkCodecs() {
+        RetainedEnchant kept = new RetainedEnchant("protection", 4);
+        assertEquals("minecraft:protection", kept.id());
+        var encoded = RetainedEnchant.CODEC.encodeStart(JsonOps.INSTANCE, kept).result().orElseThrow();
+        assertEquals(kept, RetainedEnchant.CODEC.parse(JsonOps.INSTANCE, encoded).result().orElseThrow());
+        assertTrue(RetainedEnchant.CODEC.parse(JsonOps.INSTANCE,
+            JsonParser.parseString("{\"id\":\"minecraft:protection\",\"level\":0}")).error().isPresent());
+        assertThrows(IllegalArgumentException.class, () -> new RetainedEnchant("protection", 256));
+        var bytes = Unpooled.buffer();
+        try {
+            RetainedEnchant.STREAM_CODEC.encode(bytes, kept);
+            assertEquals(kept, RetainedEnchant.STREAM_CODEC.decode(bytes));
+            assertEquals(0, bytes.readableBytes());
+        } finally { bytes.release(); }
+        var malformed = Unpooled.buffer();
+        try {
+            net.minecraft.network.codec.ByteBufCodecs.stringUtf8(FusedPair.MAX_ENCHANT_ID_LENGTH)
+                .encode(malformed, "minecraft:protection");
+            net.minecraft.network.codec.ByteBufCodecs.VAR_INT.encode(malformed, 0);
+            assertThrows(DecoderException.class, () -> RetainedEnchant.STREAM_CODEC.decode(malformed));
+        } finally { malformed.release(); }
+    }
 
     @Test
     void identifiersAreBoundedAfterTheDefaultNamespaceIsAdded() {

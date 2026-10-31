@@ -855,5 +855,13 @@
   "message.enchantment_fusion.harvest_limit": "本次掉落過多，超出部分保留原樣。",
   "message.enchantment_fusion.smelt_overflow": "熔煉產物超過堆疊上限，原掉落已保留。",
   "gui.enchantment_fusion.reject.select_single_for_consumable": "該物品只能化形單附魔，請切換單附魔模式。",
-  "gui.enchantment_fusion.picker.single_book_tip": "按住 Shift+左鍵選擇一條用於補強；右鍵恢復雙附魔選擇。"
+  "gui.enchantment_fusion.picker.single_book_tip": "按住 Shift+左鍵選擇一條用於補強；右鍵恢復雙附魔選擇。",
+  "signature.enchantment_fusion.loyalty_guard.title": "忠誠護主",
+  "signature.enchantment_fusion.loyalty_guard.desc": "致命受擊時消耗一級忠誠觸發圖騰救命，並處決半徑內合格敵人。半徑為 3 + 2×忠誠等級 + 0.5×保護等級，最多 24 格。忠誠耗盡移除融合，保留裝備和保護等級。",
+  "tooltip.enchantment_fusion.retained_enchantment": "保留的副位（同名附魔空位可用時恢復）：%s",
+  "message.enchantment_fusion.guard_retention_full": "忠誠護主無法安全保留保護等級：這件物品保存的附魔過多。",
+  "message.enchantment_fusion.guard_damage_unavailable": "忠誠護主已救命，但處決傷害類型不可用。",
+  "death.attack.enchantment_fusion_loyalty_guard": "%1$s 被 %2$s 的忠誠護主處決了",
+  "death.attack.enchantment_fusion_loyalty_guard.item": "%1$s 被 %2$s 用 %3$s 的忠誠護主處決了",
+  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s 在與 %2$s 戰鬥時被忠誠護主處決了"
 }

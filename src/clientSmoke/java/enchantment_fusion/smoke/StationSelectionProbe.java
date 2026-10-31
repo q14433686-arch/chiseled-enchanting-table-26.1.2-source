@@ -5,15 +5,19 @@ import enchantment_fusion.item.FusedEnchantedBookItem;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.FusionStationOperations.OperationKind;
+import enchantment_fusion.menu.EnchantmentFusionMenu;
+import enchantment_fusion.menu.FusionNetworking.StationAction;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.registry.FusionDataComponents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -83,6 +87,33 @@ final class StationSelectionProbe {
                 1, -1, true, FusionMatrixRegistry.serverSnapshot());
             require(bookSingle.executable() && bookSingle.kind() == OperationKind.TOP_UP_LEVEL,
                 "Explicitly selecting the book's matching donor must enable top-up");
+
+            EnchantmentFusionMenu menu = new EnchantmentFusionMenu(0, player.getInventory(), slots,
+                ContainerLevelAccess.NULL, BlockPos.ZERO);
+            try {
+                var candidates = FusionStationOperations.collectCandidates(slots, FusionStationOperations.TAB_FUSE);
+                require(candidates.size() == 2, "Selection fixture needs exactly two candidates");
+                String firstToken = candidates.get(0).selectionToken();
+                String secondToken = candidates.get(1).selectionToken();
+                require(menu.performAction(player, StationAction.PICK_SINGLE_A, 0, 0, firstToken)
+                    && menu.singleOnlyMode() && menu.computePreview().selection().secondary() == null,
+                    "Shift selection must atomically enter single mode");
+                require(menu.performAction(player, StationAction.PICK_SECONDARY_B, 1, 0, secondToken)
+                    && !menu.singleOnlyMode() && menu.computePreview().selection().secondaryIndex() == 1,
+                    "Right-clicking the default B in single mode must restore pair mode");
+                require(menu.performAction(player, StationAction.PICK_SECONDARY_B, 1, 0, secondToken)
+                    && !menu.singleOnlyMode() && menu.computePreview().selection().secondaryIndex() == 1,
+                    "Right-clicking the already-selected B must not silently enter single mode");
+                require(menu.performAction(player, StationAction.PICK_SINGLE_A, 0, 0, firstToken)
+                    && menu.performAction(player, StationAction.PICK_SECONDARY_B, 0, 0, firstToken)
+                    && !menu.singleOnlyMode() && menu.computePreview().selection().secondaryIndex() == 0
+                    && menu.computePreview().selection().primaryIndex() == 1,
+                    "Right-clicking current A in single mode must make it B and select the other A");
+                require(!menu.performAction(player, StationAction.PICK_SINGLE_A, 0, 0, "stale:token")
+                    && !menu.singleOnlyMode(), "A stale candidate token must not change selection");
+            } finally {
+                menu.removed(player);
+            }
         } finally {
             player.getAbilities().instabuild = savedCreative;
         }

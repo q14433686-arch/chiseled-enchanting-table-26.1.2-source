@@ -150,8 +150,18 @@ final class FusionRuleEngineTest {
     }
 
     @Test
-    void allOneHundredFiftyCuratedSignatureResonancesAreStrictlyUniqueAndDirectional() {
-        assertEquals(150, SignaturePairs.allUniqueSignatures().size(), "Expected 150 curated directional Signature Resonances");
+    void loyaltyProtectionRescueIsDirectionalAndUsesBoundedLevelRadius() {
+        var guard = FusedPair.clean("minecraft:loyalty", 3, "minecraft:protection", 4);
+        assertEquals("loyalty_guard", SignaturePairs.resolve(guard).orElseThrow().id());
+        assertEquals("loyal_lifeline", SignaturePairs.resolve(guard.flipped()).orElseThrow().id());
+        assertEquals(11.0D, enchantment_fusion.mechanics.signatures.LoyaltyGuard.radius(3, 4));
+        assertEquals(5.5D, enchantment_fusion.mechanics.signatures.LoyaltyGuard.radius(1, 1));
+        assertEquals(24.0D, enchantment_fusion.mechanics.signatures.LoyaltyGuard.radius(255, 255));
+    }
+
+    @Test
+    void allCuratedSignatureResonancesAreStrictlyUniqueAndDirectional() {
+        assertEquals(151, SignaturePairs.allUniqueSignatures().size(), "Expected 151 curated directional Signature Resonances");
         Set<String> ids = new HashSet<>();
         for (SignatureEntry entry : SignaturePairs.allUniqueSignatures()) {
             assertTrue(ids.add(entry.id()), "Duplicate Signature ID forbidden: " + entry.id());
@@ -230,7 +240,7 @@ final class FusionRuleEngineTest {
     }
 
     @Test
-    void allElevenLocalesShareIdenticalTranslationKeySetIncludingAll150SignaturesAnd140Transmutes() throws Exception {
+    void allElevenLocalesShareIdenticalTranslationKeySetIncludingAll151SignaturesAnd140Transmutes() throws Exception {
         List<String> locales = List.of(
             "de_de", "en_us", "es_es", "fr_fr", "it_it", "ja_jp",
             "ko_kr", "pt_br", "ru_ru", "zh_cn", "zh_tw"
@@ -245,7 +255,7 @@ final class FusionRuleEngineTest {
                 if (baselineKeys == null) {
                     baselineKeys = keys;
                     assertTrue(keys.size() >= 750, "Expected comprehensive 0.6.0 curated translation key set");
-                    assertEquals(150, SignaturePairs.allUniqueSignatures().size());
+                    assertEquals(151, SignaturePairs.allUniqueSignatures().size());
                     for (var sig : SignaturePairs.allUniqueSignatures()) {
                         assertTrue(keys.contains(sig.titleKey()), "Missing signature title key: " + sig.titleKey());
                         assertTrue(keys.contains(sig.descKey()), "Missing signature desc key: " + sig.descKey());

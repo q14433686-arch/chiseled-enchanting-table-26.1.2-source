@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.IntConsumer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -288,8 +289,7 @@ public final class FusionContextDrawer {
         int topPos,
         List<EnchantCandidate> candidates,
         BiConsumer<Integer, Boolean> pickAction,
-        Runnable setSingleModeTrue,
-        Runnable setSingleModeFalse,
+        IntConsumer pickSingleAction,
         Runnable openFullGrimoire
     ) {
         if (badgeBox(leftPos, topPos).contains(mx, my)) {
@@ -341,7 +341,7 @@ public final class FusionContextDrawer {
             HitBox rowBox = new HitBox(listX, listY + r * ROW_STEP, rowW, ROW_H);
             if (rowBox.contains(mx, my)) {
                 autoSelectRecipeCandidates(
-                    this.matched.get(idx), candidates, pickAction, setSingleModeTrue, setSingleModeFalse
+                    this.matched.get(idx), candidates, pickAction, pickSingleAction
                 );
                 this.expanded = false;
                 FusionGuiMicroEffects.playUiSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.32F, 0.72F);
@@ -368,14 +368,12 @@ public final class FusionContextDrawer {
         ContextRecipe rec,
         List<EnchantCandidate> candidates,
         BiConsumer<Integer, Boolean> pickAction,
-        Runnable setSingleModeTrue,
-        Runnable setSingleModeFalse
+        IntConsumer pickSingleAction
     ) {
         if (!rec.isSignature()) {
             for (int i = 0; i < candidates.size(); i++) {
                 if (rec.primaryEnchantId().equals(candidates.get(i).id())) {
-                    setSingleModeTrue.run();
-                    pickAction.accept(i, false);
+                    pickSingleAction.accept(i);
                     return;
                 }
             }
@@ -400,7 +398,6 @@ public final class FusionContextDrawer {
             }
         }
         if (idxA >= 0 && idxB >= 0) {
-            setSingleModeFalse.run();
             pickAction.accept(idxA, false);
             pickAction.accept(idxB, true);
         }

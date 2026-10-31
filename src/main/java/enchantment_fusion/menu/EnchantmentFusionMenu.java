@@ -298,17 +298,18 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 uiState.set(DATA_SECONDARY_IDX, NO_SELECTION);
                 changed = true;
             }
-            case PICK_PRIMARY_A -> {
+            case PICK_PRIMARY_A, PICK_SINGLE_A -> {
                 List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(stationInv, activeTab());
                 int resolvedIdx = resolveCandidateIndex(cands, paramA, expectedToken);
                 if (resolvedIdx >= 0) {
                     ResolvedSelection cur = FusionStationOperations.resolveSelection(
                         cands, preferredPrimaryIndex(), preferredSecondaryIndex(), singleOnlyMode()
                     );
-                    if (resolvedIdx == cur.secondaryIndex()) {
+                    if (action == StationAction.PICK_PRIMARY_A && resolvedIdx == cur.secondaryIndex()) {
                         uiState.set(DATA_SECONDARY_IDX, cur.primaryIndex());
                     }
                     uiState.set(DATA_PRIMARY_IDX, resolvedIdx);
+                    if (action == StationAction.PICK_SINGLE_A) uiState.set(DATA_SINGLE_MODE, 1);
                     changed = true;
                 } else {
                     failReason = RejectReason.MISSING_INPUT;
@@ -318,19 +319,22 @@ public final class EnchantmentFusionMenu extends AbstractContainerMenu {
                 List<EnchantCandidate> cands = FusionStationOperations.collectCandidates(stationInv, activeTab());
                 int resolvedIdx = resolveCandidateIndex(cands, paramA, expectedToken);
                 if (resolvedIdx >= 0) {
-                    ResolvedSelection cur = FusionStationOperations.resolveSelection(
-                        cands, preferredPrimaryIndex(), preferredSecondaryIndex(), singleOnlyMode()
+                    // Right-click is an explicit pair selection, including when this row
+                    // happened to be the default B. Do it in one server action so a stale
+                    // client toggle cannot silently switch the result back to single mode.
+                    ResolvedSelection paired = FusionStationOperations.resolveSelection(
+                        cands, preferredPrimaryIndex(), preferredSecondaryIndex(), false
                     );
-                    if (!singleOnlyMode() && resolvedIdx == cur.secondaryIndex()) {
-                        uiState.set(DATA_SINGLE_MODE, 1);
+                    if (resolvedIdx == paired.primaryIndex() && paired.secondaryIndex() < 0) {
+                        failReason = RejectReason.MISSING_INPUT;
                     } else {
-                        uiState.set(DATA_SINGLE_MODE, 0);
-                        if (resolvedIdx == cur.primaryIndex()) {
-                            uiState.set(DATA_PRIMARY_IDX, cur.secondaryIndex() >= 0 ? cur.secondaryIndex() : 0);
+                        if (resolvedIdx == paired.primaryIndex()) {
+                            uiState.set(DATA_PRIMARY_IDX, paired.secondaryIndex());
                         }
                         uiState.set(DATA_SECONDARY_IDX, resolvedIdx);
+                        uiState.set(DATA_SINGLE_MODE, 0);
+                        changed = true;
                     }
-                    changed = true;
                 } else {
                     failReason = RejectReason.MISSING_INPUT;
                 }

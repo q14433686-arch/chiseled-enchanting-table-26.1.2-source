@@ -76,6 +76,10 @@ public final class FusionTooltipRenderer {
         }
 
         boolean shift = isShiftHeld();
+        for (var retained : stack.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.of())) {
+            lines.add(Component.translatable("tooltip.enchantment_fusion.retained_enchantment",
+                formatEnchantmentWithLevel(registries, retained.id(), retained.level())).withStyle(ChatFormatting.GOLD));
+        }
         FusedEnchantmentList list = stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         boolean hasCrossTransmute = renderCrossDomainEnchantmentLines(stack, registries, list, lines, shift);
 

@@ -855,5 +855,13 @@
   "message.enchantment_fusion.harvest_limit": "Demasiados objetos: el exceso queda intacto.",
   "message.enchantment_fusion.smelt_overflow": "La fundición supera el límite de pila; se conserva el objeto original.",
   "gui.enchantment_fusion.reject.select_single_for_consumable": "Este objeto acepta un encantamiento; elige el modo individual.",
-  "gui.enchantment_fusion.picker.single_book_tip": "Mayús+clic izquierdo elige un encantamiento para mejorar; clic derecho restaura el par."
+  "gui.enchantment_fusion.picker.single_book_tip": "Mayús+clic izquierdo elige un encantamiento para mejorar; clic derecho restaura el par.",
+  "signature.enchantment_fusion.loyalty_guard.title": "Loyalty’s Last Stand",
+  "signature.enchantment_fusion.loyalty_guard.desc": "A lethal hit consumes one Loyalty level for a totem rescue and executes eligible enemies within 3 + 2 × Loyalty + 0.5 × Protection blocks (maximum 24). The equipped item remains; Protection is preserved when the fusion runs out.",
+  "tooltip.enchantment_fusion.retained_enchantment": "Preserved secondary (waiting for a free enchantment slot): %s",
+  "message.enchantment_fusion.guard_retention_full": "Loyalty rescue cannot safely preserve Protection: this item has too many preserved enchantments.",
+  "message.enchantment_fusion.guard_damage_unavailable": "Loyalty rescue saved you, but its execution damage type is unavailable.",
+  "death.attack.enchantment_fusion_loyalty_guard": "%1$s was judged by %2$s’s last stand",
+  "death.attack.enchantment_fusion_loyalty_guard.item": "%1$s was judged by %2$s using %3$s",
+  "death.attack.enchantment_fusion_loyalty_guard.player": "%1$s was judged while fighting %2$s"
 }

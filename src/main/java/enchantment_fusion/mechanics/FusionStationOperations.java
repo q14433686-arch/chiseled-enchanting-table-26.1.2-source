@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.FusionRuleEngine.EnchantInput;
 import enchantment_fusion.mechanics.FusionRuleEngine.PairEvaluation;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
+import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.registry.FusionDataComponents;
@@ -929,12 +930,26 @@ public final class FusionStationOperations {
                                 return ActionResult.failed(RejectReason.MISSING_INPUT);
                             }
                             FusedPair upgraded = old.withPrimaryLevel(nextLvl);
+                            int projection = sTarget.getOrDefault(FusionDataComponents.LOYALTY_GUARD_PROJECTION, 0);
+                            int nativeBefore = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(donor.holder());
+                            boolean sharedPrimary = false;
+                            for (int other = 0; other < list.size(); other++) {
+                                if (other != i && list.pairs().get(other).involves(old.primaryId())) sharedPrimary = true;
+                            }
                             sTarget.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(i, upgraded));
                             if (VesselCapacityRules.isPotentialEquipmentHost(sTarget)) {
                                 if (replacesNativePrimary(upgraded)) {
                                     removeGearVanillaEnchant(sTarget, upgraded.primaryId());
                                 } else if (donor.holder().value().canEnchant(sTarget)) {
                                     setGearVanillaEnchantLevel(sTarget, donor.holder(), nextLvl);
+                                }
+                            }
+                            if (LoyaltyGuard.isPair(old) && projection > 0) {
+                                int nativeAfter = sTarget.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(donor.holder());
+                                if (!sharedPrimary && projection == old.primaryLevel() && nativeBefore == projection && nativeAfter == nextLvl) {
+                                    sTarget.set(FusionDataComponents.LOYALTY_GUARD_PROJECTION, nextLvl);
+                                } else {
+                                    sTarget.remove(FusionDataComponents.LOYALTY_GUARD_PROJECTION);
                                 }
                             }
                             syncGlintOverride(sTarget);
@@ -1085,11 +1100,20 @@ public final class FusionStationOperations {
         target.set(FusionDataComponents.FUSED_PAIRS, list.replaceAt(socketIndex, flipped));
 
         if (VesselCapacityRules.isPotentialEquipmentHost(target)) {
-            removeGearVanillaEnchant(target, oldPair.primaryId());
+            if (!LoyaltyGuard.isPair(oldPair)
+                || LoyaltyGuard.hasUnambiguousProjection(target, oldPair, list.removeAt(socketIndex))) {
+                removeGearVanillaEnchant(target, oldPair.primaryId());
+            }
+            if (LoyaltyGuard.isPair(oldPair)) target.remove(FusionDataComponents.LOYALTY_GUARD_PROJECTION);
             if (!replacesNativePrimary(flipped)) {
                 lookupEnchantment(registries, flipped.primaryId()).ifPresent(h -> {
                     if (h.value().canEnchant(target)) {
+                        int before = target.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(h);
                         setGearVanillaEnchantLevel(target, h, flipped.primaryLevel());
+                        if (LoyaltyGuard.isPair(flipped) && before == 0
+                            && !list.removeAt(socketIndex).containsEnchantmentId(LoyaltyGuard.PRIMARY)) {
+                            target.set(FusionDataComponents.LOYALTY_GUARD_PROJECTION, flipped.primaryLevel());
+                        }
                     }
                 });
             }
@@ -1173,8 +1197,16 @@ public final class FusionStationOperations {
             } else {
                 target.set(FusionDataComponents.FUSED_PAIRS, remaining);
             }
-            removeGearVanillaEnchant(target, oldPair.primaryId());
-            removeGearVanillaEnchant(target, oldPair.secondaryId());
+            if (LoyaltyGuard.isPair(oldPair)) {
+                if (LoyaltyGuard.hasUnambiguousProjection(target, oldPair, remaining)) {
+                    removeGearVanillaEnchant(target, oldPair.primaryId());
+                }
+                target.remove(FusionDataComponents.LOYALTY_GUARD_PROJECTION);
+                // Protection is a virtual secondary, not a native projection of this fusion.
+            } else {
+                removeGearVanillaEnchant(target, oldPair.primaryId());
+                removeGearVanillaEnchant(target, oldPair.secondaryId());
+            }
             syncGlintOverride(target);
 
             ItemStack extractedFusedBook = FusedEnchantedBookItem.createForPair(oldPair);
@@ -1270,7 +1302,11 @@ public final class FusionStationOperations {
         if (!replacesNativePrimary(pair)) {
             lookupEnchantment(registries, pair.primaryId()).ifPresent(h -> {
                 if (h.value().canEnchant(gear)) {
+                    int before = gear.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(h);
                     setGearVanillaEnchantLevel(gear, h, pair.primaryLevel());
+                    if (LoyaltyGuard.isPair(pair) && before == 0 && !existing.containsEnchantmentId(LoyaltyGuard.PRIMARY)) {
+                        gear.set(FusionDataComponents.LOYALTY_GUARD_PROJECTION, pair.primaryLevel());
+                    }
                 }
             });
         } else {
@@ -1293,7 +1329,7 @@ public final class FusionStationOperations {
     public static boolean normalizeRedesignedPrimary(ItemStack gear, HolderLookup.Provider registries) {
         if (gear == null || gear.isEmpty()) return false;
         FusedEnchantmentList pairs = gear.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
-        boolean changed = false;
+        boolean changed = LoyaltyGuard.materializeRetained(gear, registries);
         for (FusedPair pair : pairs.pairs()) {
             if (!FlameKineticEffects.isDefaultPair(pair)) continue;
             Optional<Holder<Enchantment>> holder = lookupEnchantment(registries, pair.primaryId());
@@ -1314,12 +1350,17 @@ public final class FusionStationOperations {
     }
 
     public static void syncGlintOverride(ItemStack stack) {
-        boolean hasFused = !stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).isEmpty();
+        FusedEnchantmentList pairs = stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        boolean hasFused = !pairs.isEmpty();
         boolean hasTransmuted = !stack.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of()).isEmpty();
+        boolean hasRetained = !stack.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.of()).isEmpty();
         boolean hasVanilla = !stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).isEmpty();
-        if ((hasFused || hasTransmuted) && !hasVanilla) {
+        if (pairs.pairs().stream().noneMatch(LoyaltyGuard::isPair)) {
+            stack.remove(FusionDataComponents.LOYALTY_GUARD_PROJECTION);
+        }
+        if ((hasFused || hasTransmuted || hasRetained) && !hasVanilla) {
             stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
-        } else if (!hasFused && !hasTransmuted) {
+        } else if (!hasFused && !hasTransmuted && !hasRetained) {
             stack.remove(DataComponents.ENCHANTMENT_GLINT_OVERRIDE);
         }
     }
