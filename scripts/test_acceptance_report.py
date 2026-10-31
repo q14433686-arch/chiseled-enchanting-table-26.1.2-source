@@ -18,6 +18,7 @@ class AcceptancePlanTest(unittest.TestCase):
         self.assertFalse(set(exercised) - set(planned), "unplanned fixture IDs")
         self.assertTrue({"05-mending-unbreaking", "05-unbreaking-mending",
                          "16-blast-protection", "16-protection-blast",
+                         "39.1-density-breach", "39.1-breach-density",
                          "09-efficiency-silk", "09-silk-efficiency", "11-multishot-piercing",
                          "11-piercing-multishot"}.issubset(exercised))
         self.assertIn('"SKIP"', plan)

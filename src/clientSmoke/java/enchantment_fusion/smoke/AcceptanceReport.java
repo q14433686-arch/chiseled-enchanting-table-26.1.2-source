@@ -29,6 +29,8 @@ final class AcceptanceReport {
         plan("05-unbreaking-mending", "Unbreaking ▷ Mending: real wear, XP conversion and break rescue fixture", "Not reached if setup fails.");
         plan("16-blast-protection", "Blast Protection ▷ Protection: armor calculation and counter fixture", "Not reached if setup fails.");
         plan("16-protection-blast", "Protection ▷ Blast Protection: explosion and ordinary damage fixture", "Not reached if setup fails.");
+        plan("39.1-density-breach", "Density ▷ Breach: equal armor math, real crater and arrow fixture", "Not reached if setup fails.");
+        plan("39.1-breach-density", "Breach ▷ Density: equal armor math, real crater and arrow fixture", "Not reached if setup fails.");
         plan("09-efficiency-silk", "Efficiency ▷ Silk Touch: prepared server fixture", "Not reached if setup fails.");
         plan("09-silk-efficiency", "Silk Touch ▷ Efficiency: prepared server fixture", "Not reached if setup fails.");
         plan("common-station-selection", "Station selection and stale-target checks", "Not reached if setup fails.");
@@ -43,6 +45,7 @@ final class AcceptanceReport {
         plan("01-fire-knockback", "Multi-tick fire/knockback integration sequence", "Not reached if an earlier phase fails.");
         plan("05-runtime-compat", "05 real restart, unusual item formats, external mod cancellation and multiplayer synchronization", "Not covered by the prepared single-player server fixture.");
         plan("16-runtime-compat", "16 natural blast push, multiplayer PvP, totems and protection-mod compatibility", "Not covered by the prepared single-player server fixture.");
+        plan("39.1-runtime-compat", "39.1 real draw/throw, firework rockets, multiplayer PvP, totems and protection mods", "Not covered by the prepared fixture; firework rocket support is not yet implemented.");
         plan("09-input-config", "09 real client G/V input, configuration reload and multiplayer permissions", "Not covered by the prepared server fixture.");
         plan("11-shot-pvp", "11 real draw/reload, randomness, two-player PvP and natural save/unload", "Not covered by the prepared server fixture.");
         plan("multiplayer-protection", "Real multiplayer, third-party protection plugins and modded projectile compatibility", "Requires additional clients/mods; not covered by these probes.");
