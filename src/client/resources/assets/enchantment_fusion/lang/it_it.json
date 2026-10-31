@@ -206,7 +206,7 @@
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
   "signature.enchantment_fusion.pyro_thorns.title": "Agguato di spine ardenti",
-  "signature.enchantment_fusion.pyro_thorns.desc": "[Spine ▷ Protezione dal fuoco] Un colpo da mischia efficace marca l’aggressore; se colpisce ancora subisce una risposta ritardata e prende fuoco, con normale usura.",
+  "signature.enchantment_fusion.pyro_thorns.desc": "[Spine ▷ Protezione dal fuoco] Un colpo da mischia efficace marca l’aggressore; se colpisce poi qualsiasi bersaglio in mischia subisce una risposta ritardata e prende fuoco, con normale usura.",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",

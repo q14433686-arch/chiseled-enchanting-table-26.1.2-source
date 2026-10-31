@@ -206,7 +206,7 @@
   "signature.enchantment_fusion.arrow_stride.title": "借箭疾行",
   "signature.enchantment_fusion.arrow_stride.desc": "被遠程攻击擦中時激發迅捷II幻步，瞬息拉近与射手距離。",
   "signature.enchantment_fusion.pyro_thorns.title": "灼刺埋伏",
-  "signature.enchantment_fusion.pyro_thorns.desc": "【荊棘 ▷ 火焰保護】受到有效近戰傷害時標記攻擊者；同一攻擊者再次命中你後才引燃並延遲反傷，裝備按正常流程消耗耐久。",
+  "signature.enchantment_fusion.pyro_thorns.desc": "【荊棘 ▷ 火焰保護】受到有效近戰傷害時標記攻擊者；同一攻擊者再次有效近戰命中任意目標後才引燃並延遲反傷，裝備按正常流程消耗耐久。",
   "signature.enchantment_fusion.blast_thorns.title": "爆震荆棘",
   "signature.enchantment_fusion.blast_thorns.desc": "受擊時觸發氣浪反震，将貼身圍攻者猛烈彈開。",
   "signature.enchantment_fusion.sniper_thorns.title": "追魂反刺",

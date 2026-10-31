@@ -206,7 +206,7 @@
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
   "signature.enchantment_fusion.pyro_thorns.title": "Glutdornen-Lauer",
-  "signature.enchantment_fusion.pyro_thorns.desc": "[Dornen ▷ Feuerschutz] Wirksamer Nahkampfschaden markiert den Angreifer. Bei seinem nächsten Treffer folgen verzögerter Dornenschaden und Entzündung mit normalem Verschleiß.",
+  "signature.enchantment_fusion.pyro_thorns.desc": "[Dornen ▷ Feuerschutz] Wirksamer Nahkampfschaden markiert den Angreifer. Bei seinem nächsten Nahkampftreffer auf ein beliebiges Ziel folgen verzögerter Dornenschaden und Entzündung mit normalem Verschleiß.",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",

@@ -206,7 +206,7 @@
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
   "signature.enchantment_fusion.pyro_thorns.title": "Searing Ambush",
-  "signature.enchantment_fusion.pyro_thorns.desc": "[Thorns ▷ Fire Protection] A damaging melee hit marks its attacker. If the same attacker hits you again, the mark causes a delayed thorn strike and ignition, with normal equipment wear.",
+  "signature.enchantment_fusion.pyro_thorns.desc": "[Thorns ▷ Fire Protection] A damaging melee hit marks its attacker. If that attacker later lands a melee hit on any target, the mark causes a delayed thorn strike and ignition, with normal equipment wear.",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",

@@ -206,7 +206,7 @@
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
   "signature.enchantment_fusion.pyro_thorns.title": "灼棘の伏撃",
-  "signature.enchantment_fusion.pyro_thorns.desc": "【棘の鎧 ▷ 火炎耐性】有効な近接ダメージで攻撃者を印付けし、同じ相手に再び当てられると遅れて反撃し着火する。通常の耐久を消費する。",
+  "signature.enchantment_fusion.pyro_thorns.desc": "【棘の鎧 ▷ 火炎耐性】有効な近接ダメージで攻撃者を印付けし、その攻撃者が次に任意の対象へ近接攻撃を当てると遅れて反撃し着火する。通常の耐久を消費する。",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",

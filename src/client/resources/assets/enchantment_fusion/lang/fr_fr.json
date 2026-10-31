@@ -206,7 +206,7 @@
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
   "signature.enchantment_fusion.pyro_thorns.title": "Embuscade d’épines brûlantes",
-  "signature.enchantment_fusion.pyro_thorns.desc": "[Épines ▷ Protection contre le feu] Une attaque de mêlée effective marque l’attaquant ; à son prochain coup, une riposte différée l’enflamme et use normalement l’équipement.",
+  "signature.enchantment_fusion.pyro_thorns.desc": "[Épines ▷ Protection contre le feu] Une attaque de mêlée effective marque l’attaquant ; à son prochain coup de mêlée sur n’importe quelle cible, une riposte différée l’enflamme et use normalement l’équipement.",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",

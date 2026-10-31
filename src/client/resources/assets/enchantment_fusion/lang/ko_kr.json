@@ -206,7 +206,7 @@
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
   "signature.enchantment_fusion.pyro_thorns.title": "작열 가시 매복",
-  "signature.enchantment_fusion.pyro_thorns.desc": "【가시 ▷ 화염 보호】유효한 근접 피해를 주는 공격자를 표시하고 같은 공격자가 다시 맞히면 지연 반격과 점화를 일으킵니다. 일반 장비 내구도가 소모됩니다.",
+  "signature.enchantment_fusion.pyro_thorns.desc": "【가시 ▷ 화염 보호】유효한 근접 피해를 주는 공격자를 표시하고 같은 공격자가 이후 어떤 대상이든 근접 공격으로 맞히면 지연 반격과 점화를 일으킵니다. 일반 장비 내구도가 소모됩니다.",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",

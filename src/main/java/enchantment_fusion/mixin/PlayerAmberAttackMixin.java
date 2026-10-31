@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
+import enchantment_fusion.mechanics.signatures.FireThornsSkills;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -56,6 +57,7 @@ public abstract class PlayerAmberAttackMixin {
         Player player = (Player) (Object) this;
         GlazedStrikeEffect.prepareSwing(player, target);
         AmberSealSkill.AttackFrame frame = AmberSealSkill.beginAttack(player, player.getWeaponItem(), target, source);
+        FireThornsSkills.AttackSnapshot thorns = FireThornsSkills.beforeAttack(player, target, source);
         boolean succeeded = false;
         try {
             ItemStack weapon = player.getWeaponItem();
@@ -67,8 +69,11 @@ public abstract class PlayerAmberAttackMixin {
                     succeeded = original.call(target, source, damage);
                     return succeeded;
                 } finally {
-                    try { MomentumSealSkills.damageResult(player, target, source, succeeded); }
-                    finally { HeavyCrushSkill.endHit(heavyHit, succeeded); }
+                    try { FireThornsSkills.afterAttack(thorns, player, target, source, succeeded); }
+                    finally {
+                        try { MomentumSealSkills.damageResult(player, target, source, succeeded); }
+                        finally { HeavyCrushSkill.endHit(heavyHit, succeeded); }
+                    }
                 }
             } finally { SoulThreadSkills.endHit(soulHit, succeeded); }
         } finally { AmberSealSkill.endAttack(frame, succeeded); }
@@ -82,6 +87,7 @@ public abstract class PlayerAmberAttackMixin {
         Player player = (Player) (Object) this;
         GlazedStrikeEffect.prepareStab(player, slot, target);
         AmberSealSkill.AttackFrame frame = AmberSealSkill.beginAttack(player, player.getItemBySlot(slot), target, source);
+        FireThornsSkills.AttackSnapshot thorns = FireThornsSkills.beforeAttack(player, target, source);
         boolean succeeded = false;
         try {
             ItemStack weapon = player.getItemBySlot(slot);
@@ -93,8 +99,11 @@ public abstract class PlayerAmberAttackMixin {
                     succeeded = original.call(target, source, damage);
                     return succeeded;
                 } finally {
-                    try { MomentumSealSkills.damageResult(player, target, source, succeeded); }
-                    finally { HeavyCrushSkill.endHit(heavyHit, succeeded); }
+                    try { FireThornsSkills.afterAttack(thorns, player, target, source, succeeded); }
+                    finally {
+                        try { MomentumSealSkills.damageResult(player, target, source, succeeded); }
+                        finally { HeavyCrushSkill.endHit(heavyHit, succeeded); }
+                    }
                 }
             } finally { SoulThreadSkills.endHit(soulHit, succeeded); }
         } finally { AmberSealSkill.endAttack(frame, succeeded); }

@@ -206,7 +206,7 @@
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
   "signature.enchantment_fusion.pyro_thorns.title": "Засада жгучих шипов",
-  "signature.enchantment_fusion.pyro_thorns.desc": "[Шипы ▷ Огнеупорность] Успешный удар ближнего боя помечает нападающего; при его следующем ударе с задержкой наносятся урон и поджог, с обычным износом.",
+  "signature.enchantment_fusion.pyro_thorns.desc": "[Шипы ▷ Огнеупорность] Успешный удар ближнего боя помечает нападающего; при его следующем ударе ближнего боя по любой цели с задержкой наносятся урон и поджог, с обычным износом.",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",

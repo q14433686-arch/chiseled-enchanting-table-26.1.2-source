@@ -10,6 +10,7 @@ import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,6 +59,7 @@ public final class FireThornsSkills {
         Ring(Gear gear, ResourceKey<Level> dimension, long created) { this.gear = gear; this.dimension = dimension; this.created = created; }
     }
     private static final Map<Key, Mark> MARKS = new HashMap<>();
+    private static final Map<UUID, Set<Key>> MARKS_BY_ATTACKER = new HashMap<>();
     private static final List<Retaliation> PENDING = new ArrayList<>();
     private static final Map<UUID, Ring> RINGS = new HashMap<>();
     private static final ThreadLocal<Boolean> IN_SKILL = ThreadLocal.withInitial(() -> false);
@@ -124,30 +126,96 @@ public final class FireThornsSkills {
         Gear gear = gear(player, item.inSlot(), true);
         return gear != null && gear.stack() == item.itemStack();
     }
-    /** Observe actual health/absorption loss once; defer any retaliation outside the current hit. */
-    public static void observeDamage(ServerPlayer wearer, DamageSource source, float beforeHealth, float beforeAbsorption) {
-        if (Boolean.TRUE.equals(IN_SKILL.get()) || wearer.isSpectator() || !melee(source)
-            || !(source.getEntity() instanceof LivingEntity attacker) || source.getDirectEntity() != attacker
-            || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) || source.is(DamageTypeTags.BYPASSES_EFFECTS)
-            || source.is(DamageTypeTags.BYPASSES_ENCHANTMENTS) || !legalAttacker(wearer, attacker)) return;
-        float lost = Math.max(0.0F, beforeHealth - wearer.getHealth()) + Math.max(0.0F, beforeAbsorption - wearer.getAbsorptionAmount());
+    private static boolean directMelee(DamageSource source, LivingEntity attacker) {
+        return !Boolean.TRUE.equals(IN_SKILL.get()) && melee(source) && source.getEntity() == attacker
+            && source.getDirectEntity() == attacker && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
+            && !source.is(DamageTypeTags.BYPASSES_EFFECTS) && !source.is(DamageTypeTags.BYPASSES_ENCHANTMENTS);
+    }
+    private static void putMark(Key key, Mark mark) {
+        MARKS.put(key, mark);
+        MARKS_BY_ATTACKER.computeIfAbsent(key.attacker(), ignored -> new HashSet<>()).add(key);
+    }
+    private static void removeMark(Key key, Mark expected) {
+        if (!MARKS.remove(key, expected)) return;
+        Set<Key> indexed = MARKS_BY_ATTACKER.get(key.attacker());
+        if (indexed != null) {
+            indexed.remove(key);
+            if (indexed.isEmpty()) MARKS_BY_ATTACKER.remove(key.attacker());
+        }
+    }
+    private static Map<Key, Mark> snapshot(LivingEntity attacker) {
+        Set<Key> keys = MARKS_BY_ATTACKER.get(attacker.getUUID());
+        if (keys == null || keys.isEmpty()) return Map.of();
+        Map<Key, Mark> result = new HashMap<>();
+        for (Key key : List.copyOf(keys)) {
+            Mark mark = MARKS.get(key);
+            if (mark != null) result.put(key, mark);
+        }
+        return result;
+    }
+    /** Only marks present before this hit may be consumed; a mark created by this hit is not its own second hit. */
+    private static Set<UUID> consume(ServerLevel level, LivingEntity attacker, Map<Key, Mark> candidates) {
+        if (candidates.isEmpty()) return Set.of();
+        Set<UUID> triggered = new HashSet<>();
+        MinecraftServer server = level.getServer();
+        for (var entry : candidates.entrySet()) {
+            Key key = entry.getKey(); Mark mark = entry.getValue();
+            if (MARKS.get(key) != mark || !key.attacker().equals(attacker.getUUID()) || !key.dimension().equals(level.dimension())) continue;
+            ServerPlayer wearer = server.getPlayerList().getPlayer(key.owner());
+            if (wearer == null || wearer.level() != level || !ready(wearer) || !owns(wearer, mark.gear()) || level.getGameTime() >= mark.expires()) {
+                removeMark(key, mark); continue;
+            }
+            if (!equipped(wearer, mark.gear()) || !legalAttacker(wearer, attacker) || PENDING.size() >= MAX_PENDING) continue;
+            removeMark(key, mark);
+            PENDING.add(new Retaliation(key, mark.gear()));
+            triggered.add(key.owner());
+        }
+        return triggered;
+    }
+    /** Observe actual health/absorption loss on any living target and mark an equipped victim separately. */
+    public static void observeDamage(LivingEntity victim, DamageSource source, float beforeHealth, float beforeAbsorption) {
+        if (!(victim.level() instanceof ServerLevel level) || !(source.getEntity() instanceof LivingEntity attacker)
+            || !directMelee(source, attacker)) return;
+        float lost = Math.max(0.0F, beforeHealth - victim.getHealth()) + Math.max(0.0F, beforeAbsorption - victim.getAbsorptionAmount());
         if (!Float.isFinite(lost) || lost <= 0.0F) return;
+        Set<UUID> triggered = consume(level, attacker, snapshot(attacker));
+        if (!(victim instanceof ServerPlayer wearer) || !ready(wearer) || triggered.contains(wearer.getUUID())
+            || !legalAttacker(wearer, attacker)) return;
         Gear gear = first(wearer, true);
         if (gear == null) return;
-        long now = wearer.level().getGameTime(); Key key = new Key(wearer.getUUID(), attacker.getUUID(), wearer.level().dimension());
+        long now = level.getGameTime(); Key key = new Key(wearer.getUUID(), attacker.getUUID(), level.dimension());
         Mark previous = MARKS.get(key);
         if (previous != null && now < previous.expires() && previous.gear().stack() == gear.stack()
-            && previous.gear().pair().equals(gear.pair()) && equipped(wearer, previous.gear())) {
-            if (PENDING.size() >= MAX_PENDING) return; // retain the marker if the bounded queue is busy
-            MARKS.remove(key);
-            PENDING.add(new Retaliation(key, previous.gear()));
-        } else {
-            if (MARKS.size() >= MAX_MARKS && !MARKS.containsKey(key)) return;
-            MARKS.put(key, new Mark(gear, now + param(AMBUSH, "mark_lifetime_ticks", 120, 20, 1200)));
-            wearer.level().sendParticles(ParticleTypes.SOUL_FIRE_FLAME, attacker.getX(), attacker.getY() + attacker.getBbHeight() * 0.6D,
-                attacker.getZ(), 8, 0.2D, 0.25D, 0.2D, 0.01D);
-            CompendiumDiscoveryTracker.recordDiscovery(wearer, THORNS, FIRE);
+            && previous.gear().pair().equals(gear.pair()) && equipped(wearer, previous.gear())) return;
+        if (MARKS.size() >= MAX_MARKS && previous == null) return;
+        putMark(key, new Mark(gear, now + param(AMBUSH, "mark_lifetime_ticks", 120, 20, 1200)));
+        level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, attacker.getX(), attacker.getY() + attacker.getBbHeight() * 0.6D,
+            attacker.getZ(), 8, 0.2D, 0.25D, 0.2D, 0.01D);
+        CompendiumDiscoveryTracker.recordDiscovery(wearer, THORNS, FIRE);
+    }
+    /** Snapshot prior marks around real vanilla attack calls, including targets with no LivingEntity health. */
+    public static final class AttackSnapshot {
+        private final Map<Key, Mark> candidates;
+        private final float health, absorption;
+        private AttackSnapshot(Map<Key, Mark> candidates, float health, float absorption) {
+            this.candidates = candidates; this.health = health; this.absorption = absorption;
         }
+    }
+    public static @Nullable AttackSnapshot beforeAttack(LivingEntity attacker, Entity victim, DamageSource source) {
+        if (!(attacker.level() instanceof ServerLevel) || !directMelee(source, attacker)) return null;
+        Map<Key, Mark> candidates = snapshot(attacker);
+        if (candidates.isEmpty()) return null;
+        float health = victim instanceof LivingEntity living ? living.getHealth() : 0.0F;
+        float absorption = victim instanceof LivingEntity living ? living.getAbsorptionAmount() : 0.0F;
+        return new AttackSnapshot(candidates, health, absorption);
+    }
+    public static void afterAttack(@Nullable AttackSnapshot frame, LivingEntity attacker, Entity victim, DamageSource source, boolean accepted) {
+        if (frame == null || !accepted || !(attacker.level() instanceof ServerLevel level) || !directMelee(source, attacker)) return;
+        if (victim instanceof LivingEntity living) {
+            float lost = Math.max(0.0F, frame.health - living.getHealth()) + Math.max(0.0F, frame.absorption - living.getAbsorptionAmount());
+            if (!Float.isFinite(lost) || lost <= 0.0F) return;
+        }
+        consume(level, attacker, frame.candidates);
     }
     /** Called before a different fusion's optional extra reduction; real enchantment/resistance mitigation only. */
     public static void observeFire(ServerPlayer wearer, DamageSource source, float beforeMagic, float afterMagic) {
@@ -174,8 +242,7 @@ public final class FireThornsSkills {
         ServerLevel level = server.getLevel(pending.key().dimension()); ServerPlayer wearer = server.getPlayerList().getPlayer(pending.key().owner());
         Entity entity = level == null ? null : level.getEntity(pending.key().attacker());
         if (level == null || wearer == null || wearer.level() != level || !ready(wearer) || !equipped(wearer, pending.gear())
-            || !(entity instanceof LivingEntity attacker) || !legalAttacker(wearer, attacker)
-            || wearer.distanceToSqr(attacker) > 64.0D || !clearPath(level, wearer, attacker.getBoundingBox().getCenter())) return;
+            || !(entity instanceof LivingEntity attacker) || !legalAttacker(wearer, attacker)) return;
         float amount = (float) Math.min(20.0D, 1.0D + Math.clamp(pending.gear().pair().primaryLevel(), 1, 10));
         boolean nested = Boolean.TRUE.equals(IN_SKILL.get()); IN_SKILL.set(true);
         try {
@@ -222,7 +289,7 @@ public final class FireThornsSkills {
             ServerLevel level = server.getLevel(key.dimension()); ServerPlayer wearer = server.getPlayerList().getPlayer(key.owner());
             Entity attacker = level == null ? null : level.getEntity(key.attacker());
             if (level == null || wearer == null || wearer.level() != level || !ready(wearer) || !owns(wearer, mark.gear())
-                || level.getGameTime() >= mark.expires() || !(attacker instanceof LivingEntity living) || !living.isAlive()) MARKS.remove(key, mark);
+                || level.getGameTime() >= mark.expires() || !(attacker instanceof LivingEntity living) || !living.isAlive()) removeMark(key, mark);
         }
         for (var entry : List.copyOf(RINGS.entrySet())) {
             ServerPlayer wearer = server.getPlayerList().getPlayer(entry.getKey()); Ring ring = entry.getValue();
@@ -232,8 +299,11 @@ public final class FireThornsSkills {
         }
     }
     public static void onDisconnect(UUID player) {
-        MARKS.keySet().removeIf(k -> k.owner().equals(player) || k.attacker().equals(player));
+        for (var entry : List.copyOf(MARKS.entrySet())) {
+            Key key = entry.getKey();
+            if (key.owner().equals(player) || key.attacker().equals(player)) removeMark(key, entry.getValue());
+        }
         PENDING.removeIf(r -> r.key().owner().equals(player) || r.key().attacker().equals(player)); RINGS.remove(player);
     }
-    public static void clear() { MARKS.clear(); PENDING.clear(); RINGS.clear(); IN_SKILL.remove(); }
+    public static void clear() { MARKS.clear(); MARKS_BY_ATTACKER.clear(); PENDING.clear(); RINGS.clear(); IN_SKILL.remove(); }
 }

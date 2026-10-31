@@ -66,14 +66,24 @@ final class FireThornsProbe {
                 require(enemy.doHurtTarget(level, player), "First real melee hit must be accepted");
                 FireThornsSkills.tickServer(level.getServer());
                 require(enemy.getHealth() == health && !enemy.isOnFire(), "First hit must only mark, not trigger instant thorns or ignition");
-                player.setHealth(player.getMaxHealth()); player.invulnerableTime = 0; enemy.invulnerableTime = 0;
-                require(enemy.doHurtTarget(level, player), "Second real melee hit must be accepted");
+                deny.add(villager.getUUID()); villager.invulnerableTime = 0;
+                require(!enemy.doHurtTarget(level, villager), "A cancelled attack on another target must fail"); deny.clear();
+                FireThornsSkills.tickServer(level.getServer());
+                require(enemy.getHealth() == health && !enemy.isOnFire(), "Cancelled second attack must not consume the mark");
+                villager.invulnerableTime = 0; enemy.invulnerableTime = 0;
+                require(enemy.doHurtTarget(level, villager), "Second real melee attack on a different victim must be accepted");
                 require(enemy.getHealth() == health && !enemy.isOnFire(), "Retaliation must wait until the current attack completes");
                 int beforeWear = chest.getDamageValue(); FireThornsSkills.tickServer(level.getServer());
                 require(enemy.getHealth() < health && enemy.isOnFire() && chest.getDamageValue() == beforeWear + 2,
-                    "Second hit must trigger one real delayed thorn strike, ignition and ordinary equipment wear");
+                    "A second hit on another victim must trigger one delayed thorn strike, ignition and ordinary equipment wear");
                 float after = enemy.getHealth(); FireThornsSkills.tickServer(level.getServer());
                 require(enemy.getHealth() == after, "A consumed mark must not retaliate twice");
+                player.setHealth(player.getMaxHealth()); player.invulnerableTime = 0; enemy.invulnerableTime = 0;
+                require(enemy.doHurtTarget(level, player), "A later attack on the wearer must form a fresh mark");
+                player.setHealth(player.getMaxHealth()); player.invulnerableTime = 0; enemy.invulnerableTime = 0;
+                require(enemy.doHurtTarget(level, player), "Hitting the wearer again must also consume that mark");
+                FireThornsSkills.tickServer(level.getServer());
+                require(enemy.getHealth() < after, "A new mark must retaliate on a subsequent wearer hit");
             } else {
                 player.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.SHIELD));
                 float baseline = fireHit(player, 8.0F);
