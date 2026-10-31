@@ -52,9 +52,9 @@ public final class ConfirmedMelee {
     public static void after(@Nullable Observation observation, boolean accepted) {
         if (observation == null || !accepted || !observation.player().isAlive()
             || observation.player().level() != observation.target().level()) return;
-        float loss = (observation.health() + observation.absorption())
-            - (observation.target().getHealth() + observation.target().getAbsorptionAmount());
-        if (!Float.isFinite(loss) || loss <= 0) return;
+        float loss = ConfirmedMeleeMath.actualLoss(observation.health(), observation.absorption(),
+            observation.target().getHealth(), observation.target().getAbsorptionAmount());
+        if (loss <= 0) return;
         Hit hit = new Hit(observation.player(), observation.target(), observation.weapon(), observation.slot(),
             observation.source(), observation.full(), loss, observation.eligibleBefore());
         boolean previous = Boolean.TRUE.equals(DISPATCHING.get());
