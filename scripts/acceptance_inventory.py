@@ -49,6 +49,8 @@ DIRECTION_FIXTURES = {
     # Each heavy-crush fixture explicitly compares both orders before its own actions.
     ("density", "breach"): ("39.1-density-breach", False),
     ("breach", "density"): ("39.1-breach-density", False),
+    ("infinity", "unbreaking"): ("39.2-infinity-unbreaking", True),
+    ("unbreaking", "infinity"): ("39.2-unbreaking-infinity", True),
     ("luck_of_the_sea", "lure"): ("39.4-luck-lure", True),
     ("lure", "luck_of_the_sea"): ("39.4-lure-luck", True),
     ("power", "quick_charge"): ("39.5-power-quick", True),
