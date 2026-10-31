@@ -205,8 +205,8 @@
   "signature.enchantment_fusion.deflection_field.desc": "Launches a spectral counter-arrow back toward incoming attackers when struck.",
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
-  "signature.enchantment_fusion.pyro_thorns.title": "Pyro Thorns",
-  "signature.enchantment_fusion.pyro_thorns.desc": "Thorns retaliation sets attackers ablaze on contact.",
+  "signature.enchantment_fusion.pyro_thorns.title": "작열 가시 매복",
+  "signature.enchantment_fusion.pyro_thorns.desc": "【가시 ▷ 화염 보호】유효한 근접 피해를 주는 공격자를 표시하고 같은 공격자가 다시 맞히면 지연 반격과 점화를 일으킵니다. 일반 장비 내구도가 소모됩니다.",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",
@@ -584,8 +584,8 @@
   "signature.enchantment_fusion.overdraw_snipe.desc": "Bow only: a fully drawn real arrow that hits earns a short draw credit for the same bow. The next draw starts ahead; it never fires automatically. Switching, expiry, loss or death can clear the credit.",
   "signature.enchantment_fusion.crushing_updraft.title": "Crushing Updraft",
   "signature.enchantment_fusion.crushing_updraft.desc": "Heavy slams deal bonus impact damage and kick up a lifting updraft beneath your feet!",
-  "signature.enchantment_fusion.cinder_backlash.title": "Cinder Backlash",
-  "signature.enchantment_fusion.cinder_backlash.desc": "Absorbs heat when struck to spray searing embers back onto nearby attackers!",
+  "signature.enchantment_fusion.cinder_backlash.title": "화염 차단 가시막",
+  "signature.enchantment_fusion.cinder_backlash.desc": "【화염 보호 ▷ 가시】화염 피해를 막으면 짧은 가상 가시막이 닿는 적을 찌르고 점화합니다. 불 블록은 놓지 않습니다.",
   "signature.enchantment_fusion.concussion_shrapnel.title": "Concussion Shrapnel",
   "signature.enchantment_fusion.concussion_shrapnel.desc": "Incoming blasts and heavy hits vent a concussive burst that knocks back and pelts attackers!",
   "signature.enchantment_fusion.ricochet_ward.title": "Ricochet Ward",
@@ -994,5 +994,6 @@
   "message.enchantment_fusion.fire_heat_ready": "저장된 열: %s / %s.",
   "message.enchantment_fusion.soul_pressure": "영혼 압력: %s / %s. 완충 공격으로 해방.",
   "message.enchantment_fusion.soul_released": "영혼 압력이 해방되었습니다.",
-  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 주 손의 근접 무기가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 주 손의 근접 무기가 필요합니다.",
+  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "기존 장비는 기존 효과를 유지하며 새 능력은 내구도 있는 방어구나 손에 든 방패가 필요합니다."
 }

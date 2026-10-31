@@ -205,8 +205,8 @@
   "signature.enchantment_fusion.deflection_field.desc": "Launches a spectral counter-arrow back toward incoming attackers when struck.",
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
-  "signature.enchantment_fusion.pyro_thorns.title": "Pyro Thorns",
-  "signature.enchantment_fusion.pyro_thorns.desc": "Thorns retaliation sets attackers ablaze on contact.",
+  "signature.enchantment_fusion.pyro_thorns.title": "Searing Ambush",
+  "signature.enchantment_fusion.pyro_thorns.desc": "[Thorns ▷ Fire Protection] A damaging melee hit marks its attacker. If the same attacker hits you again, the mark causes a delayed thorn strike and ignition, with normal equipment wear.",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",
@@ -584,8 +584,8 @@
   "signature.enchantment_fusion.overdraw_snipe.desc": "Bow only: a fully drawn real arrow that hits earns a short draw credit for the same bow. The next draw starts ahead; it never fires automatically. Switching, expiry, loss or death can clear the credit.",
   "signature.enchantment_fusion.crushing_updraft.title": "Crushing Updraft",
   "signature.enchantment_fusion.crushing_updraft.desc": "Heavy slams deal bonus impact damage and kick up a lifting updraft beneath your feet!",
-  "signature.enchantment_fusion.cinder_backlash.title": "Cinder Backlash",
-  "signature.enchantment_fusion.cinder_backlash.desc": "Absorbs heat when struck to spray searing embers back onto nearby attackers!",
+  "signature.enchantment_fusion.cinder_backlash.title": "Fireward Thorn Curtain",
+  "signature.enchantment_fusion.cinder_backlash.desc": "[Fire Protection ▷ Thorns] Resisted fire creates a short virtual curtain that pricks and ignites nearby enemies; no fire blocks.",
   "signature.enchantment_fusion.concussion_shrapnel.title": "Concussion Shrapnel",
   "signature.enchantment_fusion.concussion_shrapnel.desc": "Incoming blasts and heavy hits vent a concussive burst that knocks back and pelts attackers!",
   "signature.enchantment_fusion.ricochet_ward.title": "Ricochet Ward",
@@ -994,5 +994,6 @@
   "message.enchantment_fusion.fire_heat_ready": "Stored heat: %s / %s.",
   "message.enchantment_fusion.soul_pressure": "Soul pressure: %s / %s. Finish with a full-strength hit.",
   "message.enchantment_fusion.soul_released": "Soul pressure released.",
-  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "This legacy carrier keeps its old effect; the new soul skills require a held melee weapon."
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "This legacy carrier keeps its old effect; the new soul skills require a held melee weapon.",
+  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Legacy carrier keeps its old effect; the new thorn skills use damageable armor or a held shield."
 }

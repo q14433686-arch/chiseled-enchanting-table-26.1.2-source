@@ -11,6 +11,7 @@ import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,7 +81,7 @@ public final class FireTradeoffSkills {
     public static boolean supportsHost(ItemStack stack) {
         return stack != null && !stack.isEmpty() && stack.isDamageableItem() && supportsCarrier(FusionCarrier.classify(stack));
     }
-    private static boolean slotMatches(ItemStack stack, EquipmentSlot slot) {
+    public static boolean slotMatches(ItemStack stack, EquipmentSlot slot) {
         Set<FusionCarrier> roles = FusionCarrier.classify(stack);
         return switch (slot) {
             case MAINHAND, OFFHAND -> roles.contains(FusionCarrier.SHIELD);
@@ -140,17 +141,25 @@ public final class FireTradeoffSkills {
     public static float primaryProtection(ServerLevel level, ServerPlayer player, DamageSource source, float vanilla) {
         float total = vanilla;
         for (EquipmentSlot slot : SLOTS) {
-            Gear item = gear(player, slot, true);
-            if (item == null) item = gear(player, slot, false);
-            if (item == null) continue;
-            Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), item.pair().primaryId()).orElse(null);
-            if (primary == null) continue;
-            int nativeLevel = item.stack().getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary);
-            if (nativeLevel > 0 && primary.value().matchingSlot(slot)) continue;
-            MutableFloat value = new MutableFloat(total);
-            primary.value().modifyDamageProtection(level, item.pair().primaryLevel(), item.stack(), player, source, value);
-            total = value.floatValue();
-            if (!Float.isFinite(total)) return vanilla;
+            ItemStack stack = player.getItemBySlot(slot);
+            if (!slotMatches(stack, slot)) continue;
+            Map<String, Integer> replayLevels = new LinkedHashMap<>();
+            for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
+                String signature = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
+                boolean fireDefense = applies(pair, stack, signature)
+                    || (FIRE.equals(pair.primaryId()) && FireThornsSkills.applies(pair, stack, signature));
+                if (fireDefense) replayLevels.merge(pair.primaryId(), pair.primaryLevel(), Math::max);
+            }
+            for (var entry : replayLevels.entrySet()) {
+                Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), entry.getKey()).orElse(null);
+                if (primary == null) continue;
+                int nativeLevel = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary);
+                if (nativeLevel > 0 && primary.value().matchingSlot(slot)) continue;
+                MutableFloat value = new MutableFloat(total);
+                primary.value().modifyDamageProtection(level, Math.max(entry.getValue(), nativeLevel), stack, player, source, value);
+                total = value.floatValue();
+                if (!Float.isFinite(total)) return vanilla;
+            }
         }
         return total;
     }

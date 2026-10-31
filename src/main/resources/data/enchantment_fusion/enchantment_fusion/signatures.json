@@ -288,12 +288,19 @@
     "pyro_thorns": {
       "primary": "minecraft:thorns",
       "secondary": "minecraft:fire_protection",
-      "domain": "armor_curse"
+      "domain": "armor_curse",
+      "mark_lifetime_ticks": 120,
+      "ignition_seconds": 3,
+      "retaliation_wear": 2
     },
     "cinder_backlash": {
       "primary": "minecraft:fire_protection",
       "secondary": "minecraft:thorns",
-      "domain": "armor_curse"
+      "domain": "armor_curse",
+      "curtain_lifetime_ticks": 80,
+      "contact_reach_tenths": 7,
+      "target_cooldown_ticks": 20,
+      "ignition_seconds": 2
     },
     "blast_thorns": {
       "primary": "minecraft:thorns",

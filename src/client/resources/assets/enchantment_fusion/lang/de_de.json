@@ -205,8 +205,8 @@
   "signature.enchantment_fusion.deflection_field.desc": "Launches a spectral counter-arrow back toward incoming attackers when struck.",
   "signature.enchantment_fusion.arrow_stride.title": "Arrow Stride",
   "signature.enchantment_fusion.arrow_stride.desc": "Getting grazed by ranged fire grants a burst of Speed II to close the gap.",
-  "signature.enchantment_fusion.pyro_thorns.title": "Pyro Thorns",
-  "signature.enchantment_fusion.pyro_thorns.desc": "Thorns retaliation sets attackers ablaze on contact.",
+  "signature.enchantment_fusion.pyro_thorns.title": "Glutdornen-Lauer",
+  "signature.enchantment_fusion.pyro_thorns.desc": "[Dornen ▷ Feuerschutz] Wirksamer Nahkampfschaden markiert den Angreifer. Bei seinem nächsten Treffer folgen verzögerter Dornenschaden und Entzündung mit normalem Verschleiß.",
   "signature.enchantment_fusion.blast_thorns.title": "Blast Thorns",
   "signature.enchantment_fusion.blast_thorns.desc": "Thorns retaliation blasts melee attackers backward with concussive force.",
   "signature.enchantment_fusion.sniper_thorns.title": "Sniper Thorns",
@@ -584,8 +584,8 @@
   "signature.enchantment_fusion.overdraw_snipe.desc": "Bow only: a fully drawn real arrow that hits earns a short draw credit for the same bow. The next draw starts ahead; it never fires automatically. Switching, expiry, loss or death can clear the credit.",
   "signature.enchantment_fusion.crushing_updraft.title": "Crushing Updraft",
   "signature.enchantment_fusion.crushing_updraft.desc": "Heavy slams deal bonus impact damage and kick up a lifting updraft beneath your feet!",
-  "signature.enchantment_fusion.cinder_backlash.title": "Cinder Backlash",
-  "signature.enchantment_fusion.cinder_backlash.desc": "Absorbs heat when struck to spray searing embers back onto nearby attackers!",
+  "signature.enchantment_fusion.cinder_backlash.title": "Feuerschützender Dornenvorhang",
+  "signature.enchantment_fusion.cinder_backlash.desc": "[Feuerschutz ▷ Dornen] Abgewehrtes Feuer erzeugt kurz einen virtuellen Vorhang, der berührende Feinde sticht und entzündet; keine Feuerblöcke.",
   "signature.enchantment_fusion.concussion_shrapnel.title": "Concussion Shrapnel",
   "signature.enchantment_fusion.concussion_shrapnel.desc": "Incoming blasts and heavy hits vent a concussive burst that knocks back and pelts attackers!",
   "signature.enchantment_fusion.ricochet_ward.title": "Ricochet Ward",
@@ -994,5 +994,6 @@
   "message.enchantment_fusion.fire_heat_ready": "Gespeicherte Hitze: %s / %s.",
   "message.enchantment_fusion.soul_pressure": "Seelendruck: %s / %s. Mit einem vollen Treffer auslösen.",
   "message.enchantment_fusion.soul_released": "Seelendruck freigesetzt.",
-  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Alter Träger behält seinen Effekt; die neuen Fähigkeiten benötigen eine Nahkampfwaffe in der Haupthand."
+  "tooltip.enchantment_fusion.legacy_soul_thread_carrier": "Alter Träger behält seinen Effekt; die neuen Fähigkeiten benötigen eine Nahkampfwaffe in der Haupthand.",
+  "tooltip.enchantment_fusion.legacy_fire_thorns_carrier": "Alter Träger behält seinen Effekt; nötig sind beschädigbare Rüstung oder ein gehaltener Schild."
 }

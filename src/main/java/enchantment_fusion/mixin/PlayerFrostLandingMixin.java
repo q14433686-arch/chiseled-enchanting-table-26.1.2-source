@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
+import enchantment_fusion.mechanics.signatures.FireThornsSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -35,7 +36,9 @@ public abstract class PlayerFrostLandingMixin {
         target = "Lnet/minecraft/world/entity/player/Player;getDamageAfterMagicAbsorb(Lnet/minecraft/world/damagesource/DamageSource;F)F"))
     private float ef$fireTradeoffAfterMagic(Player self, DamageSource source, float damage, Operation<Float> original) {
         float vanilla = original.call(self, source, damage);
-        return self instanceof ServerPlayer player ? FireTradeoffSkills.afterMagic(player, source, damage, vanilla) : vanilla;
+        if (!(self instanceof ServerPlayer player)) return vanilla;
+        FireThornsSkills.observeFire(player, source, damage, vanilla);
+        return FireTradeoffSkills.afterMagic(player, source, damage, vanilla);
     }
 
     @WrapMethod(method = "actuallyHurt")
@@ -48,5 +51,6 @@ public abstract class PlayerFrostLandingMixin {
         original.call(level, source, damage);
         FrostLandingCapture.afterHealthDamage(player, source);
         BlastDefenseSkills.observeActualDamage(player, source, beforeHealth, beforeAbsorption);
+        FireThornsSkills.observeDamage(player, source, beforeHealth, beforeAbsorption);
     }
 }

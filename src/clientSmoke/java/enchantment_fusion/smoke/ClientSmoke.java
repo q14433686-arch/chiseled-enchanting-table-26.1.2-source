@@ -658,6 +658,8 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("17-fire-protection", () -> FireTradeoffProbe.exercise(sp, tablePos.above(210).east(12), true));
         acceptance.run("18-smite-bane", () -> SoulThreadProbe.exercise(sp, tablePos.above(225).east(12), false));
         acceptance.run("18-bane-smite", () -> SoulThreadProbe.exercise(sp, tablePos.above(225).east(12), true));
+        acceptance.run("19-thorns-fire", () -> FireThornsProbe.exercise(sp, tablePos.above(240).east(12), false));
+        acceptance.run("19-fire-thorns", () -> FireThornsProbe.exercise(sp, tablePos.above(240).east(12), true));
         acceptance.run("39.1-density-breach", () -> HeavyCrushProbe.exercise(sp, tablePos.above(90).east(12), false));
         acceptance.run("39.1-breach-density", () -> HeavyCrushProbe.exercise(sp, tablePos.above(90).east(12), true));
         acceptance.run("39.2-infinity-unbreaking", () -> EchoReserveProbe.exerciseEcho(sp, tablePos.above(150).east(12)));
