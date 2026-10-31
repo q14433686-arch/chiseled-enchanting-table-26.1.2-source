@@ -151,8 +151,8 @@
   "signature.enchantment_fusion.concussive_plunder.desc": "[Knockback ▷ Looting] Shoves foes off-balance (Weakness + Slowness) while snatching ransom gold and XP straight into your palm!",
   "signature.enchantment_fusion.legion_plunder.title": "Pluck the Passing Goose",
   "signature.enchantment_fusion.legion_plunder.desc": "[Looting ▷ Sweeping Edge] Even before death, sweeping across living foes plucks pelts, feathers, bones, or gold nuggets from each monster once!",
-  "signature.enchantment_fusion.raw_ore_geode.title": "Raw Ore Geode",
-  "signature.enchantment_fusion.raw_ore_geode.desc": "Keeps natural ore blocks intact while popping 1-3 bonus raw ores or gems.",
+  "signature.enchantment_fusion.raw_ore_geode.title": "Choix de minerai scellé",
+  "signature.enchantment_fusion.raw_ore_geode.desc": "[Toucher de soie ▷ Fortune] Gardez le minerai récolté ou ouvrez un échantillon pour obtenir le butin de Fortune. Tenez l’outil correspondant en main principale et un échantillon en main secondaire, puis activez la compétence. Sans expérience supplémentaire.",
   "signature.enchantment_fusion.smelt_fortune.title": "Smelt Fortune",
   "signature.enchantment_fusion.smelt_fortune.desc": "Auto-smelts mined ores into ingots with full Fortune multiplication.",
   "signature.enchantment_fusion.pulse_prospect.title": "Dowsing Vein Pulse",
@@ -1000,5 +1000,11 @@
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "L’ancien support garde son effet ; la frontière utilise une arme de mêlée, la mèche un balayage d’épée.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "L’ancien support garde son effet ; l’œil utilise une arme de mêlée, le noyau un balayage d’épée.",
   "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "L’ancien support garde son effet ; les nouvelles techniques d’âme utilisent une arme de mêlée.",
-  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "L’ancien support garde son effet ; les nouvelles techniques utilisent une arme de mêlée."
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "L’ancien support garde son effet ; les nouvelles techniques utilisent une arme de mêlée.",
+  "tooltip.enchantment_fusion.sealed_ore": "Minerai scellé (Fortune %s) : gardez le bloc ou tenez un échantillon en main secondaire avec l’outil approprié et appuyez sur %s ; %s change de compétence. Pas d’XP supplémentaire.",
+  "message.enchantment_fusion.sealed_ore_one": "Placez un seul échantillon dans la main secondaire.",
+  "message.enchantment_fusion.sealed_ore_unsupported": "La table de butin ne permet pas un échange sûr. Le minerai est conservé et le choix supprimé.",
+  "message.enchantment_fusion.sealed_ore_opened": "Un échantillon a été échangé contre le butin de Fortune.",
+  "skill.enchantment_fusion.open_sealed_ore": "Ouvrir le minerai scellé",
+  "tooltip.enchantment_fusion.legacy_sealed_ore_carrier": "L’ancien support garde son effet ; les échantillons exigent un outil adapté au minerai."
 }

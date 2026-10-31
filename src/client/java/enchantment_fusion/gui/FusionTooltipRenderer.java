@@ -33,6 +33,7 @@ import enchantment_fusion.mechanics.signatures.FireSweepSkills;
 import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
+import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
@@ -103,6 +104,12 @@ public final class FusionTooltipRenderer {
             return;
         }
 
+        Integer sealedFortune = stack.get(FusionDataComponents.SEALED_ORE_FORTUNE);
+        if (sealedFortune != null) {
+            lines.add(Component.translatable("tooltip.enchantment_fusion.sealed_ore", sealedFortune,
+                Component.keybind("key.enchantment_fusion.activate_skill"), Component.keybind("key.enchantment_fusion.cycle_skill"))
+                .withStyle(ChatFormatting.AQUA));
+        }
         boolean shift = isShiftHeld();
         List<RetainedEnchant> retainedEntries = stack.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of());
         for (RetainedEnchant retained : retainedEntries) {
@@ -214,6 +221,8 @@ public final class FusionTooltipRenderer {
                 && SoulBladeSkills.matches(pair, sigOpt.get().id()) && !SoulBladeSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacySegmentThreadCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && SegmentThreadSkills.matches(pair, sigOpt.get().id()) && !SegmentThreadSkills.applies(pair, stack, sigOpt.get().id());
+            boolean legacySealedOreCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && SealedOreSkills.matches(pair, sigOpt.get().id()) && !SealedOreSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyRetainedVolleyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && RetainedVolleyHosts.matches(pair, sigOpt.get().id()) && !RetainedVolleyHosts.supportsHost(stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
@@ -259,7 +268,7 @@ public final class FusionTooltipRenderer {
                     && !legacyFishingCarrier && !legacyCadenceCarrier && !legacyReserveCarrier
                     && !legacyMomentumCarrier && !legacyPiercingChainCarrier && !legacyThermalCarrier && !legacyFireTradeoffCarrier
                     && !legacySoulThreadCarrier && !legacyFireThornsCarrier && !legacyFireSweepCarrier && !legacyWindSweepCarrier
-                    && !legacySoulBladeCarrier && !legacySegmentThreadCarrier && !legacyGlazeAmberCarrier) {
+                    && !legacySoulBladeCarrier && !legacySegmentThreadCarrier && !legacySealedOreCarrier && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
@@ -362,6 +371,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacySegmentThreadCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_segment_thread_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacySealedOreCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_sealed_ore_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyRetainedVolleyCarrier) {

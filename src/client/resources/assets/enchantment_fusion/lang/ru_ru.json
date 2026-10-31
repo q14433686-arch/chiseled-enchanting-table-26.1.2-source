@@ -151,8 +151,8 @@
   "signature.enchantment_fusion.concussive_plunder.desc": "[Knockback ▷ Looting] Shoves foes off-balance (Weakness + Slowness) while snatching ransom gold and XP straight into your palm!",
   "signature.enchantment_fusion.legion_plunder.title": "Pluck the Passing Goose",
   "signature.enchantment_fusion.legion_plunder.desc": "[Looting ▷ Sweeping Edge] Even before death, sweeping across living foes plucks pelts, feathers, bones, or gold nuggets from each monster once!",
-  "signature.enchantment_fusion.raw_ore_geode.title": "Raw Ore Geode",
-  "signature.enchantment_fusion.raw_ore_geode.desc": "Keeps natural ore blocks intact while popping 1-3 bonus raw ores or gems.",
+  "signature.enchantment_fusion.raw_ore_geode.title": "Выбор запечатанной руды",
+  "signature.enchantment_fusion.raw_ore_geode.desc": "[Шёлковое касание ▷ Удача] Сохраните добытую руду или откройте один образец ради добычи с Удачей. Держите подходящий инструмент в основной руке, один образец — в другой, и активируйте умение. Дополнительный опыт не выдаётся.",
   "signature.enchantment_fusion.smelt_fortune.title": "Smelt Fortune",
   "signature.enchantment_fusion.smelt_fortune.desc": "Auto-smelts mined ores into ingots with full Fortune multiplication.",
   "signature.enchantment_fusion.pulse_prospect.title": "Dowsing Vein Pulse",
@@ -1000,5 +1000,11 @@
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "Старый предмет сохраняет эффект; границе нужно оружие ближнего боя, фитилям — размашистый удар мечом.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "Старый предмет сохраняет эффект; глазу нужно оружие ближнего боя, ядру — размашистый удар мечом.",
   "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "Старый предмет сохраняет эффект; новым приёмам души нужно оружие ближнего боя.",
-  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "Старый предмет сохраняет эффект; новым приёмам нужно оружие ближнего боя."
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "Старый предмет сохраняет эффект; новым приёмам нужно оружие ближнего боя.",
+  "tooltip.enchantment_fusion.sealed_ore": "Запечатанная руда (Удача %s): сохраните блок или держите один образец во второй руке с нужным инструментом и нажмите %s; %s переключает умение. Без дополнительного опыта.",
+  "message.enchantment_fusion.sealed_ore_one": "Поместите один образец во вторую руку.",
+  "message.enchantment_fusion.sealed_ore_unsupported": "Таблицу добычи нельзя безопасно обменять. Руда сохранена, выбор снят.",
+  "message.enchantment_fusion.sealed_ore_opened": "Один образец обменян на добычу с Удачей.",
+  "skill.enchantment_fusion.open_sealed_ore": "Открыть образец",
+  "tooltip.enchantment_fusion.legacy_sealed_ore_carrier": "Старый предмет сохраняет эффект; образцам нужен инструмент, добывающий эту руду."
 }

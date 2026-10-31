@@ -29,6 +29,7 @@ import enchantment_fusion.mechanics.signatures.FireSweepSkills;
 import enchantment_fusion.mechanics.signatures.WindSweepSkills;
 import enchantment_fusion.mechanics.signatures.SoulBladeSkills;
 import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
+import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -322,7 +323,7 @@ public final class MatrixEffectExecutor {
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
                 || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal
                 || redesignedFireTradeoff || redesignedSoulThread || redesignedFireThorns || redesignedFireSweep || redesignedWindSweep
-                || redesignedSoulBlade || redesignedSegmentThread;
+                || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

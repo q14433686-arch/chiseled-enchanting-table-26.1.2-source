@@ -151,8 +151,8 @@
   "signature.enchantment_fusion.concussive_plunder.desc": "[Knockback ▷ Looting] Shoves foes off-balance (Weakness + Slowness) while snatching ransom gold and XP straight into your palm!",
   "signature.enchantment_fusion.legion_plunder.title": "Pluck the Passing Goose",
   "signature.enchantment_fusion.legion_plunder.desc": "[Looting ▷ Sweeping Edge] Even before death, sweeping across living foes plucks pelts, feathers, bones, or gold nuggets from each monster once!",
-  "signature.enchantment_fusion.raw_ore_geode.title": "Raw Ore Geode",
-  "signature.enchantment_fusion.raw_ore_geode.desc": "Keeps natural ore blocks intact while popping 1-3 bonus raw ores or gems.",
+  "signature.enchantment_fusion.raw_ore_geode.title": "Scelta del minerale sigillato",
+  "signature.enchantment_fusion.raw_ore_geode.desc": "[Tocco di velluto ▷ Fortuna] Conserva il minerale ottenuto o apri un campione per il bottino di Fortuna. Tieni lo strumento corrispondente nella mano principale e un campione nell’altra, poi attiva l’abilità. Nessuna esperienza aggiuntiva.",
   "signature.enchantment_fusion.smelt_fortune.title": "Smelt Fortune",
   "signature.enchantment_fusion.smelt_fortune.desc": "Auto-smelts mined ores into ingots with full Fortune multiplication.",
   "signature.enchantment_fusion.pulse_prospect.title": "Dowsing Vein Pulse",
@@ -1000,5 +1000,11 @@
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "I vecchi oggetti mantengono gli effetti; il confine usa armi da mischia, le micce una spazzata di spada.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "I vecchi oggetti mantengono gli effetti; l’occhio usa armi da mischia, il nucleo una spazzata di spada.",
   "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "I vecchi oggetti mantengono gli effetti; le nuove tecniche d’anima usano armi da mischia.",
-  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "Il vecchio oggetto mantiene l’effetto; le nuove tecniche usano armi da mischia."
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "Il vecchio oggetto mantiene l’effetto; le nuove tecniche usano armi da mischia.",
+  "tooltip.enchantment_fusion.sealed_ore": "Minerale sigillato (Fortuna %s): conserva il blocco oppure tieni un campione nella mano secondaria con lo strumento adatto e premi %s; %s cambia abilità. Nessuna XP aggiuntiva.",
+  "message.enchantment_fusion.sealed_ore_one": "Metti un solo campione nella mano secondaria.",
+  "message.enchantment_fusion.sealed_ore_unsupported": "La tabella bottino non consente uno scambio sicuro. Il minerale resta e la scelta viene rimossa.",
+  "message.enchantment_fusion.sealed_ore_opened": "Un campione è stato scambiato con il bottino di Fortuna.",
+  "skill.enchantment_fusion.open_sealed_ore": "Apri campione sigillato",
+  "tooltip.enchantment_fusion.legacy_sealed_ore_carrier": "Il vecchio oggetto mantiene l’effetto; i campioni richiedono uno strumento adatto al minerale."
 }

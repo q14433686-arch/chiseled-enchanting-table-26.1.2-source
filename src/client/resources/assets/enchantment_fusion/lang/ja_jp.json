@@ -151,8 +151,8 @@
   "signature.enchantment_fusion.concussive_plunder.desc": "[Knockback ▷ Looting] Shoves foes off-balance (Weakness + Slowness) while snatching ransom gold and XP straight into your palm!",
   "signature.enchantment_fusion.legion_plunder.title": "Pluck the Passing Goose",
   "signature.enchantment_fusion.legion_plunder.desc": "[Looting ▷ Sweeping Edge] Even before death, sweeping across living foes plucks pelts, feathers, bones, or gold nuggets from each monster once!",
-  "signature.enchantment_fusion.raw_ore_geode.title": "Raw Ore Geode",
-  "signature.enchantment_fusion.raw_ore_geode.desc": "Keeps natural ore blocks intact while popping 1-3 bonus raw ores or gems.",
+  "signature.enchantment_fusion.raw_ore_geode.title": "封鉱の選択",
+  "signature.enchantment_fusion.raw_ore_geode.desc": "[シルクタッチ ▷ 幸運] 実際に採れた鉱石をそのまま保つか、一つ消費して幸運の戦利品に替える。対応する融合道具を主手、封鉱一つをオフハンドに持ち、スキルを発動。開封で追加経験値は出ない。",
   "signature.enchantment_fusion.smelt_fortune.title": "Smelt Fortune",
   "signature.enchantment_fusion.smelt_fortune.desc": "Auto-smelts mined ores into ingots with full Fortune multiplication.",
   "signature.enchantment_fusion.pulse_prospect.title": "Dowsing Vein Pulse",
@@ -1000,5 +1000,11 @@
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "旧装備は旧効果を維持。新しい境界は近接武器、導火線は剣の範囲攻撃が必要。",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "旧装備は旧効果を維持。風眼は近接武器、風核は剣の範囲攻撃が必要。",
   "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "旧装備は旧効果を維持。新しい魂の技は近接武器を使う。",
-  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "旧装備は旧効果を維持。新しい足止めと糸は近接武器を使う。"
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "旧装備は旧効果を維持。新しい足止めと糸は近接武器を使う。",
+  "tooltip.enchantment_fusion.sealed_ore": "封鉱（幸運 %s）：鉱石のまま保つか、対応道具と共にオフハンドに一つ持って %s で開封。%s でスキル切替。追加経験値なし。",
+  "message.enchantment_fusion.sealed_ore_one": "封鉱を一つだけオフハンドに置いてください。",
+  "message.enchantment_fusion.sealed_ore_unsupported": "この戦利品テーブルは安全に交換できません。鉱石を保ち、開封選択を解除しました。",
+  "message.enchantment_fusion.sealed_ore_opened": "封鉱一つを幸運の戦利品に交換しました。",
+  "skill.enchantment_fusion.open_sealed_ore": "封鉱を開封",
+  "tooltip.enchantment_fusion.legacy_sealed_ore_carrier": "旧装備は旧効果を維持。封鉱には対象鉱石を採掘できる道具が必要。"
 }

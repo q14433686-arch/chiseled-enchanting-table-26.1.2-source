@@ -151,8 +151,8 @@
   "signature.enchantment_fusion.concussive_plunder.desc": "[Knockback ▷ Looting] Shoves foes off-balance (Weakness + Slowness) while snatching ransom gold and XP straight into your palm!",
   "signature.enchantment_fusion.legion_plunder.title": "Pluck the Passing Goose",
   "signature.enchantment_fusion.legion_plunder.desc": "[Looting ▷ Sweeping Edge] Even before death, sweeping across living foes plucks pelts, feathers, bones, or gold nuggets from each monster once!",
-  "signature.enchantment_fusion.raw_ore_geode.title": "Raw Ore Geode",
-  "signature.enchantment_fusion.raw_ore_geode.desc": "Keeps natural ore blocks intact while popping 1-3 bonus raw ores or gems.",
+  "signature.enchantment_fusion.raw_ore_geode.title": "Escolha do minério selado",
+  "signature.enchantment_fusion.raw_ore_geode.desc": "[Toque suave ▷ Fortuna] Guarde o minério obtido ou abra uma amostra para receber o saque de Fortuna. Segure a ferramenta correspondente na mão principal e uma amostra na outra mão e ative a habilidade. Sem XP adicional.",
   "signature.enchantment_fusion.smelt_fortune.title": "Smelt Fortune",
   "signature.enchantment_fusion.smelt_fortune.desc": "Auto-smelts mined ores into ingots with full Fortune multiplication.",
   "signature.enchantment_fusion.pulse_prospect.title": "Dowsing Vein Pulse",
@@ -1000,5 +1000,11 @@
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "O item antigo mantém o efeito; a fronteira usa armas corpo a corpo e o pavio exige varredura de espada.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "O item antigo mantém o efeito; o olho usa armas corpo a corpo e o núcleo exige varredura de espada.",
   "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "O item antigo mantém o efeito; as novas técnicas de alma usam armas corpo a corpo.",
-  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "O item antigo mantém o efeito; as novas técnicas usam armas corpo a corpo."
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "O item antigo mantém o efeito; as novas técnicas usam armas corpo a corpo.",
+  "tooltip.enchantment_fusion.sealed_ore": "Minério selado (Fortuna %s): guarde o bloco ou segure uma amostra na mão secundária com a ferramenta certa e pressione %s; %s alterna habilidades. Sem XP adicional.",
+  "message.enchantment_fusion.sealed_ore_one": "Coloque uma única amostra na mão secundária.",
+  "message.enchantment_fusion.sealed_ore_unsupported": "A tabela de saque não permite uma troca segura. O minério foi mantido e a opção removida.",
+  "message.enchantment_fusion.sealed_ore_opened": "Uma amostra foi trocada por saque de Fortuna.",
+  "skill.enchantment_fusion.open_sealed_ore": "Abrir minério selado",
+  "tooltip.enchantment_fusion.legacy_sealed_ore_carrier": "O item antigo mantém o efeito; amostras exigem ferramenta adequada ao minério."
 }

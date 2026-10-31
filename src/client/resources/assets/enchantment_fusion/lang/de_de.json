@@ -151,8 +151,8 @@
   "signature.enchantment_fusion.concussive_plunder.desc": "[Knockback ▷ Looting] Shoves foes off-balance (Weakness + Slowness) while snatching ransom gold and XP straight into your palm!",
   "signature.enchantment_fusion.legion_plunder.title": "Pluck the Passing Goose",
   "signature.enchantment_fusion.legion_plunder.desc": "[Looting ▷ Sweeping Edge] Even before death, sweeping across living foes plucks pelts, feathers, bones, or gold nuggets from each monster once!",
-  "signature.enchantment_fusion.raw_ore_geode.title": "Raw Ore Geode",
-  "signature.enchantment_fusion.raw_ore_geode.desc": "Keeps natural ore blocks intact while popping 1-3 bonus raw ores or gems.",
+  "signature.enchantment_fusion.raw_ore_geode.title": "Versiegelte Erzwahl",
+  "signature.enchantment_fusion.raw_ore_geode.desc": "[Behutsamkeit ▷ Glück] Echte Erztropfen können als Block behalten oder einmal für Glück-Beute geöffnet werden. Halte das passende Werkzeug in der Haupthand und eine Probe in der Nebenhand und aktiviere die Fähigkeit. Kein zusätzliches EP.",
   "signature.enchantment_fusion.smelt_fortune.title": "Smelt Fortune",
   "signature.enchantment_fusion.smelt_fortune.desc": "Auto-smelts mined ores into ingots with full Fortune multiplication.",
   "signature.enchantment_fusion.pulse_prospect.title": "Dowsing Vein Pulse",
@@ -1000,5 +1000,11 @@
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "Alte Träger behalten ihren Effekt; die Grenze nutzt Nahkampfwaffen, die Zündschnur einen Schwertschwung.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "Alte Träger behalten ihren Effekt; das Auge nutzt Nahkampfwaffen, der Kern einen Schwertschwung.",
   "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "Alte Träger behalten ihren Effekt; die neuen Seelentechniken nutzen Nahkampfwaffen.",
-  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "Der alte Gegenstand behält seinen Effekt; Stolpern und Faden benötigen eine Nahkampfwaffe."
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "Der alte Gegenstand behält seinen Effekt; Stolpern und Faden benötigen eine Nahkampfwaffe.",
+  "tooltip.enchantment_fusion.sealed_ore": "Versiegeltes Erz (Glück %s): Block behalten oder eine Probe mit passendem Werkzeug in der Nebenhand halten und %s drücken; %s wechselt die Fähigkeit. Kein zusätzliches EP.",
+  "message.enchantment_fusion.sealed_ore_one": "Lege eine einzelne Probe in die Nebenhand.",
+  "message.enchantment_fusion.sealed_ore_unsupported": "Diese Beutetabelle lässt sich nicht sicher tauschen. Der Erzblock bleibt erhalten, die Wahl verfällt.",
+  "message.enchantment_fusion.sealed_ore_opened": "Eine Probe wurde gegen Glück-Beute getauscht.",
+  "skill.enchantment_fusion.open_sealed_ore": "Erzprobe öffnen",
+  "tooltip.enchantment_fusion.legacy_sealed_ore_carrier": "Alter Gegenstand behält seinen Effekt; neue Proben benötigen ein passendes Erzwerkzeug."
 }

@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.ExtraBlockHarvest;
 import enchantment_fusion.mechanics.HarvestDropCapture;
 import enchantment_fusion.mechanics.SignaturePairs;
+import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -68,7 +69,9 @@ public abstract class ServerPlayerGameModeHarvestMixin {
         boolean tracked = level instanceof ServerLevel && breaker instanceof ServerPlayer;
         if (tracked) HarvestDropCapture.enterPlayerDestroy((ServerLevel) level, (ServerPlayer) breaker, pos);
         try {
-            original.call(block, level, breaker, pos, state, blockEntity, tool);
+            ItemStack lootTool = tracked ? SealedOreSkills.lootTool((ServerLevel) level, tool) : tool;
+            original.call(block, level, breaker, pos, state, blockEntity, lootTool);
+            if (tracked) SealedOreSkills.sealDrop((ServerLevel) level, (ServerPlayer) breaker, pos, state, blockEntity, lootTool);
         } finally {
             if (tracked) HarvestDropCapture.leavePlayerDestroy((ServerLevel) level, (ServerPlayer) breaker, pos);
         }

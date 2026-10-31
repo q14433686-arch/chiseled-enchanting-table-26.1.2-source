@@ -172,6 +172,24 @@ public final class FusionDataComponents {
             .build()
     );
 
+    /** A genuine Silk Touch ore drop may hold one optional, consumable Fortune choice. */
+    public static final DataComponentType<Integer> SEALED_ORE_FORTUNE = Registry.register(
+        BuiltInRegistries.DATA_COMPONENT_TYPE,
+        EnchantmentFusion.id("sealed_ore_fortune"),
+        DataComponentType.<Integer>builder()
+            .persistent(Codec.intRange(1, FusedPair.MAX_LEVEL))
+            .networkSynchronized(ByteBufCodecs.VAR_INT.map(
+                v -> {
+                    if (v < 1 || v > FusedPair.MAX_LEVEL) throw new DecoderException("Invalid sealed ore level: " + v);
+                    return v;
+                },
+                v -> {
+                    if (v < 1 || v > FusedPair.MAX_LEVEL) throw new EncoderException("Invalid sealed ore level: " + v);
+                    return v;
+                }))
+            .build()
+    );
+
     public static final DataComponentType<Integer> VESSEL_BONUS = Registry.register(
         BuiltInRegistries.DATA_COMPONENT_TYPE,
         EnchantmentFusion.id("vessel_bonus"),

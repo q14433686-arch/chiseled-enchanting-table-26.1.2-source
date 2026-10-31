@@ -151,8 +151,8 @@
   "signature.enchantment_fusion.concussive_plunder.desc": "[Knockback ▷ Looting] Shoves foes off-balance (Weakness + Slowness) while snatching ransom gold and XP straight into your palm!",
   "signature.enchantment_fusion.legion_plunder.title": "Pluck the Passing Goose",
   "signature.enchantment_fusion.legion_plunder.desc": "[Looting ▷ Sweeping Edge] Even before death, sweeping across living foes plucks pelts, feathers, bones, or gold nuggets from each monster once!",
-  "signature.enchantment_fusion.raw_ore_geode.title": "Raw Ore Geode",
-  "signature.enchantment_fusion.raw_ore_geode.desc": "Keeps natural ore blocks intact while popping 1-3 bonus raw ores or gems.",
+  "signature.enchantment_fusion.raw_ore_geode.title": "Sealed Ore Choice",
+  "signature.enchantment_fusion.raw_ore_geode.desc": "[Silk Touch ▷ Fortune] Actual Silk Touch ore drops may be kept as blocks or opened once for Fortune loot. Hold the matching tool in the main hand and one sample in the offhand, then activate the skill. No extra XP is awarded on opening.",
   "signature.enchantment_fusion.smelt_fortune.title": "Smelt Fortune",
   "signature.enchantment_fusion.smelt_fortune.desc": "Auto-smelts mined ores into ingots with full Fortune multiplication.",
   "signature.enchantment_fusion.pulse_prospect.title": "Dowsing Vein Pulse",
@@ -1000,5 +1000,11 @@
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "This legacy carrier keeps its old effects; the new boundary uses melee weapons and the fuse requires a sword sweep.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "This legacy carrier keeps its old effects; the wind eye uses melee weapons and the core requires a sword sweep.",
   "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "This legacy carrier keeps its old effects; the new soul skills use melee weapons.",
-  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "This legacy carrier keeps its old effects; the new trip and thread use melee weapons."
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "This legacy carrier keeps its old effects; the new trip and thread use melee weapons.",
+  "tooltip.enchantment_fusion.sealed_ore": "Sealed ore (Fortune %s): keep the block, or hold one in offhand with the matching tool and press %s; use %s to cycle skills. Opening grants no extra XP.",
+  "message.enchantment_fusion.sealed_ore_one": "Separate one sealed sample into your offhand before opening it.",
+  "message.enchantment_fusion.sealed_ore_unsupported": "This loot table cannot be exchanged safely. The intact ore was kept and the choice cleared.",
+  "message.enchantment_fusion.sealed_ore_opened": "One sample was exchanged for its Fortune yield.",
+  "skill.enchantment_fusion.open_sealed_ore": "Open sealed ore",
+  "tooltip.enchantment_fusion.legacy_sealed_ore_carrier": "Legacy carrier keeps its old effect; sealed samples need a tool that can harvest a supported ore."
 }

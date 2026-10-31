@@ -151,8 +151,8 @@
   "signature.enchantment_fusion.concussive_plunder.desc": "[Knockback ▷ Looting] Shoves foes off-balance (Weakness + Slowness) while snatching ransom gold and XP straight into your palm!",
   "signature.enchantment_fusion.legion_plunder.title": "Pluck the Passing Goose",
   "signature.enchantment_fusion.legion_plunder.desc": "[Looting ▷ Sweeping Edge] Even before death, sweeping across living foes plucks pelts, feathers, bones, or gold nuggets from each monster once!",
-  "signature.enchantment_fusion.raw_ore_geode.title": "Raw Ore Geode",
-  "signature.enchantment_fusion.raw_ore_geode.desc": "Keeps natural ore blocks intact while popping 1-3 bonus raw ores or gems.",
+  "signature.enchantment_fusion.raw_ore_geode.title": "Elección de mena sellada",
+  "signature.enchantment_fusion.raw_ore_geode.desc": "[Toque de seda ▷ Fortuna] Conserva la mena obtenida o abre una muestra para obtener botín de Fortuna. Sujeta la herramienta correspondiente en la mano principal y una muestra en la secundaria, y activa la habilidad. No da experiencia adicional.",
   "signature.enchantment_fusion.smelt_fortune.title": "Smelt Fortune",
   "signature.enchantment_fusion.smelt_fortune.desc": "Auto-smelts mined ores into ingots with full Fortune multiplication.",
   "signature.enchantment_fusion.pulse_prospect.title": "Dowsing Vein Pulse",
@@ -1000,5 +1000,11 @@
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "El objeto antiguo conserva su efecto; el límite usa armas cuerpo a cuerpo y la mecha requiere barrido de espada.",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "El objeto antiguo conserva su efecto; el ojo usa armas cuerpo a cuerpo y el núcleo exige barrido de espada.",
   "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades de alma usan armas cuerpo a cuerpo.",
-  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades usan armas cuerpo a cuerpo."
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "El objeto antiguo conserva su efecto; las nuevas habilidades usan armas cuerpo a cuerpo.",
+  "tooltip.enchantment_fusion.sealed_ore": "Mena sellada (Fortuna %s): conserva el bloque o sostén una muestra en la mano secundaria con la herramienta adecuada y pulsa %s; %s cambia de habilidad. Sin experiencia adicional.",
+  "message.enchantment_fusion.sealed_ore_one": "Pon una sola muestra en la mano secundaria.",
+  "message.enchantment_fusion.sealed_ore_unsupported": "La tabla de botín no permite un intercambio seguro. Se conserva la mena y se elimina la opción.",
+  "message.enchantment_fusion.sealed_ore_opened": "Una muestra se cambió por botín de Fortuna.",
+  "skill.enchantment_fusion.open_sealed_ore": "Abrir mena sellada",
+  "tooltip.enchantment_fusion.legacy_sealed_ore_carrier": "El objeto antiguo conserva su efecto; las muestras requieren una herramienta apta para la mena."
 }

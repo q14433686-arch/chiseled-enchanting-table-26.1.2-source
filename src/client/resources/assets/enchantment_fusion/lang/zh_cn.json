@@ -151,8 +151,8 @@
   "signature.enchantment_fusion.concussive_plunder.desc": "【击退 ▷ 抢夺】猛推震退令敌失衡（虚弱+迟缓）的刹那，逆向从其身上顺手扯出一份金宝与经验球落入掌心！",
   "signature.enchantment_fusion.legion_plunder.title": "雁过拔毛",
   "signature.enchantment_fusion.legion_plunder.desc": "【抢夺 ▷ 横扫之刃】即便强敌未死，剑锋擦身掠过活体敌群亦能先行薅下一份皮毛骨金（每只怪物限薅一次）！",
-  "signature.enchantment_fusion.raw_ore_geode.title": "原矿伴生",
-  "signature.enchantment_fusion.raw_ore_geode.desc": "精准采集完整保留原矿石的同时，额外迸出1至3枚伴生粗矿或宝石。",
+  "signature.enchantment_fusion.raw_ore_geode.title": "封样择运",
+  "signature.enchantment_fusion.raw_ore_geode.desc": "[精准采集 ▷ 时运] 真实精准采集矿块可保留为原矿，或消耗一块封样换取一次时运掉落。主手持同等级融合工具、副手持单个封样，按主动技能键拆样；拆样不额外生成经验。",
   "signature.enchantment_fusion.smelt_fortune.title": "熔金时运",
   "signature.enchantment_fusion.smelt_fortune.desc": "挖掘矿石自动高炉熔炼为金属锭，并完整享受时运暴击增产！",
   "signature.enchantment_fusion.pulse_prospect.title": "点石寻脉",
@@ -1000,5 +1000,11 @@
   "tooltip.enchantment_fusion.legacy_fire_sweep_carrier": "旧载体保留原效果；新余烬界使用近战武器，引信需要剑的真实横扫。",
   "tooltip.enchantment_fusion.legacy_wind_sweep_carrier": "旧载体保留原效果；新风眼使用近战武器，风核需要剑的真实横扫。",
   "tooltip.enchantment_fusion.legacy_soul_blade_carrier": "旧载体保留原效果；新的破魂和灵刃使用近战武器。",
-  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "旧载体保留原效果；新的断节和丝线使用近战武器。"
+  "tooltip.enchantment_fusion.legacy_segment_thread_carrier": "旧载体保留原效果；新的断节和丝线使用近战武器。",
+  "tooltip.enchantment_fusion.sealed_ore": "封存矿样（时运 %s）：可保留矿块；或主手持对应工具、副手放单个封样，按 %s 拆样，%s 切换技能。拆样不额外产经验。",
+  "message.enchantment_fusion.sealed_ore_one": "请将单个封样放入副手后再拆样。",
+  "message.enchantment_fusion.sealed_ore_unsupported": "当前战利品表无法安全交换；已保留完整矿块并清除拆样选项。",
+  "message.enchantment_fusion.sealed_ore_opened": "已消耗一个封样并取得一次时运掉落。",
+  "skill.enchantment_fusion.open_sealed_ore": "拆开封样",
+  "tooltip.enchantment_fusion.legacy_sealed_ore_carrier": "旧载体保留原效果；封样需要能收获对应矿石的工具。"
 }
