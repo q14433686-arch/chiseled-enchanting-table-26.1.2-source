@@ -21,6 +21,8 @@ import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.SoulStepSkills;
 import enchantment_fusion.mechanics.signatures.FishingTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
+import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
+import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -178,6 +180,9 @@ public final class FusionTooltipRenderer {
                 && FishingTideSkills.matches(pair, sigOpt.get().id()) && !FishingTideSkills.applies(pair, stack, sigOpt.get().id());
             boolean legacyCadenceCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && RangedCadenceSkills.matches(pair, sigOpt.get().id()) && !RangedCadenceSkills.applies(pair, stack, sigOpt.get().id());
+            boolean legacyReserveCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
+                && ((EchoPathSkills.matches(pair, sigOpt.get().id()) && !EchoPathSkills.applies(pair, stack, sigOpt.get().id()))
+                    || (DurabilityReserveSkills.matches(pair, sigOpt.get().id()) && !DurabilityReserveSkills.applies(pair, stack, sigOpt.get().id())));
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && ((GlazedStrikeEffect.isPair(pair) && GlazedStrikeEffect.SIGNATURE.equals(sigOpt.get().id())
                         && !GlazedStrikeEffect.applies(pair, stack, sigOpt.get().id()))
@@ -279,6 +284,10 @@ public final class FusionTooltipRenderer {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_cadence_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
+            if (legacyReserveCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_reserve_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
             if (legacyGlazeAmberCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_glaze_amber_carrier")
                     .withStyle(ChatFormatting.GOLD));
@@ -288,6 +297,8 @@ public final class FusionTooltipRenderer {
                     || AmberSealSkill.applies(pair, stack, sigOpt.get().id())
                     || (SoulStepSkills.REVERSE.equals(sigOpt.get().id()) && SoulStepSkills.applies(pair, stack, sigOpt.get().id()))
                     || (RangedCadenceSkills.CROSSBOW.equals(sigOpt.get().id()) && RangedCadenceSkills.applies(pair, stack, sigOpt.get().id()))
+                    || DurabilityReserveSkills.applies(pair, stack, sigOpt.get().id())
+                    || EchoPathSkills.applies(pair, stack, sigOpt.get().id())
                     || (UnderwaterMiningSkills.isSpendPair(pair) && UnderwaterMiningSkills.applies(pair, stack, sigOpt.get().id())))) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
                     Component.keybind("key.enchantment_fusion.activate_skill"),

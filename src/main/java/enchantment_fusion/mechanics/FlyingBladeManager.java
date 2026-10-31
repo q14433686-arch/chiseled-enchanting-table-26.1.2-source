@@ -2,6 +2,7 @@ package enchantment_fusion.mechanics;
 
 import enchantment_fusion.mechanics.ProjectilePathTracker.CachedFlightPath;
 import enchantment_fusion.mechanics.ProjectilePathTracker.PathSourceKind;
+import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.model.TriggerType;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -453,9 +454,8 @@ public final class FlyingBladeManager {
         ProjectilePathTracker.markPathCompleted(f.flightId, terminalPos, level.getGameTime());
         float rawAttack = resolveWeaponAttackDamage(f.weaponSnapshot);
 
-        // [无限 ▷ 耐久] 余音绕梁：沿暂缓存飞行路径延迟回放一道剑气/枪影残响！
-        if (SignaturePairs.stackHasSignature(f.weaponSnapshot, "eternal_bowstring")
-            || SignaturePairs.playerHasEquippedSignature(owner, "eternal_bowstring")) {
+        // Legacy unsupported carriers retain their automatic flying-blade echo; new bows use an explicit arrow action.
+        if (EchoPathSkills.hasLegacySignature(f.weaponSnapshot) || EchoPathSkills.playerHasLegacySignature(owner)) {
             ProjectilePathTracker.schedulePathEcho(path, 12L, Math.max(3.0F, rawAttack * 0.48F), false, true);
         }
         // [突进 ▷ 忠诚] 回马金枪：飞行轨迹末端逆向回溯杀回马枪！

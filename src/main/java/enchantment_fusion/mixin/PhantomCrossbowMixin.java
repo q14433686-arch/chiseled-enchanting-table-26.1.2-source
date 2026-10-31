@@ -5,6 +5,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
+import enchantment_fusion.mechanics.signatures.EchoPathSkills;
+import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -26,6 +28,7 @@ public abstract class PhantomCrossbowMixin {
                                                CallbackInfo ci) {
         PhantomVolley.configureCrossbow(projectile, shooter, index);
         RangedCadenceSkills.configureCrossbowShot(projectile, shooter, index);
+        EchoPathSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
     }
 
     @WrapOperation(method = "onUseTick", at = @At(value = "INVOKE",

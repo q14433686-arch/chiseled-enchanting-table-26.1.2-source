@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
+import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -21,7 +22,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class PhantomArrowMixin {
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void ef$tickPhantom(CallbackInfo ci) {
-        if (!PhantomVolley.tick((AbstractArrow) (Object) this)) ci.cancel();
+        AbstractArrow arrow = (AbstractArrow) (Object) this;
+        EchoPathSkills.sample(arrow);
+        if (!PhantomVolley.tick(arrow)) ci.cancel();
     }
 
     // Vanilla normally excludes players when PvP is disabled. Ghosts must still physically
@@ -49,6 +52,7 @@ public abstract class PhantomArrowMixin {
         } finally {
             HeavyCrushSkill.endHit(heavyHit, succeeded);
             RangedCadenceSkills.finishBowHit(arrow, target, succeeded);
+            EchoPathSkills.hit(arrow, target, hit.getLocation(), amount, succeeded);
             if (reserved) PhantomVolley.finishImpact(arrow, target, hit.getLocation(), succeeded);
         }
     }

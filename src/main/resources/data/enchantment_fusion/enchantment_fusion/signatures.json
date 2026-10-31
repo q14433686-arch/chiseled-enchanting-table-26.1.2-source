@@ -608,7 +608,18 @@
     "eternal_bowstring": {
       "primary": "minecraft:infinity",
       "secondary": "minecraft:unbreaking",
-      "domain": "ranged"
+      "domain": "ranged",
+      "echo_wear_cost": 3,
+      "echo_lifetime_ticks": 200,
+      "echo_damage_percent": 60
+    },
+    "tenacious_reserve": {
+      "primary": "minecraft:unbreaking",
+      "secondary": "minecraft:infinity",
+      "domain": "armor_curse",
+      "saved_wear_per_charge": 4,
+      "charge_capacity": 3,
+      "reserve_lifetime_ticks": 1200
     },
     "undying_hellfire": {
       "primary": "minecraft:infinity",

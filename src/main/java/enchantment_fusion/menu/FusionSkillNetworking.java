@@ -7,6 +7,8 @@ import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.PrecisionConstruction;
 import enchantment_fusion.mechanics.signatures.SoulStepSkills;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
+import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
+import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +48,9 @@ public final class FusionSkillNetworking {
         SLICE_MODE("skill.enchantment_fusion.slice_mode"),
         LINE_BUILD("skill.enchantment_fusion.line_build"),
         SOUL_CRAWL("skill.enchantment_fusion.soul_crawl"),
-        CHARGED_CROSSBOW("skill.enchantment_fusion.charged_crossbow");
+        CHARGED_CROSSBOW("skill.enchantment_fusion.charged_crossbow"),
+        DURABILITY_RESERVE("skill.enchantment_fusion.durability_reserve"),
+        PATH_ECHO("skill.enchantment_fusion.path_echo");
         final String translation;
         Skill(String translation) { this.translation = translation; }
     }
@@ -57,7 +61,7 @@ public final class FusionSkillNetworking {
     private FusionSkillNetworking() {}
 
     private static List<Skill> equippedSkills(ServerPlayer player) {
-        List<Skill> skills = new ArrayList<>(8);
+        List<Skill> skills = new ArrayList<>(10);
         if (UnderwaterMiningSkills.hasEquippedSpend(player)) skills.add(Skill.BREATH);
         if (FrostFallSkills.find(player, true) != null) skills.add(Skill.FROST_WAVE);
         if (FrostFallSkills.find(player, false) != null) skills.add(Skill.FROST_STEP);
@@ -66,6 +70,8 @@ public final class FusionSkillNetworking {
         if (PrecisionConstruction.hasLine(player)) skills.add(Skill.LINE_BUILD);
         if (SoulStepSkills.hasEquippedCrawl(player)) skills.add(Skill.SOUL_CRAWL);
         if (RangedCadenceSkills.hasEquippedCrossbow(player)) skills.add(Skill.CHARGED_CROSSBOW);
+        if (DurabilityReserveSkills.hasEquipped(player)) skills.add(Skill.DURABILITY_RESERVE);
+        if (EchoPathSkills.hasEquipped(player)) skills.add(Skill.PATH_ECHO);
         return skills;
     }
 
@@ -117,6 +123,8 @@ public final class FusionSkillNetworking {
             case LINE_BUILD -> PrecisionConstruction.activateLine(player);
             case SOUL_CRAWL -> SoulStepSkills.activateCrawl(player);
             case CHARGED_CROSSBOW -> RangedCadenceSkills.activateCrossbow(player);
+            case DURABILITY_RESERVE -> DurabilityReserveSkills.activate(player);
+            case PATH_ECHO -> EchoPathSkills.activate(player);
         }
     }
 

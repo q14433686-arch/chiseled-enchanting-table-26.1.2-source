@@ -226,8 +226,12 @@ public final class MiningFishingSignatures {
                         tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
                     }
                 }
-                case "perpetual_craft", "eternal_bowstring", "tempered_anvil_heart" -> {
+                case "perpetual_craft", "tempered_anvil_heart" -> {
                     if (tool.isDamaged() && rng.nextFloat() < 0.75F) tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
+                }
+                case "eternal_bowstring" -> {
+                    if (!EchoPathSkills.applies(pair, tool, sigId) && tool.isDamaged() && rng.nextFloat() < 0.75F)
+                        tool.setDamageValue(Math.max(0, tool.getDamageValue() - 1));
                 }
                 case "ocean_breath_mine" -> {
                     // The new direction creates a collectable bubble only after a real break;

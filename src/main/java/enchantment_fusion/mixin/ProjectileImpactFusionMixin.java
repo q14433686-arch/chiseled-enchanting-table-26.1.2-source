@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.ProjectilePathTracker.PathTrailStyle;
 import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
+import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.model.TriggerType;
 import java.util.EnumSet;
 import java.util.Set;
@@ -253,8 +254,7 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
         ItemStack weapon,
         CachedFlightPath path
     ) {
-        if (SignaturePairs.stackHasSignature(weapon, "eternal_bowstring")
-            || SignaturePairs.playerHasEquippedSignature(shooter, "eternal_bowstring")) {
+        if (EchoPathSkills.hasLegacySignature(weapon) || EchoPathSkills.playerHasLegacySignature(shooter)) {
             ProjectilePathTracker.schedulePathEcho(path, 12L, 3.6F, false, true);
         }
         if (SignaturePairs.stackHasSignature(weapon, "boomerang_lance")
