@@ -134,6 +134,30 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void frostFireUsesDifferentCarriersForTheTwoDirections() {
+        var basalt = FusedPair.clean("minecraft:frost_walker", 2, "minecraft:fire_protection", 4);
+        var hearth = basalt.flipped();
+        var foot = enchantment_fusion.model.FusionCarrier.FOOT_ARMOR;
+        var head = enchantment_fusion.model.FusionCarrier.HEAD_ARMOR;
+        var chest = enchantment_fusion.model.FusionCarrier.CHEST_ARMOR;
+        var leg = enchantment_fusion.model.FusionCarrier.LEG_ARMOR;
+        var shield = enchantment_fusion.model.FusionCarrier.SHIELD;
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostFireSkills.isBasaltPair(basalt));
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostFireSkills.isHearthPair(hearth));
+        assertEquals("magma_basalt_step", SignaturePairs.resolve(basalt).orElseThrow().id());
+        assertEquals("glacial_hearth", SignaturePairs.resolve(hearth).orElseThrow().id());
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostFireSkills.supportsCarrier(basalt, Set.of(foot)));
+        assertFalse(enchantment_fusion.mechanics.signatures.FrostFireSkills.supportsCarrier(basalt, Set.of(head)));
+        for (var armor : List.of(foot, head, chest, leg)) {
+            assertTrue(enchantment_fusion.mechanics.signatures.FrostFireSkills.supportsCarrier(hearth, Set.of(armor)), armor.name());
+        }
+        assertFalse(enchantment_fusion.mechanics.signatures.FrostFireSkills.supportsCarrier(hearth, Set.of(shield)));
+        assertTrue(enchantment_fusion.mechanics.signatures.FrostFireSkills.correctSlot(Set.of(head), net.minecraft.world.entity.EquipmentSlot.HEAD));
+        assertFalse(enchantment_fusion.mechanics.signatures.FrostFireSkills.correctSlot(Set.of(head), net.minecraft.world.entity.EquipmentSlot.MAINHAND));
+        assertFalse(enchantment_fusion.mechanics.signatures.FrostFireSkills.correctSlot(Set.of(head), net.minecraft.world.entity.EquipmentSlot.CHEST));
+    }
+
+    @Test
     void frostAttributionUsesOnlyTheActualMarginalProtectionAfterVanillasCap() {
         assertEquals(4.8F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 5.2F, 12, 12), 0.0001F);
         assertEquals(2.0F, enchantment_fusion.mechanics.signatures.FrostLandingCapture.marginalAbsorption(10, 2, 25, 10), 0.0001F,

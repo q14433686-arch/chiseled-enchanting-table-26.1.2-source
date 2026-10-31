@@ -401,6 +401,10 @@ public final class ArmorCurseSignatures {
         EquippedSignature dive = FrostWakeDiveSkills.select(player, false);
         if (wake == null) signatures.remove(FrostWakeDiveSkills.WAKE); else signatures.put(FrostWakeDiveSkills.WAKE, wake);
         if (dive == null) signatures.remove(FrostWakeDiveSkills.DIVE); else signatures.put(FrostWakeDiveSkills.DIVE, dive);
+        EquippedSignature basalt = FrostFireSkills.select(player, true);
+        EquippedSignature hearth = FrostFireSkills.select(player, false);
+        if (basalt == null) signatures.remove(FrostFireSkills.BASALT); else signatures.put(FrostFireSkills.BASALT, basalt);
+        if (hearth == null) signatures.remove(FrostFireSkills.HEARTH); else signatures.put(FrostFireSkills.HEARTH, hearth);
         for (EquippedSignature eq : signatures.values()) {
             String sigId = eq.sigId();
             EquipmentSlot slot = eq.slot();
@@ -424,27 +428,9 @@ public final class ArmorCurseSignatures {
                         FORGED_QUILL_STACKS.merge(player.getUUID(), 1, (a, b) -> Math.min(8, a + b));
                     }
                 }
-                case "glacial_hearth" -> {
-                    player.setTicksFrozen(0);
-                    for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 3.2D, null)) {
-                        mob.setTicksFrozen(Math.min(200, mob.getTicksFrozen() + 25));
-                    }
-                }
+                case "glacial_hearth" -> FrostFireSkills.tickHearth(level, player, FrostFireSkills.applies(eq.pair(), eq.stack(), sigId));
                 case "tide_breaker_dive", "permafrost_wake" -> FrostWakeDiveSkills.tick(level, player, eq, selectedWaterBoots);
-                case "magma_basalt_step" -> {
-                    if (player.mayBuild() && !player.isShiftKeyDown()) {
-                        BlockPos feet = player.blockPosition();
-                        for (int dx = -1; dx <= 1; dx++) {
-                            for (int dz = -1; dz <= 1; dz++) {
-                                BlockPos lavaPos = feet.offset(dx, -1, dz);
-                                BlockState st = level.getBlockState(lavaPos);
-                                if (st.is(Blocks.LAVA) && st.getFluidState().isSource() && level.getBlockState(lavaPos.above()).isAir()) {
-                                    level.setBlockAndUpdate(lavaPos, Blocks.BASALT.defaultBlockState());
-                                }
-                            }
-                        }
-                    }
-                }
+                case "magma_basalt_step" -> FrostFireSkills.tickBasalt(level, player, eq, FrostFireSkills.applies(eq.pair(), eq.stack(), sigId));
                 case "ice_thorn_trail" -> {
                     for (LivingEntity mob : nearbyHostiles(level, player, player.position(), 4.5D, null)) {
                         BlockState under = level.getBlockState(mob.blockPosition().below());

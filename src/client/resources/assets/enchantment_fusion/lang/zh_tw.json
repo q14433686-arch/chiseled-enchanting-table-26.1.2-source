@@ -214,7 +214,7 @@
   "signature.enchantment_fusion.permafrost_wake.title": "玄冰凝海",
   "signature.enchantment_fusion.permafrost_wake.desc": "While worn and not sneaking or immersed, place temporary thin ice in air above source water; extinguish yourself and chill eligible enemies. Original water is preserved. Native stepping-damage immunity remains; water freezing is replaced.",
   "signature.enchantment_fusion.magma_basalt_step.title": "踏火玄武",
-  "signature.enchantment_fusion.magma_basalt_step.desc": "行經熔岩表面時将其瞬間冷卻为安全玄武岩，免疫岩漿燙傷！",
+  "signature.enchantment_fusion.magma_basalt_step.desc": "穿靴時每半秒將腳下3×3露天源熔岩永久變為玄武岩；潛行暫停。水面生成會消失的薄冰，保留原水。霜行原有的踩踏灼傷免疫仍生效，不免疫火焰或浸泡熔岩。",
   "signature.enchantment_fusion.frost_meteor_fall.title": "Frostfall Reserve",
   "signature.enchantment_fusion.frost_meteor_fall.desc": "Worn boots store the fall damage actually prevented by their Feather Falling, up to a limit. Activate to release a forward-moving virtual frost wave that chills eligible enemies. The original Feather Falling remains; cancelled or lethal falls store nothing.",
   "signature.enchantment_fusion.soul_stride_landing.title": "御魂輕功",
@@ -589,7 +589,7 @@
   "signature.enchantment_fusion.ricochet_ward.title": "偏折反刺",
   "signature.enchantment_fusion.ricochet_ward.desc": "受擊獲短暫抗性，並向襲擊者反擊發射一支光靈反制箭。",
   "signature.enchantment_fusion.glacial_hearth.title": "冰爐暖步",
-  "signature.enchantment_fusion.glacial_hearth.desc": "踏火不傷並在周身維持恆溫霜環，受熱源傷害時回復微幅生命並減速追兵！",
+  "signature.enchantment_fusion.glacial_hearth.desc": "穿戴時清除自身凍結，並使周圍3.2格範圍內的非盟友逐漸凍結（包括非盟友中立生物；玩家須允許PvP）。保留原版火焰保護；不提供免疫或治療。",
   "signature.enchantment_fusion.feather_rime_glide.title": "Aerial Frost Step",
   "signature.enchantment_fusion.feather_rime_glide.desc": "While airborne in these boots, activate to form a temporary thin platform only in empty air. Up to three steps per airborne journey; cooldown 1.5 seconds. Landing on a step does not reset the limit. It breaks or decays to air and never replaces water. The conflicting native Frost Walker water-freezing effect is replaced.",
   "signature.enchantment_fusion.arc_lightning_cleave.title": "弧光雷斬",
@@ -897,5 +897,6 @@
   "message.enchantment_fusion.amber_unavailable": "目標已被封存、同時封存數已滿，或其減速屬性被占用。",
   "message.enchantment_fusion.amber_sealed": "餘火已封存：命中目標可碎封，再用技能可撤銷。",
   "message.enchantment_fusion.amber_cancelled": "琥珀焰封已撤銷；在安全條件下恢復自然剩餘的燃燒時間。",
-  "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "舊版載體：保留原有效果；新版碎釉與琥珀技能需要劍、斧、長矛或重錘。"
+  "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "舊版載體：保留原有效果；新版碎釉與琥珀技能需要劍、斧、長矛或重錘。",
+  "tooltip.enchantment_fusion.legacy_frost_fire_carrier": "舊載體保留原有發動方式；玄武岩轉換現逐格檢查原版權限。"
 }

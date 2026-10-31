@@ -136,7 +136,8 @@ public final class FrostFallSkills {
         for (FusedPair pair : item.itemStack().getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
             String sig = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
             if ((isStepPair(pair) && STEP_SIGNATURE.equals(sig))
-                || (FrostWakeDiveSkills.isWakePair(pair) && FrostWakeDiveSkills.WAKE.equals(sig))) return true;
+                || (FrostWakeDiveSkills.isWakePair(pair) && FrostWakeDiveSkills.WAKE.equals(sig))
+                || (FrostFireSkills.isBasaltPair(pair) && FrostFireSkills.BASALT.equals(sig))) return true;
         }
         return false;
     }

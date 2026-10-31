@@ -214,7 +214,7 @@
   "signature.enchantment_fusion.permafrost_wake.title": "Permafrost Wake",
   "signature.enchantment_fusion.permafrost_wake.desc": "While worn and not sneaking or immersed, place temporary thin ice in air above source water; extinguish yourself and chill eligible enemies. Original water is preserved. Native stepping-damage immunity remains; water freezing is replaced.",
   "signature.enchantment_fusion.magma_basalt_step.title": "Magma Basalt Step",
-  "signature.enchantment_fusion.magma_basalt_step.desc": "Cools nearby surface lava into solid basalt underfoot and guards from magma.",
+  "signature.enchantment_fusion.magma_basalt_step.desc": "While worn as boots, exposed source lava in a 3 by 3 area underfoot permanently becomes basalt every half second; sneak to pause. Temporary thin ice forms above water without replacing it. Frost Walker still blocks stepping burns, not fire or lava immersion.",
   "signature.enchantment_fusion.frost_meteor_fall.title": "Frostfall Reserve",
   "signature.enchantment_fusion.frost_meteor_fall.desc": "Worn boots store the fall damage actually prevented by their Feather Falling, up to a limit. Activate to release a forward-moving virtual frost wave that chills eligible enemies. The original Feather Falling remains; cancelled or lethal falls store nothing.",
   "signature.enchantment_fusion.soul_stride_landing.title": "Soul Stride Landing",
@@ -589,7 +589,7 @@
   "signature.enchantment_fusion.ricochet_ward.title": "Ricochet Ward",
   "signature.enchantment_fusion.ricochet_ward.desc": "Grants brief guard resistance and fires a homing spectral counter-bolt back at ranged attackers.",
   "signature.enchantment_fusion.glacial_hearth.title": "Glacial Hearth",
-  "signature.enchantment_fusion.glacial_hearth.desc": "Tempers fire damage into soothing chill aura while slowing nearby pursuers!",
+  "signature.enchantment_fusion.glacial_hearth.desc": "While worn as armor, clears your freezing and gradually freezes nearby non-allies within a 3.2-block box, including neutral creatures; other players require permitted PvP. Vanilla Fire Protection remains. No fire immunity or healing.",
   "signature.enchantment_fusion.feather_rime_glide.title": "Aerial Frost Step",
   "signature.enchantment_fusion.feather_rime_glide.desc": "While airborne in these boots, activate to form a temporary thin platform only in empty air. Up to three steps per airborne journey; cooldown 1.5 seconds. Landing on a step does not reset the limit. It breaks or decays to air and never replaces water. The conflicting native Frost Walker water-freezing effect is replaced.",
   "signature.enchantment_fusion.arc_lightning_cleave.title": "Arc Lightning Cleave",
@@ -897,5 +897,6 @@
   "message.enchantment_fusion.amber_unavailable": "The target is already sealed, the seal limit is reached, or its speed modifier is unavailable.",
   "message.enchantment_fusion.amber_sealed": "Flame sealed. Hit the target to shatter it, or use the skill again to cancel.",
   "message.enchantment_fusion.amber_cancelled": "Amber seal cancelled; any naturally remaining fire is restored where safe.",
-  "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "Legacy carrier: the previous effect remains; the redesigned glaze and amber skills require a sword, axe, spear or mace."
+  "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "Legacy carrier: the previous effect remains; the redesigned glaze and amber skills require a sword, axe, spear or mace.",
+  "tooltip.enchantment_fusion.legacy_frost_fire_carrier": "Legacy carrier retains its original activation; basalt conversion now checks vanilla permissions per block."
 }

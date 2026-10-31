@@ -214,7 +214,7 @@
   "signature.enchantment_fusion.permafrost_wake.title": "玄冰凝海",
   "signature.enchantment_fusion.permafrost_wake.desc": "穿戴靴子、未潜行且未浸水时，在源水上方空气铺临时薄冰；灭火并寒冷附近合格敌人。原水不被替换；保留原版行走伤害免疫，冻水效果被替代。",
   "signature.enchantment_fusion.magma_basalt_step.title": "踏火玄武",
-  "signature.enchantment_fusion.magma_basalt_step.desc": "行经熔岩表面时将其瞬间冷却为安全玄武岩，免疫岩浆烫伤！",
+  "signature.enchantment_fusion.magma_basalt_step.desc": "穿靴时每半秒将脚下3×3露天源岩浆永久变为玄武岩；潜行暂停。水面生成会消失的薄冰，保留原水。霜行原有的踩踏灼伤免疫仍生效，不免疫火焰或岩浆浸泡。",
   "signature.enchantment_fusion.frost_meteor_fall.title": "霜势缓冲",
   "signature.enchantment_fusion.frost_meteor_fall.desc": "穿戴靴子高处落地，按该装备的摔落保护实际减免量积攒有限霜势；主动释放向前扩散的虚拟霜波，寒冷合格敌人。保留原版摔落保护；被取消或致命的坠落不蓄势。",
   "signature.enchantment_fusion.soul_stride_landing.title": "御魂轻功",
@@ -589,7 +589,7 @@
   "signature.enchantment_fusion.ricochet_ward.title": "偏折反刺",
   "signature.enchantment_fusion.ricochet_ward.desc": "受击获短暂抗性，并向袭击者反击发射一支光灵反制箭。",
   "signature.enchantment_fusion.glacial_hearth.title": "冰炉暖步",
-  "signature.enchantment_fusion.glacial_hearth.desc": "踏火不伤并在周身维持恒温霜环，受热源伤害时回复微幅生命并减速追兵！",
+  "signature.enchantment_fusion.glacial_hearth.desc": "穿戴时清除自身冻结，并使周围3.2格范围内的非盟友逐渐冻结（包括非盟友中立生物；玩家须允许PvP）。保留原版火焰保护；不提供免疫或治疗。",
   "signature.enchantment_fusion.feather_rime_glide.title": "空中霜阶",
   "signature.enchantment_fusion.feather_rime_glide.desc": "穿靴在空中主动于脚下空位凝出临时薄冰台；一次离地最多 3 次，冷却 1.5 秒，踩上霜台不重置次数。薄冰碎裂或消散为空气，不替换原水；冲突的原版冰霜行者冻水效果被替代。",
   "signature.enchantment_fusion.arc_lightning_cleave.title": "弧光雷斩",
@@ -897,5 +897,6 @@
   "message.enchantment_fusion.amber_unavailable": "目标已被封存、同时封存数已满，或其减速属性被占用。",
   "message.enchantment_fusion.amber_sealed": "余火已封存：命中目标可碎封，再用技能可撤销。",
   "message.enchantment_fusion.amber_cancelled": "琥珀焰封已撤销；在安全条件下恢复自然剩余的燃烧时间。",
-  "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "旧版载体：保留原有效果；新版碎釉与琥珀技能需要剑、斧、长矛或重锤。"
+  "tooltip.enchantment_fusion.legacy_glaze_amber_carrier": "旧版载体：保留原有效果；新版碎釉与琥珀技能需要剑、斧、长矛或重锤。",
+  "tooltip.enchantment_fusion.legacy_frost_fire_carrier": "旧载体保留原有发动方式；玄武岩转换现逐格检查原版权限。"
 }
