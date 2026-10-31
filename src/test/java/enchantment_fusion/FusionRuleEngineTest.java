@@ -508,6 +508,10 @@ final class FusionRuleEngineTest {
         assertEquals(0, enchantment_fusion.mechanics.signatures.AmberSealSkill.restorableFire(100, Long.MAX_VALUE));
         assertEquals(Integer.MAX_VALUE, enchantment_fusion.mechanics.signatures.AmberSealSkill.restorableFire(Integer.MAX_VALUE, -1));
         assertEquals(0, enchantment_fusion.mechanics.signatures.AmberSealSkill.restorableFire(-1, 0));
+        assertEquals(75, enchantment_fusion.mechanics.signatures.AmberSealSkill.mergedSavedFire((short) 0, 0, 100, 25));
+        assertEquals(300, enchantment_fusion.mechanics.signatures.AmberSealSkill.mergedSavedFire((short) 300, 300, 100, 25));
+        assertEquals(-20, enchantment_fusion.mechanics.signatures.AmberSealSkill.mergedSavedFire((short) -20, -20, 10, 11));
+        assertEquals(Short.MAX_VALUE, enchantment_fusion.mechanics.signatures.AmberSealSkill.mergedSavedFire((short) -1, Integer.MAX_VALUE, 100, 25));
         assertEquals(5.4F, enchantment_fusion.mechanics.signatures.AmberSealSkill.shockDamage(1, 2, 100), 1e-5F);
         assertEquals(19.4F, enchantment_fusion.mechanics.signatures.AmberSealSkill.shockDamage(255, 255, Integer.MAX_VALUE), 1e-5F);
         assertEquals(1.8D, enchantment_fusion.mechanics.signatures.AmberSealSkill.shockRadius(1), 1e-9);

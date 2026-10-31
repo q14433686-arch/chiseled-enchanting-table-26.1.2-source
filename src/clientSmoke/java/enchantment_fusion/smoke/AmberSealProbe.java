@@ -22,7 +22,10 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
@@ -88,6 +91,21 @@ final class AmberSealProbe {
             require(AmberSealSkill.activate(player), "A burning target in view should be sealable");
             require(target.getRemainingFireTicks() == 0 && target.getAttribute(Attributes.MOVEMENT_SPEED).getValue() < initialSpeed,
                 "Sealing captures the existing fire timer and applies transient slowness");
+            TagValueOutput saving = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+            target.saveWithoutId(saving);
+            var savedTarget = saving.buildResult();
+            require(savedTarget.getShortOr("Fire", (short) 0) > 0 && target.getRemainingFireTicks() == 0,
+                "Serializing an active seal must save a fire fallback without changing the live target");
+            Zombie restoredCopy = new Zombie(level); // Codec round-trip only, not a disk/restart test.
+            restoredCopy.load(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), savedTarget));
+            require(restoredCopy.getRemainingFireTicks() > 0,
+                "Reloading the serialized target must restore the unspent fire fallback");
+            target.setRemainingFireTicks(300);
+            TagValueOutput laterFire = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+            target.saveWithoutId(laterFire);
+            require(laterFire.buildResult().getShortOr("Fire", (short) 0) >= 300,
+                "The save fallback must never shorten a newer independent fire within the vanilla short range");
+            target.clearFire();
 
             denied.add(target.getUUID());
             target.invulnerableTime = 0;

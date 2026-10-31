@@ -309,6 +309,25 @@ public final class AmberSealSkill {
         if (remaining > target.getRemainingFireTicks()) target.setRemainingFireTicks(remaining);
     }
 
+    /**
+     * Save a conservative fire fallback without changing a still-active seal. Entity unload
+     * can occur after serialization, so the unload callback alone is not sufficient. The
+     * vanilla Fire tag is a signed short; only the recovered portion is clamped to that range.
+     */
+    public static short fireTicksForSave(Entity entity, short vanillaValue) {
+        if (!(entity instanceof LivingEntity target) || !(entity.level() instanceof ServerLevel)) return vanillaValue;
+        Seal seal = BY_TARGET.get(entity.getUUID());
+        if (seal == null || seal.target() != entity || !target.isAlive() || target.isInWaterOrRain()
+            || target.isInLava() || target.fireImmune()) return vanillaValue;
+        return mergedSavedFire(vanillaValue, target.getRemainingFireTicks(), seal.fireTicks(),
+            seal.level().getGameTime() - seal.started());
+    }
+
+    public static short mergedSavedFire(short vanillaValue, int currentTicks, int storedTicks, long elapsedTicks) {
+        int saved = Math.max(restorableFire(storedTicks, elapsedTicks), currentTicks);
+        return saved > 0 ? (short) Math.min(Short.MAX_VALUE, saved) : vanillaValue;
+    }
+
     public static boolean isApplyingBurst() {
         return Boolean.TRUE.equals(IN_BURST.get());
     }
