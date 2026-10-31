@@ -33,6 +33,18 @@ final class SoulStepMathTest {
         assertFalse(SoulStepMath.actualStep(10.0D));
         assertFalse(SoulStepMath.actualStep(Double.NaN));
     }
+    @Test void vibrationMuffleRequiresARealRecentSpentTickWithoutOverflow() {
+        assertFalse(SoulStepMath.isMuffleTick(0, Long.MIN_VALUE));
+        assertFalse(SoulStepMath.isMuffleTick(123, Long.MIN_VALUE));
+        assertFalse(SoulStepMath.isMuffleTick(Long.MAX_VALUE, Long.MIN_VALUE));
+        assertFalse(SoulStepMath.isMuffleTick(Long.MIN_VALUE, Long.MIN_VALUE));
+        assertTrue(SoulStepMath.isMuffleTick(123, 123));
+        assertTrue(SoulStepMath.isMuffleTick(124, 123));
+        assertFalse(SoulStepMath.isMuffleTick(125, 123));
+        assertFalse(SoulStepMath.isMuffleTick(122, 123));
+        assertFalse(SoulStepMath.isMuffleTick(Long.MIN_VALUE, Long.MAX_VALUE));
+        assertTrue(SoulStepMath.isMuffleTick(Long.MAX_VALUE, Long.MAX_VALUE - 1));
+    }
     @Test void levelSpeedIsBoundedAndDoesNotMutateEquipment() {
         assertEquals(0.6D, SoulStepMath.fastSneak(2), 0.00001D);
         assertEquals(1.0D, SoulStepMath.fastSneak(100), 0.00001D);

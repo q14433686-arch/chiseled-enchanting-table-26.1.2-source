@@ -17,6 +17,14 @@ public final class SoulStepMath {
         return value;
     }
 
+    /** Only a consumed movement tick and the immediately following tick are quiet. */
+    public static boolean isMuffleTick(long now, long lastSpentTick) {
+        // Long.MIN_VALUE is the uninitialized marker. Avoid subtraction between arbitrary
+        // game times: that can overflow and accidentally treat the marker as a recent tick.
+        return lastSpentTick != Long.MIN_VALUE
+            && (now == lastSpentTick || (now != Long.MIN_VALUE && now - 1 == lastSpentTick));
+    }
+
     public static double fastSneak(int swiftLevel) {
         return Math.min(1.0D, 0.3D + 0.15D * Math.clamp(swiftLevel, 1, 6));
     }

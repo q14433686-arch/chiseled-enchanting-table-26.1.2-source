@@ -58,6 +58,12 @@ final class SoulStepProbe {
             player.setPos(origin.getX() + 0.5D, origin.getY() + 1.0D, origin.getZ() + 0.5D);
             player.setDeltaMovement(Vec3.ZERO); player.setOnGround(true);
             player.setYRot(-90.0F); player.setXRot(0.0F);
+            if (!reverse) {
+                player.setShiftKeyDown(true); player.setSprinting(false);
+                SoulStepSkills.tick(player); // fresh state with no collected or spent energy
+                require(!SoulStepSkills.muffle(player, GameEvent.HIT_GROUND),
+                    "Fresh, uncharged boots must not suppress movement vibration");
+            }
             player.setShiftKeyDown(reverse); player.setSprinting(!reverse);
             SoulStepSkills.tick(player); // establish the physical start position
             for (int i = 1; i <= 6; i++) {

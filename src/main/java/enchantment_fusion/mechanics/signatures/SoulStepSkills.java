@@ -151,7 +151,7 @@ public final class SoulStepSkills {
         ForwardState state = FORWARD_STATE.get(player.getUUID());
         long now = player.level().getGameTime();
         if (state == null || !sameGear(state.gear, find(player, true)) || !player.isShiftKeyDown()
-            || now < state.muffleTick || now - state.muffleTick > 1) return false;
+            || !SoulStepMath.isMuffleTick(now, state.muffleTick)) return false;
         return event.is(GameEvent.STEP) || event.is(GameEvent.HIT_GROUND) || event.is(GameEvent.SWIM);
     }
     public static void tick(ServerPlayer player) {
