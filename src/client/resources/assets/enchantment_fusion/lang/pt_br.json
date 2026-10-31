@@ -1028,5 +1028,6 @@
   "skill.enchantment_fusion.water_pressure": "Lâmina de pressão",
   "message.enchantment_fusion.water_pressure_ready": "A lâmina já está pronta; nenhum ar extra foi gasto.",
   "message.enchantment_fusion.water_pressure_air": "Ar insuficiente para preparar a lâmina.",
-  "message.enchantment_fusion.water_pressure_paid": "Lâmina pronta; %s ticks de ar gastos."
+  "message.enchantment_fusion.water_pressure_paid": "Lâmina pronta; %s ticks de ar gastos.",
+  "message.enchantment_fusion.water_pressure_underwater": "Mergulhe os olhos para preparar a lâmina de pressão."
 }

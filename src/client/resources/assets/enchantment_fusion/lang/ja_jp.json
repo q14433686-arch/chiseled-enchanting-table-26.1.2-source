@@ -1028,5 +1028,6 @@
   "skill.enchantment_fusion.water_pressure": "水圧斬",
   "message.enchantment_fusion.water_pressure_ready": "水圧斬は準備済み。酸素は追加消費されない。",
   "message.enchantment_fusion.water_pressure_air": "水圧斬を準備する酸素が足りない。",
-  "message.enchantment_fusion.water_pressure_paid": "水圧斬を準備。酸素を%sティック消費。"
+  "message.enchantment_fusion.water_pressure_paid": "水圧斬を準備。酸素を%sティック消費。",
+  "message.enchantment_fusion.water_pressure_underwater": "水圧斬を準備するには目まで水に浸かる必要がある。"
 }

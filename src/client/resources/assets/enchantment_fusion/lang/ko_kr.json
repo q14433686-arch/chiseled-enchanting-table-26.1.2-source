@@ -1028,5 +1028,6 @@
   "skill.enchantment_fusion.water_pressure": "수압 참격",
   "message.enchantment_fusion.water_pressure_ready": "이미 수압 참격이 준비되어 산소를 더 쓰지 않았습니다.",
   "message.enchantment_fusion.water_pressure_air": "수압 참격을 준비할 산소가 부족합니다.",
-  "message.enchantment_fusion.water_pressure_paid": "수압 참격 준비 완료. 산소 %s틱 소비."
+  "message.enchantment_fusion.water_pressure_paid": "수압 참격 준비 완료. 산소 %s틱 소비.",
+  "message.enchantment_fusion.water_pressure_underwater": "수압 참격을 준비하려면 눈까지 물에 잠겨야 합니다."
 }

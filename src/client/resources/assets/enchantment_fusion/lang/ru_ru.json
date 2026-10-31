@@ -1028,5 +1028,6 @@
   "skill.enchantment_fusion.water_pressure": "Клинок давления",
   "message.enchantment_fusion.water_pressure_ready": "Клинок уже подготовлен; дополнительный воздух не потрачен.",
   "message.enchantment_fusion.water_pressure_air": "Недостаточно воздуха для клинка.",
-  "message.enchantment_fusion.water_pressure_paid": "Клинок подготовлен; потрачено %s тактов воздуха."
+  "message.enchantment_fusion.water_pressure_paid": "Клинок подготовлен; потрачено %s тактов воздуха.",
+  "message.enchantment_fusion.water_pressure_underwater": "Погрузитесь с головой в воду, чтобы подготовить клинок давления."
 }

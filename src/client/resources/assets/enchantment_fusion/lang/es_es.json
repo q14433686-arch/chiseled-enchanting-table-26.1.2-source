@@ -1028,5 +1028,6 @@
   "skill.enchantment_fusion.water_pressure": "Hoja de presión",
   "message.enchantment_fusion.water_pressure_ready": "La hoja ya está preparada; no se gastó más aire.",
   "message.enchantment_fusion.water_pressure_air": "No hay suficiente aire para preparar la hoja.",
-  "message.enchantment_fusion.water_pressure_paid": "Hoja preparada; se gastaron %s ticks de aire."
+  "message.enchantment_fusion.water_pressure_paid": "Hoja preparada; se gastaron %s ticks de aire.",
+  "message.enchantment_fusion.water_pressure_underwater": "Sumerge los ojos para preparar la hoja de presión."
 }

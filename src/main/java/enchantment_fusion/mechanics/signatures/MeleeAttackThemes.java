@@ -1,6 +1,8 @@
 package enchantment_fusion.mechanics.signatures;
 
 import enchantment_fusion.mechanics.FusionStationOperations;
+import enchantment_fusion.mechanics.MatrixEffectExecutor;
+import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
@@ -64,10 +66,14 @@ public final class MeleeAttackThemes {
             || SegmentThreadSkills.replaysPrimary(weapon, primary);
     }
     public static float nonNativeDamage(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source, float value) {
-        if (Boolean.TRUE.equals(PRIMARY_REPLAY.get()) || !(source.getEntity() instanceof ServerPlayer owner)
-            || source.getDirectEntity() != owner || owner.getMainHandItem() != weapon) return value;
+        if (Boolean.TRUE.equals(PRIMARY_REPLAY.get()) || MatrixEffectExecutor.isExecuting()
+            || Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get())
+            || !(source.getEntity() instanceof ServerPlayer owner) || source.getDirectEntity() != owner
+            || owner.getMainHandItem() != weapon) return value;
+        FusedEnchantmentList pairs = weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        if (pairs.isEmpty()) return value;
         Set<String> processed = new HashSet<>(); float result = value;
-        for (FusedPair pair : weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
+        for (FusedPair pair : pairs.pairs()) {
             String id = pair.primaryId();
             if (!ownedTemplate(pair, weapon) || !processed.add(id) || replayedEarlier(weapon, id)) continue;
             Holder<Enchantment> enchantment = FusionStationOperations.lookupEnchantment(level.registryAccess(), id).orElse(null);
@@ -80,10 +86,14 @@ public final class MeleeAttackThemes {
         return result;
     }
     public static void nonNativePostAttack(ServerLevel level, Player player, ItemStack weapon, Entity victim, DamageSource source) {
-        if (Boolean.TRUE.equals(PRIMARY_REPLAY.get()) || !(player instanceof ServerPlayer owner) || owner.getMainHandItem() != weapon
+        if (Boolean.TRUE.equals(PRIMARY_REPLAY.get()) || MatrixEffectExecutor.isExecuting()
+            || Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get())
+            || !(player instanceof ServerPlayer owner) || owner.getMainHandItem() != weapon
             || source.getEntity() != owner || source.getDirectEntity() != owner) return;
+        FusedEnchantmentList pairs = weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        if (pairs.isEmpty()) return;
         Set<String> processed = new HashSet<>();
-        for (FusedPair pair : weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
+        for (FusedPair pair : pairs.pairs()) {
             String id = pair.primaryId();
             if (!ownedTemplate(pair, weapon) || !processed.add(id) || replayedEarlier(weapon, id)) continue;
             Holder<Enchantment> enchantment = FusionStationOperations.lookupEnchantment(level.registryAccess(), id).orElse(null);

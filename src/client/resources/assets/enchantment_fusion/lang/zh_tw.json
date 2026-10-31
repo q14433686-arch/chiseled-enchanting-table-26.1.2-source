@@ -1028,5 +1028,6 @@
   "skill.enchantment_fusion.water_pressure": "水壓斬",
   "message.enchantment_fusion.water_pressure_ready": "水壓斬已準備，不再扣除氧氣。",
   "message.enchantment_fusion.water_pressure_air": "氧氣不足，無法準備水壓斬。",
-  "message.enchantment_fusion.water_pressure_paid": "水壓斬已準備，消耗 %s 刻氧氣。"
+  "message.enchantment_fusion.water_pressure_paid": "水壓斬已準備，消耗 %s 刻氧氣。",
+  "message.enchantment_fusion.water_pressure_underwater": "請將頭部浸入水中後準備水壓斬。"
 }

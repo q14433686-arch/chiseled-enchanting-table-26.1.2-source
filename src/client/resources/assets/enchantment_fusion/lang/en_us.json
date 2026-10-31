@@ -1028,5 +1028,6 @@
   "skill.enchantment_fusion.water_pressure": "Pressure blade",
   "message.enchantment_fusion.water_pressure_ready": "Pressure blade is already prepared; no more air was spent.",
   "message.enchantment_fusion.water_pressure_air": "Not enough air to prepare a pressure blade.",
-  "message.enchantment_fusion.water_pressure_paid": "Pressure blade prepared; spent %s air ticks."
+  "message.enchantment_fusion.water_pressure_paid": "Pressure blade prepared; spent %s air ticks.",
+  "message.enchantment_fusion.water_pressure_underwater": "Submerge your eyes to prepare a pressure blade."
 }

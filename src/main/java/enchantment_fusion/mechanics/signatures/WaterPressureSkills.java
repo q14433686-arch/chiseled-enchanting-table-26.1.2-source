@@ -90,7 +90,10 @@ public final class WaterPressureSkills {
     /** Called only after the server has selected and rate-limited the player's active skill. */
     public static boolean activate(ServerPlayer owner) {
         Gear gear = helmet(owner);
-        if (!ready(owner) || !underwater(owner) || owner.containerMenu != owner.inventoryMenu || gear == null) return false;
+        if (!ready(owner) || owner.containerMenu != owner.inventoryMenu || gear == null) return false;
+        if (!underwater(owner)) {
+            owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.water_pressure_underwater"), true); return false;
+        }
         long now = owner.level().getGameTime(); Prepared old = PREPARED.get(owner.getUUID());
         if (old != null && now < old.expires() && old.dimension().equals(owner.level().dimension())
             && owner.getItemBySlot(EquipmentSlot.HEAD) == old.gear().stack() && hasPair(old.gear())) {
@@ -126,6 +129,8 @@ public final class WaterPressureSkills {
                     BUBBLES.remove(bubble); burst(owner, target, gear);
                 } else if (target.isAlive()) {
                     if (bubble != null) BUBBLES.remove(bubble);
+                    List<Bubble> owned = BUBBLES.stream().filter(entry -> entry.owner().equals(owner.getUUID())).toList();
+                    if (owned.size() >= 8) BUBBLES.remove(owned.getFirst());
                     if (BUBBLES.size() < MAX_BUBBLES) {
                         BUBBLES.add(new Bubble(owner.getUUID(), target.getUUID(), owner.level().dimension(), gear, now + BUBBLE_TICKS));
                         owner.level().sendParticles(ParticleTypes.BUBBLE, target.getX(), target.getY(0.5D), target.getZ(), 10, 0.2D, 0.25D, 0.2D, 0.03D);

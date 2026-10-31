@@ -121,6 +121,8 @@ public final class StealthBladeSkills {
                     release(owner, gear, target);
                 } else if (hit.full()) {
                     if (mark != null) MARKS.remove(mark);
+                    List<Mark> owned = MARKS.stream().filter(entry -> entry.owner.equals(owner.getUUID())).toList();
+                    if (owned.size() >= 8) MARKS.remove(owned.getFirst());
                     if (MARKS.size() < MAX_MARKS) {
                         MARKS.add(new Mark(owner, gear, target.position(), now + MARK_TICKS));
                         owner.level().sendParticles(ParticleTypes.ENCHANT, target.getX(), target.getY(0.2D), target.getZ(),

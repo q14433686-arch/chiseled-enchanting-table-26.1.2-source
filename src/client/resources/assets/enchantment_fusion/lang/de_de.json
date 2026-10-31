@@ -1028,5 +1028,6 @@
   "skill.enchantment_fusion.water_pressure": "Druckklinge",
   "message.enchantment_fusion.water_pressure_ready": "Druckklinge bereits vorbereitet; keine weitere Luft verbraucht.",
   "message.enchantment_fusion.water_pressure_air": "Nicht genug Luft für die Druckklinge.",
-  "message.enchantment_fusion.water_pressure_paid": "Druckklinge bereit; %s Luft-Ticks verbraucht."
+  "message.enchantment_fusion.water_pressure_paid": "Druckklinge bereit; %s Luft-Ticks verbraucht.",
+  "message.enchantment_fusion.water_pressure_underwater": "Tauche mit den Augen unter Wasser, um die Druckklinge vorzubereiten."
 }

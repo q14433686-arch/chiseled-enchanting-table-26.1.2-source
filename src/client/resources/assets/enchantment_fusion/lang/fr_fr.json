@@ -1028,5 +1028,6 @@
   "skill.enchantment_fusion.water_pressure": "Lame de pression",
   "message.enchantment_fusion.water_pressure_ready": "Lame déjà préparée ; aucun air supplémentaire dépensé.",
   "message.enchantment_fusion.water_pressure_air": "Air insuffisant pour préparer la lame.",
-  "message.enchantment_fusion.water_pressure_paid": "Lame préparée ; %s ticks d’air dépensés."
+  "message.enchantment_fusion.water_pressure_paid": "Lame préparée ; %s ticks d’air dépensés.",
+  "message.enchantment_fusion.water_pressure_underwater": "Immergez les yeux pour préparer la lame de pression."
 }
