@@ -171,6 +171,24 @@ class AuditBoundaryTest {
     }
 
     @Test
+    void replenishPoliciesArePerCategoryBoundedAndDatapackConfigurable() {
+        var parsed = TransmuteCatalog.parseFromJson(JsonParser.parseString(
+            "{\"variants\":{},\"replenish_settings\":{\"food\":{\"xp_interval\":31,\"group_cap\":12},\"potion\":{\"xp_interval\":80}}}"
+        ).getAsJsonObject());
+        assertEquals(new TransmuteCatalog.ReplenishPolicy(31, 12), parsed.replenishPolicies().get(TransmuteCatalog.ReplenishCategory.FOOD));
+        assertEquals(new TransmuteCatalog.ReplenishPolicy(80, 4), parsed.replenishPolicies().get(TransmuteCatalog.ReplenishCategory.POTION));
+        assertEquals(new TransmuteCatalog.ReplenishPolicy(22, 64), parsed.replenishPolicies().get(TransmuteCatalog.ReplenishCategory.THROWABLE));
+        for (String bad : List.of(
+            "{\"food\":{\"xp_interval\":0}}", "{\"food\":{\"group_cap\":257}}",
+            "{\"food\":{\"xp_interval\":1.5}}", "{\"unrecognized\":{\"group_cap\":1}}"
+        )) {
+            assertThrows(IllegalArgumentException.class, () -> TransmuteCatalog.parseFromJson(JsonParser.parseString(
+                "{\"variants\":{},\"replenish_settings\":" + bad + "}"
+            ).getAsJsonObject()));
+        }
+    }
+
+    @Test
     void longValidPairDiscoveryFitsBothCompendiumCodecs() {
         String pairKey = "a".repeat(128) + ">" + "b".repeat(128);
         var bytes = Unpooled.buffer();

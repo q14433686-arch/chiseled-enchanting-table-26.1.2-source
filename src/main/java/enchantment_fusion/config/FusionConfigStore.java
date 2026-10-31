@@ -267,6 +267,8 @@ public final class FusionConfigStore {
             if (!Double.isFinite(n)) throw new IllegalArgumentException("invalid number");
             double min = 0, max = 1;
             if (path.contains("trigger_cooldowns")) { min = 4; max = 1200; }
+            else if (file.equals("transmutations") && path.contains("replenish_settings") && key.equals("xp_interval")) { min = 1; max = 10_000; }
+            else if (file.equals("transmutations") && path.contains("replenish_settings") && key.equals("group_cap")) { min = 1; max = 256; }
             else if (key.equals("melee_min_charge")) { min = 0.05; max = 1; }
             else if (key.equals("melee_full_charge")) { min = 0.10; max = 1; }
             else if (key.startsWith("stabilizer_reduction_")) { min = 0.01; max = 1; }

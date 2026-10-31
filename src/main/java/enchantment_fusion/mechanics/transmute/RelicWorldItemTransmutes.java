@@ -91,37 +91,42 @@ public final class RelicWorldItemTransmutes {
             if (st.isEmpty()) continue;
 
             if (getTransmutedLevel(st, "mending_xp_bottle") > 0) {
-                int buf = BOTTLE_XP_BUFFER.merge(pid, gained, Integer::sum);
+                int buf = (int) Math.min(64L, (long) BOTTLE_XP_BUFFER.getOrDefault(pid, 0) + gained);
                 int converted = 0;
-                while (buf >= 8 && !st.isEmpty() && converted < 8) {
+                while (buf >= 8 && !st.isEmpty() && converted < 8 && hasAtLeastEightSpendableXp(player)) {
+                    var inventory = player.getInventory();
+                    int plainSlot = inventory.findSlotMatchingItem(new ItemStack(Items.GLASS_BOTTLE));
+                    ItemStack bottle = plainSlot >= 0 && inventory.getItem(plainSlot) != st ? inventory.getItem(plainSlot) : st;
+                    ItemStack output = new ItemStack(Items.EXPERIENCE_BOTTLE);
+                    boolean freesInventorySlot = bottle.getCount() == 1 && (bottle != st || hand == InteractionHand.MAIN_HAND);
+                    if (inventory.getSlotWithRemainingSpace(output) < 0 && inventory.getFreeSlot() < 0 && !freesInventorySlot) break;
+                    // Each conversion pays both actual spendable XP and one real glass bottle;
+                    // no output is created if either resource or inventory space is missing.
+                    player.giveExperiencePoints(-8);
+                    bottle.shrink(1);
+                    inventory.add(output);
                     buf -= 8;
                     converted++;
-                    if (player.totalExperience >= 8) player.giveExperiencePoints(-8);
-                    int plainSlot = player.getInventory().findSlotMatchingItem(new ItemStack(Items.GLASS_BOTTLE));
-                    if (plainSlot >= 0 && player.getInventory().getItem(plainSlot) != st) {
-                        player.getInventory().getItem(plainSlot).shrink(1);
-                    } else {
-                        st.shrink(1);
-                    }
-                    player.getInventory().placeItemBackInInventory(new ItemStack(Items.EXPERIENCE_BOTTLE, 1));
                 }
                 BOTTLE_XP_BUFFER.put(pid, Math.max(0, buf));
-                LAST_PLAYER_XP.put(pid, player.totalExperience);
                 return;
             }
             if (getTransmutedLevel(st, "mending_vitality") > 0) {
                 player.heal(Math.min(4.0F, 0.35F * gained));
                 return;
             }
-            if (getTransmutedLevel(st, "mending_replenish") > 0 && st.getCount() < st.getMaxStackSize()) {
-                int buf = REPLENISH_XP_BUFFER.merge(pid, gained, Integer::sum);
-                if (buf >= 22) {
-                    REPLENISH_XP_BUFFER.put(pid, buf - 22);
-                    st.grow(1);
-                }
-                return;
-            }
+            // Replenishment is handled at the actual XP-credit hook, not by comparing a
+            // player's total XP on a later tick. Keep hand priority over bottle/vitality.
+            if (getTransmutedLevel(st, "mending_replenish") > 0) return;
         }
+    }
+
+    /** Vanilla totalExperience is not the spendable balance after levels are spent. */
+    static boolean hasAtLeastEightSpendableXp(ServerPlayer player) {
+        if (player.experienceLevel >= 2) return true;
+        if (player.experienceLevel < 1) return false;
+        int pointsIntoLevel = (int) Math.floor(player.experienceProgress * player.getXpNeededForNextLevel() + 0.0001D);
+        return 7 + pointsIntoLevel >= 8;
     }
 
     public static void tickWorldItems(ServerLevel level) {

@@ -496,7 +496,7 @@
   "transmute.enchantment_fusion.mending_xp_bottle.title": "Bottled Experience",
   "transmute.enchantment_fusion.mending_xp_bottle.desc": "Inscribed on an empty Glass Bottle: absorbs gained XP in your inventory and condenses into a Bottle o' Enchanting!",
   "transmute.enchantment_fusion.mending_replenish.title": "Soul-Fed Replenish",
-  "transmute.enchantment_fusion.mending_replenish.desc": "Inscribed on consumables or throwables: absorbs gained XP over time to replenish +1 stack count.",
+  "transmute.enchantment_fusion.mending_replenish.desc": "While held, real XP is kept and also builds replenishment progress; matching items are added at the configured interval and group cap.",
   "transmute.enchantment_fusion.mending_vitality.title": "Vitality Mending",
   "transmute.enchantment_fusion.mending_vitality.desc": "Inscribed on a Totem of Undying: channels absorbed XP directly into restoring your health.",
   "item.enchantment_fusion.fusion_grimoire": "Fusion Grimoire",

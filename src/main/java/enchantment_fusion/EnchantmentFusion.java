@@ -6,6 +6,7 @@ import enchantment_fusion.data.FusionDataLoader;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.FusionWorldLoot;
 import enchantment_fusion.mechanics.MatrixRuntimeHooks;
+import enchantment_fusion.mechanics.transmute.ReplenishTracker;
 import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.mixin.FusionMixinConfigPlugin;
 import enchantment_fusion.registry.FusionBlockEntities;
@@ -32,6 +33,7 @@ public final class EnchantmentFusion implements ModInitializer {
     @Override
     public void onInitialize() {
         FusionDataComponents.init();
+        ReplenishTracker.init();
         FusionBlocks.init();
         FusionItems.init();
         FusionBlockEntities.init();

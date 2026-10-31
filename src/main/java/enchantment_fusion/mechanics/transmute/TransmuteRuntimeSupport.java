@@ -37,9 +37,7 @@ public final class TransmuteRuntimeSupport {
     public static final Map<UUID, UUID> SOUL_CHASE_TARGET = new ConcurrentHashMap<>();
     public static final Map<UUID, Long> SOUL_CHASE_UNTIL = new ConcurrentHashMap<>();
     public static final Map<UUID, Long> LAST_SWING_TICK = new ConcurrentHashMap<>();
-    public static final Map<UUID, Integer> LAST_PLAYER_XP = new ConcurrentHashMap<>();
     public static final Map<UUID, Integer> BOTTLE_XP_BUFFER = new ConcurrentHashMap<>();
-    public static final Map<UUID, Integer> REPLENISH_XP_BUFFER = new ConcurrentHashMap<>();
     public static final Map<String, Long> ACTIVE_SKILL_COOLDOWNS = new ConcurrentHashMap<>();
     public static final Set<UUID> LAUNCH_PROCESSED_PROJ = Collections.newSetFromMap(new ConcurrentHashMap<>());
     public static final Set<UUID> PICKPOCKETED_MOBS = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -55,9 +53,7 @@ public final class TransmuteRuntimeSupport {
         SOUL_CHASE_TARGET.remove(playerId);
         SOUL_CHASE_UNTIL.remove(playerId);
         LAST_SWING_TICK.remove(playerId);
-        LAST_PLAYER_XP.remove(playerId);
         BOTTLE_XP_BUFFER.remove(playerId);
-        REPLENISH_XP_BUFFER.remove(playerId);
         SPEAR_CHARGE_TICKS.remove(playerId);
         SPEAR_CHARGE_WEAPON.remove(playerId);
         String prefix = playerId + "|";
@@ -68,9 +64,7 @@ public final class TransmuteRuntimeSupport {
         SOUL_CHASE_TARGET.clear();
         SOUL_CHASE_UNTIL.clear();
         LAST_SWING_TICK.clear();
-        LAST_PLAYER_XP.clear();
         BOTTLE_XP_BUFFER.clear();
-        REPLENISH_XP_BUFFER.clear();
         ACTIVE_SKILL_COOLDOWNS.clear();
         LAUNCH_PROCESSED_PROJ.clear();
         PICKPOCKETED_MOBS.clear();

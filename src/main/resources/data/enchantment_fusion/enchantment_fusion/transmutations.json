@@ -1,6 +1,12 @@
 {
   "schema_version": 1,
   "replace": false,
+  "replenish_settings": {
+    "food": {"xp_interval": 22, "group_cap": 64},
+    "potion": {"xp_interval": 44, "group_cap": 4},
+    "throwable": {"xp_interval": 22, "group_cap": 64},
+    "other": {"xp_interval": 22, "group_cap": 64}
+  },
   "variants": {
     "unbreaking_totem": {
       "source": "minecraft:unbreaking",

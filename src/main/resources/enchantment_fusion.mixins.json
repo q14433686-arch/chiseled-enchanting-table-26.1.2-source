@@ -15,6 +15,7 @@
     "CetXpQuotesBridgeMixin",
     "GrindstoneAberrationGuardMixin",
     "LivingEntityConsumableFusionMixin",
+    "PlayerExperienceFusionMixin",
     "PlayerMiningFusionMixin",
     "ProjectileImpactFusionMixin",
     "ServerPlayerGameModeHarvestMixin"

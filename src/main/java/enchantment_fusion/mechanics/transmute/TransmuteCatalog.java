@@ -53,10 +53,21 @@ public final class TransmuteCatalog {
         boolean requireDamageable
     ) {}
 
+    public enum ReplenishCategory { FOOD, POTION, THROWABLE, OTHER }
+
+    public record ReplenishPolicy(int xpInterval, int groupCap) {
+        public ReplenishPolicy {
+            if (xpInterval < 1 || xpInterval > 10_000 || groupCap < 1 || groupCap > 256) {
+                throw new IllegalArgumentException("Replenish interval or group cap out of range");
+            }
+        }
+    }
+
     public record Snapshot(
         Map<String, Map<TargetRole, RoleBinding>> matrix,
         List<TransmuteVariant> allVariants,
-        Map<String, String> domainById
+        Map<String, String> domainById,
+        Map<ReplenishCategory, ReplenishPolicy> replenishPolicies
     ) {}
 
     private static volatile Snapshot activeSnapshot = loadClasspathDefault();
@@ -74,14 +85,14 @@ public final class TransmuteCatalog {
         } catch (Exception ex) {
             EnchantmentFusion.LOGGER.error("Failed to bootstrap classpath transmutations.json", ex);
         }
-        return new Snapshot(Map.of(), List.of(), Map.of());
+        return new Snapshot(Map.of(), List.of(), Map.of(), defaultReplenishPolicies());
     }
 
     public static Snapshot parseFromJson(@Nullable JsonObject root) {
         if (root == null || !root.has("variants") || !root.get("variants").isJsonObject()) {
             return activeSnapshot != null
                 ? activeSnapshot
-                : new Snapshot(Map.of(), List.of(), Map.of());
+                : new Snapshot(Map.of(), List.of(), Map.of(), defaultReplenishPolicies());
         }
         Map<String, Map<TargetRole, RoleBinding>> matrix = new LinkedHashMap<>();
         List<TransmuteVariant> variants = new ArrayList<>();
@@ -131,8 +142,59 @@ public final class TransmuteCatalog {
         return new Snapshot(
             Collections.unmodifiableMap(frozen),
             Collections.unmodifiableList(variants),
-            Collections.unmodifiableMap(domains)
+            Collections.unmodifiableMap(domains),
+            parseReplenishPolicies(root)
         );
+    }
+
+    private static Map<ReplenishCategory, ReplenishPolicy> defaultReplenishPolicies() {
+        return Map.of(
+            ReplenishCategory.FOOD, new ReplenishPolicy(22, 64),
+            ReplenishCategory.POTION, new ReplenishPolicy(44, 4),
+            ReplenishCategory.THROWABLE, new ReplenishPolicy(22, 64),
+            ReplenishCategory.OTHER, new ReplenishPolicy(22, 64)
+        );
+    }
+
+    private static Map<ReplenishCategory, ReplenishPolicy> parseReplenishPolicies(JsonObject root) {
+        Map<ReplenishCategory, ReplenishPolicy> result = new EnumMap<>(defaultReplenishPolicies());
+        if (!root.has("replenish_settings")) return Collections.unmodifiableMap(result);
+        if (!root.get("replenish_settings").isJsonObject()) throw new IllegalArgumentException("Invalid replenish settings");
+        JsonObject settings = root.getAsJsonObject("replenish_settings");
+        for (Map.Entry<String, JsonElement> entry : settings.entrySet()) {
+            ReplenishCategory category;
+            try { category = ReplenishCategory.valueOf(entry.getKey().toUpperCase(java.util.Locale.ROOT)); }
+            catch (IllegalArgumentException ex) { throw new IllegalArgumentException("Unknown replenish category: " + entry.getKey(), ex); }
+            if (!entry.getValue().isJsonObject()) throw new IllegalArgumentException("Invalid replenish category settings");
+            JsonObject values = entry.getValue().getAsJsonObject();
+            ReplenishPolicy defaults = result.get(category);
+            int interval = readPolicyInt(values, "xp_interval", defaults.xpInterval());
+            int cap = readPolicyInt(values, "group_cap", defaults.groupCap());
+            result.put(category, new ReplenishPolicy(interval, cap));
+        }
+        return Collections.unmodifiableMap(result);
+    }
+
+    private static int readPolicyInt(JsonObject values, String name, int fallback) {
+        if (!values.has(name)) return fallback;
+        JsonElement value = values.get(name);
+        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber()) throw new IllegalArgumentException("Invalid " + name);
+        double n = value.getAsDouble();
+        if (!Double.isFinite(n) || n != Math.rint(n) || n < 1 || n > 10_000) throw new IllegalArgumentException("Invalid " + name);
+        return (int) n;
+    }
+
+    public static ReplenishCategory replenishCategory(ItemStack stack) {
+        if (stack.has(DataComponents.POTION_CONTENTS) || stack.is(Items.POTION)
+            || stack.is(Items.SPLASH_POTION) || stack.is(Items.LINGERING_POTION)) return ReplenishCategory.POTION;
+        if (stack.has(DataComponents.FOOD)) return ReplenishCategory.FOOD;
+        if (stack.is(Items.ENDER_PEARL) || stack.is(Items.WIND_CHARGE) || stack.is(Items.FIREWORK_ROCKET)
+            || stack.is(Items.SNOWBALL) || stack.is(Items.EGG)) return ReplenishCategory.THROWABLE;
+        return ReplenishCategory.OTHER;
+    }
+
+    public static ReplenishPolicy replenishPolicy(ItemStack stack) {
+        return activeSnapshot.replenishPolicies().get(replenishCategory(stack));
     }
 
     private static void addBinding(Map<String, Map<TargetRole, RoleBinding>> matrix, String source,

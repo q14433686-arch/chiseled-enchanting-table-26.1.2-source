@@ -496,7 +496,7 @@
   "transmute.enchantment_fusion.mending_xp_bottle.title": "凝灵成瓶",
   "transmute.enchantment_fusion.mending_xp_bottle.desc": "跨界铭刻于空玻璃瓶：随身吸收玩家获得的经验值，蓄满后自动凝结转化为附魔之瓶！",
   "transmute.enchantment_fusion.mending_replenish.title": "汲灵增殖",
-  "transmute.enchantment_fusion.mending_replenish.desc": "跨界铭刻于消耗品或投掷物：在战斗中汲取经验值，自动为该组物品缓慢恢复 +1 数量。",
+  "transmute.enchantment_fusion.mending_replenish.desc": "持握时，正常获得真实经验并积累补给；达到分类间隔后补充同组件物品，受组上限限制。",
   "transmute.enchantment_fusion.mending_vitality.title": "汲灵愈体",
   "transmute.enchantment_fusion.mending_vitality.desc": "跨界铭刻于不死图腾等无耐久饰品：手持或随身携带时汲取溢出的经验微光直接治愈自身生命。",
   "item.enchantment_fusion.fusion_grimoire": "融合秘典",

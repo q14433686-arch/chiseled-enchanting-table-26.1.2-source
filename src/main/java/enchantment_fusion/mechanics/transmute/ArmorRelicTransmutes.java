@@ -271,12 +271,6 @@ public final class ArmorRelicTransmutes {
             }
         }
 
-        int curXp = player.totalExperience;
-        Integer prevXp = LAST_PLAYER_XP.put(pid, curXp);
-        if (prevXp != null && curXp > prevXp) {
-            RelicWorldItemTransmutes.handleSpecialMendingXpGain(player, curXp - prevXp);
-        }
-
         if (level.getGameTime() % 10L != 0L) return;
 
         Long chaseUntil = SOUL_CHASE_UNTIL.get(pid);
