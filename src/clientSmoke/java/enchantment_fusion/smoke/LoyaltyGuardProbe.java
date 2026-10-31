@@ -4,6 +4,7 @@ import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.model.RetainedEnchant;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -170,7 +171,7 @@ final class LoyaltyGuardProbe {
         ItemStack kept = LoyaltyGuard.afterUse(legacy, 0, level.registryAccess());
         require(kept != null && enchantLevel(kept, loyalty) == 3 && enchantLevel(kept, protection) == 2
             && enchantLevel(kept, unbreaking) == 3, "Unmarked legacy or independent vanilla levels must never be debited");
-        var retained = kept.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.of());
+        List<RetainedEnchant> retained = kept.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.of());
         require(retained.size() == 1 && retained.getFirst().level() == 4,
             "A conflicting secondary must be kept separately at its exact level");
         FusionStationOperations.removeGearVanillaEnchant(kept, "minecraft:protection");

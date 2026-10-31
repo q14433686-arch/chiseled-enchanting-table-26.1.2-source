@@ -12,6 +12,7 @@ import enchantment_fusion.mechanics.VesselCapacityRules;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.HostForm;
+import enchantment_fusion.model.RetainedEnchant;
 import enchantment_fusion.registry.FusionDataComponents;
 import enchantment_fusion.registry.FusionItems;
 import java.util.List;
@@ -76,7 +77,7 @@ public final class FusionTooltipRenderer {
         }
 
         boolean shift = isShiftHeld();
-        for (var retained : stack.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.of())) {
+        for (RetainedEnchant retained : stack.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of())) {
             lines.add(Component.translatable("tooltip.enchantment_fusion.retained_enchantment",
                 formatEnchantmentWithLevel(registries, retained.id(), retained.level())).withStyle(ChatFormatting.GOLD));
         }
