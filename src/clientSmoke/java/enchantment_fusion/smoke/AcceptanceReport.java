@@ -34,6 +34,8 @@ final class AcceptanceReport {
         plan("39.1-breach-density", "Breach ▷ Density: equal armor math, crater, arrow and direct rocket fixture", "Not reached if setup fails.");
         plan("39.2-infinity-unbreaking", "Infinity ▷ Unbreaking: real bow/crossbow hit and virtual path echo fixture", "Not reached if setup fails.");
         plan("39.2-unbreaking-infinity", "Unbreaking ▷ Infinity: native/non-native real durability rolls and reserve fixture", "Not reached if setup fails.");
+        plan("39.3-knockback-silk", "Knockback ▷ Silk Touch: real hits, capture and original-direction release fixture", "Not reached if setup fails.");
+        plan("39.3-silk-knockback", "Silk Touch ▷ Knockback: real hits, held movement and chosen-direction release fixture", "Not reached if setup fails.");
         plan("39.4-luck-lure", "Luck of the Sea ▷ Lure: bite, simulated wait and native catch fixture", "Not reached if setup fails.");
         plan("39.4-lure-luck", "Lure ▷ Luck of the Sea: native catch, virtual school and next cast fixture", "Not reached if setup fails.");
         plan("39.5-power-quick", "Power ▷ Quick Charge: manually timed real bow release and collision fixture", "Not reached if setup fails.");

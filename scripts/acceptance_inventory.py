@@ -51,6 +51,8 @@ DIRECTION_FIXTURES = {
     ("breach", "density"): ("39.1-breach-density", False),
     ("infinity", "unbreaking"): ("39.2-infinity-unbreaking", True),
     ("unbreaking", "infinity"): ("39.2-unbreaking-infinity", True),
+    ("knockback", "silk_touch"): ("39.3-knockback-silk", True),
+    ("silk_touch", "knockback"): ("39.3-silk-knockback", True),
     ("luck_of_the_sea", "lure"): ("39.4-luck-lure", True),
     ("lure", "luck_of_the_sea"): ("39.4-lure-luck", True),
     ("power", "quick_charge"): ("39.5-power-quick", True),

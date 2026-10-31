@@ -654,6 +654,8 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("39.1-breach-density", () -> HeavyCrushProbe.exercise(sp, tablePos.above(90).east(12), true));
         acceptance.run("39.2-infinity-unbreaking", () -> EchoReserveProbe.exerciseEcho(sp, tablePos.above(150).east(12)));
         acceptance.run("39.2-unbreaking-infinity", () -> EchoReserveProbe.exerciseReserve(sp));
+        acceptance.run("39.3-knockback-silk", () -> MomentumSealProbe.exercise(sp, tablePos.above(165).east(12), false));
+        acceptance.run("39.3-silk-knockback", () -> MomentumSealProbe.exercise(sp, tablePos.above(165).east(12), true));
         acceptance.run("39.4-luck-lure", () -> FishingTideProbe.exercise(sp, tablePos.above(120).east(12), false));
         acceptance.run("39.4-lure-luck", () -> FishingTideProbe.exercise(sp, tablePos.above(120).east(12), true));
         acceptance.run("39.5-power-quick", () -> RangedCadenceProbe.exercise(sp, tablePos.above(135).east(12), false));
