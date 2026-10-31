@@ -701,7 +701,7 @@
   "signature.enchantment_fusion.tailwind_return.title": "Tailwind Homecoming",
   "signature.enchantment_fusion.tailwind_return.desc": "[Loyalty ▷ Wind Burst] Raises a homecoming updraft on hit, clearing fall damage while granting Speed II and Slow Falling!",
   "signature.enchantment_fusion.glazed_kiln_edge.title": "Burning Glaze Shatter",
-  "signature.enchantment_fusion.glazed_kiln_edge.desc": "[Fire Aspect ▷ Silk Touch] A fully charged confirmed hit on an already burning target deals armor-bypassing bonus damage from any direction. Swords, axes, spears and maces; vanilla Fire Aspect remains. Legacy other carriers keep their old effect.",
+  "signature.enchantment_fusion.glazed_kiln_edge.desc": "[Fire Aspect ▷ Silk Touch] A fully charged main-hand hit on an already burning target deals armor-bypassing bonus damage from any direction. Swords, axes, spears and maces; the primary ignites even where vanilla cannot attach it. Other legacy carriers keep their old effect.",
   "signature.enchantment_fusion.amber_embalm.title": "Amber Flame Seal",
   "signature.enchantment_fusion.amber_embalm.desc": "[Silk Touch ▷ Fire Aspect] Main-hand sword, axe, spear or mace: confirmed hits ignite. Aim at a burning target and activate to seal its remaining fire and slow it; hit again for one small heat-crystal shock. Activate again to cancel. Native Silk Touch remains where applicable.",
   "signature.enchantment_fusion.true_gold_refinery.title": "True Gold Fears No Fire",

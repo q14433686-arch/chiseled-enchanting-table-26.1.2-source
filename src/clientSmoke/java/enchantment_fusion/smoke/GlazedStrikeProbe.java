@@ -8,7 +8,6 @@ import enchantment_fusion.mechanics.MatrixEffectExecutor;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
-import enchantment_fusion.model.TriggerType;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,6 +20,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -40,11 +41,15 @@ final class GlazedStrikeProbe {
     static void exercise(ServerPlayer player) {
         var level = player.level();
         var oldMain = player.getMainHandItem();
+        var attackSpeed = player.getAttribute(Attributes.ATTACK_SPEED);
+        double oldSpeed = attackSpeed.getBaseValue();
         var target = new Zombie(level);
         Set<UUID> denied = new HashSet<>();
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !denied.contains(entity.getUUID()));
         try {
             target.setNoAi(true);
+            target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(100.0D);
+            target.setHealth(100.0F);
             target.setPos(player.getX() + 2.0D, player.getY(), player.getZ());
             level.addFreshEntity(target);
             ItemStack sword = new ItemStack(Items.DIAMOND_SWORD);
@@ -100,39 +105,102 @@ final class GlazedStrikeProbe {
             require(reversed.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().getFirst().equals(PAIR.flipped()),
                 "A failed flip must retain the original pair");
 
-            // These are actual server damage callbacks driven by a manually dispatched attack;
-            // they do not claim to test a real mouse click or a second client.
+            // Real server Player.attack / stabAttack calls; there is no client mouse, kinetic movement,
+            // shield, multiplayer, or physical line-of-sight simulation in this fixture.
+            MatrixEffectExecutor.clearCooldowns();
+            GlazedStrikeEffect.clear();
+            attackSpeed.setBaseValue(1024.0D); // Full charge with no need to tick the whole world here.
+            player.resetAttackStrengthTicker();
+            target.clearFire();
+            target.invulnerableTime = 0;
+            float before = target.getHealth();
+            player.attack(target);
+            float afterDirect = target.getHealth();
+            require(afterDirect < before, "The cold sword hit must actually damage the target");
+            GlazedStrikeEffect.tickServer(level.getServer());
+            require(Math.abs(target.getHealth() - afterDirect) < 0.001F,
+                "A cold target must not receive the glaze bonus from the same hit's ignition");
+
+            // A failed full hit and a subsequent partial hit in the same tick must not share a pending attempt.
+            target.setHealth(100.0F);
+            target.setRemainingFireTicks(150);
+            target.invulnerableTime = 0;
+            player.resetAttackStrengthTicker();
+            denied.add(target.getUUID());
+            player.attack(target);
+            denied.clear();
+            require(target.getHealth() == 100.0F, "The cancelled full hit must not deal damage");
+            attackSpeed.setBaseValue(0.1D);
+            player.resetAttackStrengthTicker();
+            target.invulnerableTime = 0;
+            player.attack(target);
+            afterDirect = target.getHealth();
+            require(afterDirect < 100.0F, "The subsequent partial hit must actually land");
+            GlazedStrikeEffect.tickServer(level.getServer());
+            require(Math.abs(target.getHealth() - afterDirect) < 0.001F,
+                "A partial hit must not consume a failed full attempt's pending glaze");
+
+            attackSpeed.setBaseValue(1024.0D);
+            player.resetAttackStrengthTicker();
+            target.setHealth(100.0F);
+            target.setRemainingFireTicks(150);
+            target.invulnerableTime = 0;
+            player.attack(target);
+            afterDirect = target.getHealth();
+            GlazedStrikeEffect.tickServer(level.getServer());
+            require(afterDirect - target.getHealth() > 1.0F,
+                "An already-burning target must receive the armor-bypassing bonus from a real full hit");
+
+            ItemStack axe = new ItemStack(Items.DIAMOND_AXE);
+            FusionStationOperations.applyFusedPairToGear(axe, PAIR, level.registryAccess());
+            require(axe.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(fire) == 0,
+                "The fixture must exercise a carrier without native Fire Aspect projection");
+            player.setItemInHand(InteractionHand.MAIN_HAND, axe);
             MatrixEffectExecutor.clearCooldowns();
             target.clearFire();
-            float before = target.getHealth();
-            MatrixEffectExecutor.dispatch(level, player, sword, TriggerType.ON_MELEE_STRIKE, target, target.position(), true);
-            require(target.hurtServer(level, level.damageSources().playerAttack(player), 1.0F), "Cold hit must land");
+            target.setHealth(100.0F);
+            target.invulnerableTime = 0;
+            require(target.hurtServer(level, level.damageSources().playerAttack(player), 1.0F), "Unframed direct damage must land");
+            require(!target.isOnFire(), "Damage outside the exact weapon attack must not grant fallback fire");
+            target.invulnerableTime = 0;
+            player.resetAttackStrengthTicker();
+            player.attack(target);
+            afterDirect = target.getHealth();
+            require(target.isOnFire(), "A confirmed non-native axe hit must supply the Fire Aspect primary's ignition");
             GlazedStrikeEffect.tickServer(level.getServer());
-            require(before - target.getHealth() <= 1.01F, "Cold target must not receive the glaze bonus");
+            require(Math.abs(target.getHealth() - afterDirect) < 0.001F,
+                "Fallback ignition must not turn the same cold hit into a glaze hit");
+            target.invulnerableTime = 0;
+            player.resetAttackStrengthTicker();
+            player.attack(target);
+            afterDirect = target.getHealth();
+            GlazedStrikeEffect.tickServer(level.getServer());
+            require(afterDirect - target.getHealth() > 1.0F, "A later full axe hit must shatter its own prior fire");
 
+            ItemStack spear = new ItemStack(Items.DIAMOND_SPEAR);
+            FusionStationOperations.applyFusedPairToGear(spear, PAIR, level.registryAccess());
+            player.setItemInHand(InteractionHand.MAIN_HAND, spear);
+            MatrixEffectExecutor.clearCooldowns();
+            target.setHealth(100.0F);
+            target.setRemainingFireTicks(150);
             target.invulnerableTime = 0;
-            target.igniteForSeconds(10.0F);
-            before = target.getHealth();
-            MatrixEffectExecutor.dispatch(level, player, sword, TriggerType.ON_MELEE_STRIKE, target, target.position(), false);
-            require(target.hurtServer(level, level.damageSources().playerAttack(player), 1.0F), "Partial hit must land");
+            attackSpeed.setBaseValue(0.1D);
+            player.resetAttackStrengthTicker();
+            require(player.stabAttack(EquipmentSlot.MAINHAND, target, 2.0F, true, false, false), "Partial spear stab must land");
+            afterDirect = target.getHealth();
             GlazedStrikeEffect.tickServer(level.getServer());
-            require(before - target.getHealth() <= 1.01F, "Partial hit must not receive the glaze bonus");
-
+            require(Math.abs(target.getHealth() - afterDirect) < 0.001F, "A partial spear stab must not shatter");
+            attackSpeed.setBaseValue(1024.0D);
+            player.resetAttackStrengthTicker();
             target.invulnerableTime = 0;
-            denied.add(target.getUUID());
-            MatrixEffectExecutor.dispatch(level, player, sword, TriggerType.ON_MELEE_STRIKE, target, target.position(), true);
-            require(!target.hurtServer(level, level.damageSources().playerAttack(player), 1.0F), "Cancelled hit must be denied");
+            require(player.stabAttack(EquipmentSlot.MAINHAND, target, 2.0F, true, false, false), "Full spear stab must land");
+            afterDirect = target.getHealth();
             GlazedStrikeEffect.tickServer(level.getServer());
-            denied.clear();
-            target.invulnerableTime = 0;
-            before = target.getHealth();
-            MatrixEffectExecutor.dispatch(level, player, sword, TriggerType.ON_MELEE_STRIKE, target, target.position(), true);
-            require(target.hurtServer(level, level.damageSources().playerAttack(player), 1.0F), "Full hit must land");
-            GlazedStrikeEffect.tickServer(level.getServer());
-            require(before - target.getHealth() > 1.5F, "Already-burning target must receive the armor-bypassing bonus");
+            require(afterDirect - target.getHealth() > 1.0F, "A full main-hand spear stab must receive the shatter bonus");
         } finally {
             denied.clear();
             target.discard();
+            attackSpeed.setBaseValue(oldSpeed);
             player.setItemInHand(InteractionHand.MAIN_HAND, oldMain);
             GlazedStrikeEffect.clear();
             MatrixEffectExecutor.clearCooldowns();

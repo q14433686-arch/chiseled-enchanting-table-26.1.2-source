@@ -519,6 +519,15 @@ final class FusionRuleEngineTest {
     }
 
     @Test
+    void glazedSpearReadinessUsesTheCorrectVanillaAttackMode() {
+        assertFalse(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.stabReady(true, 9, 10, true));
+        assertTrue(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.stabReady(true, 10, 10, false));
+        assertTrue(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.stabReady(false, 0, 10, true));
+        assertFalse(enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.stabReady(false, 100, 0, false));
+        assertEquals(7.3F, enchantment_fusion.mechanics.signatures.GlazedStrikeEffect.bonusDamage(10, 2, 1), 1e-5F);
+    }
+
+    @Test
     void diveOnlyTargetsOurThinPathAndNeverReplacesIceWithWater() throws Exception {
         String frost = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/TemporaryFrostEffects.java"));
         String armor = Files.readString(Path.of("src/main/java/enchantment_fusion/mechanics/signatures/ArmorCurseSignatures.java"));

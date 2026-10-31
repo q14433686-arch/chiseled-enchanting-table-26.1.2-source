@@ -701,7 +701,7 @@
   "signature.enchantment_fusion.tailwind_return.title": "乘風歸來",
   "signature.enchantment_fusion.tailwind_return.desc": "【忠誠 ▷ 風爆】命中捲起歸風升流托舉身形，清零摔落傷害並賦予迅捷II與緩降御風之勢！",
   "signature.enchantment_fusion.glazed_kiln_edge.title": "燃燒碎釉",
-  "signature.enchantment_fusion.glazed_kiln_edge.desc": "【火焰附加 ▷ 絲綢之觸】劍、斧、長矛或重錘對已燃燒的目標滿蓄真實命中時，從任意方向追加破甲傷害；保留原版火焰附加。舊版其他載體保留舊效果。",
+  "signature.enchantment_fusion.glazed_kiln_edge.desc": "【火焰附加 ▷ 絲綢之觸】主手劍、斧、長矛或重錘滿蓄命中已燃燒目標，從任意方向追加破甲傷害；主位負責點火，原版不支援附著時由技能補足。舊版其他載體保留舊效果。",
   "signature.enchantment_fusion.amber_embalm.title": "琥珀焰封",
   "signature.enchantment_fusion.amber_embalm.desc": "【絲綢之觸 ▷ 火焰附加】主手持劍、斧、長矛或重錘；實際命中點燃目標，瞄準燃燒目標使用技能封存餘火並減速，再次命中釋放一次小範圍熱晶衝擊。再用技能可撤銷；可原生附著的絲綢之觸保留。",
   "signature.enchantment_fusion.true_gold_refinery.title": "真金火煉",

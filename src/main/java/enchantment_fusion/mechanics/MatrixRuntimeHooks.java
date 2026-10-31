@@ -249,7 +249,7 @@ public final class MatrixRuntimeHooks {
                 && !AmberSealSkill.isApplyingBurst() && !LoyaltyGuard.isExecuting()
                 && !Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get())) {
                 FlameKineticEffects.confirm(level, attacker, entity);
-                GlazedStrikeEffect.confirm(level, attacker, entity);
+                GlazedStrikeEffect.onConfirmedDamage(level, attacker, entity, source);
             }
             if (Boolean.TRUE.equals(IN_AFTER_DAMAGE.get())) {
                 return;
@@ -274,6 +274,9 @@ public final class MatrixRuntimeHooks {
         // Entity Kill hooks
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             AmberSealSkill.afterDeath(entity, damageSource);
+            if (damageSource.getEntity() instanceof ServerPlayer attacker && entity.level() instanceof ServerLevel level) {
+                GlazedStrikeEffect.onConfirmedDeath(level, attacker, entity, damageSource);
+            }
             if (entity instanceof ServerPlayer deadPlayer) {
                 MirageSnapbackSkill.onPlayerDisconnect(deadPlayer.getUUID());
                 UnderwaterMiningSkills.onPlayerDisconnect(deadPlayer);

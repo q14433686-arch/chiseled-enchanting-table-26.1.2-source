@@ -65,14 +65,18 @@ public final class AmberSealSkill {
         private final @Nullable AttackFrame previous;
         private final @Nullable Candidate candidate;
         private final @Nullable Seal seal;
+        private final ServerPlayer owner;
+        private final ItemStack weapon;
         private final Entity target;
         private final DamageSource source;
         private boolean confirmed;
         private AttackFrame(@Nullable AttackFrame previous, @Nullable Candidate candidate, @Nullable Seal seal,
-                            Entity target, DamageSource source) {
+                            ServerPlayer owner, ItemStack weapon, Entity target, DamageSource source) {
             this.previous = previous;
             this.candidate = candidate;
             this.seal = seal;
+            this.owner = owner;
+            this.weapon = weapon;
             this.target = target;
             this.source = source;
         }
@@ -229,9 +233,16 @@ public final class AmberSealSkill {
         }
         if (seal != null && (candidate == null || seal.owner() != owner || seal.target() != target || seal.weapon() != weapon
             || !seal.pair().equals(candidate.pair()))) seal = null;
-        AttackFrame frame = new AttackFrame(ATTACK.get(), candidate, seal, target, source);
+        AttackFrame frame = new AttackFrame(ATTACK.get(), candidate, seal, owner, weapon, target, source);
         ATTACK.set(frame); // Also mask a parent frame during an unrelated nested attack.
         return frame;
+    }
+
+    /** The same target, source and weapon must be inside this exact vanilla direct damage call. */
+    public static boolean isCurrentDirectAttack(ServerPlayer owner, ItemStack weapon, LivingEntity target, DamageSource source) {
+        AttackFrame frame = ATTACK.get();
+        return frame != null && frame.owner == owner && frame.weapon == weapon && frame.target == target && frame.source == source
+            && source.getEntity() == owner && source.getDirectEntity() == owner;
     }
 
     public static void afterDamage(LivingEntity entity, DamageSource source, float damageTaken, boolean blocked) {

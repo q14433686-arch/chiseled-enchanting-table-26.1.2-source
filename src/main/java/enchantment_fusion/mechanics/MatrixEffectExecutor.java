@@ -279,12 +279,8 @@ public final class MatrixEffectExecutor {
             if (sigOpt.isPresent() && FrostFallSkills.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && AmberSealSkill.applies(pair, hostStack, sigOpt.get().id())) continue;
             if (sigOpt.isPresent() && GlazedStrikeEffect.applies(pair, hostStack, sigOpt.get().id())) {
-                // Only the actual weapon used for the attack may prime this redesigned skill;
-                // an unrelated held/worn copy must not trigger it from a different host.
-                if (allowHostUniversalFallback && matchedTrigger == TriggerType.ON_MELEE_STRIKE
-                    && fullChargeMelee && chargeScale >= snapshot.economy().meleeFullCharge() && targetEntity != null) {
-                    GlazedStrikeEffect.prepare(level, player, hostStack, pair, sigOpt.get().id(), targetEntity);
-                }
+                // The real Player.attack / spear-stab damage calls prepare and confirm this skill.
+                // Pre-attack dispatch must not charge a cooldown or also execute the legacy path.
                 continue;
             }
             boolean redesignedMelee = sigOpt.isPresent() && FlameKineticEffects.matches(pair, sigOpt.get().id());

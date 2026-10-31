@@ -701,7 +701,7 @@
   "signature.enchantment_fusion.tailwind_return.title": "乘风归来",
   "signature.enchantment_fusion.tailwind_return.desc": "【忠诚 ▷ 风爆】命中卷起归风升流托举身形，清零摔落伤害并赋予迅捷II与缓降御风之势！",
   "signature.enchantment_fusion.glazed_kiln_edge.title": "燃烧碎釉",
-  "signature.enchantment_fusion.glazed_kiln_edge.desc": "【火焰附加 ▷ 精准采集】剑、斧、长矛或重锤对已燃烧的目标满蓄真实命中时，从任意方向追加破甲伤害；保留原版火焰附加。旧版其他载体保留旧效果。",
+  "signature.enchantment_fusion.glazed_kiln_edge.desc": "【火焰附加 ▷ 精准采集】主手剑、斧、长矛或重锤满蓄命中已燃烧目标，从任意方向追加破甲伤害；主位负责点火，原版不支持附着时由技能补足。旧版其他载体保留旧效果。",
   "signature.enchantment_fusion.amber_embalm.title": "琥珀焰封",
   "signature.enchantment_fusion.amber_embalm.desc": "【精准采集 ▷ 火焰附加】主手持剑、斧、长矛或重锤；真实命中点燃目标，瞄准燃烧目标使用技能封存余火并减速，再次命中释放一次小范围热晶冲击。再用技能可撤销；可原生附着的精准采集保留。",
   "signature.enchantment_fusion.true_gold_refinery.title": "真金火炼",
