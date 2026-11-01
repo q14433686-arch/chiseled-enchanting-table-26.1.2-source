@@ -23,6 +23,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -111,9 +112,6 @@ public final class GrapnelRiptide {
     private static boolean equipped(ServerPlayer owner, ItemStack stack, FusedPair pair, EquipmentSlot slot) {
         return owner.getItemBySlot(slot) == stack && pair.equals(selected(stack)) && unambiguous(stack);
     }
-    private static @Nullable EquipmentSlot hand(ServerPlayer owner, ItemStack stack) {
-        return owner.getMainHandItem() == stack ? EquipmentSlot.MAINHAND : owner.getOffhandItem() == stack ? EquipmentSlot.OFFHAND : null;
-    }
     public static boolean hasEquipped(ServerPlayer owner) { return selected(owner.getMainHandItem()) != null || selected(owner.getOffhandItem()) != null; }
 
     /** Preserve absent primary at vanilla's own strength query; never repeat an existing native enchantment. */
@@ -150,10 +148,12 @@ public final class GrapnelRiptide {
     public static @Nullable Release begin(ItemStack stack, Level level, LivingEntity user, int remaining) {
         Release previous = CURRENT.get(); if (previous != null) previous.ambiguous = true;
         if (!(level instanceof ServerLevel world) || !(user instanceof ServerPlayer owner) || owner.level() != world || !ready(owner)
-            || MatrixEffectExecutor.isExecuting() || stack.getUseDuration(user) - remaining < 10 || !owner.isInWaterOrRain()
-            || stack.nextDamageWillBreak()) return null;
-        EquipmentSlot slot = hand(owner, stack); FusedPair pair = selected(stack);
-        if (slot == null || pair == null || !unambiguous(stack)) return null;
+            || MatrixEffectExecutor.isExecuting() || !owner.isUsingItem() || owner.getUseItem() != stack
+            || owner.getUseItemRemainingTicks() != remaining || stack.getUseDuration(user) - remaining < 10
+            || !owner.isInWaterOrRain() || stack.nextDamageWillBreak()) return null;
+        EquipmentSlot slot = owner.getUsedItemHand() == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND;
+        FusedPair pair = selected(stack);
+        if (owner.getItemBySlot(slot) != stack || pair == null || !unambiguous(stack)) return null;
         Release release = new Release(previous, owner, stack, pair, slot); CURRENT.set(release); return release;
     }
     public static @Nullable Release beginQuery(ItemStack stack, LivingEntity owner) {
