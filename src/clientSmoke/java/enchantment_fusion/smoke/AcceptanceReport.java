@@ -81,6 +81,7 @@ final class AcceptanceReport {
         plan("40.1-power-lure", "Power ▷ Lure: real full-draw bow hit and simulated active target recall", "Not reached if setup fails.");
         plan("40.1-flame-lure", "Flame ▷ Lure: real burning bow/crossbow hit and simulated active target recall", "Not reached if setup fails.");
         plan("40.1-punch-lure", "Punch ▷ Lure: real arrow push and simulated active target recall", "Not reached if setup fails.");
+        plan("40.1-multishot-lure", "Multishot ▷ Lure: real multi-arrow volleys and simulated active target recall", "Not reached if setup fails.");
         plan("40.1-runtime-compat", "40.1 natural key input and charge, spear, other players, claims, datapacks and remaining source adapters", "Not covered by the prepared single-player fixtures.");
         plan("42.3-sharp-swift", "Sharpness ▷ Swift Sneak: real hits and simulated imprint movement", "Not reached if setup fails.");
         plan("42.3-swift-sharp", "Swift Sneak ▷ Sharpness: worn leggings, simulated crouch and real hit", "Not reached if setup fails.");

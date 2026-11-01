@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
+import enchantment_fusion.mechanics.signatures.GrapnelVolley;
 import java.util.List;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -24,11 +25,17 @@ public abstract class PhantomBowBatchMixin {
         boolean entered = (Object) this instanceof BowItem
             && PhantomVolley.enterBowBatch(weapon, (int) projectiles.stream().filter(stack -> !stack.isEmpty()).count());
         HeavyCrushProjectiles.enterShot(shooter, weapon);
+        GrapnelVolley.Batch grapnel = GrapnelVolley.begin(shooter, weapon);
+        boolean completed = false;
         try {
             original.call(level, shooter, hand, weapon, projectiles, power, inaccuracy, crit, targetOverride);
+            completed = true;
         } finally {
-            HeavyCrushProjectiles.exitShot();
-            PhantomVolley.exitBowBatch(entered);
+            try { GrapnelVolley.end(grapnel, completed); }
+            finally {
+                HeavyCrushProjectiles.exitShot();
+                PhantomVolley.exitBowBatch(entered);
+            }
         }
     }
 }

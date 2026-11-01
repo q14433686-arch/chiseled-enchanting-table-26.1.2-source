@@ -52,6 +52,7 @@ public final class GrapnelSkills {
     public static final String SIGNATURE = "spirit_grapnel", LURE = "minecraft:lure";
     public static final String EFFICIENCY = "minecraft:efficiency", SILK = "minecraft:silk_touch", FORTUNE = "minecraft:fortune";
     public static final String POWER = "minecraft:power", FLAME = "minecraft:flame", PUNCH = "minecraft:punch";
+    public static final String MULTISHOT = "minecraft:multishot";
     private static final Set<FusionCarrier> TOOLS = Set.of(FusionCarrier.PICKAXE, FusionCarrier.AXE, FusionCarrier.SHOVEL, FusionCarrier.HOE);
     private static final Set<String> MINING_PRIMARIES = Set.of(EFFICIENCY, SILK, FORTUNE);
     private static final int MAX_OWNERS = 256, MAX_DROPS = 64, MAX_FLIGHTS = 4096, MAX_FLIGHT_GEARS = 16;
@@ -64,7 +65,8 @@ public final class GrapnelSkills {
     private record Drop(ItemEntity entity, ItemStack stack, ItemStack snapshot) {}
     private record DropsMark(Gear gear, ResourceKey<Level> dimension, long until, BlockPos origin, List<Drop> drops) implements Mark {}
     private static final Map<UUID, Mark> MARKS = new HashMap<>();
-    private record Flight(UUID owner, ResourceKey<Level> dimension, List<Gear> gears, boolean fullDraw, long expires) {}
+    private record Flight(UUID owner, ResourceKey<Level> dimension, List<Gear> gears, boolean fullDraw,
+                          @Nullable GrapnelVolley.Batch volley, long expires) {}
     private static final Map<AbstractArrow, Flight> FLIGHTS = new WeakHashMap<>();
     private record PendingPush(UUID target, Flight flight, long tick) {}
     private static final Map<AbstractArrow, PendingPush> PENDING_PUSHES = new WeakHashMap<>();
@@ -89,7 +91,8 @@ public final class GrapnelSkills {
         return pair != null && MINING_PRIMARIES.contains(pair.primaryId()) && LURE.equals(pair.secondaryId());
     }
     public static boolean rangedFirst(@Nullable FusedPair pair) {
-        return pair != null && (POWER.equals(pair.primaryId()) || FLAME.equals(pair.primaryId()) || PUNCH.equals(pair.primaryId())) && LURE.equals(pair.secondaryId());
+        return pair != null && (POWER.equals(pair.primaryId()) || FLAME.equals(pair.primaryId()) || PUNCH.equals(pair.primaryId())
+            || MULTISHOT.equals(pair.primaryId())) && LURE.equals(pair.secondaryId());
     }
     public static boolean matches(@Nullable FusedPair pair) {
         return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair))
@@ -142,12 +145,15 @@ public final class GrapnelSkills {
     }
     /** Capture the actual launcher and draw state inside a real bow/crossbow shot, never from a nearby scan. */
     public static void launched(Projectile projectile, LivingEntity shooter, int index, @Nullable ItemStack weapon) {
-        if (!(projectile instanceof AbstractArrow arrow) || !(shooter instanceof ServerPlayer owner) || index != 0
+        if (!(projectile instanceof AbstractArrow arrow) || !(shooter instanceof ServerPlayer owner) || index < 0
             || !ready(owner) || weapon == null || (owner.getMainHandItem() != weapon && owner.getOffhandItem() != weapon)
-            || arrow.getOwner() != owner || PhantomVolley.isGhost(arrow) || FLIGHTS.size() >= MAX_FLIGHTS) return;
-        List<Gear> gears = rangedGears(weapon);
+            || arrow.getOwner() != owner || PhantomVolley.isGhost(arrow)) return;
+        GrapnelVolley.Batch volley = GrapnelVolley.launched(arrow, shooter, weapon);
+        if (FLIGHTS.size() >= MAX_FLIGHTS) return;
+        List<Gear> gears = rangedGears(weapon).stream()
+            .filter(gear -> index == 0 || MULTISHOT.equals(gear.pair().primaryId())).toList();
         if (!gears.isEmpty()) FLIGHTS.put(arrow, new Flight(owner.getUUID(), owner.level().dimension(), gears,
-            arrow.isCritArrow(), owner.level().getGameTime() + 1200L));
+            arrow.isCritArrow(), volley, owner.level().getGameTime() + 1200L));
     }
     private static boolean eligibleTarget(ServerPlayer owner, LivingEntity target, FusedPair pair) {
         if (attackFirst(pair)) return MeleeAttackThemes.eligible(owner, target, pair.primaryId());
@@ -160,7 +166,8 @@ public final class GrapnelSkills {
         Flight flight = FLIGHTS.get(arrow);
         if (flight == null || !(victim instanceof LivingEntity target) || !(arrow.getOwner() instanceof ServerPlayer owner)
             || source.getDirectEntity() != arrow || source.getEntity() != owner || !flight.owner().equals(owner.getUUID())
-            || !ready(owner) || owner.level() != arrow.level() || target.level() != owner.level() || !target.isAlive()
+            || !ready(owner) || owner.level() != arrow.level() || owner.level().getEntity(arrow.getUUID()) != arrow
+            || target.level() != owner.level() || !target.isAlive()
             || !owner.level().dimension().equals(flight.dimension()) || owner.level().getGameTime() >= flight.expires()
             || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) || source.is(DamageTypeTags.BYPASSES_EFFECTS)
             || source.is(DamageTypeTags.BYPASSES_ENCHANTMENTS) || PhantomVolley.isGhost(arrow) || MatrixEffectExecutor.isExecuting()) return null;
@@ -178,7 +185,8 @@ public final class GrapnelSkills {
             FusedPair pair = gear.pair();
             if (PUNCH.equals(pair.primaryId()) || !owns(hit.owner, gear) || !eligibleTarget(hit.owner, hit.target, pair)
                 || (POWER.equals(pair.primaryId()) && !hit.flight.fullDraw())
-                || (FLAME.equals(pair.primaryId()) && !hit.burning)) continue;
+                || (FLAME.equals(pair.primaryId()) && !hit.burning)
+                || (MULTISHOT.equals(pair.primaryId()) && !GrapnelVolley.proven(hit.flight.volley()))) continue;
             markTarget(hit.owner, hit.target, gear); return;
         }
     }

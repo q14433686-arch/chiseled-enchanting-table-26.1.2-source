@@ -113,7 +113,7 @@ final class GrapnelProjectileProbe {
             player.setGameMode(mode); player.setPos(oldPos); player.setDeltaMovement(oldVelocity); player.setYRot(oldYaw); player.setXRot(oldPitch);
         }
     }
-    private static void hit(Arrow arrow, LivingEntity target, boolean cancelled) {
+    static void hit(Arrow arrow, LivingEntity target, boolean cancelled) {
         target.invulnerableTime = 0; float before = target.getHealth();
         arrow.setPos(target.getX() - 3.0D, target.getY() + 0.8D, target.getZ()); arrow.setNoGravity(true); arrow.shoot(1, 0, 0, 3, 0);
         for (int i = 0; i < 4 && arrow.isAlive() && target.getHealth() == before; i++) arrow.tick();
@@ -133,22 +133,22 @@ final class GrapnelProjectileProbe {
         item.performShooting(level, player, InteractionHand.MAIN_HAND, crossbow, 3.15F, 1.0F, null);
         return oneArrow(level, area, before, player);
     }
-    private static Set<UUID> arrowIds(ServerLevel level, AABB area) {
+    static Set<UUID> arrowIds(ServerLevel level, AABB area) {
         Set<UUID> result = new HashSet<>(); for (Arrow arrow : level.getEntitiesOfClass(Arrow.class, area)) result.add(arrow.getUUID()); return result;
     }
     private static Arrow oneArrow(ServerLevel level, AABB area, Set<UUID> before, ServerPlayer owner) {
         var found = level.getEntitiesOfClass(Arrow.class, area, arrow -> !before.contains(arrow.getUUID()) && arrow.getOwner() == owner);
         require(found.size() == 1, "Exactly one real arrow must be launched"); return found.getFirst();
     }
-    private static UUID marked(ServerPlayer player) throws Exception {
+    static UUID marked(ServerPlayer player) throws Exception {
         Field field = GrapnelSkills.class.getDeclaredField("MARKS"); field.setAccessible(true);
         Object mark = ((Map<?, ?>) field.get(null)).get(player.getUUID()); if (mark == null) return null;
         Method target = mark.getClass().getDeclaredMethod("target"); target.setAccessible(true); return (UUID) target.invoke(mark);
     }
-    private static ItemStack fused(ServerLevel level, Item item, FusedPair pair) {
+    static ItemStack fused(ServerLevel level, Item item, FusedPair pair) {
         ItemStack result = new ItemStack(item); FusionStationOperations.applyFusedPairToGear(result, pair, level.registryAccess()); return result;
     }
-    private static void checkStation(ServerLevel level, FusedPair pair, boolean power) {
+    static void checkStation(ServerLevel level, FusedPair pair, boolean power) {
         var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         var primary = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse(pair.primaryId())));
         var secondary = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse(pair.secondaryId())));

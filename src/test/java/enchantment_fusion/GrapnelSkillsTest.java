@@ -12,7 +12,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class GrapnelSkillsTest {
-    @Test void defaultWildcardCoversOnlyTheNineExplicitActionAdapters() {
+    @Test void defaultWildcardCoversOnlyTheTenExplicitActionAdapters() {
         var old = SignatureCatalog.parseFromJson(null);
         try {
             SignatureCatalog.publish(SignatureCatalog.parseFromJson(JsonParser.parseString("""
@@ -26,7 +26,7 @@ final class GrapnelSkillsTest {
                 FusedPair pair = FusedPair.clean(work, 3, GrapnelSkills.LURE, 2);
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
-            for (String ranged : new String[]{GrapnelSkills.POWER, GrapnelSkills.FLAME, GrapnelSkills.PUNCH}) {
+            for (String ranged : new String[]{GrapnelSkills.POWER, GrapnelSkills.FLAME, GrapnelSkills.PUNCH, GrapnelSkills.MULTISHOT}) {
                 FusedPair pair = FusedPair.clean(ranged, 3, GrapnelSkills.LURE, 2);
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
@@ -79,5 +79,9 @@ final class GrapnelSkillsTest {
         assertTrue(GrapnelSkills.supportsCarrier(punch, Set.of(FusionCarrier.BOW)));
         assertTrue(GrapnelSkills.supportsCarrier(punch, Set.of(FusionCarrier.CROSSBOW)));
         assertFalse(GrapnelSkills.supportsCarrier(punch, Set.of(FusionCarrier.SWORD)));
+        FusedPair multishot = FusedPair.clean(GrapnelSkills.MULTISHOT, 1, GrapnelSkills.LURE, 1);
+        assertTrue(GrapnelSkills.supportsCarrier(multishot, Set.of(FusionCarrier.BOW)));
+        assertTrue(GrapnelSkills.supportsCarrier(multishot, Set.of(FusionCarrier.CROSSBOW)));
+        assertFalse(GrapnelSkills.supportsCarrier(multishot, Set.of(FusionCarrier.SWORD)));
     }
 }
