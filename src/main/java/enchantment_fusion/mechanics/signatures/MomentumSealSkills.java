@@ -123,7 +123,8 @@ public final class MomentumSealSkills {
         Attack frame = CURRENT.get();
         if (!usable(frame, player, target)) return vanilla;
         if (WindSweepSkills.alreadyReplayed(player, frame.weapon, target, frame.source)
-            || MeleeImpulseSkills.alreadyReplayed(player, frame.weapon, target, frame.source)) return vanilla;
+            || MeleeImpulseSkills.alreadyReplayed(player, frame.weapon, target, frame.source)
+            || GrapnelImpact.alreadyReplayed(player, frame.weapon, target, frame.source)) return vanilla;
         ServerPlayer owner = (ServerPlayer) player;
         ServerLevel level = owner.level();
         Holder<Enchantment> knockback = FusionStationOperations.lookupEnchantment(level.registryAccess(), KNOCKBACK).orElse(null);

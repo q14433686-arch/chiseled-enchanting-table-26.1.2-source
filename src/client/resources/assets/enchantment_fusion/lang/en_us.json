@@ -1087,5 +1087,8 @@
   "tooltip.enchantment_fusion.quick_grapnel": "When Quick Charge actually shortens a real crossbow load, that load’s real arrow can mark a damaged eligible enemy for 8 seconds. Hold the same crossbow and activate within 12 blocks with clear sight to reel it in.",
   "tooltip.enchantment_fusion.mending_grapnel": "When an experience orb actually repairs this held or worn item, mark your location for 8 seconds. Keep the same item equipped; aim at an eligible enemy within 8 blocks of the mark and activate within 12 blocks with clear sight. XP is spent normally.",
   "tooltip.enchantment_fusion.unbreaking_grapnel": "When Unbreaking actually prevents a complete wear request on this held or worn item, mark your location for 8 seconds. Keep the same item equipped; aim at an eligible enemy within 8 blocks of the mark and activate within 12 blocks with clear sight.",
-  "message.enchantment_fusion.grapnel_durability_marked": "Durability action marked this location. Aim at an eligible enemy and activate grapnel recall."
+  "message.enchantment_fusion.grapnel_durability_marked": "Durability action marked this location. Aim at an eligible enemy and activate grapnel recall.",
+  "tooltip.enchantment_fusion.knockback_grapnel": "A real melee hit that damages and pushes an eligible enemy, with Knockback actually contributing, marks it for 8 seconds. Hold the same weapon and activate within 12 blocks with clear sight.",
+  "tooltip.enchantment_fusion.breach_grapnel": "When Breach actually reduces an armored enemy’s protection during a damaging melee hit, mark it for 8 seconds. Hold the same weapon and activate within 12 blocks with clear sight.",
+  "tooltip.enchantment_fusion.density_grapnel": "When Density actually adds to a mace smash that damages an eligible enemy, mark it for 8 seconds. Hold the same mace and activate within 12 blocks with clear sight."
 }

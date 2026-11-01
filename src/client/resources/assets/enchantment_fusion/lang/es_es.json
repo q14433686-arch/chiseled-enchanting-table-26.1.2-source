@@ -1087,5 +1087,8 @@
   "tooltip.enchantment_fusion.quick_grapnel": "Si Carga rápida acorta una carga real de ballesta, su flecha real puede marcar durante 8 segundos a un enemigo válido dañado. Mantén la misma ballesta y recógelo con visión despejada a 12 bloques o menos.",
   "tooltip.enchantment_fusion.mending_grapnel": "Cuando un orbe de experiencia repare realmente este objeto sostenido o equipado, marca tu posición durante 8 segundos; la experiencia se consume normalmente. Conserva el objeto y apunta con visión despejada desde 12 bloques o menos a un enemigo válido a 8 bloques de la marca.",
   "tooltip.enchantment_fusion.unbreaking_grapnel": "Cuando Irrompibilidad evite por completo un desgaste real de este objeto sostenido o equipado, marca tu posición durante 8 segundos. Conserva el objeto y apunta con visión despejada desde 12 bloques o menos a un enemigo válido a 8 bloques de la marca.",
-  "message.enchantment_fusion.grapnel_durability_marked": "Acción de durabilidad marcada. Apunta a un enemigo válido y activa la recogida."
+  "message.enchantment_fusion.grapnel_durability_marked": "Acción de durabilidad marcada. Apunta a un enemigo válido y activa la recogida.",
+  "tooltip.enchantment_fusion.knockback_grapnel": "Un golpe cuerpo a cuerpo real marca 8 segundos a un enemigo válido si causa daño, lo mueve y Empuje contribuye realmente a la fuerza. Recógelo con la misma arma a 12 bloques o menos y con visión despejada.",
+  "tooltip.enchantment_fusion.breach_grapnel": "Si Brecha reduce realmente la protección de un enemigo válido con armadura en un golpe que causa daño, lo marca 8 segundos. Recógelo con la misma arma a 12 bloques o menos y con visión despejada.",
+  "tooltip.enchantment_fusion.density_grapnel": "Si Densidad aumenta realmente el daño de caída de un golpe real de maza que daña a un enemigo válido, lo marca 8 segundos. Recógelo con la misma maza a 12 bloques o menos y con visión despejada."
 }

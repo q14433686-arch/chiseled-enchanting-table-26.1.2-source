@@ -1087,5 +1087,8 @@
   "tooltip.enchantment_fusion.quick_grapnel": "빠른 장전이 실제 석궁 장전 시간을 줄이면 그 장전의 진짜 화살로 피해를 입힌 유효한 적을 8초 표식합니다. 같은 석궁을 들고 12블록 이내에서 시야가 트일 때 당깁니다.",
   "tooltip.enchantment_fusion.mending_grapnel": "경험치 구슬이 착용하거나 든 이 장비를 실제로 수리하면 위치를 8초 표식하며 경험치는 정상 소비됩니다. 같은 장비를 유지하고 표식에서 12블록 이내에서 8블록 안의 시야가 트인 유효한 적을 조준해 당깁니다.",
   "tooltip.enchantment_fusion.unbreaking_grapnel": "내구성이 착용하거나 든 이 장비의 내구도 소모를 실제로 완전히 막으면 위치를 8초 표식합니다. 같은 장비를 유지하고 표식에서 12블록 이내에서 8블록 안의 시야가 트인 유효한 적을 조준해 당깁니다.",
-  "message.enchantment_fusion.grapnel_durability_marked": "내구도 동작이 위치를 표식했습니다. 유효한 적을 조준해 회수하세요."
+  "message.enchantment_fusion.grapnel_durability_marked": "내구도 동작이 위치를 표식했습니다. 유효한 적을 조준해 회수하세요.",
+  "tooltip.enchantment_fusion.knockback_grapnel": "실제 근접 공격으로 적을 다치게 하고 밀치기 효과가 힘을 더해 실제로 밀면 8초 표식합니다. 같은 무기를 들고 12블록 이내에서 시야가 트일 때 당깁니다.",
+  "tooltip.enchantment_fusion.breach_grapnel": "갑옷 입은 적에게 실제 근접 피해를 줄 때 격파가 방어구 효과를 실제로 줄이면 8초 표식합니다. 같은 무기를 들고 12블록 이내에서 시야가 트일 때 당깁니다.",
+  "tooltip.enchantment_fusion.density_grapnel": "철퇴의 실제 강타가 적에게 피해를 주고 밀도가 낙하 피해를 실제로 늘리면 8초 표식합니다. 같은 철퇴를 들고 12블록 이내에서 시야가 트일 때 당깁니다."
 }

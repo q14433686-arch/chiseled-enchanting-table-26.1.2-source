@@ -1087,5 +1087,8 @@
   "tooltip.enchantment_fusion.quick_grapnel": "Si Charge rapide raccourcit un chargement réel de l’arbalète, sa vraie flèche peut marquer 8 secondes un ennemi valide blessé. Gardez la même arbalète et rappelez-le à 12 blocs maximum en ligne de vue.",
   "tooltip.enchantment_fusion.mending_grapnel": "Lorsqu’une orbe d’expérience répare réellement cet objet tenu ou porté, votre position est marquée 8 secondes ; l’expérience est consommée normalement. Gardez l’objet et visez en ligne de vue depuis 12 blocs maximum un ennemi valide à 8 blocs de la marque.",
   "tooltip.enchantment_fusion.unbreaking_grapnel": "Lorsque Solidité empêche entièrement une usure réelle de cet objet tenu ou porté, votre position est marquée 8 secondes. Gardez l’objet et visez en ligne de vue depuis 12 blocs maximum un ennemi valide à 8 blocs de la marque.",
-  "message.enchantment_fusion.grapnel_durability_marked": "Action de durabilité marquée. Visez un ennemi valide et activez le rappel."
+  "message.enchantment_fusion.grapnel_durability_marked": "Action de durabilité marquée. Visez un ennemi valide et activez le rappel.",
+  "tooltip.enchantment_fusion.knockback_grapnel": "Un vrai coup de mêlée marque 8 secondes un ennemi valide si Recul contribue réellement à la poussée, qui le blesse et le déplace. Rappelez-le avec la même arme à 12 blocs maximum et en ligne de vue.",
+  "tooltip.enchantment_fusion.breach_grapnel": "Si Brèche réduit réellement la protection d’un ennemi valide en armure lors d’un coup de mêlée blessant, il est marqué 8 secondes. Rappelez-le avec la même arme à 12 blocs maximum et en ligne de vue.",
+  "tooltip.enchantment_fusion.density_grapnel": "Si Densité augmente réellement les dégâts de chute d’un vrai coup de masse blessant un ennemi valide, il est marqué 8 secondes. Rappelez-le avec la même masse à 12 blocs maximum et en ligne de vue."
 }

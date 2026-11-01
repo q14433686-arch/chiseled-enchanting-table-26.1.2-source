@@ -1087,5 +1087,8 @@
   "tooltip.enchantment_fusion.quick_grapnel": "Quando Carga rápida realmente encurta uma recarga da besta, a flecha real dessa carga pode marcar por 8 segundos um inimigo válido ferido. Segure a mesma besta e puxe-o com visão livre a até 12 blocos.",
   "tooltip.enchantment_fusion.mending_grapnel": "Quando um orbe de experiência realmente reparar este item segurado ou equipado, marque sua posição por 8 segundos; a experiência é gasta normalmente. Mantenha o item e mire com visão livre, a até 12 blocos, em um inimigo válido a até 8 blocos da marca.",
   "tooltip.enchantment_fusion.unbreaking_grapnel": "Quando Inquebrável impedir completamente um desgaste real deste item segurado ou equipado, marque sua posição por 8 segundos. Mantenha o item e mire com visão livre, a até 12 blocos, em um inimigo válido a até 8 blocos da marca.",
-  "message.enchantment_fusion.grapnel_durability_marked": "Ação de durabilidade marcada. Mire em um inimigo válido e ative o recolhimento."
+  "message.enchantment_fusion.grapnel_durability_marked": "Ação de durabilidade marcada. Mire em um inimigo válido e ative o recolhimento.",
+  "tooltip.enchantment_fusion.knockback_grapnel": "Um golpe real corpo a corpo marca por 8 segundos um inimigo válido se causar dano, movê-lo e Repulsão contribuir realmente para o impulso. Recolha com a mesma arma a até 12 blocos e com visão livre.",
+  "tooltip.enchantment_fusion.breach_grapnel": "Se Ruptura reduzir realmente a proteção de um inimigo válido com armadura em um golpe que causa dano, marque-o por 8 segundos. Recolha com a mesma arma a até 12 blocos e com visão livre.",
+  "tooltip.enchantment_fusion.density_grapnel": "Se Densidade aumentar realmente o dano de queda de um golpe real de maça que fere um inimigo válido, marque-o por 8 segundos. Recolha com a mesma maça a até 12 blocos e com visão livre."
 }

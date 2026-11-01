@@ -15,6 +15,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelVolley;
 import enchantment_fusion.mechanics.signatures.GrapnelProjectilePrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelDefense;
 import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
+import enchantment_fusion.mechanics.signatures.GrapnelImpact;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -79,13 +80,15 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
     private static float ef$heavyArmor(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source,
                                        float value, Operation<Float> original) {
         float vanilla = original.call(level, weapon, victim, source, value);
-        return HeavyCrushSkill.armorEffect(level, weapon, victim, source, vanilla);
+        float heavy = HeavyCrushSkill.armorEffect(level, weapon, victim, source, vanilla);
+        return GrapnelImpact.project(GrapnelImpact.Kind.ARMOR, level, weapon, victim, source, heavy);
     }
 
     @WrapMethod(method = "modifyFallBasedDamage")
     private static float ef$heavySmash(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source,
                                        float value, Operation<Float> original) {
         float vanilla = original.call(level, weapon, victim, source, value);
-        return HeavyCrushSkill.fallEffect(level, weapon, victim, source, vanilla);
+        float heavy = HeavyCrushSkill.fallEffect(level, weapon, victim, source, vanilla);
+        return GrapnelImpact.project(GrapnelImpact.Kind.FALL, level, weapon, victim, source, heavy);
     }
 }

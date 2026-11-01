@@ -88,6 +88,7 @@ public final class GrapnelSkills {
     private GrapnelSkills() {}
     public static void init() {
         ConfirmedMelee.register(GrapnelSkills::onHit);
+        ConfirmedMelee.register(GrapnelImpact::onHit);
         MeleeAttackThemes.registerPrimaryTemplate("grapnel_attack", (pair, stack) -> attackFirst(pair) && applies(pair, stack));
     }
     public static boolean attackFirst(@Nullable FusedPair pair) {
@@ -103,7 +104,8 @@ public final class GrapnelSkills {
             && LURE.equals(pair.secondaryId());
     }
     public static boolean matches(@Nullable FusedPair pair) {
-        return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair) || GrapnelDefense.isPair(pair) || GrapnelDurability.isPair(pair))
+        return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair) || GrapnelDefense.isPair(pair)
+            || GrapnelDurability.isPair(pair) || GrapnelImpact.isPair(pair))
             && SignatureCatalog.resolve(pair).map(entry -> SIGNATURE.equals(entry.id()) && "*".equals(entry.primaryId())).orElse(false);
     }
     public static boolean supportsCarrier(Set<FusionCarrier> roles) { return MeleeAttackThemes.supportsWeapon(roles); }
@@ -113,6 +115,7 @@ public final class GrapnelSkills {
         if (miningFirst(pair)) return roles.stream().anyMatch(TOOLS::contains);
         if (GrapnelDefense.isPair(pair)) return GrapnelDefense.supportsCarrier(pair, roles);
         if (GrapnelDurability.isPair(pair)) return !roles.isEmpty(); // damageability is checked on the actual host
+        if (GrapnelImpact.isPair(pair)) return GrapnelImpact.supportsCarrier(pair, roles);
         if (rangedFirst(pair)) {
             if (PIERCING.equals(pair.primaryId()) || QUICK.equals(pair.primaryId())) return roles.contains(FusionCarrier.CROSSBOW);
             return roles.contains(FusionCarrier.BOW) || (!POWER.equals(pair.primaryId()) && roles.contains(FusionCarrier.CROSSBOW));
@@ -175,7 +178,7 @@ public final class GrapnelSkills {
     }
     private static boolean eligibleTarget(ServerPlayer owner, LivingEntity target, FusedPair pair) {
         if (attackFirst(pair)) return MeleeAttackThemes.eligible(owner, target, pair.primaryId());
-        return (rangedFirst(pair) || GrapnelDefense.isPair(pair) || GrapnelDurability.isPair(pair))
+        return (rangedFirst(pair) || GrapnelDefense.isPair(pair) || GrapnelDurability.isPair(pair) || GrapnelImpact.isPair(pair))
             && target.level() == owner.level() && LoyaltyGuard.eligibleTarget(owner, target)
             && owner.level().mayInteract(owner, target.blockPosition()) && (!(target instanceof Player other) || other.canHarmPlayer(owner));
     }
@@ -212,6 +215,12 @@ public final class GrapnelSkills {
                 || (MULTISHOT.equals(pair.primaryId()) && !GrapnelVolley.proven(hit.flight.volley()))) continue;
             markTarget(hit.owner, hit.target, gear); return;
         }
+    }
+    public static void markImpact(ServerPlayer owner, LivingEntity target, ItemStack weapon, FusedPair pair) {
+        Gear gear = new Gear(weapon, pair);
+        if (!ready(owner) || !canMark(owner) || owner.getMainHandItem() != weapon || !owns(owner, gear)
+            || owner.level().getEntity(target.getUUID()) != target || !eligibleTarget(owner, target, pair) || !target.isAlive()) return;
+        markTarget(owner, target, gear);
     }
     private static void markTarget(ServerPlayer owner, LivingEntity target, Gear gear) {
         MARKS.put(owner.getUUID(), new TargetMark(gear, owner.level().dimension(),
@@ -373,7 +382,8 @@ public final class GrapnelSkills {
     }
     public static boolean hasEquipped(ServerPlayer player) {
         return selected(player.getMainHandItem(), false) != null || selected(player.getMainHandItem(), true) != null
-            || !rangedGears(player.getMainHandItem()).isEmpty() || GrapnelDefense.hasEquipped(player) || GrapnelDurability.hasEquipped(player);
+            || !rangedGears(player.getMainHandItem()).isEmpty() || GrapnelImpact.hasEquipped(player.getMainHandItem())
+            || GrapnelDefense.hasEquipped(player) || GrapnelDurability.hasEquipped(player);
     }
     public static boolean activate(ServerPlayer owner) {
         if (!ready(owner) || owner.containerMenu != owner.inventoryMenu) return false;
@@ -454,6 +464,7 @@ public final class GrapnelSkills {
     }
     public static void clearServer() {
         MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear(); PROJECTILE_REPLAY.remove();
-        GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); GrapnelQuickCharge.clearServer(); GrapnelDurability.clearServer(); ProtectionProjection.clear();
+        GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); GrapnelQuickCharge.clearServer(); GrapnelDurability.clearServer();
+        GrapnelImpact.clearServer(); ProtectionProjection.clear();
     }
 }

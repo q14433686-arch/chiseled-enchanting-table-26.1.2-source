@@ -1087,5 +1087,8 @@
   "tooltip.enchantment_fusion.quick_grapnel": "Se Ricarica rapida abbrevia una vera ricarica della balestra, la sua freccia reale può marcare per 8 secondi un nemico valido ferito. Tieni la stessa balestra e richiamalo entro 12 blocchi con visuale libera.",
   "tooltip.enchantment_fusion.mending_grapnel": "Quando una sfera di esperienza ripara davvero questo oggetto impugnato o indossato, marca la posizione per 8 secondi; l’esperienza viene consumata normalmente. Mantieni l’oggetto e mira con visuale libera entro 12 blocchi a un nemico valido entro 8 blocchi dal segno.",
   "tooltip.enchantment_fusion.unbreaking_grapnel": "Quando Indistruttibilità impedisce completamente un’usura reale di questo oggetto impugnato o indossato, marca la posizione per 8 secondi. Mantieni l’oggetto e mira con visuale libera entro 12 blocchi a un nemico valido entro 8 blocchi dal segno.",
-  "message.enchantment_fusion.grapnel_durability_marked": "Azione di durabilità marcata. Mira a un nemico valido e attiva il recupero."
+  "message.enchantment_fusion.grapnel_durability_marked": "Azione di durabilità marcata. Mira a un nemico valido e attiva il recupero.",
+  "tooltip.enchantment_fusion.knockback_grapnel": "Un vero colpo in mischia marca per 8 secondi un nemico valido se lo ferisce e lo spinge, con Respingimento che contribuisce davvero alla spinta. Recuperalo con la stessa arma entro 12 blocchi e con visuale libera.",
+  "tooltip.enchantment_fusion.breach_grapnel": "Se Breccia riduce davvero la protezione di un nemico valido corazzato durante un colpo che infligge danno, lo marca per 8 secondi. Recuperalo con la stessa arma entro 12 blocchi e con visuale libera.",
+  "tooltip.enchantment_fusion.density_grapnel": "Se Densità aumenta davvero il danno da caduta di un vero colpo di mazza che ferisce un nemico valido, lo marca per 8 secondi. Recuperalo con la stessa mazza entro 12 blocchi e con visuale libera."
 }

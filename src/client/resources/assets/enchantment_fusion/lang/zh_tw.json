@@ -1087,5 +1087,8 @@
   "tooltip.enchantment_fusion.quick_grapnel": "快速裝填確實縮短一次真實弩裝填時，此次裝填的真實箭傷害合格敵人可留標8秒。手持原弩並在12格內視線暢通時主動牽引。",
   "tooltip.enchantment_fusion.mending_grapnel": "經驗球實際修復這件持握或穿戴的裝備時，在目前位置留標8秒，經驗正常消耗。繼續持有或穿戴原物，在距標記12格內瞄準距標記8格內的合格敵人，視線暢通時主動牽引。",
   "tooltip.enchantment_fusion.unbreaking_grapnel": "耐久主位實際完全免除這件持握或穿戴裝備的一次耐久損耗時，在目前位置留標8秒。繼續持有或穿戴原物，在距標記12格內瞄準距標記8格內的合格敵人，視線暢通時主動牽引。",
-  "message.enchantment_fusion.grapnel_durability_marked": "耐久動作已留標。瞄準合格敵人並啟動回鉤。"
+  "message.enchantment_fusion.grapnel_durability_marked": "耐久動作已留標。瞄準合格敵人並啟動回鉤。",
+  "tooltip.enchantment_fusion.knockback_grapnel": "真實近擊造成傷害，且擊退主位實際增加推力並推動合格敵人時，留標8秒。持同一武器在12格內、視線暢通時主動牽引。",
+  "tooltip.enchantment_fusion.breach_grapnel": "真實近擊造成傷害，且破甲主位實際降低有甲合格敵人的護甲效果時，留標8秒。持同一武器在12格內、視線暢通時主動牽引。",
+  "tooltip.enchantment_fusion.density_grapnel": "重錘的真實猛擊造成傷害，且致密主位實際增加墜落傷害時，留標8秒。持同一重錘在12格內、視線暢通時主動牽引。"
 }

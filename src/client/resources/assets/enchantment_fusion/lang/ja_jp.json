@@ -1087,5 +1087,8 @@
   "tooltip.enchantment_fusion.quick_grapnel": "高速装填が実際のクロスボウ装填を短縮すると、その装填の本物の矢で傷つけた適格な敵を8秒標記。同じクロスボウを持ち、12ブロック以内で視線を通して引き寄せます。",
   "tooltip.enchantment_fusion.mending_grapnel": "経験値オーブが保持・装備中のこの道具を実際に修理すると現在地を8秒標記。経験値は通常どおり消費。同じ道具を装備し、標記から12ブロック以内で8ブロック以内の適格な敵を視線が通るよう狙って引き寄せます。",
   "tooltip.enchantment_fusion.unbreaking_grapnel": "耐久力が保持・装備中のこの道具の耐久減少を実際に完全防止すると現在地を8秒標記。同じ道具を装備し、標記から12ブロック以内で8ブロック以内の適格な敵を視線が通るよう狙って引き寄せます。",
-  "message.enchantment_fusion.grapnel_durability_marked": "耐久動作で標記。適格な敵を狙って回収を発動。"
+  "message.enchantment_fusion.grapnel_durability_marked": "耐久動作で標記。適格な敵を狙って回収を発動。",
+  "tooltip.enchantment_fusion.knockback_grapnel": "実際の近接攻撃が敵にダメージを与え、ノックバック主位が押す力に寄与して実際に押すと8秒標記。同じ武器を持ち、12ブロック以内で視線が通る時に引き寄せます。",
+  "tooltip.enchantment_fusion.breach_grapnel": "装甲のある敵への実際の近接ダメージ時に防具貫通が装甲効果を実際に減らすと8秒標記。同じ武器を持ち、12ブロック以内で視線が通る時に引き寄せます。",
+  "tooltip.enchantment_fusion.density_grapnel": "メイスの実際の強打が敵を傷つけ、密度が落下ダメージを実際に増やすと8秒標記。同じメイスを持ち、12ブロック以内で視線が通る時に引き寄せます。"
 }

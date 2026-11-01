@@ -6,6 +6,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
+import enchantment_fusion.mechanics.signatures.GrapnelImpact;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
@@ -26,6 +27,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -44,32 +46,35 @@ public abstract class PlayerAmberAttackMixin {
             try {
                 MeleeImpulseSkills.Attack impulse = MeleeImpulseSkills.beginAttack(player, player.getWeaponItem(), target, EquipmentSlot.MAINHAND);
                 try {
-                    GlazedStrikeEffect.Swing swing = GlazedStrikeEffect.beginSwing(player, target);
+                    GrapnelImpact.Attack impact = GrapnelImpact.beginAttack(player, player.getWeaponItem(), target, EquipmentSlot.MAINHAND);
                     try {
-                        SoulThreadSkills.Swing soulSwing = SoulThreadSkills.beginSwing(player, target);
+                        GlazedStrikeEffect.Swing swing = GlazedStrikeEffect.beginSwing(player, target);
                         try {
-                            FireSweepSkills.Swing fireSweep = FireSweepSkills.beginSwing(player);
+                            SoulThreadSkills.Swing soulSwing = SoulThreadSkills.beginSwing(player, target);
                             try {
-                                ItemStack weapon = player.getWeaponItem();
-                                SoulBladeSkills.Attack soulBlade = SoulBladeSkills.beginAttack(player, weapon, target,
-                                    SoulThreadSkills.swingFull(player, weapon, target));
+                                FireSweepSkills.Swing fireSweep = FireSweepSkills.beginSwing(player);
                                 try {
-                                    SegmentThreadSkills.Attack segment = SegmentThreadSkills.beginAttack(player, weapon, target,
+                                    ItemStack weapon = player.getWeaponItem();
+                                    SoulBladeSkills.Attack soulBlade = SoulBladeSkills.beginAttack(player, weapon, target,
                                         SoulThreadSkills.swingFull(player, weapon, target));
                                     try {
-                                        WindSweepSkills.Attack wind = WindSweepSkills.beginAttack(player, weapon, target);
+                                        SegmentThreadSkills.Attack segment = SegmentThreadSkills.beginAttack(player, weapon, target,
+                                            SoulThreadSkills.swingFull(player, weapon, target));
                                         try {
-                                            HeavyCrushSkill.Swing heavySwing = HeavyCrushSkill.beginSwing(player, target);
+                                            WindSweepSkills.Attack wind = WindSweepSkills.beginAttack(player, weapon, target);
                                             try {
-                                                MomentumSealSkills.Attack momentum = MomentumSealSkills.beginAttack(player, weapon, target);
-                                                try { original.call(target); } finally { MomentumSealSkills.endAttack(momentum); }
-                                            } finally { HeavyCrushSkill.endSwing(heavySwing); }
-                                        } finally { WindSweepSkills.endAttack(wind); }
-                                    } finally { SegmentThreadSkills.endAttack(segment); }
-                                } finally { SoulBladeSkills.endAttack(soulBlade); }
-                            } finally { FireSweepSkills.endSwing(fireSweep); }
-                        } finally { SoulThreadSkills.endSwing(soulSwing); }
-                    } finally { GlazedStrikeEffect.endSwing(swing); }
+                                                HeavyCrushSkill.Swing heavySwing = HeavyCrushSkill.beginSwing(player, target);
+                                                try {
+                                                    MomentumSealSkills.Attack momentum = MomentumSealSkills.beginAttack(player, weapon, target);
+                                                    try { original.call(target); } finally { MomentumSealSkills.endAttack(momentum); }
+                                                } finally { HeavyCrushSkill.endSwing(heavySwing); }
+                                            } finally { WindSweepSkills.endAttack(wind); }
+                                        } finally { SegmentThreadSkills.endAttack(segment); }
+                                    } finally { SoulBladeSkills.endAttack(soulBlade); }
+                                } finally { FireSweepSkills.endSwing(fireSweep); }
+                            } finally { SoulThreadSkills.endSwing(soulSwing); }
+                        } finally { GlazedStrikeEffect.endSwing(swing); }
+                    } finally { GrapnelImpact.endAttack(impact); }
                 } finally { MeleeImpulseSkills.endAttack(impulse); }
             } finally { MeleeWorkSkills.endAttack(work); }
         } finally { MeleeWearSkills.endAttack(wear); }
@@ -86,18 +91,21 @@ public abstract class PlayerAmberAttackMixin {
             try {
                 MeleeImpulseSkills.Attack impulse = MeleeImpulseSkills.beginAttack(player, weapon, target, slot);
                 try {
-                    SoulBladeSkills.Attack soulBlade = SoulBladeSkills.beginAttack(player, weapon, target, SoulThreadSkills.stabFull(player, slot, weapon));
+                    GrapnelImpact.Attack impact = GrapnelImpact.beginAttack(player, weapon, target, slot);
                     try {
-                        SegmentThreadSkills.Attack segment = SegmentThreadSkills.beginAttack(player, weapon, target, SoulThreadSkills.stabFull(player, slot, weapon));
+                        SoulBladeSkills.Attack soulBlade = SoulBladeSkills.beginAttack(player, weapon, target, SoulThreadSkills.stabFull(player, slot, weapon));
                         try {
-                            WindSweepSkills.Attack wind = WindSweepSkills.beginAttack(player, weapon, target);
+                            SegmentThreadSkills.Attack segment = SegmentThreadSkills.beginAttack(player, weapon, target, SoulThreadSkills.stabFull(player, slot, weapon));
                             try {
-                                MomentumSealSkills.Attack frame = MomentumSealSkills.beginAttack(player, weapon, target);
-                                try { return original.call(slot, target, damage, dealsDamage, dealsKnockback, dismounts); }
-                                finally { MomentumSealSkills.endAttack(frame); }
-                            } finally { WindSweepSkills.endAttack(wind); }
-                        } finally { SegmentThreadSkills.endAttack(segment); }
-                    } finally { SoulBladeSkills.endAttack(soulBlade); }
+                                WindSweepSkills.Attack wind = WindSweepSkills.beginAttack(player, weapon, target);
+                                try {
+                                    MomentumSealSkills.Attack frame = MomentumSealSkills.beginAttack(player, weapon, target);
+                                    try { return original.call(slot, target, damage, dealsDamage, dealsKnockback, dismounts); }
+                                    finally { MomentumSealSkills.endAttack(frame); }
+                                } finally { WindSweepSkills.endAttack(wind); }
+                            } finally { SegmentThreadSkills.endAttack(segment); }
+                        } finally { SoulBladeSkills.endAttack(soulBlade); }
+                    } finally { GrapnelImpact.endAttack(impact); }
                 } finally { MeleeImpulseSkills.endAttack(impulse); }
             } finally { MeleeWorkSkills.endAttack(work); }
         } finally { MeleeWearSkills.endAttack(wear); }
@@ -233,7 +241,9 @@ public abstract class PlayerAmberAttackMixin {
         target = "Lnet/minecraft/world/entity/player/Player;getKnockback(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;)F"))
     private float ef$windPrimaryKnockback(Player player, Entity target, DamageSource source, Operation<Float> original) {
         float vanilla = WindSweepSkills.replayKnockback(player, target, source, original.call(player, target, source));
-        return MeleeImpulseSkills.replayKnockback(player, target, source, vanilla);
+        float others = MeleeImpulseSkills.replayKnockback(player, target, source, vanilla);
+        if (!(player instanceof ServerPlayer owner)) return others;
+        return GrapnelImpact.project(GrapnelImpact.Kind.KNOCKBACK, owner.level(), player.getWeaponItem(), target, source, others * 2.0F) / 2.0F;
     }
 
     @WrapOperation(method = {"attack", "stabAttack"}, at = @At(value = "INVOKE",
@@ -254,6 +264,7 @@ public abstract class PlayerAmberAttackMixin {
         original.call(target, power, x, z);
         WindSweepSkills.afterKnockback((Player) (Object) this, target, before);
         MeleeImpulseSkills.afterKnockback((Player) (Object) this, target, before);
+        GrapnelImpact.afterKnockback((Player) (Object) this, target, before);
         MomentumSealSkills.afterLivingKnockback((Player) (Object) this, target, before);
     }
 }
