@@ -199,6 +199,7 @@ public final class RangedGuardSkills {
     }
     private static boolean hostile(ServerPlayer owner, Projectile incoming, @Nullable Entity friendlyTarget) {
         if (incoming instanceof LlamaSpit || !incoming.isAlive() || incoming.level() != owner.level()
+            || !RangedTideMath.finite(incoming.getDeltaMovement()) || incoming.getDeltaMovement().lengthSqr() < 1.0E-8D
             || owner.level().getEntity(incoming.getUUID()) != incoming || !(incoming.getOwner() instanceof LivingEntity shooter)
             || !LoyaltyGuard.eligibleTarget(owner, shooter) || !owner.level().mayInteract(owner, shooter.blockPosition())) return false;
         return !(friendlyTarget instanceof Player victim) || !(shooter instanceof Player attacker) || attacker.canHarmPlayer(victim);
@@ -219,7 +220,9 @@ public final class RangedGuardSkills {
         Guarded guard = protectedArrow == null ? null : GUARDED.get(protectedArrow);
         if (protectedArrow != null && incoming != null && guard != null) {
             ServerPlayer owner = level.getServer().getPlayerList().getPlayer(guard.owner());
-            if (owner != null && validGuard(owner, protectedArrow, guard) && hostile(owner, incoming, owner) && reverse(incoming, owner)) {
+            BlockPos point = RangedTideMath.finite(impact.getLocation()) ? BlockPos.containing(impact.getLocation()) : null;
+            if (owner != null && point != null && level.hasChunkAt(point) && level.mayInteract(owner, point)
+                && validGuard(owner, protectedArrow, guard) && hostile(owner, incoming, owner) && reverse(incoming, owner)) {
                 GUARDED.remove(protectedArrow, guard);
                 level.sendParticles(ParticleTypes.CRIT, impact.getLocation().x, impact.getLocation().y, impact.getLocation().z, 6, .1D, .1D, .1D, .01D);
                 return true;

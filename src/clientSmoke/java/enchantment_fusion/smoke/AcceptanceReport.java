@@ -38,6 +38,13 @@ final class AcceptanceReport {
         plan("45.3-flame-respiration", "flame ▷ respiration: prepared underwater real-arrow hit and owner bubble", "Not reached if setup fails; fluid and flight are prepared.");
         plan("45.3-respiration-flame", "respiration ▷ flame: air payment and real-arrow water inertia", "Not reached if setup fails; fluid and flight are prepared.");
         plan("45.3-runtime-compat", "45.3 natural fluid updates and input, arrow velocity sync, datapacks, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
+        plan("45.2-power-protection", "power ▷ protection: true arrow hit and nearby friendly screen", "Not reached if setup fails; targets and projectile flight are prepared.");
+        plan("45.2-protection-power", "protection ▷ power: attributable real defense and guarded arrow collision", "Not reached if setup fails; shield timing and projectile flight are prepared.");
+        plan("45.2-punch-protection", "punch ▷ protection: true arrow hit and nearby friendly screen", "Not reached if setup fails; targets and projectile flight are prepared.");
+        plan("45.2-protection-punch", "protection ▷ punch: attributable real defense and guarded arrow collision", "Not reached if setup fails; shield timing and projectile flight are prepared.");
+        plan("45.2-flame-protection", "flame ▷ protection: true arrow hit and nearby friendly screen", "Not reached if setup fails; targets and projectile flight are prepared.");
+        plan("45.2-protection-flame", "protection ▷ flame: attributable real defense and guarded arrow collision", "Not reached if setup fails; shield timing and projectile flight are prepared.");
+        plan("45.2-runtime-compat", "45.2 natural real projectile collision, shields, PvP, latency, multi-gear capture and other mods", "Not covered by the prepared single-player fixture.");
         plan("46.1-power-swift", "power ▷ swift_sneak: real sneaking hit, sustained aim and next bow/crossbow charge", "Not reached if setup fails; pose, aim and projectile flight are prepared.");
         plan("46.1-swift-power", "swift_sneak ▷ power: real sneaking shot and one collision-respecting retreat", "Not reached if setup fails; pose, input, wall and flight are prepared.");
         plan("46.1-punch-swift", "punch ▷ swift_sneak: real sneaking hit, sustained aim and next bow/crossbow charge", "Not reached if setup fails; pose, aim and projectile flight are prepared.");
