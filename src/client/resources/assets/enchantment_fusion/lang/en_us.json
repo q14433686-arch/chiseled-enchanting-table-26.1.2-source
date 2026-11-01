@@ -1108,5 +1108,11 @@
   "message.enchantment_fusion.melee_frost_ready": "Ice-edge prepared; strike an eligible enemy while standing on ice.",
   "tooltip.enchantment_fusion.melee_frost_mark": "A real hit marks a matching enemy; the next real hit on that same marked enemy adds frost damage and brief slowness.",
   "tooltip.enchantment_fusion.melee_frost_path": "Wear the boots and activate while standing on ice; your next matching real melee hit releases a virtual blade along continuous ice. Original water is not replaced.",
-  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Old incompatible carrier: original behavior retained; the new frost blade is not applied."
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Old incompatible carrier: original behavior retained; the new frost blade is not applied.",
+  "skill.enchantment_fusion.melee_lightning": "Arc trace",
+  "message.enchantment_fusion.melee_lightning_ready": "Trident trace prepared. Hit a matching enemy near it.",
+  "message.enchantment_fusion.melee_lightning_marked": "Trident hit left an arc trace; activate before striking a matching enemy nearby.",
+  "tooltip.enchantment_fusion.melee_lightning_chain": "A full real hit marks a matching enemy; hit it again to arc through up to three nearby matching enemies.",
+  "tooltip.enchantment_fusion.melee_lightning_trace": "Throw the trident to leave a trace on a real hit; activate, then hit a matching enemy nearby. The trace expires if that trident leaves the world.",
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Old incompatible carrier: original behavior retained; the new arc is not applied."
 }

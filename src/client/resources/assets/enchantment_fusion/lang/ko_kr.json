@@ -1108,5 +1108,11 @@
   "message.enchantment_fusion.melee_frost_ready": "얼음 칼날 준비됨. 얼음 위에서 유효한 적을 공격하세요.",
   "tooltip.enchantment_fusion.melee_frost_mark": "해당 적에게 실제 명중하면 서리 표식을 남깁니다. 같은 표식 대상에게 다시 명중하면 서리 피해와 잠깐의 감속이 추가됩니다.",
   "tooltip.enchantment_fusion.melee_frost_path": "부츠를 신고 얼음 위에서 준비합니다. 다음 해당 적에게 실제 근접 명중하면 이어진 얼음 위로 가상 얼음 칼날이 나갑니다. 기존 물은 바꾸지 않습니다.",
-  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "호환되지 않는 기존 장비는 원래 효과를 유지하며 새 서리 칼날은 적용되지 않습니다."
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "호환되지 않는 기존 장비는 원래 효과를 유지하며 새 서리 칼날은 적용되지 않습니다.",
+  "skill.enchantment_fusion.melee_lightning": "번개 흔적",
+  "message.enchantment_fusion.melee_lightning_ready": "번개 흔적 준비됨. 주변의 해당 적을 공격하세요.",
+  "message.enchantment_fusion.melee_lightning_marked": "삼지창 실제 명중으로 흔적이 생겼습니다. 준비 후 근처의 해당 적을 공격하세요.",
+  "tooltip.enchantment_fusion.melee_lightning_chain": "완전 충전 실제 명중으로 해당 적을 표시합니다. 같은 대상을 다시 공격하면 가까운 해당 적 최대 셋에게 전류가 튑니다.",
+  "tooltip.enchantment_fusion.melee_lightning_trace": "삼지창을 던져 실제 명중하면 흔적이 생깁니다. 준비 후 근처의 해당 적을 공격하세요. 삼지창이 세계를 떠나면 흔적이 사라집니다.",
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "호환되지 않는 기존 장비는 원래 효과를 유지하며 새 전류는 적용되지 않습니다."
 }

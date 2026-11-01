@@ -1108,5 +1108,11 @@
   "message.enchantment_fusion.melee_frost_ready": "Eisklinge vorbereitet; triff einen passenden Gegner auf Eis.",
   "tooltip.enchantment_fusion.melee_frost_mark": "Ein echter Treffer markiert einen passenden Gegner. Der nächste echte Treffer auf denselben markierten Gegner verursacht zusätzlichen Frostschaden und kurze Verlangsamung.",
   "tooltip.enchantment_fusion.melee_frost_path": "Trage die Stiefel und aktiviere auf Eis. Dein nächster passender echter Nahkampftreffer löst eine virtuelle Klinge entlang einer durchgehenden Eisfläche aus. Ursprüngliches Wasser wird nicht ersetzt.",
-  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; die neue Frostklinge gilt dort nicht."
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; die neue Frostklinge gilt dort nicht.",
+  "skill.enchantment_fusion.melee_lightning": "Blitzspur",
+  "message.enchantment_fusion.melee_lightning_ready": "Blitzspur vorbereitet. Triff einen passenden Gegner in der Nähe.",
+  "message.enchantment_fusion.melee_lightning_marked": "Ein echter Dreizacktreffer hinterließ eine Blitzspur; aktiviere sie vor einem passenden Treffer in der Nähe.",
+  "tooltip.enchantment_fusion.melee_lightning_chain": "Ein voller echter Treffer markiert einen passenden Gegner. Ein weiterer Treffer leitet einen Funken zu höchstens drei passenden Gegnern in der Nähe.",
+  "tooltip.enchantment_fusion.melee_lightning_trace": "Ein echter Treffer mit dem geworfenen Dreizack hinterlässt eine Spur. Aktiviere sie und triff einen passenden Gegner in der Nähe. Verlässt der Dreizack die Welt, erlischt die Spur.",
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; der neue Lichtbogen gilt nicht."
 }

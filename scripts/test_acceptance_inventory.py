@@ -56,6 +56,14 @@ class AcceptanceInventoryTest(unittest.TestCase):
             self.assertEqual(6, len(fixtures))
             self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
 
+    def test_lightning_family_keeps_both_sharpness_exceptions_out(self):
+        pairs = {(attack, "channeling") for attack in ("smite", "bane_of_arthropods")}
+        pairs |= {(right, left) for left, right in pairs.copy()}
+        self.assertEqual(4, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
+        self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
+        self.assertNotIn(("sharpness", "channeling"), DIRECTION_FIXTURES)
+        self.assertNotIn(("channeling", "sharpness"), DIRECTION_FIXTURES)
+
     def test_grapnel_has_twenty_three_action_specific_fixtures_not_all_40_directions(self):
         pairs = {(primary, "lure") for primary in
                  ("sharpness", "smite", "bane_of_arthropods", "efficiency", "silk_touch", "fortune", "power", "flame", "punch", "multishot", "infinity", "piercing", "protection", "fire_protection", "blast_protection", "projectile_protection", "feather_falling", "quick_charge", "mending", "unbreaking", "knockback", "breach", "density")}

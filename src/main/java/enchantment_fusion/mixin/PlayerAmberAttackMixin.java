@@ -23,6 +23,7 @@ import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
+import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -140,9 +141,12 @@ public abstract class PlayerAmberAttackMixin {
                         try {
                             MeleeFrostSkills.Damage frost = MeleeFrostSkills.beginDamage(confirmed, fortune.damage());
                             try {
-                                succeeded = original.call(target, source, frost.damage());
-                                ConfirmedMelee.after(confirmed, succeeded);
-                                return succeeded;
+                                MeleeLightningSkills.Damage lightning = MeleeLightningSkills.beginDamage(confirmed, frost.damage());
+                                try {
+                                    succeeded = original.call(target, source, lightning.damage());
+                                    ConfirmedMelee.after(confirmed, succeeded);
+                                    return succeeded;
+                                } finally { MeleeLightningSkills.endDamage(lightning); }
                             } finally { MeleeFrostSkills.endDamage(frost); }
                         } finally { MeleeFortuneSkills.endDamage(fortune); }
                     } finally { MeleeMendingSkills.endDamage(mending); }
@@ -197,9 +201,12 @@ public abstract class PlayerAmberAttackMixin {
                         try {
                             MeleeFrostSkills.Damage frost = MeleeFrostSkills.beginDamage(confirmed, fortune.damage());
                             try {
-                                succeeded = original.call(target, source, frost.damage());
-                                ConfirmedMelee.after(confirmed, succeeded);
-                                return succeeded;
+                                MeleeLightningSkills.Damage lightning = MeleeLightningSkills.beginDamage(confirmed, frost.damage());
+                                try {
+                                    succeeded = original.call(target, source, lightning.damage());
+                                    ConfirmedMelee.after(confirmed, succeeded);
+                                    return succeeded;
+                                } finally { MeleeLightningSkills.endDamage(lightning); }
                             } finally { MeleeFrostSkills.endDamage(frost); }
                         } finally { MeleeFortuneSkills.endDamage(fortune); }
                     } finally { MeleeMendingSkills.endDamage(mending); }

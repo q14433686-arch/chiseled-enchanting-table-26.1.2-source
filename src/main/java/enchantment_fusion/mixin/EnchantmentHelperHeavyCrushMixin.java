@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
+import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelVolley;
@@ -21,9 +22,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 
 /** Keep the same native-effect ordering for both orientations of Density/Breach. */
@@ -39,7 +43,8 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
                     SoulThreadSkills.nonNativeDamage(level, weapon, victim, source, vanilla))));
         float knockbackPrimary = MeleeImpulseSkills.nonNativePrimaryDamage(level, weapon, victim, source, themed);
         float wear = MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
-        return GrapnelSkills.nonNativeProjectileDamage(level, weapon, victim, source, wear);
+        float projectile = GrapnelSkills.nonNativeProjectileDamage(level, weapon, victim, source, wear);
+        return MeleeLightningSkills.nonNativeTridentDamage(level, weapon, victim, source, projectile);
     }
 
     @WrapMethod(method = "modifyCrossbowChargingTime")
@@ -74,6 +79,15 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
         original.call(level, victim, source, weapon, attackerlessOnBreak);
         MeleeGuardSkills.replayVictimPostAttack(level, victim, source);
         GrapnelDefense.replayVictimPostAttack(level, victim, source);
+        MeleeLightningSkills.nonNativeTridentPost(level, weapon, victim, source);
+    }
+
+    @WrapMethod(method = "onHitBlock")
+    private static void ef$tridentBlockPrimary(ServerLevel level, ItemStack weapon, LivingEntity owner, Entity projectile,
+                                              EquipmentSlot slot, Vec3 position, BlockState state, Consumer<Item> onBreak,
+                                              Operation<Void> original) {
+        original.call(level, weapon, owner, projectile, slot, position, state, onBreak);
+        MeleeLightningSkills.nonNativeTridentBlock(level, weapon, projectile, position, state, onBreak);
     }
 
     @WrapMethod(method = "modifyArmorEffectiveness")

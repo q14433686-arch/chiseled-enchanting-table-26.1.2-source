@@ -1108,5 +1108,11 @@
   "message.enchantment_fusion.melee_frost_ready": "Lâmina de gelo preparada; acerte um inimigo válido sobre o gelo.",
   "tooltip.enchantment_fusion.melee_frost_mark": "Um acerto real marca um inimigo válido. O próximo acerto real no mesmo alvo adiciona dano de gelo e lentidão breve.",
   "tooltip.enchantment_fusion.melee_frost_path": "Vista as botas e ative sobre o gelo. Seu próximo acerto real adequado libera uma lâmina virtual sobre gelo contínuo. A água original não é substituída.",
-  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Itens antigos incompatíveis mantêm seu efeito original; a nova lâmina de gelo não se aplica."
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Itens antigos incompatíveis mantêm seu efeito original; a nova lâmina de gelo não se aplica.",
+  "skill.enchantment_fusion.melee_lightning": "Rastro elétrico",
+  "message.enchantment_fusion.melee_lightning_ready": "Rastro preparado. Acerte um inimigo compatível por perto.",
+  "message.enchantment_fusion.melee_lightning_marked": "Um acerto real do tridente deixou um rastro; ative-o antes de acertar um inimigo compatível próximo.",
+  "tooltip.enchantment_fusion.melee_lightning_chain": "Um acerto real carregado marca um inimigo compatível. Ao acertá-lo novamente, um arco salta para até três inimigos compatíveis próximos.",
+  "tooltip.enchantment_fusion.melee_lightning_trace": "Um acerto real do tridente lançado deixa um rastro. Ative-o e acerte um inimigo compatível próximo. Se o tridente sair do mundo, o rastro desaparece.",
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Itens antigos incompatíveis mantêm o efeito original; o novo arco não se aplica."
 }

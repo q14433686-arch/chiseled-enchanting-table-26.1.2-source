@@ -95,6 +95,10 @@ final class AcceptanceReport {
         plan("40.1-knockback-lure", "Knockback ▷ Lure: actual hit and resisted impulse, simulated recall", "Not reached if setup fails.");
         plan("40.1-breach-lure", "Breach ▷ Lure: actual armored hit and simulated recall", "Not reached if setup fails.");
         plan("40.1-density-lure", "Density ▷ Lure: actual mace hit with simulated fall and recall", "Not reached if setup fails.");
+        plan("43.3-smite-channel", "Smite ▷ Channeling: real marks and virtual chain", "Not reached if setup fails.");
+        plan("43.3-channel-smite", "Channeling ▷ Smite: real trident and trace settlement", "Not reached if setup fails.");
+        plan("43.3-bane-channel", "Bane ▷ Channeling: real marks and virtual chain", "Not reached if setup fails.");
+        plan("43.3-channel-bane", "Channeling ▷ Bane: real trident and trace settlement", "Not reached if setup fails.");
         plan("43.2-sharp-frost", "Sharpness ▷ Frost Walker: real hit, mark and frost damage", "Not reached if setup fails.");
         plan("43.2-frost-sharp", "Frost Walker ▷ Sharpness: boots, ice-constrained blade and water guard", "Not reached if setup fails.");
         plan("43.2-smite-frost", "Smite ▷ Frost Walker: real hit, mark and frost damage", "Not reached if setup fails.");

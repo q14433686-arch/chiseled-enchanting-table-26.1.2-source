@@ -1108,5 +1108,11 @@
   "message.enchantment_fusion.melee_frost_ready": "冰刃已準備；站在冰面上攻擊合格敵人。",
   "tooltip.enchantment_fusion.melee_frost_mark": "真實命中對應類別的合格敵人留下霜痕；再次真實命中同一目標時碎痕，增加霜擊並短暫緩速。",
   "tooltip.enchantment_fusion.melee_frost_path": "穿戴靴子站在冰面主動準備；下次真實命中對應敵人時，沿連續冰面引出虛擬冰刃，不替換原水。",
-  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "舊的不適用載體保留原效果，不套用新的霜刃。"
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "舊的不適用載體保留原效果，不套用新的霜刃。",
+  "skill.enchantment_fusion.melee_lightning": "雷痕引擊",
+  "message.enchantment_fusion.melee_lightning_ready": "雷痕已準備；在雷痕附近命中對應敵人。",
+  "message.enchantment_fusion.melee_lightning_marked": "三叉戟真實命中留下雷痕；主動準備後攻擊附近的對應敵人。",
+  "tooltip.enchantment_fusion.melee_lightning_chain": "滿蓄真實命中對應敵人留下電印；再次命中同一目標時，電弧跳向附近最多三個對應敵人。",
+  "tooltip.enchantment_fusion.melee_lightning_trace": "投擲三叉戟真實命中留下雷痕；主動準備後擊中附近對應敵人。該三叉戟離開世界時雷痕失效。",
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "舊的不適用載體保留原效果，不套用新的電弧。"
 }

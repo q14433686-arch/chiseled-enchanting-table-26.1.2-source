@@ -1108,5 +1108,11 @@
   "message.enchantment_fusion.melee_frost_ready": "Filo de hielo preparado; golpea a un enemigo válido sobre hielo.",
   "tooltip.enchantment_fusion.melee_frost_mark": "Un impacto real marca a un enemigo válido. El siguiente impacto real en ese mismo objetivo añade daño de escarcha y ralentización breve.",
   "tooltip.enchantment_fusion.melee_frost_path": "Equipa las botas y activa sobre hielo. Tu siguiente impacto real adecuado libera una hoja virtual sobre hielo continuo. No se sustituye el agua original.",
-  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben la nueva hoja de escarcha."
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben la nueva hoja de escarcha.",
+  "skill.enchantment_fusion.melee_lightning": "Marca eléctrica",
+  "message.enchantment_fusion.melee_lightning_ready": "Marca preparada. Golpea a un enemigo compatible cercano.",
+  "message.enchantment_fusion.melee_lightning_marked": "El tridente dejó una marca al impactar de verdad; actívala antes de golpear a un enemigo compatible cercano.",
+  "tooltip.enchantment_fusion.melee_lightning_chain": "Un impacto real cargado marca al enemigo compatible. Un segundo impacto en él salta hasta tres enemigos compatibles cercanos.",
+  "tooltip.enchantment_fusion.melee_lightning_trace": "Un impacto real con el tridente arrojado deja una marca. Actívala y golpea a un enemigo compatible cercano. Si el tridente sale del mundo, la marca desaparece.",
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben el nuevo arco."
 }

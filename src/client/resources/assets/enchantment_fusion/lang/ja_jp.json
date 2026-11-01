@@ -1108,5 +1108,11 @@
   "message.enchantment_fusion.melee_frost_ready": "氷刃を準備。氷上で対象種の敵を攻撃してください。",
   "tooltip.enchantment_fusion.melee_frost_mark": "対象種の敵に実際に当てると霜印を付ける。同じ印の敵への次の実際の命中で霜撃を加え、短時間減速する。",
   "tooltip.enchantment_fusion.melee_frost_path": "ブーツを装備して氷上で発動。次の対象種への実際の近接攻撃で、連続する氷面に沿う虚氷刃を放つ。元の水は置換しない。",
-  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "旧式の非対応道具は元の効果を保ち、新しい氷刃は適用されない。"
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "旧式の非対応道具は元の効果を保ち、新しい氷刃は適用されない。",
+  "skill.enchantment_fusion.melee_lightning": "雷痕導き",
+  "message.enchantment_fusion.melee_lightning_ready": "雷痕を準備。近くの対象種を攻撃してください。",
+  "message.enchantment_fusion.melee_lightning_marked": "トライデントの実際の命中で雷痕が残った。発動後に近くの対象種を攻撃。",
+  "tooltip.enchantment_fusion.melee_lightning_chain": "最大溜めの実際の命中で対象種に電印を付ける。同じ敵を再び攻撃すると、近くの対象種最大三体へ電弧が跳ぶ。",
+  "tooltip.enchantment_fusion.melee_lightning_trace": "投げたトライデントの実際の命中で雷痕を残す。発動後に近くの対象種を攻撃。トライデントが世界を離れると失効。",
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "旧式の非対応道具は元の効果を保ち、新しい電弧は適用されない。"
 }

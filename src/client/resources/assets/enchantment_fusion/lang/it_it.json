@@ -1108,5 +1108,11 @@
   "message.enchantment_fusion.melee_frost_ready": "Lama di ghiaccio pronta; colpisci un nemico valido sul ghiaccio.",
   "tooltip.enchantment_fusion.melee_frost_mark": "Un vero colpo marca un nemico valido. Il successivo vero colpo sullo stesso bersaglio aggiunge danni da gelo e un breve rallentamento.",
   "tooltip.enchantment_fusion.melee_frost_path": "Indossa gli stivali e attiva sul ghiaccio. Il prossimo vero colpo adatto libera una lama virtuale lungo il ghiaccio continuo. L’acqua originale non viene sostituita.",
-  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; la nuova lama di gelo non si applica."
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; la nuova lama di gelo non si applica.",
+  "skill.enchantment_fusion.melee_lightning": "Traccia elettrica",
+  "message.enchantment_fusion.melee_lightning_ready": "Traccia pronta. Colpisci un nemico adatto nelle vicinanze.",
+  "message.enchantment_fusion.melee_lightning_marked": "Il tridente ha lasciato una traccia con un vero colpo; attivala prima di colpire un nemico adatto vicino.",
+  "tooltip.enchantment_fusion.melee_lightning_chain": "Un vero colpo caricato marca un nemico adatto. Colpendolo di nuovo, un arco salta fino a tre nemici adatti vicini.",
+  "tooltip.enchantment_fusion.melee_lightning_trace": "Un vero colpo del tridente lanciato lascia una traccia. Attivala e colpisci un nemico adatto vicino. Se il tridente lascia il mondo, la traccia svanisce.",
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; il nuovo arco non si applica."
 }
