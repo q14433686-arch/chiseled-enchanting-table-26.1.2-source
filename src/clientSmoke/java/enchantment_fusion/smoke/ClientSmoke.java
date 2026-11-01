@@ -687,6 +687,9 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("44.2-mending-smite", () -> MeleeMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
         acceptance.run("44.2-bane-mending", () -> MeleeMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
         acceptance.run("44.2-mending-bane", () -> MeleeMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));
+        acceptance.run("40.1-sharp-lure", () -> GrapnelProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness"));
+        acceptance.run("40.1-smite-lure", () -> GrapnelProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite"));
+        acceptance.run("40.1-bane-lure", () -> GrapnelProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods"));
         acceptance.run("42.3-sharp-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("42.3-swift-sharp", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
         acceptance.run("42.3-smite-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));

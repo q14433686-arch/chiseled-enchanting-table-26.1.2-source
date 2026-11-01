@@ -1065,5 +1065,10 @@
   "message.enchantment_fusion.melee_mending_set": "Lame prête : le prochain coup de mêlée valide et chargé la libère.",
   "tooltip.enchantment_fusion.melee_mending_repair": "Un coup chargé marque la cible. La frapper à nouveau détourne une partie des dégâts bruts et répare approximativement l’arme selon les pertes réelles, jusqu’à 8 points.",
   "tooltip.enchantment_fusion.melee_mending_blade": "Une vraie réparation par orbe d’expérience accumule des marques. Activez-les puis frappez à pleine charge pour lancer une lame dirigée.",
-  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "L’ancien support garde son effet ; cette direction exige une arme de mêlée durable."
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "L’ancien support garde son effet ; cette direction exige une arme de mêlée durable.",
+  "skill.enchantment_fusion.grapnel": "Rappel du leurre",
+  "message.enchantment_fusion.grapnel_marked": "Cible marquée. Tenez cette arme et activez la compétence pour la ramener.",
+  "message.enchantment_fusion.grapnel_need": "Aucune marque valide.",
+  "tooltip.enchantment_fusion.melee_grapnel": "Tranchant exige un coup chargé ; Châtiment et Fléau, le type de cible correspondant. Un vrai coup de mêlée marque 8 secondes. Activez avec la même arme à 12 blocs maximum et en ligne de vue. L’effet principal et la résistance au recul restent actifs.",
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "Le support ancien conserve son ancien effet ; cette direction exige une arme de mêlée."
 }

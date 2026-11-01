@@ -1065,5 +1065,10 @@
   "message.enchantment_fusion.melee_mending_set": "刃を準備しました。次の有効な最大溜め近接攻撃で放ちます。",
   "tooltip.enchantment_fusion.melee_mending_repair": "最大溜めの命中で目標に印を付ける。同じ目標への次の攻撃では元のダメージの一部を減らし、実損に応じて武器をおおよそ最大8修復する。",
   "tooltip.enchantment_fusion.melee_mending_blade": "経験値オーブが実際に武器を修復すると鍛痕がたまる。起動後、有効な最大溜め近接攻撃で狙った方向に刃を放つ。",
-  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "旧アイテムは旧効果を保持します。この方向には耐久値のある近接武器が必要です。"
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "旧アイテムは旧効果を保持します。この方向には耐久値のある近接武器が必要です。",
+  "skill.enchantment_fusion.grapnel": "誘標の引き寄せ",
+  "message.enchantment_fusion.grapnel_marked": "対象を標記しました。この武器を持ってスキルキーで引き寄せます。",
+  "message.enchantment_fusion.grapnel_need": "有効な標記がありません。",
+  "tooltip.enchantment_fusion.melee_grapnel": "ダメージ増加は最大溜め、不死特効と虫特効は対応する対象が必要。実際の近接攻撃で8秒標記。同じ武器を持ち、12ブロック以内で視線が通る時に発動。主効果とノックバック耐性は維持。",
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "旧来の装備は旧効果を維持します。この方向には近接武器が必要です。"
 }

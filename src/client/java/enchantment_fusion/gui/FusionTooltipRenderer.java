@@ -40,6 +40,7 @@ import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
@@ -261,6 +262,9 @@ public final class FusionTooltipRenderer {
             boolean meleeMendingTemplate = MeleeMendingSkills.matches(pair);
             boolean legacyMeleeMendingCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeMendingTemplate
                 && !MeleeMendingSkills.applies(pair, stack);
+            boolean grapnelTemplate = GrapnelSkills.matches(pair);
+            boolean legacyGrapnelCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && grapnelTemplate
+                && !GrapnelSkills.applies(pair, stack);
             boolean legacyRetainedVolleyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && RetainedVolleyHosts.matches(pair, sigOpt.get().id()) && !RetainedVolleyHosts.supportsHost(stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
@@ -324,8 +328,12 @@ public final class FusionTooltipRenderer {
                     lines.add(Component.translatable(MeleeMendingSkills.attackFirst(pair)
                         ? "tooltip.enchantment_fusion.melee_mending_repair" : "tooltip.enchantment_fusion.melee_mending_blade").withStyle(ChatFormatting.AQUA));
                 }
+                if (shift && grapnelTemplate && !legacyGrapnelCarrier) {
+                    lines.add(Component.translatable("tooltip.enchantment_fusion.melee_grapnel").withStyle(ChatFormatting.AQUA));
+                }
             } else if (sigOpt.isPresent()) {
-                Component sigTitle = Component.translatable(sigOpt.get().titleKey());
+                Component sigTitle = Component.translatable(grapnelTemplate && !legacyGrapnelCarrier
+                    ? "skill.enchantment_fusion.grapnel" : sigOpt.get().titleKey());
                 lines.add(Component.translatable(
                     "tooltip.enchantment_fusion.pair_signature",
                     sigTitle,
@@ -340,7 +348,8 @@ public final class FusionTooltipRenderer {
                     && !legacySoulThreadCarrier && !legacyFireThornsCarrier && !legacyFireSweepCarrier && !legacyWindSweepCarrier
                     && !legacySoulBladeCarrier && !legacySegmentThreadCarrier && !legacySealedOreCarrier
                     && !legacyFortuneBankCarrier && !legacyGlazeAmberCarrier) {
-                    lines.add(Component.translatable(sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
+                    lines.add(Component.translatable(grapnelTemplate && !legacyGrapnelCarrier
+                        ? "tooltip.enchantment_fusion.melee_grapnel" : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
                 lines.add(Component.translatable(
@@ -406,6 +415,15 @@ public final class FusionTooltipRenderer {
             if (legacyMeleeMendingCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_mending_carrier")
                     .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyGrapnelCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_grapnel_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (shift && grapnelTemplate && !legacyGrapnelCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
+                    Component.keybind("key.enchantment_fusion.activate_skill"),
+                    Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
             }
             if (shift && meleeMendingTemplate && MeleeMendingSkills.mendingFirst(pair) && !legacyMeleeMendingCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",

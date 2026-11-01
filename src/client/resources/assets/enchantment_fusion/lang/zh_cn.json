@@ -1065,5 +1065,10 @@
   "message.enchantment_fusion.melee_mending_set": "锻痕已准备；下一次合格满蓄近战释放锋刃。",
   "tooltip.enchantment_fusion.melee_mending_repair": "满蓄命中留下印记；再击同一目标时，减少部分原始伤害并根据实际损伤近似修复武器，至多8点。",
   "tooltip.enchantment_fusion.melee_mending_blade": "经验球真正修复此武器后积攒锻痕；主动准备后，下次合格满蓄近战释放定向锋刃。",
-  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "旧载体保留旧效果；此方向要求有耐久的近战武器。"
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "旧载体保留旧效果；此方向要求有耐久的近战武器。",
+  "skill.enchantment_fusion.grapnel": "诱标回钩",
+  "message.enchantment_fusion.grapnel_marked": "已标记目标；手持这把武器并使用技能键收线。",
+  "message.enchantment_fusion.grapnel_need": "没有有效的诱标。",
+  "tooltip.enchantment_fusion.melee_grapnel": "锋利须满蓄；亡灵杀手和节肢杀手须命中对应目标。真实近击留标8秒，手持同一武器、12格内且视线畅通时主动收线。保留主位效果，受抗击退影响。",
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "旧载体保留旧效果；此方向要求近战武器。"
 }

@@ -1065,5 +1065,10 @@
   "message.enchantment_fusion.melee_mending_set": "Lama pronta: il prossimo colpo corpo a corpo valido e carico la libera.",
   "tooltip.enchantment_fusion.melee_mending_repair": "Un colpo carico marca il bersaglio. Colpirlo ancora devia parte del danno grezzo e ripara approssimativamente l’arma in base al danno reale, fino a 8 punti.",
   "tooltip.enchantment_fusion.melee_mending_blade": "La riparazione effettiva con sfere esperienza accumula segni. Attivali e colpisci a piena carica per liberare una lama direzionata.",
-  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "Il vecchio supporto conserva l’effetto; questa direzione richiede un’arma corpo a corpo con durabilità."
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "Il vecchio supporto conserva l’effetto; questa direzione richiede un’arma corpo a corpo con durabilità.",
+  "skill.enchantment_fusion.grapnel": "Richiamo dell’esca",
+  "message.enchantment_fusion.grapnel_marked": "Bersaglio marcato. Impugna questa arma e attiva l’abilità per attirarlo.",
+  "message.enchantment_fusion.grapnel_need": "Nessun marchio valido.",
+  "tooltip.enchantment_fusion.melee_grapnel": "Affilatezza richiede un colpo completamente caricato; Punizione e Rovina richiedono il bersaglio corretto. Un vero colpo corpo a corpo marca per 8 secondi. Attiva con la stessa arma entro 12 blocchi e con visuale libera. Restano l’effetto principale e la resistenza al contraccolpo.",
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "Il vecchio supporto conserva il suo effetto; questa direzione richiede un’arma da mischia."
 }

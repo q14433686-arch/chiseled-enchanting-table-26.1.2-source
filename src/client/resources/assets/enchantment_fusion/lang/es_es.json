@@ -1065,5 +1065,10 @@
   "message.enchantment_fusion.melee_mending_set": "Filo preparado: el próximo golpe cuerpo a cuerpo válido y cargado lo libera.",
   "tooltip.enchantment_fusion.melee_mending_repair": "Un golpe cargado marca al objetivo. Al volver a golpearlo se desvía parte del daño bruto y se repara el arma de forma aproximada según el daño real, hasta 8 puntos.",
   "tooltip.enchantment_fusion.melee_mending_blade": "La reparación real con orbes de experiencia acumula marcas. Actívalas y da un golpe válido cargado para liberar una hoja dirigida.",
-  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "El objeto antiguo conserva su efecto; esta dirección requiere un arma cuerpo a cuerpo con durabilidad."
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "El objeto antiguo conserva su efecto; esta dirección requiere un arma cuerpo a cuerpo con durabilidad.",
+  "skill.enchantment_fusion.grapnel": "Recoger el señuelo",
+  "message.enchantment_fusion.grapnel_marked": "Objetivo marcado. Sujeta esta arma y usa la habilidad para atraerlo.",
+  "message.enchantment_fusion.grapnel_need": "No queda ninguna marca válida.",
+  "tooltip.enchantment_fusion.melee_grapnel": "Filo requiere un golpe completamente cargado; Castigo y Perdición, su tipo de objetivo. Un golpe cuerpo a cuerpo real marca durante 8 segundos. Activa con la misma arma, a 12 bloques o menos y con visión despejada. Se mantienen el efecto principal y la resistencia al empuje.",
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "El soporte antiguo conserva su efecto anterior; esta dirección requiere un arma cuerpo a cuerpo."
 }

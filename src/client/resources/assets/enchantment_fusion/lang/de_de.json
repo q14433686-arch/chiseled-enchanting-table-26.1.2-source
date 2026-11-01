@@ -1065,5 +1065,10 @@
   "message.enchantment_fusion.melee_mending_set": "Klinge bereit: Der nächste gültige voll aufgeladene Nahkampftreffer setzt sie frei.",
   "tooltip.enchantment_fusion.melee_mending_repair": "Ein voll aufgeladener Treffer markiert das Ziel. Ein weiterer Treffer wandelt einen Teil des Rohschadens anhand des tatsächlichen Schadens näherungsweise in bis zu 8 Haltbarkeit um.",
   "tooltip.enchantment_fusion.melee_mending_blade": "Tatsächliche Reparatur durch Erfahrungskugeln sammelt Schmiedemarken. Aktivieren und voll aufgeladen gültig treffen, um eine gerichtete Klinge freizusetzen.",
-  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "Alter Träger behält den alten Effekt; diese Richtung benötigt eine haltbare Nahkampfwaffe."
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "Alter Träger behält den alten Effekt; diese Richtung benötigt eine haltbare Nahkampfwaffe.",
+  "skill.enchantment_fusion.grapnel": "Lockmarke einholen",
+  "message.enchantment_fusion.grapnel_marked": "Ziel markiert. Halte diese Waffe und hole es mit der Fähigkeit ein.",
+  "message.enchantment_fusion.grapnel_need": "Keine gültige Lockmarke vorhanden.",
+  "tooltip.enchantment_fusion.melee_grapnel": "Schärfe benötigt einen voll aufgeladenen Treffer; Bann und Nemesis das passende Ziel. Ein echter Nahkampftreffer markiert 8 Sekunden. Mit derselben Waffe innerhalb von 12 Blöcken und bei freier Sicht aktivieren. Haupteffekt und Rückstoßresistenz bleiben erhalten.",
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "Alter Träger behält seinen bisherigen Effekt; diese Richtung benötigt eine Nahkampfwaffe."
 }

@@ -9,16 +9,17 @@ import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /** Observe real orb repairs; use only leftover XP for non-native mending carriers. */
 @Mixin(ExperienceOrb.class)
 public abstract class ExperienceOrbDurabilityMixin {
-    @Inject(method = "repairPlayerItems", at = @At("RETURN"), cancellable = true)
-    private void ef$repairNonNative(ServerPlayer player, int amount, CallbackInfoReturnable<Integer> result) {
-        int remaining = result.getReturnValueI();
-        if (remaining > 0) result.setReturnValue(DurabilityEconomy.repairNonNative(player, remaining));
+    // playerTouch calls the recursive vanilla method exactly once. Wrapping that outer
+    // call avoids replaying our non-native pass at every recursive return frame.
+    @WrapOperation(method = "playerTouch", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/ExperienceOrb;repairPlayerItems(Lnet/minecraft/server/level/ServerPlayer;I)I"))
+    private int ef$repairNonNative(ExperienceOrb orb, ServerPlayer player, int amount, Operation<Integer> original) {
+        int remaining = original.call(orb, player, amount);
+        return remaining > 0 ? DurabilityEconomy.repairNonNative(player, remaining) : remaining;
     }
 
     @WrapOperation(method = "repairPlayerItems", at = @At(value = "INVOKE",

@@ -1065,5 +1065,10 @@
   "message.enchantment_fusion.melee_mending_set": "Edge prepared: your next eligible fully charged melee hit releases it.",
   "tooltip.enchantment_fusion.melee_mending_repair": "A fully charged hit marks the target. Hit it again to divert part of the raw damage and approximately repair this weapon from actual loss, up to 8 points.",
   "tooltip.enchantment_fusion.melee_mending_blade": "Real experience-orb repair stores forge marks. Activate, then land an eligible fully charged melee hit to release an aimed blade.",
-  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "Legacy carrier retains its old effect; this direction requires a durable melee weapon."
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "Legacy carrier retains its old effect; this direction requires a durable melee weapon.",
+  "skill.enchantment_fusion.grapnel": "Grapnel recall",
+  "message.enchantment_fusion.grapnel_marked": "Target marked. Hold this weapon and activate to reel it in.",
+  "message.enchantment_fusion.grapnel_need": "No valid grapnel mark remains.",
+  "tooltip.enchantment_fusion.melee_grapnel": "Sharpness requires a fully charged hit; Smite and Bane require their matching target type. A real melee hit marks for 8 seconds. Hold the same weapon and activate within 12 blocks and line of sight. The primary effect remains; knockback resistance applies.",
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "Legacy carrier retains its previous effect; this direction requires a melee weapon."
 }

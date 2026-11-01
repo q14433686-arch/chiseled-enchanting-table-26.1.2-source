@@ -1065,5 +1065,10 @@
   "message.enchantment_fusion.melee_mending_set": "Lâmina preparada: o próximo golpe corpo a corpo válido e carregado a libera.",
   "tooltip.enchantment_fusion.melee_mending_repair": "Um golpe carregado marca o alvo. Atacá-lo novamente desvia parte do dano bruto e repara a arma aproximadamente conforme o dano real, até 8 pontos.",
   "tooltip.enchantment_fusion.melee_mending_blade": "Reparos reais com orbes de experiência acumulam marcas. Ative e acerte um golpe válido carregado para liberar uma lâmina direcionada.",
-  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "O item antigo mantém o efeito antigo; esta direção exige uma arma corpo a corpo com durabilidade."
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "O item antigo mantém o efeito antigo; esta direção exige uma arma corpo a corpo com durabilidade.",
+  "skill.enchantment_fusion.grapnel": "Recolher isca",
+  "message.enchantment_fusion.grapnel_marked": "Alvo marcado. Segure esta arma e use a habilidade para puxá-lo.",
+  "message.enchantment_fusion.grapnel_need": "Nenhuma marca válida.",
+  "tooltip.enchantment_fusion.melee_grapnel": "Afiação exige golpe totalmente carregado; Julgamento e Ruína exigem o tipo certo de alvo. Um golpe corpo a corpo real marca por 8 segundos. Ative com a mesma arma a até 12 blocos e com visão livre. O efeito principal e a resistência ao recuo permanecem.",
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "O suporte antigo mantém seu efeito anterior; esta direção exige arma corpo a corpo."
 }

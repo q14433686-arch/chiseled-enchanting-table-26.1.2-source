@@ -105,6 +105,14 @@ final class MeleeMendingProbe {
         cross.setDamageValue(50); player.setItemSlot(EquipmentSlot.MAINHAND, cross); beforeXp = player.totalExperience; touchOrb(player, 2);
         require(cross.getDamageValue() < 50 && intValue(player, cross, "forge") > 0 && player.totalExperience == beforeXp,
             "Missing native Mending must use actual orb XP and earn marks once");
+        MeleeMendingSkills.clearPlayer(player.getUUID()); cross.setDamageValue(50);
+        ItemStack helmet = new ItemStack(Items.DIAMOND_HELMET); helmet.setDamageValue(1);
+        var nativeMending = player.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+            .getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse(DurabilityEconomy.MENDING)));
+        helmet.enchant(nativeMending, 1); player.setItemSlot(EquipmentSlot.HEAD, helmet);
+        beforeXp = player.totalExperience; touchOrb(player, 2);
+        require(helmet.getDamageValue() == 0 && cross.getDamageValue() == 46 && intValue(player, cross, "forge") == 4
+            && player.totalExperience == beforeXp, "Native recursive repair and the non-native pass must conserve the same orb XP");
     }
     private static void touchOrb(ServerPlayer player, int value) {
         ExperienceOrb orb = new ExperienceOrb(player.level(), player.getX(), player.getY(), player.getZ(), value);
