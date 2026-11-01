@@ -6,6 +6,7 @@ import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.BowItem;
@@ -27,5 +28,6 @@ public abstract class PhantomBowMixin {
         EchoPathSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
         PiercingChainSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
         ThermalProjectileSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
+        GrapnelSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
     }
 }

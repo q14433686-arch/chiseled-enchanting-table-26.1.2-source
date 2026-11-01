@@ -1074,5 +1074,7 @@
   "message.enchantment_fusion.grapnel_drops_marked": "Abbau-Beute markiert. Halte dasselbe Werkzeug und aktiviere nach der Aufhebeverzögerung.",
   "message.enchantment_fusion.grapnel_no_room": "Nichts zurückgeholt. Volle Inventare und nicht zuordenbare Beute bleiben unverändert.",
   "message.enchantment_fusion.grapnel_recovered": "%s Gegenstand/Gegenstände aus diesem Abbau zurückgeholt.",
-  "tooltip.enchantment_fusion.mining_grapnel": "Ein erlaubter echter Abbau markiert nachweisbare, unveränderte Beute 8 Sekunden lang. Halte dasselbe Werkzeug und aktiviere nach der Aufhebeverzögerung innerhalb von 12 Blöcken bei freier Sicht. Normales Aufheben gilt; der Versuch verbraucht die Marke, volle oder nicht verifizierte Beute bleibt liegen."
+  "tooltip.enchantment_fusion.mining_grapnel": "Ein erlaubter echter Abbau markiert nachweisbare, unveränderte Beute 8 Sekunden lang. Halte dasselbe Werkzeug und aktiviere nach der Aufhebeverzögerung innerhalb von 12 Blöcken bei freier Sicht. Normales Aufheben gilt; der Versuch verbraucht die Marke, volle oder nicht verifizierte Beute bleibt liegen.",
+  "tooltip.enchantment_fusion.power_grapnel": "Ein voll gespannter echter Bogenpfeil markiert einen tatsächlich verletzten gültigen Gegner 8 Sekunden. Mit demselben Bogen innerhalb von 12 Blöcken und bei freier Sicht einholen. Stärke bleibt erhalten.",
+  "tooltip.enchantment_fusion.flame_grapnel": "Ein echter brennender Pfeil aus Bogen oder Armbrust markiert einen tatsächlich verletzten gültigen Gegner 8 Sekunden. Mit derselben Waffe innerhalb von 12 Blöcken und bei freier Sicht einholen. Kein Feuerblock; Flamme bleibt erhalten."
 }

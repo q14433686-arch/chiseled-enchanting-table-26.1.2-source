@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
+import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -33,6 +34,7 @@ public abstract class PhantomCrossbowMixin {
         EchoPathSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
         PiercingChainSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
         ThermalProjectileSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
+        GrapnelSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
     }
 
     @WrapOperation(method = "onUseTick", at = @At(value = "INVOKE",

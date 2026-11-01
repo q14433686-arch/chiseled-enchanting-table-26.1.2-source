@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
@@ -26,25 +27,34 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
 
 /** 40.1 adapters: direct melee target marks and strictly proven block-drop marks. */
 public final class GrapnelSkills {
     public static final String SIGNATURE = "spirit_grapnel", LURE = "minecraft:lure";
     public static final String EFFICIENCY = "minecraft:efficiency", SILK = "minecraft:silk_touch", FORTUNE = "minecraft:fortune";
+    public static final String POWER = "minecraft:power", FLAME = "minecraft:flame";
     private static final Set<FusionCarrier> TOOLS = Set.of(FusionCarrier.PICKAXE, FusionCarrier.AXE, FusionCarrier.SHOVEL, FusionCarrier.HOE);
     private static final Set<String> MINING_PRIMARIES = Set.of(EFFICIENCY, SILK, FORTUNE);
-    private static final int MAX_OWNERS = 256, MAX_DROPS = 64;
+    private static final int MAX_OWNERS = 256, MAX_DROPS = 64, MAX_FLIGHTS = 4096, MAX_FLIGHT_GEARS = 16;
     private static final long MARK_TICKS = 160;
     private record Gear(ItemStack stack, FusedPair pair) {}
     private sealed interface Mark permits TargetMark, DropsMark {
@@ -54,6 +64,17 @@ public final class GrapnelSkills {
     private record Drop(ItemEntity entity, ItemStack stack, ItemStack snapshot) {}
     private record DropsMark(Gear gear, ResourceKey<Level> dimension, long until, BlockPos origin, List<Drop> drops) implements Mark {}
     private static final Map<UUID, Mark> MARKS = new HashMap<>();
+    private record Flight(UUID owner, ResourceKey<Level> dimension, List<Gear> gears, boolean fullDraw, long expires) {}
+    private static final Map<AbstractArrow, Flight> FLIGHTS = new WeakHashMap<>();
+    private static final ThreadLocal<Boolean> PROJECTILE_REPLAY = ThreadLocal.withInitial(() -> false);
+    public static final class ArrowHit {
+        private final AbstractArrow arrow; private final ServerPlayer owner; private final LivingEntity target;
+        private final Flight flight; private final float health, absorption; private final boolean burning, eligibleBefore;
+        private ArrowHit(AbstractArrow arrow, ServerPlayer owner, LivingEntity target, Flight flight, boolean burning, boolean eligibleBefore) {
+            this.arrow = arrow; this.owner = owner; this.target = target; this.flight = flight; this.burning = burning;
+            this.eligibleBefore = eligibleBefore; this.health = target.getHealth(); this.absorption = target.getAbsorptionAmount();
+        }
+    }
     private GrapnelSkills() {}
     public static void init() {
         ConfirmedMelee.register(GrapnelSkills::onHit);
@@ -65,15 +86,21 @@ public final class GrapnelSkills {
     public static boolean miningFirst(@Nullable FusedPair pair) {
         return pair != null && MINING_PRIMARIES.contains(pair.primaryId()) && LURE.equals(pair.secondaryId());
     }
+    public static boolean rangedFirst(@Nullable FusedPair pair) {
+        return pair != null && (POWER.equals(pair.primaryId()) || FLAME.equals(pair.primaryId())) && LURE.equals(pair.secondaryId());
+    }
     public static boolean matches(@Nullable FusedPair pair) {
-        return (attackFirst(pair) || miningFirst(pair))
+        return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair))
             && SignatureCatalog.resolve(pair).map(entry -> SIGNATURE.equals(entry.id()) && "*".equals(entry.primaryId())).orElse(false);
     }
     public static boolean supportsCarrier(Set<FusionCarrier> roles) { return MeleeAttackThemes.supportsWeapon(roles); }
     public static boolean supportsCarrier(@Nullable FusedPair pair, @Nullable Set<FusionCarrier> roles) {
         if (roles == null) return false;
         if (attackFirst(pair)) return supportsCarrier(roles);
-        return miningFirst(pair) && roles.stream().anyMatch(TOOLS::contains);
+        if (miningFirst(pair)) return roles.stream().anyMatch(TOOLS::contains);
+        if (rangedFirst(pair)) return roles.contains(FusionCarrier.BOW)
+            || (FLAME.equals(pair.primaryId()) && roles.contains(FusionCarrier.CROSSBOW));
+        return false;
     }
     public static boolean applies(@Nullable FusedPair pair, @Nullable ItemStack stack) {
         return matches(pair) && stack != null && !stack.isEmpty() && supportsCarrier(pair, FusionCarrier.classify(stack));
@@ -83,6 +110,15 @@ public final class GrapnelSkills {
         for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs())
             if ((mining ? miningFirst(pair) : attackFirst(pair)) && applies(pair, stack)) return new Gear(stack, pair);
         return null;
+    }
+    private static List<Gear> rangedGears(@Nullable ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return List.of();
+        List<Gear> gears = new ArrayList<>();
+        for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
+            if (rangedFirst(pair) && applies(pair, stack)) gears.add(new Gear(stack, pair));
+            if (gears.size() >= MAX_FLIGHT_GEARS) break;
+        }
+        return List.copyOf(gears);
     }
     private static boolean ready(ServerPlayer player) { return player.isAlive() && !player.isSpectator() && !player.isCreative(); }
     private static boolean owns(ServerPlayer player, Gear gear) {
@@ -101,6 +137,80 @@ public final class GrapnelSkills {
         owner.level().sendParticles(ParticleTypes.FISHING, hit.target().getX(), hit.target().getY(0.6D), hit.target().getZ(),
             8, 0.2D, 0.2D, 0.2D, 0.02D);
         owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.grapnel_marked"), true);
+    }
+    /** Capture the actual launcher and draw state inside a real bow/crossbow shot, never from a nearby scan. */
+    public static void launched(Projectile projectile, LivingEntity shooter, int index, @Nullable ItemStack weapon) {
+        if (!(projectile instanceof AbstractArrow arrow) || !(shooter instanceof ServerPlayer owner) || index != 0
+            || !ready(owner) || weapon == null || (owner.getMainHandItem() != weapon && owner.getOffhandItem() != weapon)
+            || arrow.getOwner() != owner || PhantomVolley.isGhost(arrow) || FLIGHTS.size() >= MAX_FLIGHTS) return;
+        List<Gear> gears = rangedGears(weapon);
+        if (!gears.isEmpty()) FLIGHTS.put(arrow, new Flight(owner.getUUID(), owner.level().dimension(), gears,
+            arrow.isCritArrow(), owner.level().getGameTime() + 1200L));
+    }
+    private static boolean eligibleTarget(ServerPlayer owner, LivingEntity target, FusedPair pair) {
+        if (attackFirst(pair)) return MeleeAttackThemes.eligible(owner, target, pair.primaryId());
+        return rangedFirst(pair) && target.level() == owner.level() && LoyaltyGuard.eligibleTarget(owner, target)
+            && owner.level().mayInteract(owner, target.blockPosition()) && (!(target instanceof Player other) || other.canHarmPlayer(owner));
+    }
+    /** Capture before the actual arrow damage call, rather than trusting collision alone. */
+    public static @Nullable ArrowHit beforeArrowHit(AbstractArrow arrow, Entity victim, DamageSource source) {
+        Flight flight = FLIGHTS.get(arrow);
+        if (flight == null || !(victim instanceof LivingEntity target) || !(arrow.getOwner() instanceof ServerPlayer owner)
+            || source.getDirectEntity() != arrow || source.getEntity() != owner || !flight.owner().equals(owner.getUUID())
+            || !ready(owner) || owner.level() != arrow.level() || target.level() != owner.level() || !target.isAlive()
+            || !owner.level().dimension().equals(flight.dimension()) || owner.level().getGameTime() >= flight.expires()
+            || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) || source.is(DamageTypeTags.BYPASSES_EFFECTS)
+            || source.is(DamageTypeTags.BYPASSES_ENCHANTMENTS) || PhantomVolley.isGhost(arrow) || MatrixEffectExecutor.isExecuting()) return null;
+        boolean eligible = flight.gears().stream().anyMatch(gear -> eligibleTarget(owner, target, gear.pair()));
+        return new ArrowHit(arrow, owner, target, flight, arrow.isOnFire(), eligible);
+    }
+    public static void afterArrowHit(@Nullable ArrowHit hit, boolean accepted) {
+        if (hit == null || !accepted || !hit.eligibleBefore || !ready(hit.owner) || !hit.target.isAlive()
+            || hit.owner.level() != hit.target.level() || hit.owner.level() != hit.arrow.level()
+            || hit.arrow.getOwner() != hit.owner || FLIGHTS.get(hit.arrow) != hit.flight || !canMark(hit.owner)
+            || ConfirmedMeleeMath.actualLoss(hit.health, hit.absorption, hit.target.getHealth(), hit.target.getAbsorptionAmount()) <= 0) return;
+        for (Gear gear : hit.flight.gears()) {
+            FusedPair pair = gear.pair();
+            if (!owns(hit.owner, gear) || !eligibleTarget(hit.owner, hit.target, pair)
+                || (POWER.equals(pair.primaryId()) && !hit.flight.fullDraw())
+                || (FLAME.equals(pair.primaryId()) && !hit.burning)) continue;
+            MARKS.put(hit.owner.getUUID(), new TargetMark(gear, hit.owner.level().dimension(),
+                hit.owner.level().getGameTime() + MARK_TICKS, hit.target.getUUID()));
+            hit.owner.level().sendParticles(ParticleTypes.FISHING, hit.target.getX(), hit.target.getY(0.6D), hit.target.getZ(),
+                8, 0.2D, 0.2D, 0.2D, 0.02D);
+            hit.owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.grapnel_marked"), true);
+            return;
+        }
+    }
+    /** Preserve a missing Power damage effect on the actual arrow's vanilla weapon copy once. */
+    public static float nonNativeProjectileDamage(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source, float value) {
+        if (Boolean.TRUE.equals(PROJECTILE_REPLAY.get()) || !(source.getDirectEntity() instanceof AbstractArrow arrow)
+            || !(arrow.getOwner() instanceof ServerPlayer owner) || source.getEntity() != owner || MatrixEffectExecutor.isExecuting()) return value;
+        Gear best = null;
+        for (Gear gear : rangedGears(weapon)) if (POWER.equals(gear.pair().primaryId())
+            && (best == null || gear.pair().primaryLevel() > best.pair().primaryLevel())) best = gear;
+        if (best == null) return value;
+        Holder<Enchantment> power = FusionStationOperations.lookupEnchantment(level.registryAccess(), POWER).orElse(null);
+        if (power == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(power) > 0) return value;
+        MutableFloat modified = new MutableFloat(value); PROJECTILE_REPLAY.set(true);
+        try { power.value().modifyDamage(level, best.pair().primaryLevel(), weapon, victim, source, modified); }
+        finally { PROJECTILE_REPLAY.remove(); }
+        return Float.isFinite(modified.floatValue()) ? modified.floatValue() : value;
+    }
+    /** Crossbows lacking native Flame replay the current data-pack projectile-spawn effect once. */
+    public static void applyPrimarySpawn(Projectile projectile) {
+        if (!(projectile instanceof AbstractArrow arrow) || !(arrow.level() instanceof ServerLevel level)
+            || !(arrow.getOwner() instanceof ServerPlayer owner) || PhantomVolley.isGhost(arrow)) return;
+        ItemStack weapon = arrow.getWeaponItem(); Gear best = null;
+        for (Gear gear : rangedGears(weapon)) if (FLAME.equals(gear.pair().primaryId())
+            && (best == null || gear.pair().primaryLevel() > best.pair().primaryLevel())) best = gear;
+        if (best == null) return;
+        // The existing thermal direction owns its Flame replay when both pairs share one weapon.
+        FusedPair thermal = ThermalProjectileSkills.selected(weapon);
+        if (thermal != null && FLAME.equals(thermal.primaryId())) return;
+        Holder<Enchantment> flame = FusionStationOperations.lookupEnchantment(level.registryAccess(), FLAME).orElse(null);
+        if (flame == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(flame) > 0) return;
+        flame.value().onProjectileSpawned(level, best.pair().primaryLevel(), new EnchantedItemInUse(weapon, null, owner, arrow::onItemBreak), arrow);
     }
     /** Project a missing Silk/Fortune primary only onto the copy used by the real block loot call. */
     public static ItemStack lootTool(ServerLevel level, ItemStack tool) {
@@ -153,7 +263,8 @@ public final class GrapnelSkills {
         return from.distanceToSqr(to) <= 12.0D * 12.0D && VirtualCombatSight.clear(owner.level(), owner, from, to);
     }
     public static boolean hasEquipped(ServerPlayer player) {
-        return selected(player.getMainHandItem(), false) != null || selected(player.getMainHandItem(), true) != null;
+        return selected(player.getMainHandItem(), false) != null || selected(player.getMainHandItem(), true) != null
+            || !rangedGears(player.getMainHandItem()).isEmpty();
     }
     public static boolean activate(ServerPlayer owner) {
         if (!ready(owner) || owner.containerMenu != owner.inventoryMenu) return false;
@@ -166,7 +277,7 @@ public final class GrapnelSkills {
     }
     private static boolean recallTarget(ServerPlayer owner, TargetMark mark) {
         ServerLevel level = owner.level();
-        if (!(level.getEntity(mark.target()) instanceof LivingEntity target) || !MeleeAttackThemes.eligible(owner, target, mark.gear().pair().primaryId())) return false;
+        if (!(level.getEntity(mark.target()) instanceof LivingEntity target) || !eligibleTarget(owner, target, mark.gear().pair())) return false;
         Vec3 from = owner.getEyePosition(), to = target.getBoundingBox().getCenter();
         if (from.distanceToSqr(to) > 12.0D * 12.0D || !VirtualCombatSight.clear(level, owner, from, to)) return false;
         double awayX = target.getX() - owner.getX(), awayZ = target.getZ() - owner.getZ();
@@ -202,6 +313,12 @@ public final class GrapnelSkills {
         return true;
     }
     public static void tickServer(MinecraftServer server) {
+        FLIGHTS.entrySet().removeIf(entry -> {
+            Flight flight = entry.getValue(); ServerPlayer owner = server.getPlayerList().getPlayer(flight.owner());
+            return owner == null || !ready(owner) || !entry.getKey().isAlive() || owner.level() != entry.getKey().level()
+                || !owner.level().dimension().equals(flight.dimension()) || owner.level().getGameTime() >= flight.expires()
+                || flight.gears().stream().noneMatch(gear -> owns(owner, gear));
+        });
         for (var entry : List.copyOf(MARKS.entrySet())) {
             ServerPlayer owner = server.getPlayerList().getPlayer(entry.getKey()); Mark mark = entry.getValue();
             boolean noTarget = owner != null && (mark instanceof TargetMark target ? owner.level().getEntity(target.target()) == null
@@ -212,6 +329,7 @@ public final class GrapnelSkills {
     public static void clearPlayer(UUID id) {
         MARKS.remove(id);
         MARKS.entrySet().removeIf(entry -> entry.getValue() instanceof TargetMark target && target.target().equals(id));
+        FLIGHTS.entrySet().removeIf(entry -> entry.getValue().owner().equals(id));
     }
-    public static void clearServer() { MARKS.clear(); }
+    public static void clearServer() { MARKS.clear(); FLIGHTS.clear(); PROJECTILE_REPLAY.remove(); }
 }

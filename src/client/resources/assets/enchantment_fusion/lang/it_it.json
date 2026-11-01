@@ -1074,5 +1074,7 @@
   "message.enchantment_fusion.grapnel_drops_marked": "Bottino marcato. Impugna lo stesso attrezzo e attiva dopo il ritardo di raccolta.",
   "message.enchantment_fusion.grapnel_no_room": "Nessun oggetto raccolto. Il bottino senza spazio o non verificabile resta nel mondo.",
   "message.enchantment_fusion.grapnel_recovered": "Raccolti %s oggetti da questa estrazione.",
-  "tooltip.enchantment_fusion.mining_grapnel": "Un’estrazione reale e consentita marca per 8 secondi il bottino verificato e invariato. Usa lo stesso attrezzo e attiva dopo il ritardo di raccolta, entro 12 blocchi e con visuale libera. Si applica la raccolta normale; il tentativo consuma il marchio e lascia il resto nel mondo."
+  "tooltip.enchantment_fusion.mining_grapnel": "Un’estrazione reale e consentita marca per 8 secondi il bottino verificato e invariato. Usa lo stesso attrezzo e attiva dopo il ritardo di raccolta, entro 12 blocchi e con visuale libera. Si applica la raccolta normale; il tentativo consuma il marchio e lascia il resto nel mondo.",
+  "tooltip.enchantment_fusion.power_grapnel": "Una vera freccia di arco completamente caricato marca per 8 secondi il nemico valido danneggiato. Usa lo stesso arco entro 12 blocchi e con visuale libera per attirarlo. Potenza resta attiva.",
+  "tooltip.enchantment_fusion.flame_grapnel": "Una vera freccia infuocata di arco o balestra marca per 8 secondi il nemico valido danneggiato. Usa la stessa arma entro 12 blocchi e con visuale libera per attirarlo. Non piazza fuoco; Fiamma resta attiva."
 }

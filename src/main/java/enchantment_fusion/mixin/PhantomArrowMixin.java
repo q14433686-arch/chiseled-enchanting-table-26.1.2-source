@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -83,9 +84,11 @@ public abstract class PhantomArrowMixin {
         boolean reserved = arrow.level() instanceof ServerLevel && PhantomVolley.reserveImpact(arrow);
         HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginProjectile(arrow, target, source);
         PiercingChainSkills.Impact chainHit = PiercingChainSkills.beginImpact(arrow, target, hit.getLocation());
+        GrapnelSkills.ArrowHit grapnelHit = GrapnelSkills.beforeArrowHit(arrow, target, source);
         boolean succeeded = false;
         try {
             succeeded = original.call(target, source, amount);
+            GrapnelSkills.afterArrowHit(grapnelHit, succeeded);
             return succeeded;
         } finally {
             try {

@@ -79,7 +79,10 @@ public final class FusionTooltipRenderer {
     private FusionTooltipRenderer() {}
 
     private static String grapnelTooltip(FusedPair pair) {
-        return GrapnelSkills.miningFirst(pair) ? "tooltip.enchantment_fusion.mining_grapnel" : "tooltip.enchantment_fusion.melee_grapnel";
+        if (GrapnelSkills.miningFirst(pair)) return "tooltip.enchantment_fusion.mining_grapnel";
+        if (GrapnelSkills.POWER.equals(pair.primaryId())) return "tooltip.enchantment_fusion.power_grapnel";
+        if (GrapnelSkills.FLAME.equals(pair.primaryId())) return "tooltip.enchantment_fusion.flame_grapnel";
+        return "tooltip.enchantment_fusion.melee_grapnel";
     }
 
     private static String meleeWorkTooltip(FusedPair pair) {

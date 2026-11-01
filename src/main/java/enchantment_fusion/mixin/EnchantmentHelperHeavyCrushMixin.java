@@ -10,6 +10,7 @@ import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -31,7 +32,8 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
                 SoulBladeSkills.modifyDamage(level, weapon, victim, source,
                     SoulThreadSkills.nonNativeDamage(level, weapon, victim, source, vanilla))));
         float knockbackPrimary = MeleeImpulseSkills.nonNativePrimaryDamage(level, weapon, victim, source, themed);
-        return MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
+        float wear = MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
+        return GrapnelSkills.nonNativeProjectileDamage(level, weapon, victim, source, wear);
     }
 
     @WrapMethod(method = "doPostAttackEffectsWithItemSourceOnBreak")

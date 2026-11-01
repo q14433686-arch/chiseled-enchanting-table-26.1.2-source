@@ -1074,5 +1074,7 @@
   "message.enchantment_fusion.grapnel_drops_marked": "已标记本次掉落；手持原工具，拾取延迟结束后使用技能键。",
   "message.enchantment_fusion.grapnel_no_room": "未能收回物品；满包或无法确认归属的掉落留在世界中。",
   "message.enchantment_fusion.grapnel_recovered": "已收回本次采掘的 %s 件物品。",
-  "tooltip.enchantment_fusion.mining_grapnel": "合法真实采掘后标记经核验且未变化的本次掉落8秒；持同一工具，等待拾取延迟结束后，在12格内且视线畅通时主动收回。走普通拾取流程；尝试后消耗标记，满包及无法核验的物品留在世界中。"
+  "tooltip.enchantment_fusion.mining_grapnel": "合法真实采掘后标记经核验且未变化的本次掉落8秒；持同一工具，等待拾取延迟结束后，在12格内且视线畅通时主动收回。走普通拾取流程；尝试后消耗标记，满包及无法核验的物品留在世界中。",
+  "tooltip.enchantment_fusion.power_grapnel": "满蓄真实弓箭对合格敌人造成伤害时留标8秒；手持同一把弓，在12格内且视线畅通时主动牵引。保留力量主位。",
+  "tooltip.enchantment_fusion.flame_grapnel": "弓或弩射出的真实燃烧箭对合格敌人造成伤害时留标8秒；手持同一武器，在12格内且视线畅通时主动牵引。不放置火方块，保留火矢主位。"
 }

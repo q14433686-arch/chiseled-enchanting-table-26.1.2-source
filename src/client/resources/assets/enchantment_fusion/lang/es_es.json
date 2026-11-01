@@ -1074,5 +1074,7 @@
   "message.enchantment_fusion.grapnel_drops_marked": "Botín marcado. Sujeta la herramienta original y activa tras la espera de recogida.",
   "message.enchantment_fusion.grapnel_no_room": "No se ha recogido nada. El botín sin espacio o no verificable permanece en el mundo.",
   "message.enchantment_fusion.grapnel_recovered": "Recogidos %s objeto(s) de esta extracción.",
-  "tooltip.enchantment_fusion.mining_grapnel": "Una extracción real y permitida marca sus objetos verificados y sin cambios durante 8 segundos. Usa la misma herramienta y activa tras la espera de recogida, a 12 bloques o menos y con visión despejada. Se aplica la recogida normal; el intento consume la marca y deja el resto en el mundo."
+  "tooltip.enchantment_fusion.mining_grapnel": "Una extracción real y permitida marca sus objetos verificados y sin cambios durante 8 segundos. Usa la misma herramienta y activa tras la espera de recogida, a 12 bloques o menos y con visión despejada. Se aplica la recogida normal; el intento consume la marca y deja el resto en el mundo.",
+  "tooltip.enchantment_fusion.power_grapnel": "Una flecha real de arco completamente tensado marca durante 8 segundos al enemigo válido al que dañe. Usa el mismo arco a 12 bloques o menos y con visión despejada para atraerlo. Se conserva Poder.",
+  "tooltip.enchantment_fusion.flame_grapnel": "Una flecha real encendida de arco o ballesta marca durante 8 segundos al enemigo válido al que dañe. Usa la misma arma a 12 bloques o menos y con visión despejada para atraerlo. No coloca fuego; se conserva Llama."
 }
