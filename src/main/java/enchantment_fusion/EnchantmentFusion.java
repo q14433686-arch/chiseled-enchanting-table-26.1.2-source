@@ -17,6 +17,7 @@ import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.RangedWearSkills;
+import enchantment_fusion.mechanics.signatures.RangedWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -65,6 +66,7 @@ public final class EnchantmentFusion implements ModInitializer {
         WaterPressureSkills.init();
         MeleeWearSkills.init();
         RangedWearSkills.init();
+        RangedWorkSkills.init();
         MeleeImpulseSkills.init();
         MeleeGuardSkills.init();
         MeleeWorkSkills.init();

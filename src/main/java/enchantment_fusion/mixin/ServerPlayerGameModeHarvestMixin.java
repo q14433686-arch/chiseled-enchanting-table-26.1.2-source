@@ -11,6 +11,7 @@ import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelMining;
+import enchantment_fusion.mechanics.signatures.ConfirmedMining;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,11 +46,13 @@ public abstract class ServerPlayerGameModeHarvestMixin {
         boolean completed = false;
         HarvestDropCapture.Scope capture = null;
         GrapnelMining.Scope underwater = null;
+        ConfirmedMining.Scope confirmed = null;
         try {
             ServerLevel level = this.player != null && this.player.level() instanceof ServerLevel serverLevel ? serverLevel : null;
             BlockState state = level == null ? null : level.getBlockState(pos);
             ItemStack tool = this.player == null ? ItemStack.EMPTY : this.player.getMainHandItem().copy();
             if (level != null && this.player != null) {
+                confirmed = ConfirmedMining.begin(level, this.player, pos, state);
                 underwater = GrapnelMining.begin(level, this.player, pos, state);
                 capture = HarvestDropCapture.begin(level, this.player, pos);
             }
@@ -65,7 +68,10 @@ public abstract class ServerPlayerGameModeHarvestMixin {
                 if (capture != null) capture.close();
             } finally {
                 try { GrapnelMining.end(underwater); }
-                finally { ExtraBlockHarvest.finish(completed); }
+                finally {
+                    try { ConfirmedMining.end(confirmed); }
+                    finally { ExtraBlockHarvest.finish(completed); }
+                }
             }
         }
     }

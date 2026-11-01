@@ -1150,5 +1150,17 @@
   "message.enchantment_fusion.ranged_wear_echo_ready": "Haltbarkeit gespart: Echo bereit.",
   "message.enchantment_fusion.ranged_wear_echo_set": "Virtuelles Pfeilecho ausgelöst.",
   "tooltip.enchantment_fusion.riptide_grapnel": "Eine erfolgreiche Sog-Aktivierung mit tatsächlicher Bewegung markiert den neuen Ort für 8 Sekunden. Halte denselben Dreizack in derselben Hand; ziele höchstens 12 Blöcke von der Markierung entfernt auf einen geeigneten Gegner innerhalb von 8 Blöcken um sie und aktiviere bei freier Sicht den Rückholhaken. Aufladen, Wasser oder Regen und Haltbarkeit gelten wie gewohnt.",
-  "message.enchantment_fusion.grapnel_riptide_marked": "Sog hat diesen Ort markiert. Ziele auf einen geeigneten Gegner und aktiviere den Rückholhaken."
+  "message.enchantment_fusion.grapnel_riptide_marked": "Sog hat diesen Ort markiert. Ziele auf einen geeigneten Gegner und aktiviere den Rückholhaken.",
+  "skill.enchantment_fusion.ranged_work_boost": "Pfeilarbeit",
+  "skill.enchantment_fusion.ranged_work_blade": "Grubenklinge",
+  "message.enchantment_fusion.ranged_work_ready": "Drei echte Pfeiltreffer haben Arbeitskraft aufgebaut.",
+  "message.enchantment_fusion.ranged_work_active": "Ein Pfeilarbeitsschub ist bereits bereit.",
+  "message.enchantment_fusion.ranged_work_need_hits": "Triff zuerst dreimal hintereinander mit echten Pfeilen.",
+  "message.enchantment_fusion.ranged_work_set": "Pfeilarbeit bereit: Mit einem Werkzeug einen erlaubten Block schneller abbauen.",
+  "message.enchantment_fusion.ranged_work_blade_active": "Eine Grubenklinge ist bereits bereit.",
+  "message.enchantment_fusion.ranged_work_need_mining": "Baue zuerst mit diesem Werkzeug mindestens einen erlaubten Block ab.",
+  "message.enchantment_fusion.ranged_work_blade_set": "Grubenklinge bereit: Schieße binnen 10 Sekunden einen echten Pfeil.",
+  "tooltip.enchantment_fusion.ranged_work_boost": "Drei echte Pfeile mit Schaden an zulässigen Zielen innerhalb von 10 Sekunden laden den Effekt; ein Fehlschuss unterbricht ihn. Mit Bogen oder Armbrust aktivieren und zum Werkzeug wechseln: Ein erlaubter Block wird binnen 10 Sekunden schneller abgebaut. Der Schuss-Haupteffekt bleibt.",
+  "tooltip.enchantment_fusion.ranged_work_blade": "Erlaubter Abbau mit diesem Werkzeug sammelt bis zu drei Klingenladungen für 10 Sekunden. Aktivieren, Werkzeug im Inventar behalten und binnen 10 Sekunden einen echten Pfeil schießen: Eine virtuelle Klinge folgt bis zu 32 Blöcke seiner tatsächlichen Bahn. Keine Munition wird kopiert; geschützte Ziele und Wände stoppen sie. Stärke, Schlag oder Flamme prägen die Klinge; Effizienz bleibt.",
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Alte Gegenstände behalten ihren Effekt; neue Schuss-Haupteffekte benötigen Bogen/Armbrust, Effizienz-Haupteffekte Spitzhacke, Axt, Schaufel oder Hacke."
 }

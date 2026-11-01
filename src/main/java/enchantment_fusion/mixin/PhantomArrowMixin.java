@@ -11,6 +11,7 @@ import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
+import enchantment_fusion.mechanics.signatures.RangedWorkBlade;
 import enchantment_fusion.mechanics.signatures.RangedPrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelPiercing;
 import net.minecraft.server.level.ServerLevel;
@@ -57,9 +58,13 @@ public abstract class PhantomArrowMixin {
     private void ef$observeContinuousPiercing(BlockHitResult block, Operation<Void> original) {
         AbstractArrow arrow = (AbstractArrow) (Object) this;
         if (!(arrow.level() instanceof ServerLevel)) { original.call(block); return; }
-        GrapnelPiercing.Step step = GrapnelPiercing.begin(arrow); boolean completed = false;
+        GrapnelPiercing.Step step = GrapnelPiercing.begin(arrow);
+        RangedWorkBlade.Step blade = RangedWorkBlade.begin(arrow, block); boolean completed = false;
         try { original.call(block); completed = true; }
-        finally { GrapnelPiercing.end(step, completed); }
+        finally {
+            try { GrapnelPiercing.end(step, completed); }
+            finally { RangedWorkBlade.end(blade, completed); }
+        }
     }
 
     // The entity list and block hit were computed for the incoming ray.  A redirected

@@ -39,12 +39,19 @@ public final class ConfirmedArrow {
         void hit(Hit hit);
         default void missed(ServerPlayer owner, ItemStack launcher, FusedPair pair) {}
     }
+    /** Capture is tentative; publication occurs only when this exact arrow is present in the world. */
+    public interface InsertionListener {
+        @Nullable Object capture(ServerPlayer owner, ItemStack launcher);
+        void inserted(ServerPlayer owner, ItemStack launcher, AbstractArrow arrow, Object captured);
+    }
+    private record Insertion(InsertionListener listener, Object captured) {}
     public record Hit(ServerPlayer owner, ItemStack launcher, FusedPair pair, AbstractArrow arrow,
                       LivingEntity target, Vec3 location, float actualLoss, boolean burning) {}
     private static final int MAX_FLIGHTS = 2048, MAX_OWNERS = 256, MAX_LAUNCHERS = 8, MAX_NODES = 128;
     private static final long LIFETIME = 200L;
     private static final double MAX_STEP_SQUARED = 16.0D * 16.0D;
     private static final List<Listener> LISTENERS = new CopyOnWriteArrayList<>();
+    private static final List<InsertionListener> INSERTION_LISTENERS = new CopyOnWriteArrayList<>();
     private static final Map<AbstractArrow, Flight> FLIGHTS = new WeakHashMap<>();
     private static final Map<UUID, List<Flight>> LATEST = new HashMap<>();
     private static long nextSequence;
@@ -54,12 +61,13 @@ public final class ConfirmedArrow {
         final ResourceKey<Level> dimension;
         final ItemStack launcher;
         final List<FusedPair> pairs;
+        final List<Insertion> insertions;
         final long born, sequence;
         final List<Vec3> nodes = new ArrayList<>();
         boolean invalid, published, resolved;
-        Flight(ServerPlayer owner, ItemStack launcher, List<FusedPair> pairs) {
+        Flight(ServerPlayer owner, ItemStack launcher, List<FusedPair> pairs, List<Insertion> insertions) {
             this.owner = owner.getUUID(); this.dimension = owner.level().dimension();
-            this.launcher = launcher; this.pairs = pairs; this.born = owner.level().getGameTime();
+            this.launcher = launcher; this.pairs = pairs; this.insertions = insertions; this.born = owner.level().getGameTime();
             this.sequence = ++nextSequence;
         }
         void append(Vec3 position) {
@@ -91,6 +99,9 @@ public final class ConfirmedArrow {
     }
     private ConfirmedArrow() {}
     public static void register(Listener listener) { if (listener != null && !LISTENERS.contains(listener)) LISTENERS.add(listener); }
+    public static void registerInsertion(InsertionListener listener) {
+        if (listener != null && !INSERTION_LISTENERS.contains(listener)) INSERTION_LISTENERS.add(listener);
+    }
     private static boolean ready(ServerPlayer owner) { return owner.isAlive() && !owner.isSpectator() && !owner.isCreative(); }
     private static boolean owns(ServerPlayer owner, ItemStack stack) {
         for (int i = 0; i < owner.getInventory().getContainerSize(); i++) if (owner.getInventory().getItem(i) == stack) return true;
@@ -121,8 +132,15 @@ public final class ConfirmedArrow {
             if (LISTENERS.stream().anyMatch(listener -> listens(listener, pair, launcher))) selected.add(pair);
             if (selected.size() >= 64) break;
         }
-        if (selected.isEmpty()) return;
-        Flight flight = new Flight(owner, launcher, List.copyOf(selected));
+        List<Insertion> insertions = new ArrayList<>();
+        for (InsertionListener listener : INSERTION_LISTENERS) {
+            try {
+                Object captured = listener.capture(owner, launcher);
+                if (captured != null) insertions.add(new Insertion(listener, captured));
+            } catch (RuntimeException error) { EnchantmentFusion.LOGGER.error("Arrow insertion selector failed", error); }
+        }
+        if (selected.isEmpty() && insertions.isEmpty()) return;
+        Flight flight = new Flight(owner, launcher, List.copyOf(selected), List.copyOf(insertions));
         flight.append(arrow.position());
         FLIGHTS.put(arrow, flight);
     }
@@ -134,7 +152,11 @@ public final class ConfirmedArrow {
             || PhantomVolley.isGhost(arrow)) { if (flight != null) FLIGHTS.remove(arrow); return; }
         flight.append(arrow.position());
         if (!flight.published) {
-            flight.published = true;
+            flight.published = true; // Commit before callbacks; an insertion may be observed more than once.
+            if (!flight.invalid) for (Insertion insertion : flight.insertions) {
+                try { insertion.listener().inserted(owner, flight.launcher, arrow, insertion.captured()); }
+                catch (RuntimeException error) { EnchantmentFusion.LOGGER.error("Arrow insertion callback failed", error); }
+            }
             if (LATEST.size() >= MAX_OWNERS && !LATEST.containsKey(owner.getUUID())) return;
             List<Flight> latest = LATEST.computeIfAbsent(owner.getUUID(), ignored -> new ArrayList<>());
             Flight newer = latest.stream().filter(entry -> entry.launcher == flight.launcher && entry.sequence > flight.sequence).findFirst().orElse(null);

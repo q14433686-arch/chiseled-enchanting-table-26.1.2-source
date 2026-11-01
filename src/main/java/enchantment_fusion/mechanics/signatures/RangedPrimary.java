@@ -23,7 +23,8 @@ public final class RangedPrimary {
     private static final ThreadLocal<Boolean> REPLAY = ThreadLocal.withInitial(() -> false);
     private RangedPrimary() {}
     static int level(@Nullable ItemStack weapon, String primary) {
-        int result = Math.max(GrapnelProjectilePrimary.level(weapon, primary), RangedWearSkills.primaryLevel(weapon, primary));
+        int result = Math.max(Math.max(GrapnelProjectilePrimary.level(weapon, primary), RangedWearSkills.primaryLevel(weapon, primary)),
+            RangedWorkSkills.primaryLevel(weapon, primary));
         FusedPair thermal = ThermalProjectileSkills.selected(weapon);
         return thermal != null && primary.equals(thermal.primaryId()) ? Math.max(result, thermal.primaryLevel()) : result;
     }

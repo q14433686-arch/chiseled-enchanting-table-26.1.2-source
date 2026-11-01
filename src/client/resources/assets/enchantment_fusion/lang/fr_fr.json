@@ -1150,5 +1150,17 @@
   "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilité économisée : écho prêt.",
   "message.enchantment_fusion.ranged_wear_echo_set": "Écho virtuel lancé.",
   "tooltip.enchantment_fusion.riptide_grapnel": "Une activation d’Impulsion qui vous déplace réellement marque votre nouvelle position pendant 8 secondes. Gardez le même trident dans la même main ; à 12 blocs ou moins de la marque, visez un ennemi admissible à 8 blocs ou moins de celle-ci et activez le grappin à vue dégagée. La charge, l’eau ou la pluie et l’usure normales restent nécessaires.",
-  "message.enchantment_fusion.grapnel_riptide_marked": "Impulsion a marqué cet endroit. Visez un ennemi admissible et activez le grappin."
+  "message.enchantment_fusion.grapnel_riptide_marked": "Impulsion a marqué cet endroit. Visez un ennemi admissible et activez le grappin.",
+  "skill.enchantment_fusion.ranged_work_boost": "Travail à la flèche",
+  "skill.enchantment_fusion.ranged_work_blade": "Lame de carrière",
+  "message.enchantment_fusion.ranged_work_ready": "Trois flèches réelles touchées ont préparé l’élan de travail.",
+  "message.enchantment_fusion.ranged_work_active": "Une accélération de minage est déjà prête.",
+  "message.enchantment_fusion.ranged_work_need_hits": "Touchez d’abord trois fois de suite avec de vraies flèches.",
+  "message.enchantment_fusion.ranged_work_set": "Élan prêt : prenez un outil pour accélérer un bloc autorisé.",
+  "message.enchantment_fusion.ranged_work_blade_active": "Une lame de carrière est déjà prête.",
+  "message.enchantment_fusion.ranged_work_need_mining": "Minez d’abord au moins un bloc autorisé avec cet outil.",
+  "message.enchantment_fusion.ranged_work_blade_set": "Lame prête : tirez une vraie flèche dans les 10 secondes.",
+  "tooltip.enchantment_fusion.ranged_work_boost": "Trois flèches réelles consécutives blessant des cibles valides en 10 secondes accumulent l’élan ; un raté l’interrompt. Activez avec cet arc ou cette arbalète puis prenez un outil : un bloc autorisé est miné plus vite dans les 10 secondes. L’effet principal de tir reste.",
+  "tooltip.enchantment_fusion.ranged_work_blade": "Miner avec cet outil accumule jusqu’à trois charges pendant 10 secondes. Activez, gardez l’outil dans l’inventaire et tirez une vraie flèche en 10 secondes : une lame virtuelle suit jusqu’à 32 blocs de sa trajectoire réelle. Elle ne copie pas les munitions et évite cibles protégées et murs ; puissance, recul ou feu colore la lame. Efficacité reste.",
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Les anciens objets gardent leur effet ; les nouveaux exigent un arc/une arbalète pour le tir principal, ou une pioche, hache, pelle ou houe pour efficacité principale."
 }

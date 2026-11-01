@@ -1150,5 +1150,17 @@
   "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilidad ahorrada: eco listo.",
   "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtual liberado.",
   "tooltip.enchantment_fusion.riptide_grapnel": "Una activación de Propulsión que te desplace de verdad marca tu nueva posición durante 8 segundos. Mantén el mismo tridente en la misma mano; a 12 bloques o menos de la marca, apunta a un enemigo válido a 8 bloques o menos de ella y activa el gancho con visión despejada. Se conservan la carga, el agua o la lluvia y el desgaste normales.",
-  "message.enchantment_fusion.grapnel_riptide_marked": "Propulsión ha marcado este lugar. Apunta a un enemigo válido y activa el gancho."
+  "message.enchantment_fusion.grapnel_riptide_marked": "Propulsión ha marcado este lugar. Apunta a un enemigo válido y activa el gancho.",
+  "skill.enchantment_fusion.ranged_work_boost": "Trabajo de flecha",
+  "skill.enchantment_fusion.ranged_work_blade": "Filo de cantera",
+  "message.enchantment_fusion.ranged_work_ready": "Tres impactos de flechas reales han acumulado impulso.",
+  "message.enchantment_fusion.ranged_work_active": "Ya hay una mejora de minería preparada.",
+  "message.enchantment_fusion.ranged_work_need_hits": "Acierta primero tres flechas reales consecutivas.",
+  "message.enchantment_fusion.ranged_work_set": "Impulso preparado: cambia de herramienta para acelerar un bloque permitido.",
+  "message.enchantment_fusion.ranged_work_blade_active": "Ya hay un filo de cantera preparado.",
+  "message.enchantment_fusion.ranged_work_need_mining": "Mina primero al menos un bloque permitido con esta herramienta.",
+  "message.enchantment_fusion.ranged_work_blade_set": "Filo preparado: dispara una flecha real en 10 segundos.",
+  "tooltip.enchantment_fusion.ranged_work_boost": "Tres flechas reales consecutivas que dañen objetivos válidos en 10 segundos acumulan impulso; fallar lo interrumpe. Actívalo con este arco o ballesta y cambia de herramienta: un bloque permitido se mina más rápido durante 10 segundos. Se conserva el efecto principal de disparo.",
+  "tooltip.enchantment_fusion.ranged_work_blade": "Minar con esta herramienta acumula hasta tres filos durante 10 segundos. Actívalo, conserva la herramienta en el inventario y dispara una flecha real en 10 segundos: un filo virtual sigue hasta 32 bloques de su trayectoria. No copia munición y evita objetivos protegidos y paredes; el secundario aporta poder, empuje o fuego. Se conserva eficiencia.",
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Los objetos antiguos conservan su efecto; los nuevos requieren arco/ballesta para disparo principal o pico, hacha, pala o azada para eficiencia principal."
 }

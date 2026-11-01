@@ -17,6 +17,7 @@ import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.RangedWearSkills;
+import enchantment_fusion.mechanics.signatures.RangedWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
@@ -90,6 +91,8 @@ public final class FusionSkillNetworking {
         WATER_PRESSURE("skill.enchantment_fusion.water_pressure"),
         RANGED_WEAR_GUARD("skill.enchantment_fusion.ranged_wear_guard"),
         RANGED_WEAR_ECHO("skill.enchantment_fusion.ranged_wear_echo"),
+        RANGED_WORK_BOOST("skill.enchantment_fusion.ranged_work_boost"),
+        RANGED_WORK_BLADE("skill.enchantment_fusion.ranged_work_blade"),
         MELEE_WEAR_GUARD("skill.enchantment_fusion.melee_wear_guard"),
         MELEE_WEAR_EDGE("skill.enchantment_fusion.melee_wear_edge"),
         MELEE_WORK("skill.enchantment_fusion.melee_work"),
@@ -130,6 +133,8 @@ public final class FusionSkillNetworking {
         if (WaterPressureSkills.hasEquipped(player)) skills.add(Skill.WATER_PRESSURE);
         if (RangedWearSkills.hasEquipped(player, true)) skills.add(Skill.RANGED_WEAR_GUARD);
         if (RangedWearSkills.hasEquipped(player, false)) skills.add(Skill.RANGED_WEAR_ECHO);
+        if (RangedWorkSkills.hasEquipped(player, true)) skills.add(Skill.RANGED_WORK_BOOST);
+        if (RangedWorkSkills.hasEquipped(player, false)) skills.add(Skill.RANGED_WORK_BLADE);
         if (MeleeWearSkills.hasEquipped(player, true)) skills.add(Skill.MELEE_WEAR_GUARD);
         if (MeleeWearSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WEAR_EDGE);
         if (MeleeWorkSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WORK);
@@ -201,6 +206,8 @@ public final class FusionSkillNetworking {
             case WATER_PRESSURE -> WaterPressureSkills.activate(player);
             case RANGED_WEAR_GUARD -> RangedWearSkills.activate(player, true);
             case RANGED_WEAR_ECHO -> RangedWearSkills.activate(player, false);
+            case RANGED_WORK_BOOST -> RangedWorkSkills.activate(player, true);
+            case RANGED_WORK_BLADE -> RangedWorkSkills.activate(player, false);
             case MELEE_WEAR_GUARD -> MeleeWearSkills.activate(player, true);
             case MELEE_WEAR_EDGE -> MeleeWearSkills.activate(player, false);
             case MELEE_WORK -> MeleeWorkSkills.activate(player, false);

@@ -1150,5 +1150,17 @@
   "message.enchantment_fusion.ranged_wear_echo_ready": "Unbreaking saved durability: an echo charge is ready.",
   "message.enchantment_fusion.ranged_wear_echo_set": "Released one virtual arrow echo.",
   "tooltip.enchantment_fusion.riptide_grapnel": "A successful Riptide release that actually moves you marks your new location for 8 seconds. Keep the same trident in the same hand; within 12 blocks of the mark, aim at an eligible enemy within 8 blocks of it and activate with clear sight. Normal charge, water or rain, wear and other Riptide rules remain.",
-  "message.enchantment_fusion.grapnel_riptide_marked": "Riptide marked this location. Aim at an eligible enemy and activate grapnel recall."
+  "message.enchantment_fusion.grapnel_riptide_marked": "Riptide marked this location. Aim at an eligible enemy and activate grapnel recall.",
+  "skill.enchantment_fusion.ranged_work_boost": "Arrowwork",
+  "skill.enchantment_fusion.ranged_work_blade": "Quarry edge",
+  "message.enchantment_fusion.ranged_work_ready": "Three real arrow hits have prepared work momentum.",
+  "message.enchantment_fusion.ranged_work_active": "An arrowwork boost is already prepared.",
+  "message.enchantment_fusion.ranged_work_need_hits": "Land three consecutive real arrow hits first.",
+  "message.enchantment_fusion.ranged_work_set": "Arrowwork prepared: switch to a tool to hasten one legal block.",
+  "message.enchantment_fusion.ranged_work_blade_active": "A quarry edge is already prepared.",
+  "message.enchantment_fusion.ranged_work_need_mining": "Mine at least one legal block with this tool first.",
+  "message.enchantment_fusion.ranged_work_blade_set": "Quarry edge prepared: fire a real arrow within 10 seconds.",
+  "tooltip.enchantment_fusion.ranged_work_boost": "Three consecutive real arrows damaging eligible targets within 10 seconds build momentum; a miss breaks it. Activate while holding this bow or crossbow, then switch to a tool: the next legal block within 10 seconds is mined faster. The shooting primary remains.",
+  "tooltip.enchantment_fusion.ranged_work_blade": "Mining with this tool stores up to three edges for 10 seconds. Activate, keep the tool in your inventory and fire a real bow/crossbow arrow within 10 seconds: a virtual short blade follows up to 32 blocks of its actual path. It does not copy ammunition, avoids protected targets and walls, and gains Power, Punch or Flame as its secondary theme. Efficiency remains.",
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Legacy carrier keeps its old effect; newly applied shooting-first fusions require a bow/crossbow and mining-first fusions require a pickaxe, axe, shovel or hoe."
 }

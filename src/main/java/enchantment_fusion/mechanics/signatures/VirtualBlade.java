@@ -26,17 +26,25 @@ final class VirtualBlade {
     /** Shared ray settlement, optionally limited to a continuous surface such as an ice path. */
     static int castFrom(ServerPlayer owner, Vec3 start, Vec3 look, @Nullable LivingEntity excluded, double range, float damage,
                         int maxVictims, Predicate<LivingEntity> eligible, Predicate<Vec3> traversable, ParticleOptions particle) {
-        return castFrom(owner, start, look, excluded, range, damage, maxVictims, eligible, traversable, particle, null);
+        return castFrom(owner, start, look, excluded, range, damage, maxVictims, eligible, traversable, particle, null, null, 0.2D);
     }
     /** A moving blade can react only to accepted, net-damaging impacts, including contacts already overlapping its start. */
     static int sweep(ServerPlayer owner, Vec3 start, Vec3 motion, float damage, int maxVictims,
                      Predicate<LivingEntity> eligible, ParticleOptions particle, Consumer<LivingEntity> landed) {
         if (motion == null || landed == null) return 0;
-        return castFrom(owner, start, motion, null, motion.length(), damage, maxVictims, eligible, p -> true, particle, landed);
+        return castFrom(owner, start, motion, null, motion.length(), damage, maxVictims, eligible, p -> true, particle, landed, null, 0.2D);
+    }
+    /** A wider observed-path slash, with a per-target attempt reservation and side-wall checks. */
+    static int sweepWide(ServerPlayer owner, Vec3 start, Vec3 motion, float damage, int maxVictims,
+                         Predicate<LivingEntity> eligible, ParticleOptions particle, double width,
+                         Consumer<LivingEntity> attempted, Consumer<LivingEntity> landed) {
+        if (motion == null || attempted == null || landed == null || !Double.isFinite(width) || width < 0.2D || width > 1.0D) return 0;
+        return castFrom(owner, start, motion, null, motion.length(), damage, maxVictims, eligible, p -> true,
+            particle, landed, attempted, width);
     }
     private static int castFrom(ServerPlayer owner, Vec3 start, Vec3 look, @Nullable LivingEntity excluded, double range, float damage,
                                 int maxVictims, Predicate<LivingEntity> eligible, Predicate<Vec3> traversable, ParticleOptions particle,
-                                @Nullable Consumer<LivingEntity> landed) {
+                                @Nullable Consumer<LivingEntity> landed, @Nullable Consumer<LivingEntity> attemptedTarget, double width) {
         if (owner == null || start == null || look == null || eligible == null || traversable == null || particle == null || !owner.isAlive()
             || !Double.isFinite(start.x) || !Double.isFinite(start.y) || !Double.isFinite(start.z)
             || !Double.isFinite(look.x) || !Double.isFinite(look.y) || !Double.isFinite(look.z)
@@ -50,9 +58,9 @@ final class VirtualBlade {
             end = next;
         }
         List<Impact> impacts = new ArrayList<>();
-        for (LivingEntity candidate : level.getEntitiesOfClass(LivingEntity.class, new AABB(start, end).inflate(0.5D),
+        for (LivingEntity candidate : level.getEntitiesOfClass(LivingEntity.class, new AABB(start, end).inflate(Math.max(0.5D, width)),
             e -> e != excluded && eligible.test(e))) {
-            AABB box = candidate.getBoundingBox().inflate(0.2D);
+            AABB box = candidate.getBoundingBox().inflate(width);
             var intersection = landed != null && box.contains(start) ? java.util.Optional.of(start) : box.clip(start, end);
             if (intersection.isPresent()) {
                 Vec3 point = intersection.get(); impacts.add(new Impact(candidate, point, point.distanceToSqr(start)));
@@ -66,7 +74,9 @@ final class VirtualBlade {
             for (Impact impact : impacts) {
                 if (++attempted > maxVictims) break;
                 LivingEntity victim = impact.entity();
-                if (!eligible.test(victim) || !VirtualCombatSight.clear(level, owner, start, impact.point())) continue;
+                if (!eligible.test(victim) || !VirtualCombatSight.clear(level, owner, start, impact.point())
+                    || (width > 0.2D && !VirtualCombatSight.clear(level, owner, impact.point(), victim.getBoundingBox().getCenter()))) continue;
+                if (attemptedTarget != null) attemptedTarget.accept(victim); // Reserve before damage callbacks.
                 damage(level, owner, victim, damage, landed);
             }
         } finally { TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.set(previous); }

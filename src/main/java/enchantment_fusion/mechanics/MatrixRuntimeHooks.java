@@ -32,7 +32,9 @@ import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.RangedWearSkills;
+import enchantment_fusion.mechanics.signatures.RangedWorkSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
+import enchantment_fusion.mechanics.signatures.ConfirmedMining;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -124,6 +126,7 @@ public final class MatrixRuntimeHooks {
             WaterPressureSkills.clearServer();
             MeleeWearSkills.clearServer();
             RangedWearSkills.clearServer();
+            RangedWorkSkills.clearServer(server);
             ConfirmedArrow.clearServer();
             MeleeImpulseSkills.clearServer();
             MeleeGuardSkills.clearServer();
@@ -197,6 +200,7 @@ public final class MatrixRuntimeHooks {
             WaterPressureSkills.clearPlayer(pid);
             MeleeWearSkills.clearPlayer(pid);
             RangedWearSkills.clearPlayer(pid);
+            RangedWorkSkills.clearPlayer(handler.getPlayer());
             ConfirmedArrow.clearPlayer(pid);
             MeleeImpulseSkills.clearPlayer(pid);
             MeleeGuardSkills.clearPlayer(pid);
@@ -335,6 +339,7 @@ public final class MatrixRuntimeHooks {
                 ItemStack tool = serverPlayer.getMainHandItem();
                 UnderwaterMiningSkills.onMined(serverLevel, serverPlayer, pos);
                 MeleeWorkSkills.onMined(serverLevel, serverPlayer, pos, state);
+                ConfirmedMining.after(serverLevel, serverPlayer, pos, state);
                 SignaturePairs.onBlockHarvested(serverLevel, serverPlayer, tool, pos, state);
                 var slice = PrecisionConstruction.selected(tool, true);
                 if (slice != null) PrecisionConstruction.onHarvest(serverLevel, serverPlayer, tool, pos, state, slice);
@@ -421,6 +426,7 @@ public final class MatrixRuntimeHooks {
                 WaterPressureSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeWearSkills.clearPlayer(deadPlayer.getUUID());
                 RangedWearSkills.clearPlayer(deadPlayer.getUUID());
+                RangedWorkSkills.clearPlayer(deadPlayer);
                 ConfirmedArrow.clearPlayer(deadPlayer.getUUID());
                 MeleeImpulseSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeGuardSkills.clearPlayer(deadPlayer.getUUID());
@@ -461,6 +467,7 @@ public final class MatrixRuntimeHooks {
             WaterPressureSkills.tickServer(server);
             MeleeWearSkills.tickServer(server);
             RangedWearSkills.tickServer(server);
+            RangedWorkSkills.tickServer(server);
             ConfirmedArrow.tickServer(server);
             MeleeImpulseSkills.tickServer(server);
             MeleeGuardSkills.tickServer(server);

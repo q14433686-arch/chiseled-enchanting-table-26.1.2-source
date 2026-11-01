@@ -1150,5 +1150,17 @@
   "message.enchantment_fusion.ranged_wear_echo_ready": "耐久免耗：追射準備完了。",
   "message.enchantment_fusion.ranged_wear_echo_set": "虚像の追射を放った。",
   "tooltip.enchantment_fusion.riptide_grapnel": "激流を発動して実際に移動すると、移動先に8秒間の印を残す。同じ手で元のトライデントを持ち、印から12ブロック以内で、印から8ブロック以内の対象となる敵を見通して能動発動すると引き寄せる。チャージ、水や雨、耐久など通常の激流条件は維持される。",
-  "message.enchantment_fusion.grapnel_riptide_marked": "激流の移動先に印を残した。対象となる敵を狙って回収を発動。"
+  "message.enchantment_fusion.grapnel_riptide_marked": "激流の移動先に印を残した。対象となる敵を狙って回収を発動。",
+  "skill.enchantment_fusion.ranged_work_boost": "矢勢作業",
+  "skill.enchantment_fusion.ranged_work_blade": "採掘の矢刃",
+  "message.enchantment_fusion.ranged_work_ready": "実際の矢を3回連続で当て、作業勢を蓄えた。",
+  "message.enchantment_fusion.ranged_work_active": "採掘加速はすでに準備済み。",
+  "message.enchantment_fusion.ranged_work_need_hits": "まず実際の矢を3回連続で命中させる。",
+  "message.enchantment_fusion.ranged_work_set": "作業勢準備完了：道具に持ち替え、合法な採掘を1回加速。",
+  "message.enchantment_fusion.ranged_work_blade_active": "採掘の矢刃はすでに準備済み。",
+  "message.enchantment_fusion.ranged_work_need_mining": "まずこの道具で合法なブロックを1個以上採掘する。",
+  "message.enchantment_fusion.ranged_work_blade_set": "矢刃準備完了：10秒以内に実際の矢を放つ。",
+  "tooltip.enchantment_fusion.ranged_work_boost": "10秒以内に実際の矢で有効な対象へ3回連続で実ダメージを与えると蓄勢。外すと中断。この弓またはクロスボウを持って発動し、道具に持ち替えると10秒以内の合法な採掘1回を加速。射撃の主効果は維持。",
+  "tooltip.enchantment_fusion.ranged_work_blade": "この道具で合法に採掘すると最大3層を10秒間蓄える。発動後は道具を持ち物に残し、10秒以内に本物の矢を放つ。虚構の短刃が実際の軌道を最大32ブロック追跡。弾薬を複製せず、保護対象と壁を避ける。副効果に応じて射撃ダメージ増加・パンチ・フレイムの性質を持ち、効率強化は維持。",
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓またはクロスボウ、効率主位はツルハシ・斧・シャベル・クワが必要。"
 }

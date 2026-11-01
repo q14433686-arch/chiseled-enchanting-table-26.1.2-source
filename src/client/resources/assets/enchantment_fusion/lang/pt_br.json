@@ -1150,5 +1150,17 @@
   "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilidade economizada: eco pronto.",
   "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtual liberado.",
   "tooltip.enchantment_fusion.riptide_grapnel": "Uma ativação de Correnteza que realmente mova você marca a nova posição por 8 segundos. Mantenha o mesmo tridente na mesma mão; a até 12 blocos da marca, mire em um inimigo válido a até 8 blocos dela e ative o arpão com visão livre. As regras normais de carga, água ou chuva e desgaste continuam valendo.",
-  "message.enchantment_fusion.grapnel_riptide_marked": "Correnteza marcou este local. Mire em um inimigo válido e ative o arpão."
+  "message.enchantment_fusion.grapnel_riptide_marked": "Correnteza marcou este local. Mire em um inimigo válido e ative o arpão.",
+  "skill.enchantment_fusion.ranged_work_boost": "Trabalho de flecha",
+  "skill.enchantment_fusion.ranged_work_blade": "Lâmina de pedreira",
+  "message.enchantment_fusion.ranged_work_ready": "Três acertos com flechas reais acumularam impulso.",
+  "message.enchantment_fusion.ranged_work_active": "Uma aceleração de mineração já está pronta.",
+  "message.enchantment_fusion.ranged_work_need_hits": "Acerte primeiro três flechas reais consecutivas.",
+  "message.enchantment_fusion.ranged_work_set": "Impulso pronto: troque de ferramenta para acelerar um bloco permitido.",
+  "message.enchantment_fusion.ranged_work_blade_active": "Uma lâmina de pedreira já está pronta.",
+  "message.enchantment_fusion.ranged_work_need_mining": "Minere primeiro ao menos um bloco permitido com esta ferramenta.",
+  "message.enchantment_fusion.ranged_work_blade_set": "Lâmina pronta: dispare uma flecha real em 10 segundos.",
+  "tooltip.enchantment_fusion.ranged_work_boost": "Três flechas reais consecutivas causando dano a alvos válidos em 10 segundos acumulam impulso; errar interrompe. Ative com este arco ou besta e troque de ferramenta: um bloco permitido será minerado mais rápido em 10 segundos. O efeito principal de tiro permanece.",
+  "tooltip.enchantment_fusion.ranged_work_blade": "Minerar com esta ferramenta acumula até três cargas por 10 segundos. Ative, mantenha a ferramenta no inventário e dispare uma flecha real em 10 segundos: uma lâmina virtual segue até 32 blocos da trajetória real. Não copia munição e evita alvos protegidos e paredes; força, impacto ou chama define o tema. Eficiência permanece.",
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Itens antigos mantêm o efeito; novas fusões de tiro principal exigem arco/besta, e as de eficiência principal exigem picareta, machado, pá ou enxada."
 }

@@ -207,13 +207,9 @@ public final class MeleeWorkSkills {
         CompendiumDiscoveryTracker.recordDiscovery(player, gear.pair().primaryId(), gear.pair().secondaryId());
         return true;
     }
-    private static AttributeModifier modifier(Boost boost) {
-        return new AttributeModifier(SPEED, boost.multiplier() - 1.0D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
-    }
+    private static AttributeModifier modifier(Boost boost) { return MiningWorkSupport.modifier(SPEED, boost.multiplier()); }
     private static void removeModifier(ServerPlayer player, Boost boost) {
-        AttributeInstance speed = player.getAttribute(Attributes.BLOCK_BREAK_SPEED);
-        AttributeModifier actual = speed == null ? null : speed.getModifier(SPEED);
-        if (actual != null && actual.equals(modifier(boost)) && !speed.getPermanentModifiers().contains(actual)) speed.removeModifier(SPEED);
+        MiningWorkSupport.remove(player, SPEED, boost.multiplier());
     }
     private static boolean validBoost(ServerPlayer player, Boost boost) {
         return ready(player) && player.level().dimension().equals(boost.dimension()) && player.level().getGameTime() < boost.until()
@@ -221,23 +217,11 @@ public final class MeleeWorkSkills {
     }
     /** The attribute syncs to the client; it exists only while an actual suitable tool is held. */
     private static boolean refresh(ServerPlayer player, Boost boost) {
-        AttributeInstance speed = player.getAttribute(Attributes.BLOCK_BREAK_SPEED); if (speed == null) return false;
-        AttributeModifier existing = speed.getModifier(SPEED), wanted = modifier(boost);
-        if (existing != null && (!existing.equals(wanted) || speed.getPermanentModifiers().contains(existing))) return false;
-        boolean enabled = supportsTool(FusionCarrier.classify(player.getMainHandItem()))
-            && (!boost.waterOnly() || player.isEyeInFluid(FluidTags.WATER));
-        if (enabled && existing == null) speed.addTransientModifier(wanted);
-        else if (!enabled && existing != null) speed.removeModifier(SPEED);
-        return true;
+        return MiningWorkSupport.refresh(player, SPEED, boost.multiplier(), boost.waterOnly());
     }
     /** Fabric AFTER fires only for the actual removed block, after all BEFORE cancellations. */
     public static void onMined(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState block) {
-        if (!ready(player) || player.level() != level || ExtraBlockHarvest.isActive() || MatrixEffectExecutor.isExecuting()
-            || Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get()) || !level.isInWorldBounds(pos)
-            || !level.hasChunkAt(pos) || !level.mayInteract(player, pos)
-            || level.getServer().isUnderSpawnProtection(level, pos, player)
-            || player.blockActionRestricted(level, pos, player.gameMode.getGameModeForPlayer())
-            || block.isAir() || block.getDestroySpeed(level, pos) < 0 || !supportsTool(FusionCarrier.classify(player.getMainHandItem()))) return;
+        if (!MiningWorkSupport.legalBreak(level, player, pos, block)) return;
         Boost boost = BOOSTS.get(player.getUUID());
         if (boost != null && validBoost(player, boost) && (!boost.waterOnly() || player.isEyeInFluid(FluidTags.WATER))) {
             AttributeInstance speed = player.getAttribute(Attributes.BLOCK_BREAK_SPEED);
@@ -258,7 +242,8 @@ public final class MeleeWorkSkills {
         ItemStack stack = player.getItemBySlot(slot); FusedPair best = null;
         for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
             if (primary.equals(pair.primaryId())
-                && ((isWorkFirst(pair) && applies(pair, stack)) || (GrapnelSkills.miningFirst(pair) && GrapnelSkills.applies(pair, stack)))
+                && ((isWorkFirst(pair) && applies(pair, stack)) || (GrapnelSkills.miningFirst(pair) && GrapnelSkills.applies(pair, stack))
+                    || (RangedWorkSkills.miningFirst(pair) && RangedWorkSkills.applies(pair, stack)))
                 && (best == null || pair.primaryLevel() > best.primaryLevel())) best = pair;
         }
         if (best != null) sources.add(new PrimaryAttributeProjection.Source(slot, stack, best));

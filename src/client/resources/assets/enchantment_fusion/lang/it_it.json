@@ -1150,5 +1150,17 @@
   "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilità risparmiata: eco pronto.",
   "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtuale lanciato.",
   "tooltip.enchantment_fusion.riptide_grapnel": "Una carica di Risacca che ti sposta davvero segna la nuova posizione per 8 secondi. Tieni lo stesso tridente nella stessa mano; entro 12 blocchi dal segno, mira a un nemico valido entro 8 blocchi da esso e attiva il rampino con visuale libera. Restano le normali condizioni di carica, acqua o pioggia e usura.",
-  "message.enchantment_fusion.grapnel_riptide_marked": "Risacca ha segnato questa posizione. Mira a un nemico valido e attiva il rampino."
+  "message.enchantment_fusion.grapnel_riptide_marked": "Risacca ha segnato questa posizione. Mira a un nemico valido e attiva il rampino.",
+  "skill.enchantment_fusion.ranged_work_boost": "Lavoro della freccia",
+  "skill.enchantment_fusion.ranged_work_blade": "Lama di cava",
+  "message.enchantment_fusion.ranged_work_ready": "Tre frecce vere a segno hanno accumulato slancio.",
+  "message.enchantment_fusion.ranged_work_active": "Un’accelerazione di scavo è già pronta.",
+  "message.enchantment_fusion.ranged_work_need_hits": "Colpisci prima tre volte di fila con frecce vere.",
+  "message.enchantment_fusion.ranged_work_set": "Slancio pronto: cambia strumento per accelerare un blocco consentito.",
+  "message.enchantment_fusion.ranged_work_blade_active": "Una lama di cava è già pronta.",
+  "message.enchantment_fusion.ranged_work_need_mining": "Scava prima almeno un blocco consentito con questo strumento.",
+  "message.enchantment_fusion.ranged_work_blade_set": "Lama pronta: scocca una freccia vera entro 10 secondi.",
+  "tooltip.enchantment_fusion.ranged_work_boost": "Tre frecce vere consecutive che danneggiano bersagli validi entro 10 secondi accumulano slancio; un errore lo interrompe. Attiva con arco o balestra e cambia strumento: un blocco consentito si scava più velocemente entro 10 secondi. Resta l’effetto principale di tiro.",
+  "tooltip.enchantment_fusion.ranged_work_blade": "Scavare con questo strumento accumula fino a tre cariche per 10 secondi. Attiva, conserva lo strumento nell’inventario e scocca una freccia vera entro 10 secondi: una lama virtuale segue fino a 32 blocchi della traiettoria reale. Non copia munizioni ed evita bersagli protetti e muri; potenza, contraccolpo o fuoco caratterizza la lama. Efficienza resta.",
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Gli oggetti precedenti conservano l’effetto; i nuovi richiedono arco/balestra per tiro principale o piccone, ascia, pala o zappa per efficienza principale."
 }

@@ -1150,5 +1150,17 @@
   "message.enchantment_fusion.ranged_wear_echo_ready": "耐久實際免耗：追射充能已就緒。",
   "message.enchantment_fusion.ranged_wear_echo_set": "已釋放一次虛擬追射。",
   "tooltip.enchantment_fusion.riptide_grapnel": "激流成功釋放且確實推動你移動後，在新位置留標8秒。保持同一隻手持原三叉戟；在標記12格內瞄準標記8格內的合格敵人，視線暢通時主動回鉤。原版蓄力、水或雨、耐久等激流規則保留。",
-  "message.enchantment_fusion.grapnel_riptide_marked": "激流衝刺已留標。瞄準合格敵人並啟動回鉤。"
+  "message.enchantment_fusion.grapnel_riptide_marked": "激流衝刺已留標。瞄準合格敵人並啟動回鉤。",
+  "skill.enchantment_fusion.ranged_work_boost": "箭勢作業",
+  "skill.enchantment_fusion.ranged_work_blade": "採鋒隨矢",
+  "message.enchantment_fusion.ranged_work_ready": "三次真實箭命中已積蓄作業勢。",
+  "message.enchantment_fusion.ranged_work_active": "箭勢採掘加速已準備。",
+  "message.enchantment_fusion.ranged_work_need_hits": "請先連續用真實箭命中三次。",
+  "message.enchantment_fusion.ranged_work_set": "箭勢已準備：換持工具可加快一次合法採掘。",
+  "message.enchantment_fusion.ranged_work_blade_active": "採鋒隨矢已準備。",
+  "message.enchantment_fusion.ranged_work_need_mining": "請先用此工具合法採掘至少一格。",
+  "message.enchantment_fusion.ranged_work_blade_set": "採鋒已準備：10 秒內射出一支真實箭。",
+  "tooltip.enchantment_fusion.ranged_work_boost": "10 秒內連續三支真實箭使合格目標受到淨傷害積勢，射失中斷；手持此弓或弩主動釋放，換持工具後 10 秒內加快一次合法採掘。原射擊主位保留。",
+  "tooltip.enchantment_fusion.ranged_work_blade": "持此工具合法採掘可積攢至多三層鋒勢，持續 10 秒。主動釋放並將工具留在背包，10 秒內用弓或弩射出真實箭：虛擬短刃沿真實箭途最多延伸 32 格，不複製彈藥，避開受保護目標和牆體；依副位分別附帶力量、衝擊或火矢主題。原效率主位保留。",
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "舊載體保留舊效果；新射擊主位要求弓或弩，新效率主位要求鎬、斧、鏟或鋤。"
 }
