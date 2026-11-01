@@ -1045,5 +1045,8 @@
   "message.enchantment_fusion.melee_wear_edge_ready": "Genug Klingensplitter; verstärkten Treffer aktivieren.",
   "tooltip.enchantment_fusion.melee_impulse_chase": "Nach einem gültigen Haupthandtreffer mit echtem Rückstoß den noch bewegten Gegner verfolgen und erneut treffen: Eine virtuelle Klinge folgt der Blickrichtung. Bann und Nemesis verlangen passende Gegner.",
   "tooltip.enchantment_fusion.melee_impulse_transfer": "Trifft ein wirklich zurückgestoßenes Ziel auf seinem Weg einen weiteren gültigen Gegner, wird ein Teil des Schwungs übertragen; die Umgebung bleibt intakt. Bann und Nemesis verlangen passende Gegner. Nur bei nachweislich ruhendem Kontaktziel.",
-  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "Alter Träger behält den alten Effekt; diese Richtung benötigt eine Nahkampfwaffe."
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "Alter Träger behält den alten Effekt; diese Richtung benötigt eine Nahkampfwaffe.",
+  "tooltip.enchantment_fusion.melee_guard_blade": "Ein gültiger Nahkampftreffer erzeugt 3 Sekunden lang einen frontalen Schutz und lenkt bis zu 3 tatsächliche feindliche Geschosstreffer ab; erneut schlagen ruft ihn zurück. Spezialgeschosse sind teils ausgenommen.",
+  "tooltip.enchantment_fusion.melee_guard_counter": "Rüstung oder gehaltener Schild speichert den nachweisbaren Schutz dieses Gegenstands, einschließlich echtem Schildblock. Ein gültiger Nahkampftreffer verbraucht 2–4 Punkte für eine Gegenklinge; normale Trefferimmunität bleibt bestehen.",
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "Alte Träger behalten ihre Wirkung; neu sind Nahkampfwaffen oder Schutzausrüstung erforderlich."
 }

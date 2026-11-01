@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.signatures.FrostFallSkills;
 import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
 import enchantment_fusion.mechanics.signatures.NativeFrostWaterGuard;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
+import enchantment_fusion.mechanics.signatures.MeleeGuardCapture;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -30,6 +31,8 @@ public abstract class EnchantmentFrostEffectsMixin {
         FrostLandingCapture.observeEnchantment((Enchantment) (Object) this, level, item, victim,
             source, before, protection.floatValue());
         BlastDefenseSkills.observeProtection((Enchantment) (Object) this, level, item, victim,
+            source, before, protection.floatValue());
+        MeleeGuardCapture.observe((Enchantment) (Object) this, level, enchantmentLevel, item, victim,
             source, before, protection.floatValue());
     }
 

@@ -33,6 +33,7 @@ import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
+import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
@@ -330,12 +331,13 @@ public final class MatrixEffectExecutor {
             boolean redesignedWaterPressure = WaterPressureSkills.applies(pair, hostStack);
             boolean redesignedMeleeWear = MeleeWearSkills.applies(pair, hostStack);
             boolean redesignedMeleeImpulse = MeleeImpulseSkills.applies(pair, hostStack);
+            boolean redesignedMeleeGuard = MeleeGuardSkills.applies(pair, hostStack);
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
                 || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal
                 || redesignedFireTradeoff || redesignedSoulThread || redesignedFireThorns || redesignedFireSweep || redesignedWindSweep
                 || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre || redesignedFortuneBank
-                || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedMeleeImpulse;
+                || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedMeleeImpulse || redesignedMeleeGuard;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

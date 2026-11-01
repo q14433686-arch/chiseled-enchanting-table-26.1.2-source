@@ -6,16 +6,27 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.BlastArmorCapture;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
+import enchantment_fusion.mechanics.signatures.MeleeGuardCapture;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 /** Change only the selected armor's own explosion calculation; preserve vanilla damage and wear. */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityBlastDefenseMixin {
+    @WrapOperation(method = "hurtServer", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/LivingEntity;applyItemBlocking(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)F"))
+    private float ef$observeShieldBlock(LivingEntity victim, ServerLevel level, DamageSource source, float damage, Operation<Float> original) {
+        ItemStack item = victim instanceof ServerPlayer ? victim.getItemBlockingWith() : null;
+        float blocked = original.call(victim, level, source, damage);
+        if (victim instanceof ServerPlayer player) MeleeGuardCapture.shieldBlocked(player, source, item, damage, blocked);
+        return blocked;
+    }
+
     @WrapMethod(method = "getDamageAfterArmorAbsorb")
     private float ef$captureArmor(DamageSource source, float damage, Operation<Float> original) {
         if (!((Object) this instanceof ServerPlayer player)) return original.call(source, damage);
@@ -41,5 +52,14 @@ public abstract class LivingEntityBlastDefenseMixin {
             float blast = frame == null ? vanilla : BlastDefenseSkills.finishProtection(frame, vanilla, level);
             return FireTradeoffSkills.primaryProtection(level, player, source, blast);
         } finally { BlastDefenseSkills.endProtection(frame); }
+    }
+
+    @WrapOperation(method = "getDamageAfterMagicAbsorb", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/damagesource/CombatRules;getDamageAfterMagicAbsorb(FF)F"))
+    private float ef$observeRealProtection(float damage, float protection, Operation<Float> original,
+                                            DamageSource source, float inputDamage) {
+        float result = original.call(damage, protection);
+        if ((Object) this instanceof ServerPlayer player) MeleeGuardCapture.formula(player, source, damage, protection, result);
+        return result;
     }
 }

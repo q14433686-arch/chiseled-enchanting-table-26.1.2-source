@@ -39,6 +39,13 @@ final class AcceptanceReport {
         plan("42.2-bane-breath", "Bane ▷ Respiration: underwater bubble and arthropod filtering", "Not reached if setup fails.");
         plan("42.2-breath-bane", "Respiration ▷ Bane: prepared helmet and arthropod filtering", "Not reached if setup fails.");
         plan("42.2-runtime-compat", "42.2 natural fluid updates, client key, multiplayer, datapacks and claims", "Not covered by the artificially refreshed fluid-state fixture.");
+        plan("42.4-sharp-protection", "Sharpness ▷ Protection: actual projectile impact and simulated recall", "Not reached if setup fails.");
+        plan("42.4-protection-sharp", "Protection ▷ Sharpness: real per-item mitigation and counter hit", "Not reached if setup fails.");
+        plan("42.4-smite-protection", "Smite ▷ Protection: undead guard activation and actual projectile impact", "Not reached if setup fails.");
+        plan("42.4-protection-smite", "Protection ▷ Smite: per-item mitigation and undead counter hit", "Not reached if setup fails.");
+        plan("42.4-bane-protection", "Bane ▷ Protection: arthropod guard activation and actual projectile impact", "Not reached if setup fails.");
+        plan("42.4-protection-bane", "Protection ▷ Bane: per-item mitigation and arthropod counter hit", "Not reached if setup fails.");
+        plan("42.4-runtime-compat", "42.4 natural swing packets, diverse projectiles, overlapping defense effects, multiplayer and protection mods", "Not covered by the prepared single-player fixture.");
         plan("42.5-sharp-knockback", "Sharpness ▷ Knockback: actual knockback with simulated pursuit and follow-up", "Not reached if setup fails.");
         plan("42.5-knockback-sharp", "Knockback ▷ Sharpness: actual knockback and simulated swept contact", "Not reached if setup fails.");
         plan("42.5-smite-knockback", "Smite ▷ Knockback: undead pursuit and attack-primary replay", "Not reached if setup fails.");

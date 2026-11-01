@@ -9,9 +9,12 @@ import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
+import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
+import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,6 +32,14 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
                     SoulThreadSkills.nonNativeDamage(level, weapon, victim, source, vanilla))));
         float knockbackPrimary = MeleeImpulseSkills.nonNativePrimaryDamage(level, weapon, victim, source, themed);
         return MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
+    }
+
+    @WrapMethod(method = "doPostAttackEffectsWithItemSourceOnBreak")
+    private static void ef$guardVictimPostEffects(ServerLevel level, Entity victim, DamageSource source,
+                                                  ItemStack weapon, Consumer<Item> attackerlessOnBreak,
+                                                  Operation<Void> original) {
+        original.call(level, victim, source, weapon, attackerlessOnBreak);
+        MeleeGuardSkills.replayVictimPostAttack(level, victim, source);
     }
 
     @WrapMethod(method = "modifyArmorEffectiveness")

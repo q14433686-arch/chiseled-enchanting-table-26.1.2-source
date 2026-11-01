@@ -146,9 +146,10 @@ public final class FireTradeoffSkills {
             Map<String, Integer> replayLevels = new LinkedHashMap<>();
             for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
                 String signature = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
-                boolean fireDefense = applies(pair, stack, signature)
-                    || (FIRE.equals(pair.primaryId()) && FireThornsSkills.applies(pair, stack, signature));
-                if (fireDefense) replayLevels.merge(pair.primaryId(), pair.primaryLevel(), Math::max);
+                boolean primaryDefense = applies(pair, stack, signature)
+                    || (FIRE.equals(pair.primaryId()) && FireThornsSkills.applies(pair, stack, signature))
+                    || (MeleeGuardSkills.isProtectionFirst(pair) && MeleeGuardSkills.applies(pair, stack));
+                if (primaryDefense) replayLevels.merge(pair.primaryId(), pair.primaryLevel(), Math::max);
             }
             for (var entry : replayLevels.entrySet()) {
                 Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), entry.getKey()).orElse(null);

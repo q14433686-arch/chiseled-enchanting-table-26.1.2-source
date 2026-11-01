@@ -1045,5 +1045,8 @@
   "message.enchantment_fusion.melee_wear_edge_ready": "Hay suficientes fragmentos; activa el golpe potenciado.",
   "tooltip.enchantment_fusion.melee_impulse_chase": "Tras un golpe válido con empuje real, persigue y vuelve a golpear al mismo enemigo mientras se mueve para liberar un filo virtual hacia donde miras. Castigo y Perdición requieren enemigos compatibles.",
   "tooltip.enchantment_fusion.melee_impulse_transfer": "Al empujar de verdad a un objetivo, parte de su impulso pasa al primer enemigo válido que contacte su trayectoria real; no daña el terreno. Castigo y Perdición requieren enemigos compatibles. El receptor debe estar quieto para confirmar el contacto.",
-  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "El objeto antiguo conserva su efecto; esta dirección requiere un arma cuerpo a cuerpo."
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "El objeto antiguo conserva su efecto; esta dirección requiere un arma cuerpo a cuerpo.",
+  "tooltip.enchantment_fusion.melee_guard_blade": "Un golpe válido crea una guardia frontal durante 3 segundos que desvía hasta 3 impactos reales de proyectiles enemigos; otro golpe la retira. Se excluyen algunos proyectiles especiales.",
+  "tooltip.enchantment_fusion.melee_guard_counter": "La armadura o el escudo sostenido acumula su propia reducción verificable, incluido un bloqueo real con escudo. Un golpe cuerpo a cuerpo válido gasta 2–4 puntos en una hoja de contraataque; se conserva la inmunidad normal.",
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "El soporte antiguo conserva su efecto; la nueva dirección requiere arma cuerpo a cuerpo o protección."
 }

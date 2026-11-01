@@ -1045,5 +1045,8 @@
   "message.enchantment_fusion.melee_wear_edge_ready": "鋒屑已足夠，可主動準備強化近擊。",
   "tooltip.enchantment_fusion.melee_impulse_chase": "主手近戰有效命中並實際擊退後，追近仍在移動的同一敵人再次有效命中，將動勢化為沿視線的虛擬鋒刃。亡靈和節肢方向只作用於對應敵人。",
   "tooltip.enchantment_fusion.melee_impulse_transfer": "主手近戰真實擊退合格目標後，其實際行進軌跡撞到另一合格敵人時傳遞部分動量；不破壞地形。亡靈和節肢方向只作用於對應敵人。為確認碰撞，接收動量的敵人須保持靜止。",
-  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "舊載體保留舊效果；新方向要求近戰武器。"
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "舊載體保留舊效果；新方向要求近戰武器。",
+  "tooltip.enchantment_fusion.melee_guard_blade": "主手真實命中合格敵人形成正面護刃，持續3秒、最多撥開3次敵方飛行物的真實撞擊；再次揮擊收起。部分特殊飛行物不受影響。",
+  "tooltip.enchantment_fusion.melee_guard_counter": "穿護甲或持盾時，本件裝備可驗證的實際保護減傷（含盾牌真實格擋）積攢護鋒。下一次合格近戰消耗2–4點沿視線釋放反擊刃；原版受擊無敵時間仍生效。",
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "舊載體保留舊效果；新方向要求近戰武器或防護裝備。"
 }

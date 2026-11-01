@@ -1045,5 +1045,8 @@
   "message.enchantment_fusion.melee_wear_edge_ready": "Assez d’éclats ; activez le coup renforcé.",
   "tooltip.enchantment_fusion.melee_impulse_chase": "Après un coup valide et un recul réel, poursuivez et frappez à nouveau le même ennemi encore en mouvement pour lancer une lame virtuelle vers votre regard. Châtiment et Fléau exigent des ennemis adaptés.",
   "tooltip.enchantment_fusion.melee_impulse_transfer": "Après un recul réel, une partie de l’élan passe au premier ennemi valide touché sur la trajectoire réelle ; le terrain reste intact. Châtiment et Fléau exigent des ennemis adaptés. Le destinataire doit être immobile pour confirmer le contact.",
-  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "L’ancien support conserve son effet ; cette direction exige une arme de mêlée."
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "L’ancien support conserve son effet ; cette direction exige une arme de mêlée.",
+  "tooltip.enchantment_fusion.melee_guard_blade": "Un coup valide crée une garde frontale pendant 3 secondes et dévie jusqu’à 3 impacts réels de projectiles hostiles ; une autre attaque la retire. Certains projectiles spéciaux sont exclus.",
+  "tooltip.enchantment_fusion.melee_guard_counter": "L’armure ou le bouclier tenu stocke sa réduction de dégâts vérifiée, y compris un vrai blocage au bouclier. Un coup de mêlée valide dépense 2 à 4 points pour une lame de riposte ; l’immunité normale reste active.",
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "L’ancien support garde son effet ; la nouvelle direction exige une arme de mêlée ou une protection."
 }

@@ -1045,5 +1045,8 @@
   "message.enchantment_fusion.melee_wear_edge_ready": "Fragmentos suficientes; ative o golpe fortalecido.",
   "tooltip.enchantment_fusion.melee_impulse_chase": "Após um golpe válido com empurrão real, persiga e acerte novamente o mesmo inimigo ainda em movimento para lançar uma lâmina virtual na direção da mira. Julgamento e Ruína exigem inimigos correspondentes.",
   "tooltip.enchantment_fusion.melee_impulse_transfer": "Após um empurrão real, parte do impulso passa ao primeiro inimigo válido atingido na trajetória real; o terreno não é destruído. Julgamento e Ruína exigem inimigos correspondentes. O inimigo receptor deve estar parado para confirmar o contato.",
-  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "O suporte antigo mantém o efeito anterior; esta direção exige uma arma corpo a corpo."
+  "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "O suporte antigo mantém o efeito anterior; esta direção exige uma arma corpo a corpo.",
+  "tooltip.enchantment_fusion.melee_guard_blade": "Um golpe válido cria uma guarda frontal por 3 segundos e desvia até 3 impactos reais de projéteis hostis; golpeie novamente para recolher. Alguns projéteis especiais são excluídos.",
+  "tooltip.enchantment_fusion.melee_guard_counter": "A armadura ou escudo segurado acumula sua própria mitigação comprovada, incluindo um bloqueio real do escudo. Um golpe corpo a corpo válido gasta 2–4 pontos em uma lâmina de contra-ataque; a imunidade normal continua valendo.",
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "O item antigo mantém seu efeito; a nova direção exige arma corpo a corpo ou proteção."
 }

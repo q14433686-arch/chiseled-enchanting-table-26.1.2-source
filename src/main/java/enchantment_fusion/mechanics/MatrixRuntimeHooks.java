@@ -32,6 +32,7 @@ import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
+import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
@@ -111,6 +112,7 @@ public final class MatrixRuntimeHooks {
             WaterPressureSkills.clearServer();
             MeleeWearSkills.clearServer();
             MeleeImpulseSkills.clearServer();
+            MeleeGuardSkills.clearServer();
             FortuneBankSkills.clear();
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
@@ -169,6 +171,7 @@ public final class MatrixRuntimeHooks {
             WaterPressureSkills.clearPlayer(pid);
             MeleeWearSkills.clearPlayer(pid);
             MeleeImpulseSkills.clearPlayer(pid);
+            MeleeGuardSkills.clearPlayer(pid);
             FortuneBankSkills.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
             CrossDomainTransmutations.onPlayerDisconnect(pid);
@@ -379,6 +382,7 @@ public final class MatrixRuntimeHooks {
                 WaterPressureSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeWearSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeImpulseSkills.clearPlayer(deadPlayer.getUUID());
+                MeleeGuardSkills.clearPlayer(deadPlayer.getUUID());
                 FortuneBankSkills.onDisconnect(deadPlayer.getUUID());
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
             }
@@ -407,6 +411,7 @@ public final class MatrixRuntimeHooks {
             WaterPressureSkills.tickServer(server);
             MeleeWearSkills.tickServer(server);
             MeleeImpulseSkills.tickServer(server);
+            MeleeGuardSkills.tickServer(server);
             FortuneBankSkills.tickServer(server);
             GlazedStrikeEffect.tickServer(server);
             AmberSealSkill.tickServer(server);

@@ -1,6 +1,7 @@
 package enchantment_fusion.mixin;
 
 import enchantment_fusion.mechanics.signatures.WindSweepSkills;
+import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
@@ -18,5 +19,6 @@ public abstract class ServerSwingWindCoreMixin {
     @Inject(method = "handleAnimate", at = @At("TAIL"))
     private void ef$releaseWindCore(ServerboundSwingPacket packet, CallbackInfo ci) {
         WindSweepSkills.onSwing(player, packet.getHand());
+        MeleeGuardSkills.onSwing(player, packet.getHand());
     }
 }
