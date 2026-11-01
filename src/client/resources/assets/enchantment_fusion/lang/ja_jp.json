@@ -1117,5 +1117,9 @@
   "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "旧式の非対応道具は元の効果を保ち、新しい電弧は適用されない。",
   "tooltip.enchantment_fusion.melee_wind_blade": "最大溜めの実際の命中で短時間の旋回刃が生じる。移動で刃を導き、触れた対象種を切り払い押しのける。",
   "tooltip.enchantment_fusion.melee_wind_updraft": "実際の風爆で上昇すると上昇気流が生じる。中で対象種を再び攻撃すると仮想の刃波を放つ。元の風爆はブロックを作動させる場合がある。",
-  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "旧式の非対応道具は元の効果を保ち、新しい旋回刃と上昇気流は適用されない。"
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "旧式の非対応道具は元の効果を保ち、新しい旋回刃と上昇気流は適用されない。",
+  "tooltip.enchantment_fusion.wind_grapnel": "メイスの実際の命中で同じウィンドバーストが自分を上方へ押し上げると、現在位置を8秒間標識する。同じメイスを持ち、標識から12ブロック以内で、標識から8ブロック以内の適格な敵を見通せる状態で狙い、発動して引き寄せる。元のウィンドバーストと環境への影響は残る。",
+  "tooltip.enchantment_fusion.thorns_grapnel": "装備中の防具または手持ちの盾が適格な攻撃者に実際に反射ダメージを与えると、その敵を8秒間標識する。元の棘の確率と耐久消費は残る。同じ装備を維持し、12ブロック以内で見通せる状態で発動する。",
+  "message.enchantment_fusion.grapnel_wind_marked": "ウィンドバーストが位置を標識した。適格な敵を狙って回鉤を発動。",
+  "message.enchantment_fusion.grapnel_thorns_marked": "棘が攻撃者を標識した。同じ装備を維持して回鉤を発動。"
 }

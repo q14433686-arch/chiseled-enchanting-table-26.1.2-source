@@ -1117,5 +1117,9 @@
   "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Itens antigos incompatíveis mantêm o efeito original; o novo arco não se aplica.",
   "tooltip.enchantment_fusion.melee_wind_blade": "Um acerto real carregado cria uma lâmina giratória temporária. Mova-se para cortar e afastar inimigos compatíveis tocados.",
   "tooltip.enchantment_fusion.melee_wind_updraft": "Uma rajada ascendente real lança você e cria uma corrente. Acerte nela um inimigo compatível para liberar uma onda virtual. A rajada normal pode ativar blocos.",
-  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Itens antigos incompatíveis mantêm o efeito original; a nova lâmina e corrente não se aplicam."
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Itens antigos incompatíveis mantêm o efeito original; a nova lâmina e corrente não se aplicam.",
+  "tooltip.enchantment_fusion.wind_grapnel": "Um golpe real de maça marca o local por 8 segundos se a rajada do mesmo golpe realmente elevar você. Segure a mesma maça, fique a até 12 blocos da marca e mire com visão livre em um inimigo elegível a até 8 blocos dela. A rajada original e seus efeitos no ambiente permanecem.",
+  "tooltip.enchantment_fusion.thorns_grapnel": "Quando esta armadura vestida ou escudo segurado realmente reflete dano a um atacante elegível, ele é marcado por 8 segundos. A chance e o desgaste originais de Espinhos permanecem. Mantenha o mesmo item equipado e ative a até 12 blocos com visão livre.",
+  "message.enchantment_fusion.grapnel_wind_marked": "A rajada marcou o local. Mire em um inimigo elegível e ative o gancho.",
+  "message.enchantment_fusion.grapnel_thorns_marked": "Espinhos marcou o atacante. Mantenha o mesmo item equipado e ative o gancho."
 }

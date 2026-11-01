@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardCapture;
 import enchantment_fusion.mechanics.signatures.GrapnelDefenseCapture;
+import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -18,6 +19,7 @@ public abstract class PlayerBlastDefenseMixin {
     private boolean ef$trackCounterDamage(ServerLevel level, DamageSource source, float damage, Operation<Boolean> original) {
         if (!((Object) this instanceof ServerPlayer player)) return original.call(level, source, damage);
         BlastDefenseSkills.DamageFrame frame = BlastDefenseSkills.beginDamage(player, source);
+        GrapnelThorns.HurtFrame thorns = GrapnelThorns.beginHurt(player, source);
         MeleeGuardCapture.Frame guard = null;
         GrapnelDefenseCapture.Frame grapnel = null;
         boolean success = false, completed = false;
@@ -31,7 +33,10 @@ public abstract class PlayerBlastDefenseMixin {
             try { GrapnelDefenseCapture.end(grapnel, completed, success); }
             finally {
                 try { MeleeGuardCapture.end(guard, completed, success); }
-                finally { BlastDefenseSkills.endDamage(frame, success); }
+                finally {
+                    try { BlastDefenseSkills.endDamage(frame, success); }
+                    finally { GrapnelThorns.endHurt(thorns, completed, success); }
+                }
             }
         }
     }

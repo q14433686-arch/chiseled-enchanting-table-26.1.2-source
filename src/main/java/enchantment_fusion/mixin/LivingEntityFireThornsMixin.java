@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
+import enchantment_fusion.mechanics.signatures.ConfirmedLivingDamage;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -23,6 +24,7 @@ public abstract class LivingEntityFireThornsMixin {
         float beforeHealth = victim.getHealth(), beforeAbsorption = victim.getAbsorptionAmount();
         original.call(level, source, damage);
         FireThornsSkills.observeDamage(victim, source, beforeHealth, beforeAbsorption);
+        ConfirmedLivingDamage.observed(victim, source, beforeHealth, beforeAbsorption);
     }
 
     @WrapOperation(method = "stabAttack", at = @At(value = "INVOKE",

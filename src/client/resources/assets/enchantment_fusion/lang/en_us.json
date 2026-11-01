@@ -1117,5 +1117,9 @@
   "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Old incompatible carrier: original behavior retained; the new arc is not applied.",
   "tooltip.enchantment_fusion.melee_wind_blade": "A full real hit creates a temporary spinning blade. Move to guide it through matching enemies, cutting and pushing them.",
   "tooltip.enchantment_fusion.melee_wind_updraft": "A real Wind Burst launches you and creates an updraft. Hit a matching enemy inside it to release a virtual wave. Vanilla Wind Burst may trigger blocks.",
-  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Old incompatible carriers retain their original behavior; the new blade and updraft do not apply."
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Old incompatible carriers retain their original behavior; the new blade and updraft do not apply.",
+  "tooltip.enchantment_fusion.wind_grapnel": "A real mace hit whose Wind Burst actually lifts you marks this location for 8 seconds. Keep holding the same mace, stay within 12 blocks of the mark, aim at an eligible enemy within 8 blocks of it, and activate with clear sight. The original Wind Burst and its environmental effects remain.",
+  "tooltip.enchantment_fusion.thorns_grapnel": "When this worn armor or held shield really reflects a hit onto an eligible attacker, it marks that attacker for 8 seconds. Vanilla Thorns chance and wear remain. Keep the same item equipped and activate within 12 blocks with clear sight.",
+  "message.enchantment_fusion.grapnel_wind_marked": "Wind Burst marked this location. Aim at an eligible enemy and activate grapnel recall.",
+  "message.enchantment_fusion.grapnel_thorns_marked": "Thorns marked the attacker. Keep the same item equipped and activate grapnel recall."
 }

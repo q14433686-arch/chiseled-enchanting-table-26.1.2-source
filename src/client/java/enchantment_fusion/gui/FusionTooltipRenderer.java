@@ -49,6 +49,8 @@ import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelDefense;
 import enchantment_fusion.mechanics.signatures.GrapnelDurability;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
+import enchantment_fusion.mechanics.signatures.GrapnelWind;
+import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
@@ -87,6 +89,8 @@ public final class FusionTooltipRenderer {
     private FusionTooltipRenderer() {}
 
     private static String grapnelTooltip(FusedPair pair) {
+        if (GrapnelWind.isPair(pair)) return "tooltip.enchantment_fusion.wind_grapnel";
+        if (GrapnelThorns.isPair(pair)) return "tooltip.enchantment_fusion.thorns_grapnel";
         if (GrapnelDurability.MENDING.equals(pair.primaryId())) return "tooltip.enchantment_fusion.mending_grapnel";
         if (GrapnelDurability.UNBREAKING.equals(pair.primaryId())) return "tooltip.enchantment_fusion.unbreaking_grapnel";
         if (GrapnelImpact.KNOCKBACK.equals(pair.primaryId())) return "tooltip.enchantment_fusion.knockback_grapnel";

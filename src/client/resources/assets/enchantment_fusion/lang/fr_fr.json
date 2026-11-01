@@ -1117,5 +1117,9 @@
   "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Les anciens supports incompatibles gardent leur effet ; le nouvel arc ne s’applique pas.",
   "tooltip.enchantment_fusion.melee_wind_blade": "Un vrai coup chargé crée brièvement une lame tournoyante. Déplacez-vous pour trancher et repousser les ennemis adaptés touchés.",
   "tooltip.enchantment_fusion.melee_wind_updraft": "Une vraie rafale ascendante vous soulève et crée un courant. Frappez-y un ennemi adapté pour libérer une onde virtuelle. La rafale normale peut activer des blocs.",
-  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Les anciens supports incompatibles gardent leur effet ; la nouvelle lame et le courant ne s’appliquent pas."
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Les anciens supports incompatibles gardent leur effet ; la nouvelle lame et le courant ne s’appliquent pas.",
+  "tooltip.enchantment_fusion.wind_grapnel": "Un coup réel de masse marque la position pendant 8 secondes si la rafale du même coup vous soulève réellement. Gardez la même masse en main, restez à 12 blocs de la marque et visez avec une vue dégagée un ennemi admissible à 8 blocs de celle-ci. La rafale d’origine et ses effets sur l’environnement sont conservés.",
+  "tooltip.enchantment_fusion.thorns_grapnel": "Lorsque cette armure portée ou ce bouclier tenu renvoie réellement des dégâts à un attaquant admissible, il est marqué pendant 8 secondes. La probabilité et l’usure d’Épines restent normales. Gardez le même objet équipé et activez à 12 blocs avec une vue dégagée.",
+  "message.enchantment_fusion.grapnel_wind_marked": "La rafale a marqué la position. Visez un ennemi admissible et activez le grappin.",
+  "message.enchantment_fusion.grapnel_thorns_marked": "Épines a marqué l’attaquant. Gardez le même objet équipé et activez le grappin."
 }

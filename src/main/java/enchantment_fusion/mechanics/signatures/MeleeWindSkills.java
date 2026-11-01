@@ -69,6 +69,7 @@ public final class MeleeWindSkills {
         if (initialized) return;
         initialized = true;
         ConfirmedMelee.register(MeleeWindSkills::onHit);
+        ConfirmedWindBurst.register(MeleeWindSkills::onWindBurst);
         MeleeAttackThemes.registerPrimaryTemplate("melee_wind", (pair, stack) -> attackFirst(pair) && applies(pair, stack));
         ConfirmedPlayerMove.register(new ConfirmedPlayerMove.Observer() {
             @Override public boolean interested(ServerPlayer player) { return BLADES.containsKey(player.getUUID()); }
@@ -151,8 +152,7 @@ public final class MeleeWindSkills {
         return Math.min(8.0F, 2.0F + 0.3F * Math.clamp(attack, 1, 10) + 0.2F * Math.clamp(wind, 1, 10));
     }
     public static boolean upwardImpulse(@Nullable Vec3 before, @Nullable Vec3 after) {
-        return before != null && after != null && Double.isFinite(before.x) && Double.isFinite(before.y) && Double.isFinite(before.z)
-            && Double.isFinite(after.x) && Double.isFinite(after.y) && Double.isFinite(after.z) && after.y - before.y > 1.0E-4D;
+        return ConfirmedWindBurst.upwardImpulse(before, after);
     }
     private static void onHit(ConfirmedMelee.Hit hit) {
         ServerPlayer owner = hit.player(); LivingEntity victim = hit.target(); ItemStack weapon = hit.weapon();
@@ -179,17 +179,14 @@ public final class MeleeWindSkills {
             PENDING.put(owner.getUUID(), new Pending(reverse, victim.getUUID(), owner.level().dimension(), hit.source(), now));
         }
     }
-    /** Observe, rather than reroll, the same Wind Burst call and its actual upward impulse. */
-    public static void observePrimaryWind(Enchantment enchantment, ServerLevel level, int enchantmentLevel, EnchantedItemInUse item,
-                                          EnchantmentTarget side, Entity victim, DamageSource source, @Nullable Vec3 before) {
-        if (side != EnchantmentTarget.ATTACKER || item.inSlot() != EquipmentSlot.MAINHAND
-            || !(item.owner() instanceof ServerPlayer owner) || !(victim instanceof LivingEntity target) || owner.level() != level || before == null
-            || !FusionStationOperations.lookupEnchantment(level.registryAccess(), WIND).map(h -> h.value() == enchantment).orElse(false)) return;
-        Pending pending = PENDING.get(owner.getUUID()); Vec3 after = owner.getDeltaMovement();
-        if (pending == null || pending.source() != source || pending.tick() != level.getGameTime() || !pending.victim().equals(target.getUUID())
-            || !pending.dimension().equals(level.dimension()) || item.itemStack() != pending.gear().stack() || !owns(owner, pending.gear())
-            || enchantmentLevel < pending.gear().pair().primaryLevel() || !upwardImpulse(before, after)
-            || !usableCenter(owner, owner.position())) return;
+    /** The shared observation must still match this direction's own confirmed melee hit. */
+    private static void onWindBurst(ConfirmedWindBurst.Effect effect) {
+        ServerPlayer owner = effect.owner(); ServerLevel level = effect.level();
+        Pending pending = PENDING.get(owner.getUUID());
+        if (pending == null || pending.source() != effect.source() || pending.tick() != level.getGameTime()
+            || !pending.victim().equals(effect.victim().getUUID()) || !pending.dimension().equals(level.dimension())
+            || effect.stack() != pending.gear().stack() || !owns(owner, pending.gear())
+            || effect.enchantmentLevel() < pending.gear().pair().primaryLevel() || !usableCenter(owner, owner.position())) return;
         if (UPDRAFTS.containsKey(owner.getUUID()) || UPDRAFTS.size() < MAX_OWNERS) {
             long now = level.getGameTime();
             UPDRAFTS.put(owner.getUUID(), new Updraft(pending.gear(), level.dimension(), owner.position(), now + UPDRAFT_TICKS));
@@ -197,22 +194,31 @@ public final class MeleeWindSkills {
             level.sendParticles(ParticleTypes.CLOUD, owner.getX(), owner.getY() + 0.3D, owner.getZ(), 8, 0.3D, 0.15D, 0.3D, 0.01D);
         }
     }
+    /** One missing primary is shared by all compatible Wind Burst directions on this item. */
+    public static int primaryReplayLevel(int nativeLevel, int meleeLevel, int grapnelLevel) {
+        return nativeLevel > 0 ? 0 : Math.max(0, Math.max(meleeLevel, grapnelLevel));
+    }
     /** Preserve a missing primary at vanilla's post-attack timing without replaying a native copy. */
     public static void afterPostAttack(ServerLevel level, Player player, ItemStack weapon, Entity victim, DamageSource source) {
         if (!(player instanceof ServerPlayer owner) || owner.level() != level || owner.getMainHandItem() != weapon
             || source.getEntity() != owner || source.getDirectEntity() != owner) return;
         Gear gear = select(weapon, true);
-        if (gear != null && owns(owner, gear) && !Boolean.TRUE.equals(REPLAYING.get())) {
+        int meleeLevel = gear != null && owns(owner, gear) ? gear.pair().primaryLevel() : 0;
+        int grapnelLevel = GrapnelWind.primaryLevel(owner, weapon);
+        if ((meleeLevel > 0 || grapnelLevel > 0) && !Boolean.TRUE.equals(REPLAYING.get())) {
             Holder<Enchantment> nativeWind = FusionStationOperations.lookupEnchantment(level.registryAccess(), WIND).orElse(null);
-            if (nativeWind != null && weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(nativeWind) == 0) {
+            int nativeLevel = nativeWind == null ? 0 : weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(nativeWind);
+            int levelToReplay = primaryReplayLevel(nativeLevel, meleeLevel, grapnelLevel);
+            if (nativeWind != null && levelToReplay > 0) {
                 REPLAYING.set(true);
-                try { nativeWind.value().doPostAttack(level, gear.pair().primaryLevel(), new EnchantedItemInUse(weapon, EquipmentSlot.MAINHAND, owner),
+                try { nativeWind.value().doPostAttack(level, levelToReplay, new EnchantedItemInUse(weapon, EquipmentSlot.MAINHAND, owner),
                     EnchantmentTarget.ATTACKER, victim, source); }
                 finally { REPLAYING.remove(); }
             }
         }
         Pending pending = PENDING.get(owner.getUUID());
         if (pending != null && pending.source() == source && pending.victim().equals(victim.getUUID())) PENDING.remove(owner.getUUID(), pending);
+        GrapnelWind.afterPostAttack(owner, victim, source);
     }
     private static boolean bladeTarget(ServerPlayer owner, Blade blade, LivingEntity target) {
         return owns(owner, blade.gear) && BLADES.get(blade.owner) == blade && !blade.hit.contains(target.getUUID())

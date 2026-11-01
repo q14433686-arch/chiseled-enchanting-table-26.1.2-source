@@ -1117,5 +1117,9 @@
   "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "舊的不適用載體保留原效果，不套用新的電弧。",
   "tooltip.enchantment_fusion.melee_wind_blade": "滿蓄真實命中產生短暫旋刃；移動牽動它，切割並推開接觸的對應敵人。",
   "tooltip.enchantment_fusion.melee_wind_updraft": "重錘實際觸發原版風爆並升起後形成升流；在其中再次命中對應敵人釋放虛擬鋒浪。原版風爆可能觸發方塊。",
-  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "舊的不適用載體保留原效果，不啟用新的旋刃或升流。"
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "舊的不適用載體保留原效果，不啟用新的旋刃或升流。",
+  "tooltip.enchantment_fusion.wind_grapnel": "重錘真實命中且同次風爆實際將你向上推起時，在目前位置留標8秒。繼續手持同一重錘，在距標記12格內瞄準距標記8格內的合格敵人，視線暢通時主動回鉤。保留原版風爆及其環境影響。",
+  "tooltip.enchantment_fusion.thorns_grapnel": "穿戴的護甲或手持盾牌真實反傷合格攻擊者時，為其留標8秒；保留原版荊棘機率和耐久消耗。繼續穿戴或手持同一裝備，在12格內且視線暢通時主動回鉤。",
+  "message.enchantment_fusion.grapnel_wind_marked": "風爆已留標。瞄準合格敵人並啟動回鉤。",
+  "message.enchantment_fusion.grapnel_thorns_marked": "荊棘已標記攻擊者。保持原裝備並啟動回鉤。"
 }

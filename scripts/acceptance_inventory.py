@@ -92,6 +92,8 @@ DIRECTION_FIXTURES = {
     ("knockback", "lure"): ("40.1-knockback-lure", True),
     ("breach", "lure"): ("40.1-breach-lure", True),
     ("density", "lure"): ("40.1-density-lure", True),
+    ("wind_burst", "lure"): ("40.1-wind-lure", True),
+    ("thorns", "lure"): ("40.1-thorns-lure", True),
     ("smite", "channeling"): ("43.3-smite-channel", True),
     ("sharpness", "wind_burst"): ("43.4-sharp-wind", True),
     ("wind_burst", "sharpness"): ("43.4-wind-sharp", True),

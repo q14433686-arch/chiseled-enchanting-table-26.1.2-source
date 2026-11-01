@@ -15,6 +15,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelVolley;
 import enchantment_fusion.mechanics.signatures.GrapnelProjectilePrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelDefense;
+import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
 import java.util.function.Consumer;
@@ -76,10 +77,13 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
     private static void ef$guardVictimPostEffects(ServerLevel level, Entity victim, DamageSource source,
                                                   ItemStack weapon, Consumer<Item> attackerlessOnBreak,
                                                   Operation<Void> original) {
-        original.call(level, victim, source, weapon, attackerlessOnBreak);
-        MeleeGuardSkills.replayVictimPostAttack(level, victim, source);
-        GrapnelDefense.replayVictimPostAttack(level, victim, source);
-        MeleeLightningSkills.nonNativeTridentPost(level, weapon, victim, source);
+        try {
+            original.call(level, victim, source, weapon, attackerlessOnBreak);
+            MeleeGuardSkills.replayVictimPostAttack(level, victim, source);
+            GrapnelDefense.replayVictimPostAttack(level, victim, source);
+            GrapnelThorns.replayVictimPostAttack(level, victim, source);
+            MeleeLightningSkills.nonNativeTridentPost(level, weapon, victim, source);
+        } finally { GrapnelThorns.afterPostAttack(level, victim, source); }
     }
 
     @WrapMethod(method = "onHitBlock")

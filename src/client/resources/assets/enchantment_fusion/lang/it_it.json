@@ -1117,5 +1117,9 @@
   "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; il nuovo arco non si applica.",
   "tooltip.enchantment_fusion.melee_wind_blade": "Un vero colpo caricato crea per poco una lama rotante. Muoviti per tagliare e respingere i nemici adatti che tocca.",
   "tooltip.enchantment_fusion.melee_wind_updraft": "Una vera raffica ascendente ti solleva e crea una corrente. Colpisci al suo interno un nemico adatto per liberare un’onda virtuale. La raffica normale può attivare blocchi.",
-  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "I vecchi supporti incompatibili mantengono il loro effetto; la nuova lama e corrente non si applicano."
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "I vecchi supporti incompatibili mantengono il loro effetto; la nuova lama e corrente non si applicano.",
+  "tooltip.enchantment_fusion.wind_grapnel": "Un colpo reale di mazza segna la posizione per 8 secondi se la raffica dello stesso colpo ti solleva davvero. Tieni la stessa mazza, resta entro 12 blocchi dal segno e mira con visuale libera a un nemico idoneo entro 8 blocchi dal segno. La raffica originale e i suoi effetti sull’ambiente rimangono.",
+  "tooltip.enchantment_fusion.thorns_grapnel": "Quando questa armatura indossata o questo scudo impugnato riflette danni reali a un aggressore idoneo, lo segna per 8 secondi. Restano la probabilità e l’usura originali di Spine. Mantieni lo stesso oggetto equipaggiato e attiva entro 12 blocchi con visuale libera.",
+  "message.enchantment_fusion.grapnel_wind_marked": "La raffica ha segnato la posizione. Mira a un nemico idoneo e attiva il rampino.",
+  "message.enchantment_fusion.grapnel_thorns_marked": "Spine ha segnato l’aggressore. Mantieni lo stesso oggetto equipaggiato e attiva il rampino."
 }

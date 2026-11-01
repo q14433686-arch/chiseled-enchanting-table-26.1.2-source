@@ -95,6 +95,8 @@ final class AcceptanceReport {
         plan("40.1-knockback-lure", "Knockback ▷ Lure: actual hit and resisted impulse, simulated recall", "Not reached if setup fails.");
         plan("40.1-breach-lure", "Breach ▷ Lure: actual armored hit and simulated recall", "Not reached if setup fails.");
         plan("40.1-density-lure", "Density ▷ Lure: actual mace hit with simulated fall and recall", "Not reached if setup fails.");
+        plan("40.1-wind-lure", "Wind Burst ▷ Lure: real hit and wind, simulated fall and recall", "Not reached if setup fails.");
+        plan("40.1-thorns-lure", "Thorns ▷ Lure: real hurt/retaliation with high test-only level and recall", "Not reached if setup fails.");
         plan("43.3-smite-channel", "Smite ▷ Channeling: real marks and virtual chain", "Not reached if setup fails.");
         plan("43.4-sharp-wind", "sharpness ▷ Wind Burst: real hit and simulated player movement", "Not reached if setup fails.");
         plan("43.4-wind-sharp", "Wind Burst ▷ sharpness: same real wind effect and simulated updraft follow-up", "Not reached if setup fails.");

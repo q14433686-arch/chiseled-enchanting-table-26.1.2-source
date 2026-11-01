@@ -12,7 +12,8 @@ import enchantment_fusion.mechanics.signatures.GrapnelDefenseCapture;
 import enchantment_fusion.mechanics.signatures.ProtectionProjection;
 import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
-import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
+import enchantment_fusion.mechanics.signatures.ConfirmedWindBurst;
+import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -56,13 +57,19 @@ public abstract class EnchantmentFrostEffectsMixin {
     @WrapMethod(method = "doPostAttack(Lnet/minecraft/server/level/ServerLevel;ILnet/minecraft/world/item/enchantment/EnchantedItemInUse;Lnet/minecraft/world/item/enchantment/EnchantmentTarget;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;)V")
     private void ef$deferMeleeThorns(ServerLevel level, int enchantmentLevel, EnchantedItemInUse item,
                                      EnchantmentTarget side, Entity victim, DamageSource source, Operation<Void> original) {
-        if (!FireThornsSkills.suppressInstantThorns((Enchantment) (Object) this, level, item, side, victim, source)) {
-            int fireBefore = victim instanceof LivingEntity living ? living.getRemainingFireTicks() : 0;
-            Vec3 windBefore = item.owner() instanceof LivingEntity living ? living.getDeltaMovement() : null;
-            original.call(level, enchantmentLevel, item, side, victim, source);
-            MeleeFireSkills.observePrimaryFire((Enchantment) (Object) this, level, enchantmentLevel, item, side, victim, source, fireBefore);
-            MeleeWindSkills.observePrimaryWind((Enchantment) (Object) this, level, enchantmentLevel, item, side, victim, source, windBefore);
-        }
+        Enchantment enchantment = (Enchantment) (Object) this;
+        GrapnelThorns.Scope thorns = GrapnelThorns.begin(enchantment, level, enchantmentLevel, item, side, victim, source);
+        boolean completed = false;
+        try {
+            if (!FireThornsSkills.suppressInstantThorns(enchantment, level, item, side, victim, source)) {
+                int fireBefore = victim instanceof LivingEntity living ? living.getRemainingFireTicks() : 0;
+                Vec3 windBefore = item.owner() instanceof LivingEntity living ? living.getDeltaMovement() : null;
+                original.call(level, enchantmentLevel, item, side, victim, source);
+                MeleeFireSkills.observePrimaryFire(enchantment, level, enchantmentLevel, item, side, victim, source, fireBefore);
+                ConfirmedWindBurst.observe(enchantment, level, enchantmentLevel, item, side, victim, source, windBefore);
+            }
+            completed = true;
+        } finally { GrapnelThorns.finish(thorns, completed); }
     }
 
     @WrapMethod(method = "runLocationChangedEffects")

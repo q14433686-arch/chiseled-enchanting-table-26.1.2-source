@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.FrostLandingCapture;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
+import enchantment_fusion.mechanics.signatures.ConfirmedLivingDamage;
 import enchantment_fusion.mechanics.signatures.MeleeGuardCapture;
 import enchantment_fusion.mechanics.signatures.GrapnelDefenseCapture;
 import net.minecraft.server.level.ServerLevel;
@@ -57,6 +58,7 @@ public abstract class PlayerFrostLandingMixin {
         FrostLandingCapture.afterHealthDamage(player, source);
         BlastDefenseSkills.observeActualDamage(player, source, beforeHealth, beforeAbsorption);
         FireThornsSkills.observeDamage(player, source, beforeHealth, beforeAbsorption);
+        ConfirmedLivingDamage.observed(player, source, beforeHealth, beforeAbsorption);
         MeleeGuardCapture.afterHealth(player, source, beforeHealth, beforeAbsorption);
         GrapnelDefenseCapture.afterHealth(player, source, beforeHealth, beforeAbsorption);
     }

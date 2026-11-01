@@ -1117,5 +1117,9 @@
   "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben el nuevo arco.",
   "tooltip.enchantment_fusion.melee_wind_blade": "Un impacto real cargado crea una hoja giratoria temporal. Muévete para cortar y empujar a los enemigos compatibles que toque.",
   "tooltip.enchantment_fusion.melee_wind_updraft": "Una ráfaga ascendente real te eleva y crea una corriente. Golpea dentro a un enemigo compatible para liberar una onda virtual. La ráfaga normal puede activar bloques.",
-  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Los objetos antiguos incompatibles conservan su efecto; la nueva hoja y la corriente no se aplican."
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Los objetos antiguos incompatibles conservan su efecto; la nueva hoja y la corriente no se aplican.",
+  "tooltip.enchantment_fusion.wind_grapnel": "Un golpe real de maza marca la posición durante 8 segundos si la ráfaga de viento del mismo golpe te eleva de verdad. Sostén la misma maza, permanece a 12 bloques de la marca y apunta con visión despejada a un enemigo apto a 8 bloques de ella. Se conservan la ráfaga original y sus efectos en el entorno.",
+  "tooltip.enchantment_fusion.thorns_grapnel": "Cuando esta armadura equipada o escudo sostenido refleja daño real a un atacante apto, lo marca durante 8 segundos. Se conservan la probabilidad y el desgaste de Espinas. Mantén el mismo objeto equipado y activa a 12 bloques con visión despejada.",
+  "message.enchantment_fusion.grapnel_wind_marked": "La ráfaga de viento ha marcado la posición. Apunta a un enemigo apto y activa el gancho.",
+  "message.enchantment_fusion.grapnel_thorns_marked": "Espinas ha marcado al atacante. Mantén el mismo objeto equipado y activa el gancho."
 }

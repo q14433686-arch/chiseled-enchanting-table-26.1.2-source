@@ -1117,5 +1117,9 @@
   "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; der neue Lichtbogen gilt nicht.",
   "tooltip.enchantment_fusion.melee_wind_blade": "Ein voller echter Treffer erzeugt kurz eine rotierende Klinge. Bewegung lenkt sie durch passende Gegner und stößt sie zurück.",
   "tooltip.enchantment_fusion.melee_wind_updraft": "Ein echter Windstoß hebt dich an und erzeugt einen Aufwind. Triff darin erneut einen passenden Gegner für eine virtuelle Klingenwelle. Der normale Windstoß kann Blöcke auslösen.",
-  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Alte unpassende Träger behalten ihre Wirkung; die neue Klinge und der Aufwind gelten nicht."
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Alte unpassende Träger behalten ihre Wirkung; die neue Klinge und der Aufwind gelten nicht.",
+  "tooltip.enchantment_fusion.wind_grapnel": "Ein echter Streitkolbentreffer markiert den Standort für 8 Sekunden, wenn Windstoß dich dabei tatsächlich anhebt. Halte denselben Streitkolben, bleibe höchstens 12 Blöcke von der Markierung entfernt und ziele mit freier Sicht auf einen geeigneten Gegner innerhalb von 8 Blöcken um die Markierung. Der ursprüngliche Windstoß und seine Umweltwirkung bleiben erhalten.",
+  "tooltip.enchantment_fusion.thorns_grapnel": "Wenn diese getragene Rüstung oder der gehaltene Schild einen Treffer tatsächlich auf einen geeigneten Angreifer reflektiert, wird er 8 Sekunden markiert. Wahrscheinlichkeit und Haltbarkeitsverbrauch von Dornen bleiben erhalten. Behalte denselben Gegenstand angelegt und aktiviere innerhalb von 12 Blöcken bei freier Sicht.",
+  "message.enchantment_fusion.grapnel_wind_marked": "Windstoß hat den Standort markiert. Ziele auf einen geeigneten Gegner und aktiviere den Rückholhaken.",
+  "message.enchantment_fusion.grapnel_thorns_marked": "Dornen haben den Angreifer markiert. Behalte den Gegenstand angelegt und aktiviere den Rückholhaken."
 }
