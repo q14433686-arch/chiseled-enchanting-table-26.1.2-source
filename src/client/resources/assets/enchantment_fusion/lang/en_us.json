@@ -1175,5 +1175,11 @@
   "message.enchantment_fusion.ranged_tide_set": "Current charge prepared for the next real arrow within 10 seconds.",
   "tooltip.enchantment_fusion.ranged_tide_current": "An eligible underwater real-arrow hit leaves a short virtual current along up to 32 blocks of the actual underwater path. Swim forward through it once to gain a collision-safe push. Water is never replaced; the shooting primary remains.",
   "tooltip.enchantment_fusion.ranged_tide_drag": "Swim at least three blocks with these boots, then activate in water to prepare the next real bow/crossbow arrow for 10 seconds. While you keep wearing them, the arrow has less water drag. Only one water-arrow preparation can be active at a time; Depth Strider remains.",
-  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Legacy items keep their old effect. New shooting-first fusions require a bow/crossbow; Depth Strider-first fusions require boots."
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Legacy items keep their old effect. New shooting-first fusions require a bow/crossbow; Depth Strider-first fusions require boots.",
+  "skill.enchantment_fusion.ranged_sneak": "Crouched retreat",
+  "message.enchantment_fusion.ranged_sneak_aim_ready": "Crouch and keep aiming at that target to accelerate your next draw.",
+  "message.enchantment_fusion.ranged_sneak_slip_ready": "A crouched shot has prepared a retreat.",
+  "tooltip.enchantment_fusion.ranged_sneak_aim": "A real arrow fired while sneaking must damage a valid living target. Stay sneaking, hold the same launcher and keep aiming at that visible target within 24 blocks to accelerate one next bow draw or arrow crossbow load. Looking away, standing up or changing launcher cancels it. The shooting primary remains.",
+  "tooltip.enchantment_fusion.ranged_sneak_slip": "Wear these leggings and fire a real bow/crossbow arrow while sneaking. Within 5 seconds activate while sneaking on the ground to push in your movement-input direction; without input, retreat opposite your view. Movement uses normal collisions, not teleportation. Swift Sneak remains.",
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Legacy items keep their old effect. New shooting-first fusions need a bow/crossbow; Swift Sneak-first fusions need leggings."
 }

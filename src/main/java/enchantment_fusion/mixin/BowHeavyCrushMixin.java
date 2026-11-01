@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.HeavyCrushMath;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
+import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
@@ -18,6 +19,7 @@ public abstract class BowHeavyCrushMixin {
         target = "Lnet/minecraft/world/item/BowItem;getPowerForTime(I)F"))
     private float ef$heavyDraw(int elapsed, Operation<Float> original, ItemStack weapon, Level level,
                                LivingEntity user, int remaining) {
-        return original.call(HeavyCrushSkill.selected(weapon) == null ? elapsed : HeavyCrushMath.slowedUseTicks(elapsed));
+        int slowed = HeavyCrushSkill.selected(weapon) == null ? elapsed : HeavyCrushMath.slowedUseTicks(elapsed);
+        return original.call(RangedSneakSkills.bowTicks(user, weapon, slowed));
     }
 }

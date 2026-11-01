@@ -1175,5 +1175,11 @@
   "message.enchantment_fusion.ranged_tide_set": "Courant prêt pour la prochaine vraie flèche pendant 10 secondes.",
   "tooltip.enchantment_fusion.ranged_tide_current": "Une vraie flèche sous-marine blessant une cible valide laisse un bref courant virtuel sur 32 blocs au plus de sa trajectoire sous l’eau. Nagez une fois dans son sens pour recevoir une poussée soumise aux collisions. L’eau et l’effet principal de tir restent.",
   "tooltip.enchantment_fusion.ranged_tide_drag": "Nagez volontairement trois blocs avec ces bottes, puis activez dans l’eau : la prochaine vraie flèche d’arc/arbalète ralentit moins dans l’eau pendant 10 secondes tant que vous les portez. Une seule préparation aquatique à la fois ; agilité aquatique reste.",
-  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et bottes pour agilité aquatique principale."
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et bottes pour agilité aquatique principale.",
+  "skill.enchantment_fusion.ranged_sneak": "Retraite accroupie",
+  "message.enchantment_fusion.ranged_sneak_aim_ready": "Restez accroupi et visez cette cible pour accélérer la prochaine charge.",
+  "message.enchantment_fusion.ranged_sneak_slip_ready": "Un tir accroupi a préparé une retraite.",
+  "tooltip.enchantment_fusion.ranged_sneak_aim": "Une vraie flèche tirée accroupi doit blesser une cible vivante valide. Restez accroupi, gardez la même arme et visez la cible visible à moins de 24 blocs pour accélérer une prochaine tension d’arc ou charge de flèche d’arbalète. Détourner le regard, se relever ou changer d’arme annule ; l’effet principal de tir reste.",
+  "tooltip.enchantment_fusion.ranged_sneak_slip": "Avec ce pantalon, tirez une vraie flèche accroupi. Dans les 5 secondes, activez accroupi au sol pour une poussée dans la direction de déplacement ; sans entrée, reculez par rapport au regard. Collisions normales, sans téléportation ; discrétion rapide reste.",
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et pantalon pour discrétion rapide principale."
 }

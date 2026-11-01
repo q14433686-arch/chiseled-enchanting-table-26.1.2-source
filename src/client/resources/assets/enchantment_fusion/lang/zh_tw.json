@@ -1175,5 +1175,11 @@
   "message.enchantment_fusion.ranged_tide_set": "流勢已準備：10 秒內下一支真實箭降低水阻。",
   "tooltip.enchantment_fusion.ranged_tide_current": "水下真實箭使合格目標受到淨傷害後，沿實際水下箭途最多 32 格留下短暫虛擬水流。順流真實游過一次可借流推進，移動仍受碰撞限制。不替換水，保留原射擊主位。",
   "tooltip.enchantment_fusion.ranged_tide_drag": "穿此靴在水中有意游動至少三格後主動準備；10 秒內下一支真實弓弩箭在繼續穿靴時水中阻力降低。同一時間只能準備一種水下箭，保留原深海探索者主位。",
-  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新深海探索者主位要求靴子。"
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新深海探索者主位要求靴子。",
+  "skill.enchantment_fusion.ranged_sneak": "靜步撤射",
+  "message.enchantment_fusion.ranged_sneak_aim_ready": "保持潛行並瞄準該目標，可加快下一次蓄裝。",
+  "message.enchantment_fusion.ranged_sneak_slip_ready": "潛行實射已準備一次撤步。",
+  "tooltip.enchantment_fusion.ranged_sneak_aim": "潛行射出的真實箭使合格存活目標受到淨傷後，繼續潛行、手持同一弓弩並瞄準 24 格內可見目標，可加快下一次拉弓或箭矢裝弩。移開視線、起身或換弓弩會取消；保留射擊主位。",
+  "tooltip.enchantment_fusion.ranged_sneak_slip": "穿著護腿潛行射出真實弓弩箭後，5 秒內在地面潛行主動釋放，沿移動輸入方向獲得一次推力；無輸入則朝視線反方向撤退。運動走原版碰撞，不瞬移；保留迅捷潛行主位。",
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新迅捷潛行主位要求護腿。"
 }

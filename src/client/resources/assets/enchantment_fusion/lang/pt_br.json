@@ -1175,5 +1175,11 @@
   "message.enchantment_fusion.ranged_tide_set": "Corrente pronta para a próxima flecha real em até 10 segundos.",
   "tooltip.enchantment_fusion.ranged_tide_current": "Uma flecha real submersa que cause dano a um alvo válido deixa uma breve corrente virtual em até 32 blocos de sua trajetória subaquática real. Nade uma vez a favor dela para receber um impulso sujeito a colisões. A água e o efeito principal de tiro permanecem.",
   "tooltip.enchantment_fusion.ranged_tide_drag": "Nade intencionalmente três blocos com estas botas e ative na água: a próxima flecha real de arco/besta em 10 segundos perde menos velocidade na água enquanto você as usar. Apenas uma preparação aquática por vez; passos profundos permanece.",
-  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e botas para passos profundos principal."
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e botas para passos profundos principal.",
+  "skill.enchantment_fusion.ranged_sneak": "Retirada agachada",
+  "message.enchantment_fusion.ranged_sneak_aim_ready": "Continue agachado e mirando no alvo para acelerar a próxima carga.",
+  "message.enchantment_fusion.ranged_sneak_slip_ready": "Um tiro agachado preparou uma retirada.",
+  "tooltip.enchantment_fusion.ranged_sneak_aim": "Uma flecha real disparada agachado deve ferir um alvo vivo válido. Continue agachado, segure a mesma arma e mire no alvo visível a até 24 blocos para acelerar uma próxima puxada do arco ou carga de flecha da besta. Desviar a mira, levantar ou trocar a arma cancela; o efeito principal de tiro permanece.",
+  "tooltip.enchantment_fusion.ranged_sneak_slip": "Com estas calças, dispare uma flecha real agachado. Em 5 segundos, ative agachado no chão para um impulso na direção do movimento; sem comando, recua em relação ao olhar. Usa colisões normais, sem teleporte; furtividade veloz permanece.",
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e calças para furtividade veloz principal."
 }

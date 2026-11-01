@@ -20,6 +20,7 @@ import enchantment_fusion.mechanics.signatures.RangedWearSkills;
 import enchantment_fusion.mechanics.signatures.RangedWorkSkills;
 import enchantment_fusion.mechanics.signatures.RangedBreathSkills;
 import enchantment_fusion.mechanics.signatures.RangedTideSkills;
+import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
@@ -97,6 +98,7 @@ public final class FusionSkillNetworking {
         RANGED_WORK_BLADE("skill.enchantment_fusion.ranged_work_blade"),
         RANGED_BREATH("skill.enchantment_fusion.ranged_breath"),
         RANGED_TIDE("skill.enchantment_fusion.ranged_tide"),
+        RANGED_SNEAK("skill.enchantment_fusion.ranged_sneak"),
         MELEE_WEAR_GUARD("skill.enchantment_fusion.melee_wear_guard"),
         MELEE_WEAR_EDGE("skill.enchantment_fusion.melee_wear_edge"),
         MELEE_WORK("skill.enchantment_fusion.melee_work"),
@@ -141,6 +143,7 @@ public final class FusionSkillNetworking {
         if (RangedWorkSkills.hasEquipped(player, false)) skills.add(Skill.RANGED_WORK_BLADE);
         if (RangedBreathSkills.hasEquipped(player)) skills.add(Skill.RANGED_BREATH);
         if (RangedTideSkills.hasEquipped(player)) skills.add(Skill.RANGED_TIDE);
+        if (RangedSneakSkills.hasEquipped(player)) skills.add(Skill.RANGED_SNEAK);
         if (MeleeWearSkills.hasEquipped(player, true)) skills.add(Skill.MELEE_WEAR_GUARD);
         if (MeleeWearSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WEAR_EDGE);
         if (MeleeWorkSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WORK);
@@ -216,6 +219,7 @@ public final class FusionSkillNetworking {
             case RANGED_WORK_BLADE -> RangedWorkSkills.activate(player, false);
             case RANGED_BREATH -> RangedBreathSkills.activate(player);
             case RANGED_TIDE -> RangedTideSkills.activate(player);
+            case RANGED_SNEAK -> RangedSneakSkills.activate(player);
             case MELEE_WEAR_GUARD -> MeleeWearSkills.activate(player, true);
             case MELEE_WEAR_EDGE -> MeleeWearSkills.activate(player, false);
             case MELEE_WORK -> MeleeWorkSkills.activate(player, false);

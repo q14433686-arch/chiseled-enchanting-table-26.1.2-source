@@ -1175,5 +1175,11 @@
   "message.enchantment_fusion.ranged_tide_set": "Corrente pronta per la prossima freccia vera entro 10 secondi.",
   "tooltip.enchantment_fusion.ranged_tide_current": "Una freccia vera sott’acqua che danneggia un bersaglio valido lascia una breve corrente virtuale lungo fino a 32 blocchi della traiettoria subacquea reale. Nuota una volta nel suo verso per ricevere una spinta soggetta alle collisioni. Acqua ed effetto principale di tiro restano.",
   "tooltip.enchantment_fusion.ranged_tide_drag": "Nuota volontariamente tre blocchi con questi stivali e attiva nell’acqua: la prossima freccia vera di arco/balestra entro 10 secondi rallenta meno in acqua finché li indossi. Una sola preparazione acquatica alla volta; passo anfibio rimane.",
-  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale e stivali per passo anfibio principale."
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale e stivali per passo anfibio principale.",
+  "skill.enchantment_fusion.ranged_sneak": "Ritirata accovacciata",
+  "message.enchantment_fusion.ranged_sneak_aim_ready": "Rimani accovacciato e mira al bersaglio per accelerare la prossima carica.",
+  "message.enchantment_fusion.ranged_sneak_slip_ready": "Un tiro accovacciato ha preparato una ritirata.",
+  "tooltip.enchantment_fusion.ranged_sneak_aim": "Una freccia vera scoccata da accovacciato deve danneggiare un bersaglio vivo valido. Resta accovacciato, tieni la stessa arma e mira al bersaglio visibile entro 24 blocchi per accelerare una carica di arco o di freccia nella balestra. Distogliere lo sguardo, alzarsi o cambiare arma annulla; l’effetto principale di tiro resta.",
+  "tooltip.enchantment_fusion.ranged_sneak_slip": "Con questi gambali spara una freccia vera da accovacciato. Entro 5 secondi attiva a terra da accovacciato per una spinta nella direzione di movimento; senza input, arretri rispetto allo sguardo. Collisioni normali, senza teletrasporto; furtività rapida resta.",
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale e gambali per furtività rapida principale."
 }

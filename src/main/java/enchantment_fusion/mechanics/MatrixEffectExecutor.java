@@ -36,6 +36,7 @@ import enchantment_fusion.mechanics.signatures.RangedWearSkills;
 import enchantment_fusion.mechanics.signatures.RangedWorkSkills;
 import enchantment_fusion.mechanics.signatures.RangedBreathSkills;
 import enchantment_fusion.mechanics.signatures.RangedTideSkills;
+import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -346,6 +347,7 @@ public final class MatrixEffectExecutor {
             boolean redesignedRangedWork = RangedWorkSkills.applies(pair, hostStack);
             boolean redesignedRangedBreath = RangedBreathSkills.applies(pair, hostStack);
             boolean redesignedRangedTide = RangedTideSkills.applies(pair, hostStack);
+            boolean redesignedRangedSneak = RangedSneakSkills.applies(pair, hostStack);
             boolean redesignedMeleeImpulse = MeleeImpulseSkills.applies(pair, hostStack);
             boolean redesignedMeleeGuard = MeleeGuardSkills.applies(pair, hostStack);
             boolean redesignedMeleeWork = MeleeWorkSkills.applies(pair, hostStack);
@@ -361,7 +363,7 @@ public final class MatrixEffectExecutor {
                 || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal
                 || redesignedFireTradeoff || redesignedSoulThread || redesignedFireThorns || redesignedFireSweep || redesignedWindSweep
                 || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre || redesignedFortuneBank
-                || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedRangedWear || redesignedRangedWork || redesignedRangedBreath || redesignedRangedTide || redesignedMeleeImpulse
+                || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedRangedWear || redesignedRangedWork || redesignedRangedBreath || redesignedRangedTide || redesignedRangedSneak || redesignedMeleeImpulse
                 || redesignedMeleeGuard || redesignedMeleeWork || redesignedMeleeMending || redesignedMeleeFortune
                 || redesignedMeleeFire || redesignedMeleeFrost || redesignedMeleeLightning || redesignedMeleeWind || redesignedGrapnel;
             if (dedicatedAction) {

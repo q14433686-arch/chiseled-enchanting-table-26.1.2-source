@@ -3,6 +3,7 @@ package enchantment_fusion.mixin;
 import enchantment_fusion.mechanics.signatures.HeavyCrushMath;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
+import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
@@ -18,7 +19,8 @@ public abstract class CrossbowHeavyCrushMixin {
     private static void ef$heavyReload(ItemStack weapon, LivingEntity user, CallbackInfoReturnable<Integer> cir) {
         int duration = cir.getReturnValueI();
         if (HeavyCrushSkill.selected(weapon) != null) duration = HeavyCrushMath.slowedChargeDuration(duration);
-        int resolved = PiercingChainSkills.chargeDuration(weapon, user, duration);
+        int resolved = Math.min(PiercingChainSkills.chargeDuration(weapon, user, duration),
+            RangedSneakSkills.crossbowDuration(user, weapon, duration));
         if (resolved != cir.getReturnValueI()) cir.setReturnValue(resolved);
     }
 }

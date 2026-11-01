@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
+import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
@@ -62,6 +63,7 @@ public abstract class PhantomCrossbowMixin {
         boolean loaded = original.call(shooter, weapon);
         if (loaded) {
             RangedCadenceSkills.loadedCrossbow(shooter, weapon);
+            RangedSneakSkills.loadedCrossbow(shooter, weapon);
             PiercingChainSkills.loaded(shooter, weapon);
             GrapnelQuickCharge.loaded(shooter, weapon);
         }

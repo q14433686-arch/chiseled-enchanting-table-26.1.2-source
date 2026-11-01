@@ -1175,5 +1175,11 @@
   "message.enchantment_fusion.ranged_tide_set": "Strömung bereit für den nächsten echten Pfeil binnen 10 Sekunden.",
   "tooltip.enchantment_fusion.ranged_tide_current": "Ein zulässiger Treffer eines echten Unterwasserpfeils hinterlässt entlang von bis zu 32 Blöcken seiner tatsächlichen Unterwasserbahn eine kurze virtuelle Strömung. Schwimme einmal vorwärts hindurch, um einen kollisionsbegrenzten Schub zu erhalten. Wasser und Schuss-Haupteffekt bleiben.",
   "tooltip.enchantment_fusion.ranged_tide_drag": "Mit diesen Stiefeln mindestens drei Blöcke gezielt schwimmen und im Wasser aktivieren: Der nächste echte Bogen-/Armbrustpfeil hat binnen 10 Sekunden weniger Wasserwiderstand, solange du sie trägst. Nur eine Wasserpfeil-Vorbereitung zugleich; Wasserläufer bleibt.",
-  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, Wasserläufer-Haupteffekte Stiefel."
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, Wasserläufer-Haupteffekte Stiefel.",
+  "skill.enchantment_fusion.ranged_sneak": "Geduckter Rückzug",
+  "message.enchantment_fusion.ranged_sneak_aim_ready": "Schleiche und ziele weiter auf dieses Ziel, um das nächste Laden zu beschleunigen.",
+  "message.enchantment_fusion.ranged_sneak_slip_ready": "Ein Schleichschuss hat einen Rückzug vorbereitet.",
+  "tooltip.enchantment_fusion.ranged_sneak_aim": "Ein echter Pfeil aus dem Schleichen muss einem gültigen lebenden Ziel Schaden zufügen. Bleibe schleichend, halte denselben Bogen/dieselbe Armbrust und ziele auf das sichtbare Ziel innerhalb von 24 Blöcken: Ein nächstes Spannen oder Laden eines Pfeils wird schneller. Wegsehen, Aufstehen oder Waffenwechsel beendet dies; der Schuss-Haupteffekt bleibt.",
+  "tooltip.enchantment_fusion.ranged_sneak_slip": "Mit dieser Hose schleichend einen echten Pfeil verschießen. Innerhalb von 5 Sekunden am Boden schleichend aktivieren: Ein Schub folgt der Bewegungseingabe, ohne Eingabe entgegen der Blickrichtung. Normale Kollision statt Teleportation; flinkes Schleichen bleibt.",
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, flinke-Schleichen-Haupteffekte eine Hose."
 }

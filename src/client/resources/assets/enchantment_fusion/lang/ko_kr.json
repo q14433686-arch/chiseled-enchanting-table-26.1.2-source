@@ -1175,5 +1175,11 @@
   "message.enchantment_fusion.ranged_tide_set": "물살 준비: 10초 안의 다음 실제 화살에 적용됩니다.",
   "tooltip.enchantment_fusion.ranged_tide_current": "물속 실제 화살이 유효한 대상에게 피해를 주면 실제 수중 경로를 최대 32블록 따라 짧은 가상 물살이 남습니다. 물살 방향으로 실제 수영해 통과하면 충돌을 따르는 추진을 한 번 얻습니다. 물과 사격 주 효과는 유지됩니다.",
   "tooltip.enchantment_fusion.ranged_tide_drag": "이 장화를 신고 물속에서 의도적으로 세 블록 수영한 뒤 발동합니다. 10초 안의 다음 실제 활·쇠뇌 화살은 계속 착용하는 동안 수중 저항이 줄어듭니다. 수중 화살 준비는 한 번에 하나만 가능하며 물갈퀴 주 효과는 유지됩니다.",
-  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 물갈퀴 주 효과에는 장화가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 물갈퀴 주 효과에는 장화가 필요합니다.",
+  "skill.enchantment_fusion.ranged_sneak": "웅크린 후퇴",
+  "message.enchantment_fusion.ranged_sneak_aim_ready": "계속 웅크리고 대상을 조준하면 다음 장전이 빨라집니다.",
+  "message.enchantment_fusion.ranged_sneak_slip_ready": "웅크린 실제 사격으로 후퇴가 준비되었습니다.",
+  "tooltip.enchantment_fusion.ranged_sneak_aim": "웅크려 쏜 실제 화살이 유효하게 살아 있는 대상에게 피해를 주면, 계속 웅크리고 같은 무기를 든 채 24블록 내 보이는 대상을 조준하여 다음 활 당기기 또는 쇠뇌 화살 장전 한 번을 가속합니다. 시선을 돌리거나 일어서거나 무기를 바꾸면 취소되며 사격 주 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.ranged_sneak_slip": "이 각반을 신고 웅크려 실제 화살을 발사한 뒤 5초 안에 지상에서 웅크린 채 발동합니다. 이동 입력 방향으로 한 번 밀리며 입력이 없으면 시선 반대로 후퇴합니다. 일반 충돌을 따르고 순간이동하지 않으며 신속한 잠행 주 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 신속한 잠행 주 효과에는 각반이 필요합니다."
 }

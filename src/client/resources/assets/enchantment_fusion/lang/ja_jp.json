@@ -1175,5 +1175,11 @@
   "message.enchantment_fusion.ranged_tide_set": "流勢準備完了：10秒以内の次の本物の矢に適用。",
   "tooltip.enchantment_fusion.ranged_tide_current": "水中で本物の矢が有効な対象へ実ダメージを与えると、実際の水中軌道を最大32ブロック辿る短命の仮想水流を残す。流れに沿って実際に泳ぐと一度だけ衝突制限付きで加速。水を置き換えず、射撃の主効果を維持。",
   "tooltip.enchantment_fusion.ranged_tide_drag": "このブーツで水中を意図的に3ブロック泳いでから発動。10秒以内の次の本物の弓・クロスボウの矢は、着用中に水中抵抗が減る。水中矢の準備は同時に1つまで。水中移動の主効果は維持。",
-  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、水中移動主位はブーツが必要。"
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、水中移動主位はブーツが必要。",
+  "skill.enchantment_fusion.ranged_sneak": "潜伏退射",
+  "message.enchantment_fusion.ranged_sneak_aim_ready": "スニークし、この対象を狙い続けると次の装填が速くなる。",
+  "message.enchantment_fusion.ranged_sneak_slip_ready": "スニーク射撃で退避を準備。",
+  "tooltip.enchantment_fusion.ranged_sneak_aim": "スニーク中に放った本物の矢が有効な生存対象に実ダメージを与えた後、同じ弓・クロスボウを持ち、24ブロック以内の見える対象をスニークして狙い続けると、次の弓引きか矢の装填が一度速くなる。視線を外す・立つ・武器変更で解除。射撃の主効果は維持。",
+  "tooltip.enchantment_fusion.ranged_sneak_slip": "このレギンスを着けてスニーク中に本物の矢を射ち、5秒以内に地上でスニークして発動すると、移動入力方向へ一度加速。入力がなければ視線と逆方向へ。通常の衝突を使い、瞬間移動しない。スニーク速度の主効果を維持。",
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、スニーク速度主位はレギンスが必要。"
 }
