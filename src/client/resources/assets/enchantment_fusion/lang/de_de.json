@@ -1181,5 +1181,12 @@
   "message.enchantment_fusion.ranged_sneak_slip_ready": "Ein Schleichschuss hat einen Rückzug vorbereitet.",
   "tooltip.enchantment_fusion.ranged_sneak_aim": "Ein echter Pfeil aus dem Schleichen muss einem gültigen lebenden Ziel Schaden zufügen. Bleibe schleichend, halte denselben Bogen/dieselbe Armbrust und ziele auf das sichtbare Ziel innerhalb von 24 Blöcken: Ein nächstes Spannen oder Laden eines Pfeils wird schneller. Wegsehen, Aufstehen oder Waffenwechsel beendet dies; der Schuss-Haupteffekt bleibt.",
   "tooltip.enchantment_fusion.ranged_sneak_slip": "Mit dieser Hose schleichend einen echten Pfeil verschießen. Innerhalb von 5 Sekunden am Boden schleichend aktivieren: Ein Schub folgt der Bewegungseingabe, ohne Eingabe entgegen der Blickrichtung. Normale Kollision statt Teleportation; flinkes Schleichen bleibt.",
-  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, flinke-Schleichen-Haupteffekte eine Hose."
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, flinke-Schleichen-Haupteffekte eine Hose.",
+  "skill.enchantment_fusion.ranged_guard": "Geschützter Pfeil",
+  "message.enchantment_fusion.ranged_guard_full": "Die Pfeilschutzgrenze ist voll; die Vorbereitung wurde verbraucht.",
+  "message.enchantment_fusion.ranged_guard_need_defense": "Verhindere zuerst mit dieser Ausrüstung mindestens zwei Schaden.",
+  "message.enchantment_fusion.ranged_guard_set": "Schutz für den nächsten echten Pfeil innerhalb von 10 Sekunden vorbereitet.",
+  "tooltip.enchantment_fusion.ranged_guard_screen": "Ein echter Pfeil, der ein gültiges Ziel verletzt, hinterlässt kurz einen virtuellen Schirm am Trefferpunkt. Er lenkt begrenzt viele echte feindliche Geschosse ab, die Besitzer, Verbündete oder Dorfbewohner im Radius treffen würden; das ursprüngliche Geschoss bleibt bestehen. Der Schuss-Haupteffekt bleibt.",
+  "tooltip.enchantment_fusion.ranged_guard_arrow": "Tatsächlich zurechenbare Schutzminderung oder Schildblocken lädt diese Ausrüstung. Nach mindestens zwei verhindertem Schaden aktivieren: Der nächste echte Bogen-/Armbrustpfeil ist binnen 10 Sekunden geschützt, solange dieselbe Ausrüstung angelegt bleibt. Eine echte feindliche Geschosskollision wird abgelenkt; keine Munition wird kopiert. Schutz bleibt.",
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, Schutz-Haupteffekte Rüstung oder Schild."
 }

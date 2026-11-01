@@ -167,12 +167,15 @@ public final class MeleeGuardSkills {
         POST_REPLAY.set(true);
         try {
             List<Gear> meleeGear = equipped(player); List<GrapnelDefense.Gear> grapnelGear = GrapnelDefense.equipped(player);
+            List<RangedGuardSkills.Gear> rangedGear = RangedGuardSkills.equipped(player);
             for (EquipmentSlot slot : SLOTS) {
                 ItemStack stack = player.getItemBySlot(slot); int primaryLevel = 0;
                 for (Gear gear : meleeGear) if (gear.slot() == slot && gear.stack() == stack && stillEquipped(player, gear))
                     primaryLevel = Math.max(primaryLevel, gear.pair().primaryLevel());
                 for (GrapnelDefense.Gear gear : grapnelGear) if (gear.slot() == slot && gear.stack() == stack
                     && GrapnelDefense.PROTECTION.equals(gear.pair().primaryId()) && GrapnelDefense.stillEquipped(player, gear))
+                    primaryLevel = Math.max(primaryLevel, gear.pair().primaryLevel());
+                for (RangedGuardSkills.Gear gear : rangedGear) if (gear.slot() == slot && gear.stack() == stack && RangedGuardSkills.stillEquipped(player, gear))
                     primaryLevel = Math.max(primaryLevel, gear.pair().primaryLevel());
                 if (primaryLevel <= 0) continue;
                 int nativeLevel = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(protection);

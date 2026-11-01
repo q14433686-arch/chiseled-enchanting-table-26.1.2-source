@@ -2,6 +2,7 @@ package enchantment_fusion.mechanics.signatures;
 
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.model.FusedEnchantmentList;
+import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.RetainedEnchant;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayDeque;
@@ -31,14 +32,28 @@ public final class MeleeGuardCapture {
     private static final class Observation {
         float contribution; int calls; boolean ambiguous;
     }
+    /** Both direction families consume the same one-pass, per-item attribution. */
+    private interface Source {
+        ItemStack stack(); FusedPair pair(); boolean equipped(ServerPlayer owner); void credit(ServerPlayer owner, float amount);
+    }
+    private record MeleeSource(MeleeGuardSkills.Gear gear) implements Source {
+        public ItemStack stack() { return gear.stack(); } public FusedPair pair() { return gear.pair(); }
+        public boolean equipped(ServerPlayer owner) { return MeleeGuardSkills.stillEquipped(owner, gear); }
+        public void credit(ServerPlayer owner, float amount) { MeleeGuardSkills.addCharge(owner, gear, amount); }
+    }
+    private record RangedSource(RangedGuardSkills.Gear gear) implements Source {
+        public ItemStack stack() { return gear.stack(); } public FusedPair pair() { return gear.pair(); }
+        public boolean equipped(ServerPlayer owner) { return RangedGuardSkills.stillEquipped(owner, gear); }
+        public void credit(ServerPlayer owner, float amount) { RangedGuardSkills.addCharge(owner, gear, amount); }
+    }
     public static final class Frame {
-        final ServerPlayer player; final DamageSource source; final List<MeleeGuardSkills.Gear> gear;
+        final ServerPlayer player; final DamageSource source; final List<Source> gear;
         final Map<ItemStack, Observation> observations = new IdentityHashMap<>();
         final boolean cooldownClear;
         @Nullable ItemStack blockingItem;
         boolean ambiguous, blockAmbiguous, formulaSeen, finalSeen, shieldSeen, fullyBlocked;
         float input, total, result, beforeMagic, afterMagic, actualLoss, blocked;
-        Frame(ServerPlayer player, DamageSource source, List<MeleeGuardSkills.Gear> gear) {
+        Frame(ServerPlayer player, DamageSource source, List<Source> gear) {
             this.player = player; this.source = source; this.gear = gear;
             this.cooldownClear = player.invulnerableTime <= 10 || source.is(DamageTypeTags.BYPASSES_COOLDOWN);
         }
@@ -47,9 +62,13 @@ public final class MeleeGuardCapture {
     public static @Nullable Frame begin(ServerPlayer player, DamageSource source) {
         Deque<Frame> stack = FRAMES.get();
         boolean skip = stack.size() >= MAX_DEPTH || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY);
-        List<MeleeGuardSkills.Gear> gear = skip ? List.of() : MeleeGuardSkills.equipped(player);
+        List<Source> gear = new ArrayList<>();
+        if (!skip) {
+            for (MeleeGuardSkills.Gear item : MeleeGuardSkills.equipped(player)) gear.add(new MeleeSource(item));
+            for (RangedGuardSkills.Gear item : RangedGuardSkills.equipped(player)) gear.add(new RangedSource(item));
+        }
         if (gear.isEmpty() && stack.isEmpty()) { FRAMES.remove(); return null; }
-        Frame frame = new Frame(player, source, gear); stack.push(frame); return frame;
+        Frame frame = new Frame(player, source, List.copyOf(gear)); stack.push(frame); return frame;
     }
     private static @Nullable Frame current(ServerPlayer player, DamageSource source) {
         Deque<Frame> stack = FRAMES.get(); Frame frame = stack.peek();
@@ -68,7 +87,7 @@ public final class MeleeGuardCapture {
             .anyMatch(effect -> !(effect.effect() instanceof AddValue))) frame.ambiguous = true;
         Holder<Enchantment> protection = FusionStationOperations.lookupEnchantment(level.registryAccess(), MeleeGuardSkills.PROTECTION).orElse(null);
         if (protection == null || protection.value() != enchantment) return;
-        for (MeleeGuardSkills.Gear gear : frame.gear) {
+        for (Source gear : frame.gear) {
             if (gear.stack() != item) continue;
             Observation found = frame.observations.computeIfAbsent(item, ignored -> new Observation());
             found.calls++;
@@ -119,26 +138,26 @@ public final class MeleeGuardCapture {
         if (!balanced || !completed || !frame.player.isAlive() || frame.player.isSpectator()) return;
         // A completely blocked hit returns false in vanilla; the shield still performed real blocking.
         if (!frame.blockAmbiguous && frame.cooldownClear && frame.blockingItem != null && frame.blocked > 0 && (success || frame.fullyBlocked)) {
-            for (MeleeGuardSkills.Gear gear : frame.gear) {
-                if (gear.stack() == frame.blockingItem && MeleeGuardSkills.stillEquipped(frame.player, gear)) {
-                    MeleeGuardSkills.addCharge(frame.player, gear, Math.min(4.0F, frame.blocked)); break;
+            for (Source gear : frame.gear) {
+                if (gear.stack() == frame.blockingItem && gear.equipped(frame.player)) {
+                    gear.credit(frame.player, Math.min(4.0F, frame.blocked)); break;
                 }
             }
         }
         if (frame.ambiguous || !success || !frame.formulaSeen || !frame.finalSeen || frame.actualLoss <= 0) return;
         float budget = Math.max(0, Math.min(frame.input - frame.result, frame.beforeMagic - frame.afterMagic));
         if (!Float.isFinite(budget) || budget <= 0) return;
-        record Credit(MeleeGuardSkills.Gear gear, float amount) {}
+        record Credit(Source gear, float amount) {}
         List<Credit> credits = new ArrayList<>(); float total = 0;
-        for (MeleeGuardSkills.Gear gear : frame.gear) {
+        for (Source gear : frame.gear) {
             Observation observed = frame.observations.get(gear.stack());
-            if (observed == null || observed.ambiguous || !MeleeGuardSkills.stillEquipped(frame.player, gear)) continue;
+            if (observed == null || observed.ambiguous || !gear.equipped(frame.player)) continue;
             float amount = MeleeGuardMath.contribution(frame.input, frame.total, observed.contribution);
             if (amount > 0) { credits.add(new Credit(gear, amount)); total += amount; }
         }
         if (!Float.isFinite(total) || total <= 0) return;
         float scale = Math.min(1.0F, budget / total);
-        for (Credit credit : credits) MeleeGuardSkills.addCharge(frame.player, credit.gear(), credit.amount() * scale);
+        for (Credit credit : credits) credit.gear().credit(frame.player, credit.amount() * scale);
     }
     public static void clear() { FRAMES.remove(); }
 }

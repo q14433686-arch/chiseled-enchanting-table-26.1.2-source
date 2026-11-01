@@ -1181,5 +1181,12 @@
   "message.enchantment_fusion.ranged_sneak_slip_ready": "スニーク射撃で退避を準備。",
   "tooltip.enchantment_fusion.ranged_sneak_aim": "スニーク中に放った本物の矢が有効な生存対象に実ダメージを与えた後、同じ弓・クロスボウを持ち、24ブロック以内の見える対象をスニークして狙い続けると、次の弓引きか矢の装填が一度速くなる。視線を外す・立つ・武器変更で解除。射撃の主効果は維持。",
   "tooltip.enchantment_fusion.ranged_sneak_slip": "このレギンスを着けてスニーク中に本物の矢を射ち、5秒以内に地上でスニークして発動すると、移動入力方向へ一度加速。入力がなければ視線と逆方向へ。通常の衝突を使い、瞬間移動しない。スニーク速度の主効果を維持。",
-  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、スニーク速度主位はレギンスが必要。"
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、スニーク速度主位はレギンスが必要。",
+  "skill.enchantment_fusion.ranged_guard": "護りの矢",
+  "message.enchantment_fusion.ranged_guard_full": "矢の保護上限に達したため準備を消費。",
+  "message.enchantment_fusion.ranged_guard_need_defense": "まずこの防具で実際に2ダメージ以上を軽減する。",
+  "message.enchantment_fusion.ranged_guard_set": "護り準備完了：10秒以内の次の本物の矢に適用。",
+  "tooltip.enchantment_fusion.ranged_guard_screen": "本物の矢が有効な対象へ実ダメージを与えると、命中地点に短命の仮想防壁を残す。範囲内の本人・味方・村人に実際に当たる敵の飛翔体を有限回だけ反らす。元の飛翔体は残り、射撃の主効果も維持。",
+  "tooltip.enchantment_fusion.ranged_guard_arrow": "この装備に帰属する実際のダメージ軽減または盾の防御で蓄積。2ダメージ以上を防いだ後に発動すると、同じ装備を着用・持続中、10秒以内の次の本物の弓・クロスボウの矢を保護する。実際の敵飛翔体との衝突を一度反らし、弾薬を複製しない。ダメージ軽減の主効果は維持。",
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、ダメージ軽減主位は防具または盾が必要。"
 }

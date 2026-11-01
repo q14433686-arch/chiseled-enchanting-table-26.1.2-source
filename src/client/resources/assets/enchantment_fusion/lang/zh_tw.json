@@ -1181,5 +1181,12 @@
   "message.enchantment_fusion.ranged_sneak_slip_ready": "潛行實射已準備一次撤步。",
   "tooltip.enchantment_fusion.ranged_sneak_aim": "潛行射出的真實箭使合格存活目標受到淨傷後，繼續潛行、手持同一弓弩並瞄準 24 格內可見目標，可加快下一次拉弓或箭矢裝弩。移開視線、起身或換弓弩會取消；保留射擊主位。",
   "tooltip.enchantment_fusion.ranged_sneak_slip": "穿著護腿潛行射出真實弓弩箭後，5 秒內在地面潛行主動釋放，沿移動輸入方向獲得一次推力；無輸入則朝視線反方向撤退。運動走原版碰撞，不瞬移；保留迅捷潛行主位。",
-  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新迅捷潛行主位要求護腿。"
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新迅捷潛行主位要求護腿。",
+  "skill.enchantment_fusion.ranged_guard": "盾勢護射",
+  "message.enchantment_fusion.ranged_guard_full": "護矢狀態已滿，準備已消耗。",
+  "message.enchantment_fusion.ranged_guard_need_defense": "請先用這件防護裝備實際減免至少 2 點傷害。",
+  "message.enchantment_fusion.ranged_guard_set": "盾勢已準備：10 秒內下一支真實箭獲得保護。",
+  "tooltip.enchantment_fusion.ranged_guard_screen": "真實箭使合格目標受到淨傷後，在命中點留下短暫虛擬護屏。本人、盟友或村民在範圍內即將被真實敵方飛行物命中時，護屏偏轉有限次數；原飛行物仍然存在。保留射擊主位。",
+  "tooltip.enchantment_fusion.ranged_guard_arrow": "該裝備可歸因的真實保護減傷或盾牌格擋積攢盾勢；至少減免 2 點後主動準備，10 秒內下一支真實弓弩箭在持續穿戴或持握原裝備時獲得護矢。一次真實敵方彈體碰撞會被偏轉，不複製彈藥；保留保護主位。",
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新保護主位要求護甲或盾牌。"
 }

@@ -1181,5 +1181,12 @@
   "message.enchantment_fusion.ranged_sneak_slip_ready": "A crouched shot has prepared a retreat.",
   "tooltip.enchantment_fusion.ranged_sneak_aim": "A real arrow fired while sneaking must damage a valid living target. Stay sneaking, hold the same launcher and keep aiming at that visible target within 24 blocks to accelerate one next bow draw or arrow crossbow load. Looking away, standing up or changing launcher cancels it. The shooting primary remains.",
   "tooltip.enchantment_fusion.ranged_sneak_slip": "Wear these leggings and fire a real bow/crossbow arrow while sneaking. Within 5 seconds activate while sneaking on the ground to push in your movement-input direction; without input, retreat opposite your view. Movement uses normal collisions, not teleportation. Swift Sneak remains.",
-  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Legacy items keep their old effect. New shooting-first fusions need a bow/crossbow; Swift Sneak-first fusions need leggings."
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Legacy items keep their old effect. New shooting-first fusions need a bow/crossbow; Swift Sneak-first fusions need leggings.",
+  "skill.enchantment_fusion.ranged_guard": "Guarded arrow",
+  "message.enchantment_fusion.ranged_guard_full": "The arrow protection limit is full; preparation was spent.",
+  "message.enchantment_fusion.ranged_guard_need_defense": "First prevent at least two damage with this protection gear.",
+  "message.enchantment_fusion.ranged_guard_set": "Protection prepared for the next real arrow within 10 seconds.",
+  "tooltip.enchantment_fusion.ranged_guard_screen": "A real arrow damaging a valid target leaves a short virtual screen at the impact. It deflects a limited number of actual hostile projectiles that would hit the owner, allies or villagers within its radius; the original projectile remains real. The shooting primary remains.",
+  "tooltip.enchantment_fusion.ranged_guard_arrow": "Actual attributable Protection reduction or shield blocking charges this gear. Activate with at least two prevented damage to guard the next real bow/crossbow arrow for 10 seconds while this exact gear stays equipped. One genuine hostile projectile collision is deflected; no ammunition is copied. Protection remains.",
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Legacy items keep their old effect. New shooting-first fusions need a bow/crossbow; Protection-first fusions need armor or a shield."
 }

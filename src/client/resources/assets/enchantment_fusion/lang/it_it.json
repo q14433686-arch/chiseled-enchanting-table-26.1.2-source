@@ -1181,5 +1181,12 @@
   "message.enchantment_fusion.ranged_sneak_slip_ready": "Un tiro accovacciato ha preparato una ritirata.",
   "tooltip.enchantment_fusion.ranged_sneak_aim": "Una freccia vera scoccata da accovacciato deve danneggiare un bersaglio vivo valido. Resta accovacciato, tieni la stessa arma e mira al bersaglio visibile entro 24 blocchi per accelerare una carica di arco o di freccia nella balestra. Distogliere lo sguardo, alzarsi o cambiare arma annulla; l’effetto principale di tiro resta.",
   "tooltip.enchantment_fusion.ranged_sneak_slip": "Con questi gambali spara una freccia vera da accovacciato. Entro 5 secondi attiva a terra da accovacciato per una spinta nella direzione di movimento; senza input, arretri rispetto allo sguardo. Collisioni normali, senza teletrasporto; furtività rapida resta.",
-  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale e gambali per furtività rapida principale."
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale e gambali per furtività rapida principale.",
+  "skill.enchantment_fusion.ranged_guard": "Freccia protetta",
+  "message.enchantment_fusion.ranged_guard_full": "Il limite di protezione delle frecce è pieno; la preparazione è consumata.",
+  "message.enchantment_fusion.ranged_guard_need_defense": "Prima evita almeno due danni con questo equipaggiamento.",
+  "message.enchantment_fusion.ranged_guard_set": "Protezione pronta per la prossima freccia vera entro 10 secondi.",
+  "tooltip.enchantment_fusion.ranged_guard_screen": "Una freccia vera che danneggia un bersaglio valido lascia un breve schermo virtuale all’impatto. Devia un numero limitato di veri proiettili ostili che colpirebbero proprietario, alleati o abitanti nel raggio; il proiettile originale rimane reale. L’effetto principale di tiro resta.",
+  "tooltip.enchantment_fusion.ranged_guard_arrow": "La riduzione Protezione attribuibile o il blocco reale dello scudo caricano l’equipaggiamento. Dopo almeno due danni evitati, attiva per proteggere la prossima freccia vera di arco/balestra entro 10 secondi mentre mantieni lo stesso oggetto. Una vera collisione con proiettile ostile viene deviata; nessuna munizione copiata. Protezione resta.",
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale e armatura o scudo per Protezione principale."
 }

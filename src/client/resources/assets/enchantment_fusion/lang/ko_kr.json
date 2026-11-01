@@ -1181,5 +1181,12 @@
   "message.enchantment_fusion.ranged_sneak_slip_ready": "웅크린 실제 사격으로 후퇴가 준비되었습니다.",
   "tooltip.enchantment_fusion.ranged_sneak_aim": "웅크려 쏜 실제 화살이 유효하게 살아 있는 대상에게 피해를 주면, 계속 웅크리고 같은 무기를 든 채 24블록 내 보이는 대상을 조준하여 다음 활 당기기 또는 쇠뇌 화살 장전 한 번을 가속합니다. 시선을 돌리거나 일어서거나 무기를 바꾸면 취소되며 사격 주 효과는 유지됩니다.",
   "tooltip.enchantment_fusion.ranged_sneak_slip": "이 각반을 신고 웅크려 실제 화살을 발사한 뒤 5초 안에 지상에서 웅크린 채 발동합니다. 이동 입력 방향으로 한 번 밀리며 입력이 없으면 시선 반대로 후퇴합니다. 일반 충돌을 따르고 순간이동하지 않으며 신속한 잠행 주 효과는 유지됩니다.",
-  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 신속한 잠행 주 효과에는 각반이 필요합니다."
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 신속한 잠행 주 효과에는 각반이 필요합니다.",
+  "skill.enchantment_fusion.ranged_guard": "보호 화살",
+  "message.enchantment_fusion.ranged_guard_full": "화살 보호 한도에 도달해 준비가 소모되었습니다.",
+  "message.enchantment_fusion.ranged_guard_need_defense": "먼저 이 방어 장비로 피해를 실제 2 이상 막으세요.",
+  "message.enchantment_fusion.ranged_guard_set": "보호 준비: 10초 안의 다음 실제 화살에 적용됩니다.",
+  "tooltip.enchantment_fusion.ranged_guard_screen": "실제 화살이 유효한 대상에게 피해를 주면 명중 지점에 잠시 가상 방벽이 생깁니다. 범위 안의 본인, 아군 또는 주민에게 실제로 맞을 적 투사체를 제한된 횟수만큼 튕깁니다. 원래 투사체와 사격 주 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.ranged_guard_arrow": "이 장비에 귀속되는 실제 보호 피해 감소 또는 방패 막기로 충전합니다. 피해를 2 이상 막고 발동하면 같은 장비를 착용하거나 든 동안 10초 안의 다음 실제 활·쇠뇌 화살을 보호합니다. 실제 적 투사체와의 충돌 한 번을 튕기며 탄약을 복제하지 않습니다. 보호 주 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 보호 주 효과에는 방어구 또는 방패가 필요합니다."
 }

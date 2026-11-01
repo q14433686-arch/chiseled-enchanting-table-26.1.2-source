@@ -149,6 +149,7 @@ public final class FireTradeoffSkills {
                 boolean primaryDefense = applies(pair, stack, signature)
                     || (FIRE.equals(pair.primaryId()) && FireThornsSkills.applies(pair, stack, signature))
                     || (MeleeGuardSkills.isProtectionFirst(pair) && MeleeGuardSkills.applies(pair, stack))
+                    || (RangedGuardSkills.protectionFirst(pair) && RangedGuardSkills.applies(pair, stack))
                     || GrapnelDefense.applies(pair, stack);
                 if (primaryDefense) replayLevels.merge(pair.primaryId(), pair.primaryLevel(), Math::max);
             }

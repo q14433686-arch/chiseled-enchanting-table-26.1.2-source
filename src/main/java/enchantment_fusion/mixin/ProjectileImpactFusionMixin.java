@@ -15,6 +15,7 @@ import enchantment_fusion.mechanics.signatures.RangedPrimary;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
+import enchantment_fusion.mechanics.signatures.RangedGuardSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.model.TriggerType;
 import java.util.EnumSet;
@@ -174,6 +175,13 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
             self.discard();
             cir.setReturnValue(ProjectileDeflection.NONE);
         }
+    }
+
+    @Inject(method = "hitTargetOrDeflectSelf", at = @At("HEAD"), cancellable = true)
+    private void ef$guardRealProjectileImpact(HitResult hit, CallbackInfoReturnable<ProjectileDeflection> cir) {
+        Projectile self = (Projectile) (Object) this;
+        if (self.level() instanceof ServerLevel && hit instanceof EntityHitResult impact
+            && RangedGuardSkills.intercept(self, impact)) cir.setReturnValue(ProjectileDeflection.REVERSE);
     }
 
     @Inject(method = "hitTargetOrDeflectSelf", at = @At("HEAD"), cancellable = true)

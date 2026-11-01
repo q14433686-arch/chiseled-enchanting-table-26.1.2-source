@@ -25,7 +25,8 @@ public final class RangedPrimary {
     static int level(@Nullable ItemStack weapon, String primary) {
         int result = Math.max(Math.max(GrapnelProjectilePrimary.level(weapon, primary), RangedWearSkills.primaryLevel(weapon, primary)),
             Math.max(Math.max(RangedWorkSkills.primaryLevel(weapon, primary), RangedBreathSkills.primaryLevel(weapon, primary)),
-                Math.max(RangedTideSkills.primaryLevel(weapon, primary), RangedSneakSkills.primaryLevel(weapon, primary))));
+                Math.max(Math.max(RangedTideSkills.primaryLevel(weapon, primary), RangedSneakSkills.primaryLevel(weapon, primary)),
+                    RangedGuardSkills.primaryLevel(weapon, primary))));
         FusedPair thermal = ThermalProjectileSkills.selected(weapon);
         return thermal != null && primary.equals(thermal.primaryId()) ? Math.max(result, thermal.primaryLevel()) : result;
     }

@@ -1181,5 +1181,12 @@
   "message.enchantment_fusion.ranged_sneak_slip_ready": "Un tir accroupi a préparé une retraite.",
   "tooltip.enchantment_fusion.ranged_sneak_aim": "Une vraie flèche tirée accroupi doit blesser une cible vivante valide. Restez accroupi, gardez la même arme et visez la cible visible à moins de 24 blocs pour accélérer une prochaine tension d’arc ou charge de flèche d’arbalète. Détourner le regard, se relever ou changer d’arme annule ; l’effet principal de tir reste.",
   "tooltip.enchantment_fusion.ranged_sneak_slip": "Avec ce pantalon, tirez une vraie flèche accroupi. Dans les 5 secondes, activez accroupi au sol pour une poussée dans la direction de déplacement ; sans entrée, reculez par rapport au regard. Collisions normales, sans téléportation ; discrétion rapide reste.",
-  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et pantalon pour discrétion rapide principale."
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et pantalon pour discrétion rapide principale.",
+  "skill.enchantment_fusion.ranged_guard": "Flèche protégée",
+  "message.enchantment_fusion.ranged_guard_full": "La limite de protection des flèches est atteinte ; la préparation est consommée.",
+  "message.enchantment_fusion.ranged_guard_need_defense": "Évitez d’abord au moins deux dégâts avec cet équipement.",
+  "message.enchantment_fusion.ranged_guard_set": "Protection prête pour la prochaine vraie flèche pendant 10 secondes.",
+  "tooltip.enchantment_fusion.ranged_guard_screen": "Une vraie flèche blessant une cible valide laisse un bref écran virtuel au point d’impact. Il dévie un nombre limité de vrais projectiles ennemis qui toucheraient le propriétaire, ses alliés ou des villageois dans son rayon ; le projectile d’origine reste réel. L’effet principal de tir reste.",
+  "tooltip.enchantment_fusion.ranged_guard_arrow": "La réduction Protection attribuable ou un vrai blocage au bouclier charge l’équipement. Après au moins deux dégâts évités, activez pour protéger la prochaine vraie flèche d’arc/arbalète pendant 10 secondes tant que cet équipement reste porté. Une vraie collision avec un projectile hostile est déviée ; aucune munition copiée. Protection reste.",
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et armure ou bouclier pour Protection principale."
 }

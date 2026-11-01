@@ -1181,5 +1181,12 @@
   "message.enchantment_fusion.ranged_sneak_slip_ready": "Un disparo agachado ha preparado una retirada.",
   "tooltip.enchantment_fusion.ranged_sneak_aim": "Una flecha real disparada agachado debe dañar a un objetivo vivo válido. Sigue agachado, sostén la misma arma y apunta al objetivo visible a 24 bloques o menos para acelerar una carga de arco o de flecha en ballesta. Mirar a otro lado, levantarse o cambiar de arma lo cancela; el efecto principal de disparo permanece.",
   "tooltip.enchantment_fusion.ranged_sneak_slip": "Con estas perneras, dispara una flecha real agachado. En 5 segundos, activa agachado en tierra para impulsarte en la dirección de movimiento; sin entrada, retrocedes respecto a la mirada. Usa colisiones normales, no teletransporte; sigilo veloz permanece.",
-  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Los objetos antiguos mantienen su efecto. Los nuevos requieren arco/ballesta para disparo principal y perneras para sigilo veloz principal."
+  "tooltip.enchantment_fusion.legacy_ranged_sneak_carrier": "Los objetos antiguos mantienen su efecto. Los nuevos requieren arco/ballesta para disparo principal y perneras para sigilo veloz principal.",
+  "skill.enchantment_fusion.ranged_guard": "Flecha protegida",
+  "message.enchantment_fusion.ranged_guard_full": "El límite de protección de flechas está lleno; se gastó la preparación.",
+  "message.enchantment_fusion.ranged_guard_need_defense": "Primero evita al menos dos puntos de daño con este equipo.",
+  "message.enchantment_fusion.ranged_guard_set": "Protección preparada para la próxima flecha real durante 10 segundos.",
+  "tooltip.enchantment_fusion.ranged_guard_screen": "Una flecha real que daña a un objetivo válido deja una breve pantalla virtual en el impacto. Desvía un número limitado de proyectiles enemigos reales que golpearían al dueño, aliados o aldeanos dentro de su radio; el proyectil original sigue existiendo. El efecto principal de disparo permanece.",
+  "tooltip.enchantment_fusion.ranged_guard_arrow": "La reducción de Protección atribuible o el bloqueo real del escudo cargan el equipo. Activa tras evitar al menos dos de daño para proteger la próxima flecha real de arco/ballesta durante 10 segundos mientras mantengas equipado el mismo objeto. Se desvía una colisión real con proyectil enemigo; no se copia munición. Protección permanece.",
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Los objetos antiguos mantienen su efecto. Los nuevos requieren arco/ballesta para disparo principal y armadura o escudo para Protección principal."
 }

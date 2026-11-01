@@ -41,6 +41,7 @@ import enchantment_fusion.mechanics.signatures.RangedWorkSkills;
 import enchantment_fusion.mechanics.signatures.RangedBreathSkills;
 import enchantment_fusion.mechanics.signatures.RangedTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
+import enchantment_fusion.mechanics.signatures.RangedGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -314,6 +315,9 @@ public final class FusionTooltipRenderer {
             boolean rangedSneakTemplate = RangedSneakSkills.matches(pair);
             boolean legacyRangedSneakCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && rangedSneakTemplate
                 && !RangedSneakSkills.applies(pair, stack);
+            boolean rangedGuardTemplate = RangedGuardSkills.matches(pair);
+            boolean legacyRangedGuardCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && rangedGuardTemplate
+                && !RangedGuardSkills.applies(pair, stack);
             boolean meleeWearTemplate = MeleeWearSkills.matches(pair);
             boolean legacyMeleeWearCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeWearTemplate
                 && !MeleeWearSkills.applies(pair, stack);
@@ -412,6 +416,11 @@ public final class FusionTooltipRenderer {
                     lines.add(Component.translatable(RangedSneakSkills.shootingFirst(pair)
                         ? "tooltip.enchantment_fusion.ranged_sneak_aim"
                         : "tooltip.enchantment_fusion.ranged_sneak_slip").withStyle(ChatFormatting.AQUA));
+                }
+                if (shift && rangedGuardTemplate && !legacyRangedGuardCarrier) {
+                    lines.add(Component.translatable(RangedGuardSkills.shootingFirst(pair)
+                        ? "tooltip.enchantment_fusion.ranged_guard_screen"
+                        : "tooltip.enchantment_fusion.ranged_guard_arrow").withStyle(ChatFormatting.AQUA));
                 }
                 if (shift && meleeWearTemplate && !legacyMeleeWearCarrier) {
                     lines.add(Component.translatable(MeleeWearSkills.isAttackFirst(pair)
@@ -516,6 +525,10 @@ public final class FusionTooltipRenderer {
                         lines.add(Component.translatable(RangedSneakSkills.shootingFirst(pair)
                             ? "tooltip.enchantment_fusion.ranged_sneak_aim"
                             : "tooltip.enchantment_fusion.ranged_sneak_slip").withStyle(ChatFormatting.AQUA));
+                    } else if (rangedGuardTemplate && !legacyRangedGuardCarrier) {
+                        lines.add(Component.translatable(RangedGuardSkills.shootingFirst(pair)
+                            ? "tooltip.enchantment_fusion.ranged_guard_screen"
+                            : "tooltip.enchantment_fusion.ranged_guard_arrow").withStyle(ChatFormatting.AQUA));
                     } else if (meleeWearTemplate && !legacyMeleeWearCarrier) {
                         lines.add(Component.translatable(MeleeWearSkills.isAttackFirst(pair)
                             ? "tooltip.enchantment_fusion.melee_wear_guard"
@@ -579,6 +592,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacyRangedSneakCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_ranged_sneak_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyRangedGuardCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_ranged_guard_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyMeleeWearCarrier) {
