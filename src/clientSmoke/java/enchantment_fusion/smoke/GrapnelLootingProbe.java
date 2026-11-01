@@ -76,6 +76,20 @@ final class GrapnelLootingProbe {
                 unrelated.discard();
 
                 GrapnelSkills.clearPlayer(player.getUUID());
+                EquipmentZombie replaced = spawn(f, "looting_count"); before = itemIds(level, area); f.hit(replaced, true);
+                ItemEntity boundDrop = onlyNew(level, area, before); boundDrop.setNoPickUpDelay();
+                require(markedItem(player) == boundDrop, "A new actual kill may mark again");
+                player.setItemSlot(EquipmentSlot.MAINHAND, weapon.copy());
+                require(!GrapnelSkills.activate(player) && boundDrop.isAlive(), "An equal copy of the original weapon cannot spend the mark");
+                player.setItemSlot(EquipmentSlot.MAINHAND, weapon); boundDrop.discard();
+
+                GrapnelSkills.clearPlayer(player.getUUID());
+                EquipmentZombie outerRejected = spawn(f, "looting_count"); outerRejected.rejectAfterSuper = true;
+                before = itemIds(level, area); f.hit(outerRejected, true); ItemEntity rejectedDrop = onlyNew(level, area, before);
+                require(!outerRejected.isAlive() && rejectedDrop.getItem().getCount() == 4 && markedItem(player) == null,
+                    "A successful superclass death cannot bypass a rejected outer virtual damage call"); rejectedDrop.discard();
+
+                GrapnelSkills.clearPlayer(player.getUUID());
                 EquipmentZombie chance = spawn(f, "looting_chance"); before = itemIds(level, area); f.hit(chance, true);
                 ItemEntity chanceDrop = onlyNew(level, area, before);
                 require(chanceDrop.getItem().getCount() == 1 && markedItem(player) == chanceDrop,
@@ -146,7 +160,12 @@ final class GrapnelLootingProbe {
     /** The extra sampled value is a disposable fixture, not a second production roll. */
     private static final class EquipmentZombie extends Zombie {
         float sample = -1;
+        boolean rejectAfterSuper;
         EquipmentZombie(ServerLevel level) { super(EntityType.ZOMBIE, level); }
+        @Override public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+            boolean accepted = super.hurtServer(level, source, amount);
+            return accepted && !rejectAfterSuper;
+        }
         @Override protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
             if (source.getEntity() instanceof LivingEntity attacker)
                 sample = EnchantmentHelper.processEquipmentDropChance(level, attacker, source, 0.25F);
