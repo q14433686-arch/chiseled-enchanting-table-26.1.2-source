@@ -41,6 +41,7 @@ import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelDefense;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
@@ -79,6 +80,7 @@ public final class FusionTooltipRenderer {
     private FusionTooltipRenderer() {}
 
     private static String grapnelTooltip(FusedPair pair) {
+        if (GrapnelDefense.isPair(pair)) return "tooltip.enchantment_fusion.defense_grapnel";
         if (GrapnelSkills.miningFirst(pair)) return "tooltip.enchantment_fusion.mining_grapnel";
         if (GrapnelSkills.POWER.equals(pair.primaryId())) return "tooltip.enchantment_fusion.power_grapnel";
         if (GrapnelSkills.FLAME.equals(pair.primaryId())) return "tooltip.enchantment_fusion.flame_grapnel";

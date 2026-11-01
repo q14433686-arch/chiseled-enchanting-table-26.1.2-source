@@ -148,14 +148,16 @@ public final class FireTradeoffSkills {
                 String signature = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
                 boolean primaryDefense = applies(pair, stack, signature)
                     || (FIRE.equals(pair.primaryId()) && FireThornsSkills.applies(pair, stack, signature))
-                    || (MeleeGuardSkills.isProtectionFirst(pair) && MeleeGuardSkills.applies(pair, stack));
+                    || (MeleeGuardSkills.isProtectionFirst(pair) && MeleeGuardSkills.applies(pair, stack))
+                    || GrapnelDefense.applies(pair, stack);
                 if (primaryDefense) replayLevels.merge(pair.primaryId(), pair.primaryLevel(), Math::max);
             }
             for (var entry : replayLevels.entrySet()) {
                 Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), entry.getKey()).orElse(null);
                 if (primary == null) continue;
                 int nativeLevel = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary);
-                if (nativeLevel > 0 && primary.value().matchingSlot(slot)) continue;
+                if (nativeLevel > 0 && primary.value().matchingSlot(slot)
+                    || ProtectionProjection.applied(player, source, stack, primary.value())) continue;
                 MutableFloat value = new MutableFloat(total);
                 primary.value().modifyDamageProtection(level, Math.max(entry.getValue(), nativeLevel), stack, player, source, value);
                 total = value.floatValue();

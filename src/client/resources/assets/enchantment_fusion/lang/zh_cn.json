@@ -1080,5 +1080,7 @@
   "tooltip.enchantment_fusion.punch_grapnel": "弓或弩的真实箭伤害并实际击退合格敌人时留标8秒；手持同一武器，在12格内且视线畅通时主动牵引。保留冲击主位。",
   "tooltip.enchantment_fusion.multishot_grapnel": "弓或弩同一轮真实多箭射击中，真实箭命中合格敌人时留标8秒；手持同一武器，在12格内且视线畅通时主动牵引。幻影箭不计入。",
   "tooltip.enchantment_fusion.infinity_grapnel": "弓或弩射出的真实箭伤害合格敌人时留标8秒；手持同一武器，在12格内且视线畅通时主动牵引。无限遵循真实弹药规则。",
-  "tooltip.enchantment_fusion.piercing_grapnel": "弩的真实箭伤害并实际穿过合格敌人时留标8秒；手持同一把弩，在12格内且视线畅通时主动牵引。"
+  "tooltip.enchantment_fusion.piercing_grapnel": "弩的真实箭伤害并实际穿过合格敌人时留标8秒；手持同一把弩，在12格内且视线畅通时主动牵引。",
+  "tooltip.enchantment_fusion.defense_grapnel": "这件装备实际减免对应危险，或盾牌真实格挡时，在当前位置留标8秒。继续穿戴原护甲或持原盾，在距标记12格内瞄准距标记8格内的合格敌人，视线畅通时主动牵引。",
+  "message.enchantment_fusion.grapnel_defense_marked": "防护已留标。瞄准合格敌人并激活回钩。"
 }

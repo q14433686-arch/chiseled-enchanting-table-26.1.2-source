@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.google.gson.JsonParser;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelDefense;
 import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.model.FusedPair;
@@ -12,7 +13,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class GrapnelSkillsTest {
-    @Test void defaultWildcardCoversOnlyTheTwelveExplicitActionAdapters() {
+    @Test void defaultWildcardCoversOnlyTheSixteenExplicitActionAdapters() {
         var old = SignatureCatalog.parseFromJson(null);
         try {
             SignatureCatalog.publish(SignatureCatalog.parseFromJson(JsonParser.parseString("""
@@ -31,6 +32,10 @@ final class GrapnelSkillsTest {
                 FusedPair pair = FusedPair.clean(ranged, 3, GrapnelSkills.LURE, 2);
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
+            for (String defense : new String[]{GrapnelDefense.PROTECTION, GrapnelDefense.FIRE, GrapnelDefense.BLAST, GrapnelDefense.PROJECTILE}) {
+                FusedPair pair = FusedPair.clean(defense, 3, GrapnelSkills.LURE, 2);
+                assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
+            }
             assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:quick_charge", 1, GrapnelSkills.LURE, 1)));
         } finally { SignatureCatalog.publish(old); }
     }
@@ -42,12 +47,14 @@ final class GrapnelSkillsTest {
                   "spirit_grapnel":{"primary":"*","secondary":"minecraft:lure"},
                   "custom_exact":{"primary":"minecraft:smite","secondary":"minecraft:lure"},
                   "custom_silk":{"primary":"minecraft:silk_touch","secondary":"minecraft:lure"},
-                  "custom_power":{"primary":"minecraft:power","secondary":"minecraft:lure"}
+                  "custom_power":{"primary":"minecraft:power","secondary":"minecraft:lure"},
+                  "custom_protection":{"primary":"minecraft:protection","secondary":"minecraft:lure"}
                 }}
                 """).getAsJsonObject()));
             assertFalse(GrapnelSkills.matches(FusedPair.clean(MeleeAttackThemes.SMITE, 1, GrapnelSkills.LURE, 1)));
             assertFalse(GrapnelSkills.matches(FusedPair.clean(GrapnelSkills.SILK, 1, GrapnelSkills.LURE, 1)));
             assertFalse(GrapnelSkills.matches(FusedPair.clean(GrapnelSkills.POWER, 1, GrapnelSkills.LURE, 1)));
+            assertFalse(GrapnelSkills.matches(FusedPair.clean(GrapnelDefense.PROTECTION, 1, GrapnelSkills.LURE, 1)));
             assertTrue(GrapnelSkills.matches(FusedPair.clean(GrapnelSkills.FORTUNE, 1, GrapnelSkills.LURE, 1)));
             assertTrue(GrapnelSkills.matches(FusedPair.clean(MeleeAttackThemes.BANE, 1, GrapnelSkills.LURE, 1)));
             SignatureCatalog.publish(SignatureCatalog.parseFromJson(JsonParser.parseString("""
@@ -92,5 +99,14 @@ final class GrapnelSkillsTest {
         assertFalse(GrapnelSkills.supportsCarrier(piercing, Set.of(FusionCarrier.BOW)));
         assertTrue(GrapnelSkills.supportsCarrier(piercing, Set.of(FusionCarrier.CROSSBOW)));
         assertFalse(GrapnelSkills.supportsCarrier(piercing, Set.of(FusionCarrier.SWORD)));
+        for (String id : new String[]{GrapnelDefense.PROTECTION, GrapnelDefense.BLAST, GrapnelDefense.PROJECTILE}) {
+            FusedPair defense = FusedPair.clean(id, 2, GrapnelSkills.LURE, 1);
+            assertTrue(GrapnelSkills.supportsCarrier(defense, Set.of(FusionCarrier.CHEST_ARMOR)));
+            assertTrue(GrapnelSkills.supportsCarrier(defense, Set.of(FusionCarrier.SHIELD)));
+            assertFalse(GrapnelSkills.supportsCarrier(defense, Set.of(FusionCarrier.SWORD)));
+        }
+        FusedPair fireDefense = FusedPair.clean(GrapnelDefense.FIRE, 2, GrapnelSkills.LURE, 1);
+        assertTrue(GrapnelSkills.supportsCarrier(fireDefense, Set.of(FusionCarrier.CHEST_ARMOR)));
+        assertFalse(GrapnelSkills.supportsCarrier(fireDefense, Set.of(FusionCarrier.SHIELD)));
     }
 }

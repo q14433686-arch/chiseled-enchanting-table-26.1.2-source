@@ -84,6 +84,10 @@ final class AcceptanceReport {
         plan("40.1-multishot-lure", "Multishot ▷ Lure: real multi-arrow volleys and simulated active target recall", "Not reached if setup fails.");
         plan("40.1-infinity-lure", "Infinity ▷ Lure: real ammunition handling and simulated active target recall", "Not reached if setup fails.");
         plan("40.1-piercing-lure", "Piercing ▷ Lure: real continuous penetration and simulated active target recall", "Not reached if setup fails.");
+        plan("40.1-protection-lure", "Protection ▷ Lure: real hurt and shield block, simulated aim and recall", "Not reached if setup fails.");
+        plan("40.1-fire-protection-lure", "Fire Protection ▷ Lure: real hurt with simulated fire source and recall", "Not reached if setup fails.");
+        plan("40.1-blast-protection-lure", "Blast Protection ▷ Lure: real hurt with simulated explosion source and recall", "Not reached if setup fails.");
+        plan("40.1-projectile-protection-lure", "Projectile Protection ▷ Lure: real hurt and shield block with simulated arrow source and recall", "Not reached if setup fails.");
         plan("40.1-runtime-compat", "40.1 natural key input and charge, spear, other players, claims, datapacks and remaining source adapters", "Not covered by the prepared single-player fixtures.");
         plan("42.3-sharp-swift", "Sharpness ▷ Swift Sneak: real hits and simulated imprint movement", "Not reached if setup fails.");
         plan("42.3-swift-sharp", "Swift Sneak ▷ Sharpness: worn leggings, simulated crouch and real hit", "Not reached if setup fails.");

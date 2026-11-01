@@ -193,7 +193,8 @@ public final class BlastDefenseSkills {
         for (Gear gear : frame.gear) {
             if (!stillWorn(frame.player, gear)) continue;
             Holder<Enchantment> primary = isCounter(gear.pair()) ? blast : protection;
-            if (primary == null || nativeEnchantment(gear.stack(), primary)) continue;
+            if (primary == null || nativeEnchantment(gear.stack(), primary)
+                || ProtectionProjection.applied(frame.player, frame.source, gear.stack(), primary.value())) continue;
             MutableFloat value = new MutableFloat(total);
             primary.value().modifyDamageProtection(level, gear.pair().primaryLevel(), gear.stack(), frame.player, frame.source, value);
             total = value.floatValue();
@@ -201,7 +202,8 @@ public final class BlastDefenseSkills {
         for (Gear gear : frame.gear) {
             if (!isGuard(gear.pair()) || !stillWorn(frame.player, gear)) continue;
             // Apply the actual datapack secondary effect only if it is not already native.
-            if (blast != null && !nativeEnchantment(gear.stack(), blast)) {
+            if (blast != null && !nativeEnchantment(gear.stack(), blast)
+                && !ProtectionProjection.applied(frame.player, frame.source, gear.stack(), blast.value())) {
                 MutableFloat value = new MutableFloat(total);
                 blast.value().modifyDamageProtection(level, gear.pair().secondaryLevel(), gear.stack(), frame.player, frame.source, value);
                 total = value.floatValue();

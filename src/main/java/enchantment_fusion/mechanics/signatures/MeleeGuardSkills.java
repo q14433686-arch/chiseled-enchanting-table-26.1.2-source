@@ -166,12 +166,18 @@ public final class MeleeGuardSkills {
         if (protection == null) return;
         POST_REPLAY.set(true);
         try {
-            for (Gear gear : equipped(player)) {
-                if (!stillEquipped(player, gear)) continue;
-                int nativeLevel = gear.stack().getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(protection);
-                if (nativeLevel > 0 && protection.value().matchingSlot(gear.slot())) continue;
-                int levelOfEffect = Math.max(nativeLevel, gear.pair().primaryLevel());
-                protection.value().doPostAttack(level, levelOfEffect, new EnchantedItemInUse(gear.stack(), gear.slot(), player),
+            List<Gear> meleeGear = equipped(player); List<GrapnelDefense.Gear> grapnelGear = GrapnelDefense.equipped(player);
+            for (EquipmentSlot slot : SLOTS) {
+                ItemStack stack = player.getItemBySlot(slot); int primaryLevel = 0;
+                for (Gear gear : meleeGear) if (gear.slot() == slot && gear.stack() == stack && stillEquipped(player, gear))
+                    primaryLevel = Math.max(primaryLevel, gear.pair().primaryLevel());
+                for (GrapnelDefense.Gear gear : grapnelGear) if (gear.slot() == slot && gear.stack() == stack
+                    && GrapnelDefense.PROTECTION.equals(gear.pair().primaryId()) && GrapnelDefense.stillEquipped(player, gear))
+                    primaryLevel = Math.max(primaryLevel, gear.pair().primaryLevel());
+                if (primaryLevel <= 0) continue;
+                int nativeLevel = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(protection);
+                if (nativeLevel > 0 && protection.value().matchingSlot(slot)) continue;
+                protection.value().doPostAttack(level, Math.max(nativeLevel, primaryLevel), new EnchantedItemInUse(stack, slot, player),
                     EnchantmentTarget.VICTIM, victim, source);
             }
         } finally { POST_REPLAY.remove(); }

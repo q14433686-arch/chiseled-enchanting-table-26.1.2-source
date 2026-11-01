@@ -13,6 +13,7 @@ import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelVolley;
 import enchantment_fusion.mechanics.signatures.GrapnelProjectilePrimary;
+import enchantment_fusion.mechanics.signatures.GrapnelDefense;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -61,6 +62,7 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
                                                   Operation<Void> original) {
         original.call(level, victim, source, weapon, attackerlessOnBreak);
         MeleeGuardSkills.replayVictimPostAttack(level, victim, source);
+        GrapnelDefense.replayVictimPostAttack(level, victim, source);
     }
 
     @WrapMethod(method = "modifyArmorEffectiveness")

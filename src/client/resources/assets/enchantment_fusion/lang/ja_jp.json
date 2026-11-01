@@ -1080,5 +1080,7 @@
   "tooltip.enchantment_fusion.punch_grapnel": "弓またはクロスボウの実際の矢が適格な敵を傷つけ実際に押すと8秒標記。同じ武器を持ち、12ブロック以内で視線が通る時に引き寄せます。パンチ主効果は維持。",
   "tooltip.enchantment_fusion.multishot_grapnel": "弓またはクロスボウによる実際の複数矢の一斉射撃で、実際の矢が適格な敵に命中すると8秒標記。同じ武器を持ち、12ブロック以内で視線が通る時に引き寄せます。幻影矢は数えません。",
   "tooltip.enchantment_fusion.infinity_grapnel": "弓またはクロスボウの実際の矢が適格な敵にダメージを与えると8秒標記。同じ武器を持ち、12ブロック以内で視線が通る時に引き寄せます。無限は実際の弾薬規則に従います。",
-  "tooltip.enchantment_fusion.piercing_grapnel": "クロスボウの実際の矢が適格な敵を傷つけ実際に貫通すると8秒標記。同じクロスボウを持ち、12ブロック以内で視線が通る時に引き寄せます。"
+  "tooltip.enchantment_fusion.piercing_grapnel": "クロスボウの実際の矢が適格な敵を傷つけ実際に貫通すると8秒標記。同じクロスボウを持ち、12ブロック以内で視線が通る時に引き寄せます。",
+  "tooltip.enchantment_fusion.defense_grapnel": "この防具の実際の危険軽減、または盾の実際の防御で現在地を8秒標記。同じ防具を装備または盾を持ち、標記から12ブロック以内で、標記から8ブロック以内の適格な敵を視線が通るよう狙って引き寄せます。",
+  "message.enchantment_fusion.grapnel_defense_marked": "防御地点を標記。適格な敵を狙って回収を発動。"
 }

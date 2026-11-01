@@ -1080,5 +1080,7 @@
   "tooltip.enchantment_fusion.punch_grapnel": "Une vraie flèche d’arc ou d’arbalète marque 8 secondes l’ennemi valide qu’elle blesse et repousse réellement. Avec la même arme, activez à 12 blocs maximum et en ligne de vue pour le ramener. Frappe reste active.",
   "tooltip.enchantment_fusion.multishot_grapnel": "Une vraie flèche d’une salve réelle de plusieurs flèches d’arc ou d’arbalète marque 8 secondes l’ennemi valide touché. Avec la même arme, activez à 12 blocs maximum et en ligne de vue pour le ramener. Les flèches fantômes ne comptent pas.",
   "tooltip.enchantment_fusion.infinity_grapnel": "Une vraie flèche d’arc ou d’arbalète marque 8 secondes l’ennemi valide qu’elle blesse. Avec la même arme, activez à 12 blocs maximum et en ligne de vue pour le ramener. Infinité suit les règles réelles de munitions.",
-  "tooltip.enchantment_fusion.piercing_grapnel": "Une vraie flèche d’arbalète marque 8 secondes l’ennemi valide qu’elle blesse et traverse réellement. Avec la même arbalète, activez à 12 blocs maximum et en ligne de vue pour le ramener."
+  "tooltip.enchantment_fusion.piercing_grapnel": "Une vraie flèche d’arbalète marque 8 secondes l’ennemi valide qu’elle blesse et traverse réellement. Avec la même arbalète, activez à 12 blocs maximum et en ligne de vue pour le ramener.",
+  "tooltip.enchantment_fusion.defense_grapnel": "Une réduction réelle du danger correspondant ou un vrai blocage au bouclier marque votre position 8 secondes. Gardez la même armure ou le même bouclier, restez à 12 blocs de la marque et visez en ligne de vue un ennemi valide à 8 blocs maximum de celle-ci.",
+  "message.enchantment_fusion.grapnel_defense_marked": "Défense marquée. Visez un ennemi valide et activez le rappel."
 }

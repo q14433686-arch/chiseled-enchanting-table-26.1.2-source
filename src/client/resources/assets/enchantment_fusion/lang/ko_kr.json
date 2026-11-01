@@ -1080,5 +1080,7 @@
   "tooltip.enchantment_fusion.punch_grapnel": "활이나 쇠뇌의 실제 화살이 유효한 적에게 피해를 주고 실제로 밀면 8초 표식합니다. 같은 무기를 들고 12블록 이내에서 시야가 트일 때 당깁니다. 밀어내기 주 효과는 유지됩니다.",
   "tooltip.enchantment_fusion.multishot_grapnel": "활이나 쇠뇌의 실제 다중 화살 한 번 발사에서 실제 화살이 유효한 적에게 명중하면 8초 표식합니다. 같은 무기를 들고 12블록 이내에서 시야가 트일 때 당깁니다. 환영 화살은 제외됩니다.",
   "tooltip.enchantment_fusion.infinity_grapnel": "활이나 쇠뇌의 실제 화살이 유효한 적에게 피해를 주면 8초 표식합니다. 같은 무기를 들고 12블록 이내에서 시야가 트일 때 당깁니다. 무한은 실제 탄약 규칙을 따릅니다.",
-  "tooltip.enchantment_fusion.piercing_grapnel": "쇠뇌의 실제 화살이 유효한 적에게 피해를 주고 실제로 관통하면 8초 표식합니다. 같은 쇠뇌를 들고 12블록 이내에서 시야가 트일 때 당깁니다."
+  "tooltip.enchantment_fusion.piercing_grapnel": "쇠뇌의 실제 화살이 유효한 적에게 피해를 주고 실제로 관통하면 8초 표식합니다. 같은 쇠뇌를 들고 12블록 이내에서 시야가 트일 때 당깁니다.",
+  "tooltip.enchantment_fusion.defense_grapnel": "이 장비가 해당 위험을 실제로 줄이거나 방패로 실제 막으면 현재 위치를 8초 표식합니다. 같은 방어구를 착용하거나 방패를 든 채 표식에서 12블록 이내에서 표식 8블록 안의 유효한 적을 조준하고 시야가 트일 때 당깁니다.",
+  "message.enchantment_fusion.grapnel_defense_marked": "방어 위치가 표식되었습니다. 유효한 적을 조준하고 회수를 발동하세요."
 }

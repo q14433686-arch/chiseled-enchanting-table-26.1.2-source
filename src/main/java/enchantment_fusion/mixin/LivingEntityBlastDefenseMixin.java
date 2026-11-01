@@ -7,6 +7,8 @@ import enchantment_fusion.mechanics.signatures.BlastArmorCapture;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
 import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardCapture;
+import enchantment_fusion.mechanics.signatures.GrapnelDefenseCapture;
+import enchantment_fusion.mechanics.signatures.ProtectionProjection;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -23,7 +25,10 @@ public abstract class LivingEntityBlastDefenseMixin {
     private float ef$observeShieldBlock(LivingEntity victim, ServerLevel level, DamageSource source, float damage, Operation<Float> original) {
         ItemStack item = victim instanceof ServerPlayer ? victim.getItemBlockingWith() : null;
         float blocked = original.call(victim, level, source, damage);
-        if (victim instanceof ServerPlayer player) MeleeGuardCapture.shieldBlocked(player, source, item, damage, blocked);
+        if (victim instanceof ServerPlayer player) {
+            MeleeGuardCapture.shieldBlocked(player, source, item, damage, blocked);
+            GrapnelDefenseCapture.shieldBlocked(player, source, item, damage, blocked);
+        }
         return blocked;
     }
 
@@ -46,12 +51,17 @@ public abstract class LivingEntityBlastDefenseMixin {
         target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;getDamageProtection(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/damagesource/DamageSource;)F"))
     private float ef$mergeProtection(ServerLevel level, LivingEntity victim, DamageSource source, Operation<Float> original) {
         if (!(victim instanceof ServerPlayer player)) return original.call(level, victim, source);
-        BlastDefenseSkills.ProtectionFrame frame = BlastDefenseSkills.beginProtection(player, source);
+        ProtectionProjection.Frame projection = ProtectionProjection.begin(player, source);
+        BlastDefenseSkills.ProtectionFrame frame = null;
         try {
+            frame = BlastDefenseSkills.beginProtection(player, source);
             float vanilla = original.call(level, victim, source);
             float blast = frame == null ? vanilla : BlastDefenseSkills.finishProtection(frame, vanilla, level);
             return FireTradeoffSkills.primaryProtection(level, player, source, blast);
-        } finally { BlastDefenseSkills.endProtection(frame); }
+        } finally {
+            try { BlastDefenseSkills.endProtection(frame); }
+            finally { ProtectionProjection.end(projection); }
+        }
     }
 
     @WrapOperation(method = "getDamageAfterMagicAbsorb", at = @At(value = "INVOKE",
@@ -59,7 +69,10 @@ public abstract class LivingEntityBlastDefenseMixin {
     private float ef$observeRealProtection(float damage, float protection, Operation<Float> original,
                                             DamageSource source, float inputDamage) {
         float result = original.call(damage, protection);
-        if ((Object) this instanceof ServerPlayer player) MeleeGuardCapture.formula(player, source, damage, protection, result);
+        if ((Object) this instanceof ServerPlayer player) {
+            MeleeGuardCapture.formula(player, source, damage, protection, result);
+            GrapnelDefenseCapture.formula(player, source, damage, protection, result);
+        }
         return result;
     }
 }

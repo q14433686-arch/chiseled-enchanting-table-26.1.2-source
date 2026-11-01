@@ -1080,5 +1080,7 @@
   "tooltip.enchantment_fusion.punch_grapnel": "Una flecha real de arco o ballesta marca durante 8 segundos al enemigo válido si lo daña y lo empuja de verdad. Usa la misma arma a 12 bloques o menos y con visión despejada para atraerlo. Se conserva Empuje.",
   "tooltip.enchantment_fusion.multishot_grapnel": "Una flecha real de una descarga real de varias flechas con arco o ballesta marca al enemigo válido alcanzado durante 8 segundos. Usa la misma arma a 12 bloques o menos y con visión despejada para atraerlo. Las flechas fantasma no cuentan.",
   "tooltip.enchantment_fusion.infinity_grapnel": "Una flecha real de arco o ballesta marca durante 8 segundos al enemigo válido al que dañe. Usa la misma arma a 12 bloques o menos y con visión despejada para atraerlo. Infinidad sigue las reglas reales de munición.",
-  "tooltip.enchantment_fusion.piercing_grapnel": "Una flecha real de ballesta marca durante 8 segundos al enemigo válido al que dañe y atraviese de verdad. Usa la misma ballesta a 12 bloques o menos y con visión despejada para atraerlo."
+  "tooltip.enchantment_fusion.piercing_grapnel": "Una flecha real de ballesta marca durante 8 segundos al enemigo válido al que dañe y atraviese de verdad. Usa la misma ballesta a 12 bloques o menos y con visión despejada para atraerlo.",
+  "tooltip.enchantment_fusion.defense_grapnel": "Una mitigación real del peligro correspondiente o un bloqueo real de escudo marca tu posición durante 8 segundos. Mantén la misma armadura o escudo, permanece a 12 bloques de la marca y apunta con visión despejada a un enemigo válido a 8 bloques o menos de ella.",
+  "message.enchantment_fusion.grapnel_defense_marked": "Defensa marcada. Apunta a un enemigo válido y activa la recogida."
 }
