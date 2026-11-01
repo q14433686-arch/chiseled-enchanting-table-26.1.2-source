@@ -1103,5 +1103,10 @@
   "message.enchantment_fusion.melee_fire_extracted": "Fogo restante extraído em uma lâmina de calor direcionada.",
   "tooltip.enchantment_fusion.melee_fire_extract": "Um acerto real totalmente carregado marca um inimigo válido em chamas. Ative com a arma para apagar o fogo restante e liberar uma lâmina de calor direcionada.",
   "tooltip.enchantment_fusion.melee_fire_follow": "Incendeie um alvo válido com o efeito principal. Outro acerto real no alvo marcado ainda em chamas libera uma lâmina de fogo virtual.",
-  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Itens antigos incompatíveis mantêm seu efeito original; a nova lâmina de fogo não se aplica."
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Itens antigos incompatíveis mantêm seu efeito original; a nova lâmina de fogo não se aplica.",
+  "skill.enchantment_fusion.melee_frost": "Postura da lâmina de gelo",
+  "message.enchantment_fusion.melee_frost_ready": "Lâmina de gelo preparada; acerte um inimigo válido sobre o gelo.",
+  "tooltip.enchantment_fusion.melee_frost_mark": "Um acerto real marca um inimigo válido. O próximo acerto real no mesmo alvo adiciona dano de gelo e lentidão breve.",
+  "tooltip.enchantment_fusion.melee_frost_path": "Vista as botas e ative sobre o gelo. Seu próximo acerto real adequado libera uma lâmina virtual sobre gelo contínuo. A água original não é substituída.",
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Itens antigos incompatíveis mantêm seu efeito original; a nova lâmina de gelo não se aplica."
 }

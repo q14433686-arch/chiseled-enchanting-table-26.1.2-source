@@ -1103,5 +1103,10 @@
   "message.enchantment_fusion.melee_fire_extracted": "Fuego restante extraído en una hoja de calor dirigida.",
   "tooltip.enchantment_fusion.melee_fire_extract": "Un impacto real totalmente cargado marca a un enemigo válido en llamas. Activa con el arma para apagar su fuego restante y liberar una hoja de calor dirigida.",
   "tooltip.enchantment_fusion.melee_fire_follow": "Enciende a un enemigo válido con el efecto principal. Un impacto real posterior en el objetivo marcado que aún arde libera una hoja de fuego virtual.",
-  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Los objetos antiguos incompatibles conservan su efecto original; la nueva habilidad no se aplica."
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Los objetos antiguos incompatibles conservan su efecto original; la nueva habilidad no se aplica.",
+  "skill.enchantment_fusion.melee_frost": "Postura de hielo",
+  "message.enchantment_fusion.melee_frost_ready": "Filo de hielo preparado; golpea a un enemigo válido sobre hielo.",
+  "tooltip.enchantment_fusion.melee_frost_mark": "Un impacto real marca a un enemigo válido. El siguiente impacto real en ese mismo objetivo añade daño de escarcha y ralentización breve.",
+  "tooltip.enchantment_fusion.melee_frost_path": "Equipa las botas y activa sobre hielo. Tu siguiente impacto real adecuado libera una hoja virtual sobre hielo continuo. No se sustituye el agua original.",
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben la nueva hoja de escarcha."
 }

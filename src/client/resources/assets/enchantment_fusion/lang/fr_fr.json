@@ -1103,5 +1103,10 @@
   "message.enchantment_fusion.melee_fire_extracted": "Feu restant extrait en une lame de chaleur dirigée.",
   "tooltip.enchantment_fusion.melee_fire_extract": "Un vrai coup pleinement chargé marque un ennemi valide en feu. Activez avec l’arme pour éteindre son feu restant et libérer une lame de chaleur dirigée.",
   "tooltip.enchantment_fusion.melee_fire_follow": "Enflammez une cible valide avec l’effet principal. Un vrai coup ultérieur sur la cible marquée encore en feu libère une lame de feu virtuelle.",
-  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Les anciens supports incompatibles gardent leur effet ; la nouvelle lame de feu ne s’applique pas."
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Les anciens supports incompatibles gardent leur effet ; la nouvelle lame de feu ne s’applique pas.",
+  "skill.enchantment_fusion.melee_frost": "Posture de glace",
+  "message.enchantment_fusion.melee_frost_ready": "Lame de glace préparée ; frappez un ennemi valide sur la glace.",
+  "tooltip.enchantment_fusion.melee_frost_mark": "Un vrai coup marque un ennemi valide. Le prochain vrai coup sur cette même cible ajoute des dégâts de givre et un bref ralentissement.",
+  "tooltip.enchantment_fusion.melee_frost_path": "Portez les bottes et activez sur la glace. Votre prochain vrai coup adapté libère une lame virtuelle le long de la glace continue. L’eau d’origine n’est pas remplacée.",
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Les anciens supports incompatibles gardent leur effet ; la nouvelle lame de givre ne s’applique pas."
 }

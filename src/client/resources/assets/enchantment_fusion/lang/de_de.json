@@ -1103,5 +1103,10 @@
   "message.enchantment_fusion.melee_fire_extracted": "Restfeuer entzogen und gerichtete Hitzeklinge freigesetzt.",
   "tooltip.enchantment_fusion.melee_fire_extract": "Ein voll aufgeladener echter Treffer markiert einen passenden brennenden Gegner. Mit der Waffe aktivieren, um das Restfeuer zu löschen und eine gerichtete Hitzeklinge freizusetzen.",
   "tooltip.enchantment_fusion.melee_fire_follow": "Entzünde einen passenden Gegner mit dem Haupteffekt. Ein späterer echter Treffer auf den noch brennenden markierten Gegner setzt eine virtuelle Flammenklinge frei.",
-  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; die neue Feuerklinge gilt dort nicht."
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; die neue Feuerklinge gilt dort nicht.",
+  "skill.enchantment_fusion.melee_frost": "Eisklingenhaltung",
+  "message.enchantment_fusion.melee_frost_ready": "Eisklinge vorbereitet; triff einen passenden Gegner auf Eis.",
+  "tooltip.enchantment_fusion.melee_frost_mark": "Ein echter Treffer markiert einen passenden Gegner. Der nächste echte Treffer auf denselben markierten Gegner verursacht zusätzlichen Frostschaden und kurze Verlangsamung.",
+  "tooltip.enchantment_fusion.melee_frost_path": "Trage die Stiefel und aktiviere auf Eis. Dein nächster passender echter Nahkampftreffer löst eine virtuelle Klinge entlang einer durchgehenden Eisfläche aus. Ursprüngliches Wasser wird nicht ersetzt.",
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; die neue Frostklinge gilt dort nicht."
 }

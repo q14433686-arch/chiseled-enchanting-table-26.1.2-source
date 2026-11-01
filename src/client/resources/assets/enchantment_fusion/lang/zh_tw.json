@@ -1103,5 +1103,10 @@
   "message.enchantment_fusion.melee_fire_extracted": "已抽取餘火，釋放定向熱刃。",
   "tooltip.enchantment_fusion.melee_fire_extract": "滿蓄真實命中燃燒的合格敵人後留標；持該武器主動發動，熄滅其餘火並釋放定向熱刃。",
   "tooltip.enchantment_fusion.melee_fire_follow": "以主位效果點燃合格目標並留標；隨後再次真實命中仍在燃燒的標記目標，釋放虛擬熾刃。",
-  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "舊的不適用載體保留原效果，不套用新的近戰焰鋒。"
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "舊的不適用載體保留原效果，不套用新的近戰焰鋒。",
+  "skill.enchantment_fusion.melee_frost": "踏冰引刃",
+  "message.enchantment_fusion.melee_frost_ready": "冰刃已準備；站在冰面上攻擊合格敵人。",
+  "tooltip.enchantment_fusion.melee_frost_mark": "真實命中對應類別的合格敵人留下霜痕；再次真實命中同一目標時碎痕，增加霜擊並短暫緩速。",
+  "tooltip.enchantment_fusion.melee_frost_path": "穿戴靴子站在冰面主動準備；下次真實命中對應敵人時，沿連續冰面引出虛擬冰刃，不替換原水。",
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "舊的不適用載體保留原效果，不套用新的霜刃。"
 }

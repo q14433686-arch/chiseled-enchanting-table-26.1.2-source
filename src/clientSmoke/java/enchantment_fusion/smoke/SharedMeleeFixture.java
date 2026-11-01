@@ -60,9 +60,10 @@ final class SharedMeleeFixture implements AutoCloseable {
         target.setPos(player.getX() + dx, player.getY(), player.getZ() + dz);
         require(level.addFreshEntity(target), "The fixture target must enter the world"); spawned.add(target); return target;
     }
-    ItemStack equip(Item item, FusedPair pair) {
-        ItemStack weapon = new ItemStack(item); FusionStationOperations.applyFusedPairToGear(weapon, pair, level.registryAccess());
-        player.setItemSlot(EquipmentSlot.MAINHAND, weapon); return weapon;
+    ItemStack equip(Item item, FusedPair pair) { return equip(EquipmentSlot.MAINHAND, item, pair); }
+    ItemStack equip(EquipmentSlot slot, Item item, FusedPair pair) {
+        ItemStack stack = new ItemStack(item); FusionStationOperations.applyFusedPairToGear(stack, pair, level.registryAccess());
+        player.setItemSlot(slot, stack); return stack;
     }
     void hit(LivingEntity target, boolean full) {
         target.invulnerableTime = 0;

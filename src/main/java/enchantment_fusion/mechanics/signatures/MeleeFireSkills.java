@@ -37,10 +37,8 @@ public final class MeleeFireSkills {
     private static final int MAX_MARKS = 512, MARK_TICKS = 120, MAX_FIRE_TICKS = 200;
     private static final Set<FusionCarrier> WEAPONS = Set.of(FusionCarrier.SWORD, FusionCarrier.AXE, FusionCarrier.SPEAR, FusionCarrier.MACE);
     private record Gear(ItemStack stack, FusedPair pair) {}
-    private record Key(UUID owner, boolean fireFirst) {}
-    private record Mark(Gear gear, UUID target, ResourceKey<Level> dimension, long expires) {}
     private record Pending(Gear gear, UUID target, ResourceKey<Level> dimension, DamageSource source, long tick) {}
-    private static final Map<Key, Mark> MARKS = new HashMap<>();
+    private static final OwnedTargetMarks MARKS = new OwnedTargetMarks(MAX_MARKS, MeleeFireSkills::applies);
     private static final Map<UUID, Pending> PENDING = new HashMap<>();
     private static final ThreadLocal<Boolean> REPLAYING = ThreadLocal.withInitial(() -> false);
     private MeleeFireSkills() {}
@@ -74,15 +72,10 @@ public final class MeleeFireSkills {
         return owner.getMainHandItem() == gear.stack() && applies(gear.pair(), gear.stack())
             && gear.stack().getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().contains(gear.pair());
     }
-    private static boolean valid(ServerPlayer owner, Mark mark) {
-        return ready(owner) && owner.level().dimension().equals(mark.dimension()) && owner.level().getGameTime() < mark.expires()
-            && owns(owner, mark.gear());
-    }
+    private static String channel(boolean reverse) { return reverse ? "fire-first" : "attack-first"; }
     private static void putMark(ServerPlayer owner, Gear gear, LivingEntity target, boolean reverse) {
-        Key key = new Key(owner.getUUID(), reverse);
-        if (!MARKS.containsKey(key) && MARKS.size() >= MAX_MARKS) return;
-        MARKS.put(key, new Mark(gear, target.getUUID(), owner.level().dimension(), owner.level().getGameTime() + MARK_TICKS));
-        owner.level().sendParticles(ParticleTypes.FLAME, target.getX(), target.getY(0.6D), target.getZ(), 4, 0.12D, 0.15D, 0.12D, 0.01D);
+        if (MARKS.put(owner, channel(reverse), EquipmentSlot.MAINHAND, gear.stack(), gear.pair(), target, MARK_TICKS))
+            owner.level().sendParticles(ParticleTypes.FLAME, target.getX(), target.getY(0.6D), target.getZ(), 4, 0.12D, 0.15D, 0.12D, 0.01D);
     }
     private static void onHit(ConfirmedMelee.Hit hit) {
         ServerPlayer owner = hit.player(); LivingEntity target = hit.target(); ItemStack weapon = hit.weapon();
@@ -94,9 +87,9 @@ public final class MeleeFireSkills {
         }
         Gear fire = select(weapon, true);
         if (fire == null || !owns(owner, fire) || !MeleeAttackThemes.matchesTarget(fire.pair().secondaryId(), target)) return;
-        Key key = new Key(owner.getUUID(), true); Mark mark = MARKS.get(key);
-        if (mark != null && valid(owner, mark) && mark.gear().stack() == weapon && mark.gear().pair().equals(fire.pair())
-            && mark.target().equals(target.getUUID()) && target.isOnFire() && MARKS.remove(key, mark)) {
+        OwnedTargetMarks.Mark mark = MARKS.get(owner, channel(true));
+        if (mark != null && mark.stack() == weapon && mark.pair().equals(fire.pair())
+            && mark.target().equals(target.getUUID()) && target.isOnFire() && MARKS.remove(owner, channel(true), mark)) {
             PENDING.remove(owner.getUUID());
             float damage = Math.min(8.0F, 2.0F + 0.35F * Math.clamp(fire.pair().primaryLevel(), 1, 10)
                 + 0.25F * Math.clamp(fire.pair().secondaryLevel(), 1, 10));
@@ -112,21 +105,21 @@ public final class MeleeFireSkills {
     /** True only when the actively held weapon can prepare a burning-target extraction. */
     public static boolean hasEquipped(ServerPlayer owner) { return select(owner.getMainHandItem(), false) != null; }
     public static boolean activate(ServerPlayer owner) {
-        Key key = new Key(owner.getUUID(), false); Mark mark = MARKS.get(key);
-        if (mark == null || !valid(owner, mark)) { MARKS.remove(key); return false; }
+        OwnedTargetMarks.Mark mark = MARKS.get(owner, channel(false));
+        if (mark == null) return false;
         Entity entity = owner.level().getEntity(mark.target());
         if (!(entity instanceof LivingEntity target) || !target.isAlive() || !target.isOnFire()
-            || !MeleeAttackThemes.eligible(owner, target, mark.gear().pair().primaryId())
+            || !MeleeAttackThemes.eligible(owner, target, mark.pair().primaryId())
             || owner.distanceToSqr(target) > 64.0D
             || !VirtualCombatSight.clear(owner.level(), owner, owner.getEyePosition(), target.getBoundingBox().getCenter())) return false;
         int remaining = target.getRemainingFireTicks();
-        if (remaining <= 0 || !MARKS.remove(key, mark)) return false;
+        if (remaining <= 0 || !MARKS.remove(owner, channel(false), mark)) return false;
         target.clearFire();
-        float damage = 2.0F + 0.3F * Math.clamp(mark.gear().pair().primaryLevel(), 1, 10)
-            + 0.3F * Math.clamp(mark.gear().pair().secondaryLevel(), 1, 10) + Math.min(MAX_FIRE_TICKS, remaining) / 80.0F;
+        float damage = 2.0F + 0.3F * Math.clamp(mark.pair().primaryLevel(), 1, 10)
+            + 0.3F * Math.clamp(mark.pair().secondaryLevel(), 1, 10) + Math.min(MAX_FIRE_TICKS, remaining) / 80.0F;
         VirtualBlade.cast(owner, owner.getLookAngle(), null, 6.0D, damage, 6,
-            victim -> MeleeAttackThemes.eligible(owner, victim, mark.gear().pair().primaryId()), ParticleTypes.FLAME);
-        CompendiumDiscoveryTracker.recordDiscovery(owner, mark.gear().pair().primaryId(), mark.gear().pair().secondaryId());
+            victim -> MeleeAttackThemes.eligible(owner, victim, mark.pair().primaryId()), ParticleTypes.FLAME);
+        CompendiumDiscoveryTracker.recordDiscovery(owner, mark.pair().primaryId(), mark.pair().secondaryId());
         owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.melee_fire_extracted"), true);
         return true;
     }
@@ -169,17 +162,12 @@ public final class MeleeFireSkills {
         if (pending != null && pending.source() == source && pending.target().equals(target.getUUID())) PENDING.remove(owner.getUUID(), pending);
     }
     public static void tickServer(MinecraftServer server) {
-        MARKS.entrySet().removeIf(entry -> {
-            ServerPlayer owner = server.getPlayerList().getPlayer(entry.getKey().owner());
-            if (owner == null || !valid(owner, entry.getValue())) return true;
-            Entity target = owner.level().getEntity(entry.getValue().target());
-            return !(target instanceof LivingEntity living) || !living.isAlive();
-        });
+        MARKS.tickServer(server);
         PENDING.entrySet().removeIf(entry -> {
             ServerPlayer owner = server.getPlayerList().getPlayer(entry.getKey());
             return owner == null || owner.level().getGameTime() > entry.getValue().tick();
         });
     }
-    public static void clearPlayer(UUID id) { MARKS.keySet().removeIf(key -> key.owner().equals(id)); PENDING.remove(id); }
+    public static void clearPlayer(UUID id) { MARKS.clearPlayer(id); PENDING.remove(id); }
     public static void clearServer() { MARKS.clear(); PENDING.clear(); REPLAYING.remove(); }
 }

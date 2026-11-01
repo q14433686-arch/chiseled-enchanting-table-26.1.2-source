@@ -20,6 +20,7 @@ import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
+import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -92,6 +93,7 @@ public final class FusionSkillNetworking {
         MELEE_MENDING("skill.enchantment_fusion.melee_mending"),
         MELEE_FORTUNE("skill.enchantment_fusion.melee_fortune"),
         MELEE_FIRE("skill.enchantment_fusion.melee_fire"),
+        MELEE_FROST("skill.enchantment_fusion.melee_frost"),
         GRAPNEL("skill.enchantment_fusion.grapnel");
         final String translation;
         Skill(String translation) { this.translation = translation; }
@@ -128,6 +130,7 @@ public final class FusionSkillNetworking {
         if (MeleeMendingSkills.hasEquipped(player)) skills.add(Skill.MELEE_MENDING);
         if (MeleeFortuneSkills.hasEquipped(player)) skills.add(Skill.MELEE_FORTUNE);
         if (MeleeFireSkills.hasEquipped(player)) skills.add(Skill.MELEE_FIRE);
+        if (MeleeFrostSkills.hasEquipped(player)) skills.add(Skill.MELEE_FROST);
         if (GrapnelSkills.hasEquipped(player)) skills.add(Skill.GRAPNEL);
         return skills;
     }
@@ -195,6 +198,7 @@ public final class FusionSkillNetworking {
             case MELEE_MENDING -> MeleeMendingSkills.activate(player);
             case MELEE_FORTUNE -> MeleeFortuneSkills.activate(player);
             case MELEE_FIRE -> MeleeFireSkills.activate(player);
+            case MELEE_FROST -> MeleeFrostSkills.activate(player);
             case GRAPNEL -> GrapnelSkills.activate(player);
         }
     }

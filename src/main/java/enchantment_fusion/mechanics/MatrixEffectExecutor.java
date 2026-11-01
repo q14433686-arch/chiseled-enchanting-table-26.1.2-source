@@ -38,6 +38,7 @@ import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
+import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
@@ -341,6 +342,7 @@ public final class MatrixEffectExecutor {
             boolean redesignedMeleeMending = MeleeMendingSkills.applies(pair, hostStack);
             boolean redesignedMeleeFortune = MeleeFortuneSkills.applies(pair, hostStack);
             boolean redesignedMeleeFire = MeleeFireSkills.applies(pair, hostStack);
+            boolean redesignedMeleeFrost = MeleeFrostSkills.applies(pair, hostStack);
             boolean redesignedGrapnel = GrapnelSkills.applies(pair, hostStack);
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
@@ -348,7 +350,8 @@ public final class MatrixEffectExecutor {
                 || redesignedFireTradeoff || redesignedSoulThread || redesignedFireThorns || redesignedFireSweep || redesignedWindSweep
                 || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre || redesignedFortuneBank
                 || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedMeleeImpulse
-                || redesignedMeleeGuard || redesignedMeleeWork || redesignedMeleeMending || redesignedMeleeFortune || redesignedMeleeFire || redesignedGrapnel;
+                || redesignedMeleeGuard || redesignedMeleeWork || redesignedMeleeMending || redesignedMeleeFortune
+                || redesignedMeleeFire || redesignedMeleeFrost || redesignedGrapnel;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

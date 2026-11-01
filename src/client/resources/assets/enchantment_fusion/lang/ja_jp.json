@@ -1103,5 +1103,10 @@
   "message.enchantment_fusion.melee_fire_extracted": "残火を吸い、狙った方向へ熱刃を放った。",
   "tooltip.enchantment_fusion.melee_fire_extract": "燃える対象種の敵へ最大溜めで実際に当てると印が付く。武器を持って発動し、残火を消して狙った方向へ熱刃を放つ。",
   "tooltip.enchantment_fusion.melee_fire_follow": "主効果で対象種の敵に火を付けて印を付ける。後にまだ燃える印付きの敵へ実際に命中すると虚炎刃を放つ。",
-  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "旧式の非対応道具は元の効果を保ち、新しい炎刃は適用されない。"
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "旧式の非対応道具は元の効果を保ち、新しい炎刃は適用されない。",
+  "skill.enchantment_fusion.melee_frost": "氷刃の構え",
+  "message.enchantment_fusion.melee_frost_ready": "氷刃を準備。氷上で対象種の敵を攻撃してください。",
+  "tooltip.enchantment_fusion.melee_frost_mark": "対象種の敵に実際に当てると霜印を付ける。同じ印の敵への次の実際の命中で霜撃を加え、短時間減速する。",
+  "tooltip.enchantment_fusion.melee_frost_path": "ブーツを装備して氷上で発動。次の対象種への実際の近接攻撃で、連続する氷面に沿う虚氷刃を放つ。元の水は置換しない。",
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "旧式の非対応道具は元の効果を保ち、新しい氷刃は適用されない。"
 }

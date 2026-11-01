@@ -1103,5 +1103,10 @@
   "message.enchantment_fusion.melee_fire_extracted": "Flame extracted into a directed heat blade.",
   "tooltip.enchantment_fusion.melee_fire_extract": "A full real hit marks a burning eligible enemy; activate while holding the weapon to extinguish its remaining fire and release a directed heat blade.",
   "tooltip.enchantment_fusion.melee_fire_follow": "Ignite an eligible target with the primary effect; a later real hit on that marked burning target releases a virtual flame blade.",
-  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Old incompatible carrier: original behavior retained; the new melee-fire ability is not applied."
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Old incompatible carrier: original behavior retained; the new melee-fire ability is not applied.",
+  "skill.enchantment_fusion.melee_frost": "Ice-edge stance",
+  "message.enchantment_fusion.melee_frost_ready": "Ice-edge prepared; strike an eligible enemy while standing on ice.",
+  "tooltip.enchantment_fusion.melee_frost_mark": "A real hit marks a matching enemy; the next real hit on that same marked enemy adds frost damage and brief slowness.",
+  "tooltip.enchantment_fusion.melee_frost_path": "Wear the boots and activate while standing on ice; your next matching real melee hit releases a virtual blade along continuous ice. Original water is not replaced.",
+  "tooltip.enchantment_fusion.legacy_melee_frost_carrier": "Old incompatible carrier: original behavior retained; the new frost blade is not applied."
 }

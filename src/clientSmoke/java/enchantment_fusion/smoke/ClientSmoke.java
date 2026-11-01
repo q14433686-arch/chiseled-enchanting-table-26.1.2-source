@@ -710,6 +710,12 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("40.1-knockback-lure", () -> GrapnelImpactProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:knockback"));
         acceptance.run("40.1-breach-lure", () -> GrapnelImpactProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:breach"));
         acceptance.run("40.1-density-lure", () -> GrapnelImpactProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:density"));
+        acceptance.run("43.2-sharp-frost", () -> MeleeFrostProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
+        acceptance.run("43.2-frost-sharp", () -> MeleeFrostProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
+        acceptance.run("43.2-smite-frost", () -> MeleeFrostProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));
+        acceptance.run("43.2-frost-smite", () -> MeleeFrostProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
+        acceptance.run("43.2-bane-frost", () -> MeleeFrostProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
+        acceptance.run("43.2-frost-bane", () -> MeleeFrostProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));
         acceptance.run("43.1-sharp-fire", () -> MeleeFireProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("43.1-fire-sharp", () -> MeleeFireProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
         acceptance.run("43.1-smite-fire", () -> MeleeFireProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));

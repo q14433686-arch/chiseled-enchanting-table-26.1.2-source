@@ -20,15 +20,21 @@ final class VirtualBlade {
 
     static int cast(ServerPlayer owner, Vec3 look, @Nullable LivingEntity excluded, double range, float damage,
                     int maxVictims, Predicate<LivingEntity> eligible, ParticleOptions particle) {
-        if (owner == null || look == null || eligible == null || particle == null || !owner.isAlive()
+        return owner == null ? 0 : castFrom(owner, owner.getEyePosition(), look, excluded, range, damage, maxVictims, eligible, p -> true, particle);
+    }
+    /** Shared ray settlement, optionally limited to a continuous surface such as an ice path. */
+    static int castFrom(ServerPlayer owner, Vec3 start, Vec3 look, @Nullable LivingEntity excluded, double range, float damage,
+                        int maxVictims, Predicate<LivingEntity> eligible, Predicate<Vec3> traversable, ParticleOptions particle) {
+        if (owner == null || start == null || look == null || eligible == null || traversable == null || particle == null || !owner.isAlive()
+            || !Double.isFinite(start.x) || !Double.isFinite(start.y) || !Double.isFinite(start.z)
             || !Double.isFinite(look.x) || !Double.isFinite(look.y) || !Double.isFinite(look.z)
             || look.lengthSqr() < 1.0E-8D || !Double.isFinite(range) || range <= 0 || range > 24
-            || !Float.isFinite(damage) || damage <= 0 || maxVictims < 1 || maxVictims > 32) return 0;
-        ServerLevel level = owner.level(); Vec3 start = owner.getEyePosition(), unit = look.normalize(), end = start;
+            || !Float.isFinite(damage) || damage <= 0 || maxVictims < 1 || maxVictims > 32 || !traversable.test(start)) return 0;
+        ServerLevel level = owner.level(); Vec3 unit = look.normalize(), end = start;
         int steps = (int) Math.ceil(range * 2.0D);
         for (int i = 1; i <= steps; i++) {
             Vec3 next = start.add(unit.scale(range * i / steps));
-            if (!VirtualCombatSight.clear(level, owner, start, next)) break;
+            if (!traversable.test(next) || !VirtualCombatSight.clear(level, owner, start, next)) break;
             end = next;
         }
         List<Impact> impacts = new ArrayList<>();

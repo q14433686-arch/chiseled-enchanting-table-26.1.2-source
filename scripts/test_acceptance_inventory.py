@@ -49,7 +49,7 @@ class AcceptanceInventoryTest(unittest.TestCase):
         self.assertNotIn(" | PASS | ", text)
 
     def test_melee_template_families_have_individually_scoped_fixtures(self):
-        for secondary in ("swift_sneak", "respiration", "unbreaking", "knockback", "protection", "efficiency", "aqua_affinity", "fortune", "fire_aspect"):
+        for secondary in ("swift_sneak", "respiration", "unbreaking", "knockback", "protection", "efficiency", "aqua_affinity", "fortune", "fire_aspect", "frost_walker"):
             pairs = {(attack, secondary) for attack in ("sharpness", "smite", "bane_of_arthropods")}
             pairs |= {(right, left) for left, right in pairs.copy()}
             fixtures = {DIRECTION_FIXTURES[pair][0] for pair in pairs}

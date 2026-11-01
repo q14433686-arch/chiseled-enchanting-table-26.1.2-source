@@ -137,7 +137,8 @@ public final class FrostFallSkills {
             String sig = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
             if ((isStepPair(pair) && STEP_SIGNATURE.equals(sig))
                 || (FrostWakeDiveSkills.isWakePair(pair) && FrostWakeDiveSkills.WAKE.equals(sig))
-                || (FrostFireSkills.isBasaltPair(pair) && FrostFireSkills.BASALT.equals(sig))) return true;
+                || (FrostFireSkills.isBasaltPair(pair) && FrostFireSkills.BASALT.equals(sig))
+                || (MeleeFrostSkills.frostFirst(pair) && MeleeFrostSkills.applies(pair, item.itemStack()))) return true;
         }
         return false;
     }

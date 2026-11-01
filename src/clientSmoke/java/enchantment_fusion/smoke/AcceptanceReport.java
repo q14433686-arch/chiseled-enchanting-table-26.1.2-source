@@ -95,6 +95,12 @@ final class AcceptanceReport {
         plan("40.1-knockback-lure", "Knockback ▷ Lure: actual hit and resisted impulse, simulated recall", "Not reached if setup fails.");
         plan("40.1-breach-lure", "Breach ▷ Lure: actual armored hit and simulated recall", "Not reached if setup fails.");
         plan("40.1-density-lure", "Density ▷ Lure: actual mace hit with simulated fall and recall", "Not reached if setup fails.");
+        plan("43.2-sharp-frost", "Sharpness ▷ Frost Walker: real hit, mark and frost damage", "Not reached if setup fails.");
+        plan("43.2-frost-sharp", "Frost Walker ▷ Sharpness: boots, ice-constrained blade and water guard", "Not reached if setup fails.");
+        plan("43.2-smite-frost", "Smite ▷ Frost Walker: real hit, mark and frost damage", "Not reached if setup fails.");
+        plan("43.2-frost-smite", "Frost Walker ▷ Smite: boots, ice-constrained blade and water guard", "Not reached if setup fails.");
+        plan("43.2-bane-frost", "Bane ▷ Frost Walker: real hit, mark and frost damage", "Not reached if setup fails.");
+        plan("43.2-frost-bane", "Frost Walker ▷ Bane: boots, ice-constrained blade and water guard", "Not reached if setup fails.");
         plan("43.1-sharp-fire", "Sharpness ▷ Fire Aspect: real burning hit and simulated extraction", "Not reached if setup fails.");
         plan("43.1-fire-sharp", "Fire Aspect ▷ Sharpness: real ignition and directed blade", "Not reached if setup fails.");
         plan("43.1-smite-fire", "Smite ▷ Fire Aspect: real burning hit and simulated extraction", "Not reached if setup fails.");
