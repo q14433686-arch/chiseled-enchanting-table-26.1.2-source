@@ -36,6 +36,7 @@ import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
+import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
@@ -337,6 +338,7 @@ public final class MatrixEffectExecutor {
             boolean redesignedMeleeGuard = MeleeGuardSkills.applies(pair, hostStack);
             boolean redesignedMeleeWork = MeleeWorkSkills.applies(pair, hostStack);
             boolean redesignedMeleeMending = MeleeMendingSkills.applies(pair, hostStack);
+            boolean redesignedMeleeFortune = MeleeFortuneSkills.applies(pair, hostStack);
             boolean redesignedGrapnel = GrapnelSkills.applies(pair, hostStack);
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
@@ -344,7 +346,7 @@ public final class MatrixEffectExecutor {
                 || redesignedFireTradeoff || redesignedSoulThread || redesignedFireThorns || redesignedFireSweep || redesignedWindSweep
                 || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre || redesignedFortuneBank
                 || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedMeleeImpulse
-                || redesignedMeleeGuard || redesignedMeleeWork || redesignedMeleeMending || redesignedGrapnel;
+                || redesignedMeleeGuard || redesignedMeleeWork || redesignedMeleeMending || redesignedMeleeFortune || redesignedGrapnel;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

@@ -1090,5 +1090,13 @@
   "message.enchantment_fusion.grapnel_durability_marked": "Ação de durabilidade marcada. Mire em um inimigo válido e ative o recolhimento.",
   "tooltip.enchantment_fusion.knockback_grapnel": "Um golpe real corpo a corpo marca por 8 segundos um inimigo válido se causar dano, movê-lo e Repulsão contribuir realmente para o impulso. Recolha com a mesma arma a até 12 blocos e com visão livre.",
   "tooltip.enchantment_fusion.breach_grapnel": "Se Ruptura reduzir realmente a proteção de um inimigo válido com armadura em um golpe que causa dano, marque-o por 8 segundos. Recolha com a mesma arma a até 12 blocos e com visão livre.",
-  "tooltip.enchantment_fusion.density_grapnel": "Se Densidade aumentar realmente o dano de queda de um golpe real de maça que fere um inimigo válido, marque-o por 8 segundos. Recolha com a mesma maça a até 12 blocos e com visão livre."
+  "tooltip.enchantment_fusion.density_grapnel": "Se Densidade aumentar realmente o dano de queda de um golpe real de maça que fere um inimigo válido, marque-o por 8 segundos. Recolha com a mesma maça a até 12 blocos e com visão livre.",
+  "skill.enchantment_fusion.melee_fortune": "Postura do destino",
+  "message.enchantment_fusion.fortune_stance_ready": "Postura preparada; o resultado oculto fica fixo até o próximo acerto válido ou expirar.",
+  "message.enchantment_fusion.fortune_stance_wait": "A postura ainda não pode ser preparada novamente.",
+  "message.enchantment_fusion.fortune_refresh": "Carga de ataque restaurada.",
+  "message.enchantment_fusion.fortune_stance_spent": "Postura do destino consumida.",
+  "tooltip.enchantment_fusion.melee_fortune_refresh": "Um acerto real totalmente carregado contra um inimigo válido do tipo correspondente pode restaurar a carga. O efeito principal permanece.",
+  "tooltip.enchantment_fusion.melee_fortune_stance": "Ative a postura por até 8 segundos por padrão. O próximo acerto real adequado pode causar um golpe forte, três lâminas virtuais ou restaurar a carga; erros ou cancelamentos não geram nova rolagem.",
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Itens antigos incompatíveis mantêm o efeito original; a nova postura não se aplica."
 }

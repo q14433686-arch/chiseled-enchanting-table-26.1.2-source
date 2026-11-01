@@ -1090,5 +1090,13 @@
   "message.enchantment_fusion.grapnel_durability_marked": "Action de durabilité marquée. Visez un ennemi valide et activez le rappel.",
   "tooltip.enchantment_fusion.knockback_grapnel": "Un vrai coup de mêlée marque 8 secondes un ennemi valide si Recul contribue réellement à la poussée, qui le blesse et le déplace. Rappelez-le avec la même arme à 12 blocs maximum et en ligne de vue.",
   "tooltip.enchantment_fusion.breach_grapnel": "Si Brèche réduit réellement la protection d’un ennemi valide en armure lors d’un coup de mêlée blessant, il est marqué 8 secondes. Rappelez-le avec la même arme à 12 blocs maximum et en ligne de vue.",
-  "tooltip.enchantment_fusion.density_grapnel": "Si Densité augmente réellement les dégâts de chute d’un vrai coup de masse blessant un ennemi valide, il est marqué 8 secondes. Rappelez-le avec la même masse à 12 blocs maximum et en ligne de vue."
+  "tooltip.enchantment_fusion.density_grapnel": "Si Densité augmente réellement les dégâts de chute d’un vrai coup de masse blessant un ennemi valide, il est marqué 8 secondes. Rappelez-le avec la même masse à 12 blocs maximum et en ligne de vue.",
+  "skill.enchantment_fusion.melee_fortune": "Posture du destin",
+  "message.enchantment_fusion.fortune_stance_ready": "Posture préparée ; le résultat caché reste fixé jusqu’au prochain coup valide ou à expiration.",
+  "message.enchantment_fusion.fortune_stance_wait": "La posture ne peut pas encore être préparée à nouveau.",
+  "message.enchantment_fusion.fortune_refresh": "Charge d’attaque rétablie.",
+  "message.enchantment_fusion.fortune_stance_spent": "Posture du destin consommée.",
+  "tooltip.enchantment_fusion.melee_fortune_refresh": "Un vrai coup pleinement chargé sur un ennemi valide du type correspondant peut rétablir la charge. L’effet principal est conservé.",
+  "tooltip.enchantment_fusion.melee_fortune_stance": "Activez la posture pour 8 secondes maximum par défaut. Le prochain vrai coup adapté peut produire une frappe forte, trois lames virtuelles ou rétablir la charge ; un coup manqué ou annulé ne relance pas le tirage.",
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Les anciens supports incompatibles gardent leur effet d’origine ; la nouvelle posture ne s’applique pas."
 }

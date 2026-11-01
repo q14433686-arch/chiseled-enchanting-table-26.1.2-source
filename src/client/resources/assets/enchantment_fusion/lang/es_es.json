@@ -1090,5 +1090,13 @@
   "message.enchantment_fusion.grapnel_durability_marked": "Acción de durabilidad marcada. Apunta a un enemigo válido y activa la recogida.",
   "tooltip.enchantment_fusion.knockback_grapnel": "Un golpe cuerpo a cuerpo real marca 8 segundos a un enemigo válido si causa daño, lo mueve y Empuje contribuye realmente a la fuerza. Recógelo con la misma arma a 12 bloques o menos y con visión despejada.",
   "tooltip.enchantment_fusion.breach_grapnel": "Si Brecha reduce realmente la protección de un enemigo válido con armadura en un golpe que causa daño, lo marca 8 segundos. Recógelo con la misma arma a 12 bloques o menos y con visión despejada.",
-  "tooltip.enchantment_fusion.density_grapnel": "Si Densidad aumenta realmente el daño de caída de un golpe real de maza que daña a un enemigo válido, lo marca 8 segundos. Recógelo con la misma maza a 12 bloques o menos y con visión despejada."
+  "tooltip.enchantment_fusion.density_grapnel": "Si Densidad aumenta realmente el daño de caída de un golpe real de maza que daña a un enemigo válido, lo marca 8 segundos. Recógelo con la misma maza a 12 bloques o menos y con visión despejada.",
+  "skill.enchantment_fusion.melee_fortune": "Postura del destino",
+  "message.enchantment_fusion.fortune_stance_ready": "Postura preparada; el resultado oculto permanece hasta un impacto válido o su vencimiento.",
+  "message.enchantment_fusion.fortune_stance_wait": "La postura aún no puede prepararse de nuevo.",
+  "message.enchantment_fusion.fortune_refresh": "Carga de ataque restablecida.",
+  "message.enchantment_fusion.fortune_stance_spent": "Postura del destino consumida.",
+  "tooltip.enchantment_fusion.melee_fortune_refresh": "Un impacto real totalmente cargado contra un enemigo válido del tipo correspondiente puede restablecer la carga. Se conserva el efecto principal.",
+  "tooltip.enchantment_fusion.melee_fortune_stance": "Activa la postura por defecto durante hasta 8 segundos. El siguiente impacto real adecuado puede causar un golpe fuerte, tres hojas virtuales o restablecer la carga; fallar o cancelar no vuelve a tirar.",
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben la nueva postura."
 }

@@ -1090,5 +1090,13 @@
   "message.enchantment_fusion.grapnel_durability_marked": "耐久動作で標記。適格な敵を狙って回収を発動。",
   "tooltip.enchantment_fusion.knockback_grapnel": "実際の近接攻撃が敵にダメージを与え、ノックバック主位が押す力に寄与して実際に押すと8秒標記。同じ武器を持ち、12ブロック以内で視線が通る時に引き寄せます。",
   "tooltip.enchantment_fusion.breach_grapnel": "装甲のある敵への実際の近接ダメージ時に防具貫通が装甲効果を実際に減らすと8秒標記。同じ武器を持ち、12ブロック以内で視線が通る時に引き寄せます。",
-  "tooltip.enchantment_fusion.density_grapnel": "メイスの実際の強打が敵を傷つけ、密度が落下ダメージを実際に増やすと8秒標記。同じメイスを持ち、12ブロック以内で視線が通る時に引き寄せます。"
+  "tooltip.enchantment_fusion.density_grapnel": "メイスの実際の強打が敵を傷つけ、密度が落下ダメージを実際に増やすと8秒標記。同じメイスを持ち、12ブロック以内で視線が通る時に引き寄せます。",
+  "skill.enchantment_fusion.melee_fortune": "運命の構え",
+  "message.enchantment_fusion.fortune_stance_ready": "運命の構えを準備。隠れた結果は有効な命中か期限まで固定。",
+  "message.enchantment_fusion.fortune_stance_wait": "構えはまだ再使用できません。",
+  "message.enchantment_fusion.fortune_refresh": "攻撃の溜めを回復。",
+  "message.enchantment_fusion.fortune_stance_spent": "運命の構えを消費。",
+  "tooltip.enchantment_fusion.melee_fortune_refresh": "対象種に合う敵への最大溜めの実際の命中で、確率で攻撃の溜めを回復。主効果は維持。",
+  "tooltip.enchantment_fusion.melee_fortune_stance": "既定で最大8秒の構えを発動。次の対象種に合う実際の命中で、確率で強打、3本の虚刃、溜め回復のいずれかが発動。空振りや取消で結果は振り直されません。",
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "旧式の非対応道具は元の効果を保ち、新しい構えは適用されません。"
 }

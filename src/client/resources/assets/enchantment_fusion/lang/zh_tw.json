@@ -1090,5 +1090,13 @@
   "message.enchantment_fusion.grapnel_durability_marked": "耐久動作已留標。瞄準合格敵人並啟動回鉤。",
   "tooltip.enchantment_fusion.knockback_grapnel": "真實近擊造成傷害，且擊退主位實際增加推力並推動合格敵人時，留標8秒。持同一武器在12格內、視線暢通時主動牽引。",
   "tooltip.enchantment_fusion.breach_grapnel": "真實近擊造成傷害，且破甲主位實際降低有甲合格敵人的護甲效果時，留標8秒。持同一武器在12格內、視線暢通時主動牽引。",
-  "tooltip.enchantment_fusion.density_grapnel": "重錘的真實猛擊造成傷害，且致密主位實際增加墜落傷害時，留標8秒。持同一重錘在12格內、視線暢通時主動牽引。"
+  "tooltip.enchantment_fusion.density_grapnel": "重錘的真實猛擊造成傷害，且致密主位實際增加墜落傷害時，留標8秒。持同一重錘在12格內、視線暢通時主動牽引。",
+  "skill.enchantment_fusion.melee_fortune": "命運刀式",
+  "message.enchantment_fusion.fortune_stance_ready": "命運刀式已準備；隱藏結果固定，直到下一次合格命中或過期。",
+  "message.enchantment_fusion.fortune_stance_wait": "刀式尚在冷卻中。",
+  "message.enchantment_fusion.fortune_refresh": "攻擊蓄力已刷新。",
+  "message.enchantment_fusion.fortune_stance_spent": "命運刀式已消耗。",
+  "tooltip.enchantment_fusion.melee_fortune_refresh": "滿蓄真實命中符合主位類別的合格敵人，有機率刷新攻擊蓄力；保留主位正常效果。",
+  "tooltip.enchantment_fusion.melee_fortune_stance": "主動開啟預設最多8秒的命運刀式；下一次真實命中對應類別的合格敵人時，有機率觸發重擊、三道虛擬散刃或刷新攻擊蓄力。落空或被取消的攻擊不會重擲結果。",
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "舊的不適用載體保留原效果，不套用新的近戰刀式。"
 }

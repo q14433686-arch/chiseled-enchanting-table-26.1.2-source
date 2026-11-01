@@ -1090,5 +1090,13 @@
   "message.enchantment_fusion.grapnel_durability_marked": "Haltbarkeitsaktion markiert. Ziele auf einen gültigen Gegner und aktiviere den Rückholhaken.",
   "tooltip.enchantment_fusion.knockback_grapnel": "Ein echter Nahkampftreffer markiert einen gültigen Gegner 8 Sekunden, wenn Rückstoß den Stoß tatsächlich verstärkt und ihn verletzt und bewegt. Mit derselben Waffe innerhalb von 12 Blöcken bei freier Sicht einholen.",
   "tooltip.enchantment_fusion.breach_grapnel": "Verringert Durchschlag bei echtem Nahkampfschaden den Rüstungsschutz eines gültigen Gegners, wird er 8 Sekunden markiert. Mit derselben Waffe innerhalb von 12 Blöcken bei freier Sicht einholen.",
-  "tooltip.enchantment_fusion.density_grapnel": "Erhöht Dichte den Fallschaden eines echten Streitkolbenschmetterschlags gegen einen gültigen Gegner, wird er 8 Sekunden markiert. Mit demselben Streitkolben innerhalb von 12 Blöcken bei freier Sicht einholen."
+  "tooltip.enchantment_fusion.density_grapnel": "Erhöht Dichte den Fallschaden eines echten Streitkolbenschmetterschlags gegen einen gültigen Gegner, wird er 8 Sekunden markiert. Mit demselben Streitkolben innerhalb von 12 Blöcken bei freier Sicht einholen.",
+  "skill.enchantment_fusion.melee_fortune": "Schicksalsklinge",
+  "message.enchantment_fusion.fortune_stance_ready": "Schicksalshaltung bereit; das verborgene Ergebnis bleibt bis zum nächsten gültigen Treffer oder Ablauf fest.",
+  "message.enchantment_fusion.fortune_stance_wait": "Die Haltung kann noch nicht erneut vorbereitet werden.",
+  "message.enchantment_fusion.fortune_refresh": "Angriffsladung aufgefrischt.",
+  "message.enchantment_fusion.fortune_stance_spent": "Schicksalshaltung verbraucht.",
+  "tooltip.enchantment_fusion.melee_fortune_refresh": "Ein voll aufgeladener echter Treffer gegen einen passenden gültigen Gegner kann die Angriffsladung auffrischen. Der Haupteffekt bleibt erhalten.",
+  "tooltip.enchantment_fusion.melee_fortune_stance": "Aktiviere die Haltung standardmäßig für höchstens 8 Sekunden. Der nächste passende echte Treffer kann einen schweren Schlag, drei virtuelle Klingen oder Ladungsauffrischung auslösen; Fehlschläge und abgebrochene Treffer würfeln nicht neu.",
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; die neue Nahkampfhaltung gilt dort nicht."
 }

@@ -91,8 +91,9 @@ final class GrapnelImpactProbe {
                 require(level.setBlock(wall, Blocks.STONE.defaultBlockState(), 3), "Fixture wall must be placed"); changedWall = true;
                 require(!GrapnelSkills.activate(player) && target.getUUID().equals(marked(player)), "Blocked sight cannot consume the mark");
                 level.removeBlock(wall, false); changedWall = false;
-                player.setItemSlot(EquipmentSlot.MAINHAND, weapon.copy()); require(!GrapnelSkills.activate(player), "A copy cannot spend the original mark");
-                player.setItemSlot(EquipmentSlot.MAINHAND, weapon); target.setDeltaMovement(Vec3.ZERO);
+                player.setItemSlot(EquipmentSlot.OFFHAND, weapon); player.setItemSlot(EquipmentSlot.MAINHAND, weapon.copy());
+                require(!GrapnelSkills.activate(player), "A copy cannot spend the original mark");
+                player.setItemSlot(EquipmentSlot.MAINHAND, weapon); player.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY); target.setDeltaMovement(Vec3.ZERO);
                 require(GrapnelSkills.activate(player) && target.getDeltaMovement().x < 0 && marked(player) == null,
                     "Active recall must pull the marked target exactly once");
             }

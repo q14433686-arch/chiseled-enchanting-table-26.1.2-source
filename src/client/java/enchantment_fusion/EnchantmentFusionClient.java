@@ -11,6 +11,7 @@ import enchantment_fusion.gui.FusionRitualDirector;
 import enchantment_fusion.gui.FusionGuiMicroEffects;
 import enchantment_fusion.gui.FusionTooltipRenderer;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
+import enchantment_fusion.mixin.LivingEntityAttackChargeAccessor;
 import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.menu.FusionSkillNetworking;
 import enchantment_fusion.menu.EnchantmentFusionMenu;
@@ -73,6 +74,12 @@ public final class EnchantmentFusionClient implements ClientModInitializer {
             }
         });
 
+        ClientPlayNetworking.registerGlobalReceiver(FusionSkillNetworking.RefreshChargePayload.TYPE, (payload, ctx) -> {
+            ctx.client().execute(() -> {
+                if (ctx.client().player != null && payload.ticks() >= 0 && payload.ticks() <= 200)
+                    ((LivingEntityAttackChargeAccessor) (Object) ctx.client().player).ef$setAttackStrengthTicker(payload.ticks());
+            });
+        });
         ClientPlayNetworking.registerGlobalReceiver(FusionConfigNetworking.SyncPayload.TYPE, (payload, ctx) -> {
             ctx.client().execute(() -> FusionConfigClient.apply(payload));
         });

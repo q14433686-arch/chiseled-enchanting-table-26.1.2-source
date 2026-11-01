@@ -1090,5 +1090,13 @@
   "message.enchantment_fusion.grapnel_durability_marked": "Azione di durabilità marcata. Mira a un nemico valido e attiva il recupero.",
   "tooltip.enchantment_fusion.knockback_grapnel": "Un vero colpo in mischia marca per 8 secondi un nemico valido se lo ferisce e lo spinge, con Respingimento che contribuisce davvero alla spinta. Recuperalo con la stessa arma entro 12 blocchi e con visuale libera.",
   "tooltip.enchantment_fusion.breach_grapnel": "Se Breccia riduce davvero la protezione di un nemico valido corazzato durante un colpo che infligge danno, lo marca per 8 secondi. Recuperalo con la stessa arma entro 12 blocchi e con visuale libera.",
-  "tooltip.enchantment_fusion.density_grapnel": "Se Densità aumenta davvero il danno da caduta di un vero colpo di mazza che ferisce un nemico valido, lo marca per 8 secondi. Recuperalo con la stessa mazza entro 12 blocchi e con visuale libera."
+  "tooltip.enchantment_fusion.density_grapnel": "Se Densità aumenta davvero il danno da caduta di un vero colpo di mazza che ferisce un nemico valido, lo marca per 8 secondi. Recuperalo con la stessa mazza entro 12 blocchi e con visuale libera.",
+  "skill.enchantment_fusion.melee_fortune": "Posizione del destino",
+  "message.enchantment_fusion.fortune_stance_ready": "Posizione preparata; il risultato nascosto resta fisso fino al prossimo colpo valido o alla scadenza.",
+  "message.enchantment_fusion.fortune_stance_wait": "La posizione non può ancora essere preparata di nuovo.",
+  "message.enchantment_fusion.fortune_refresh": "Carica d’attacco ripristinata.",
+  "message.enchantment_fusion.fortune_stance_spent": "Posizione del destino consumata.",
+  "tooltip.enchantment_fusion.melee_fortune_refresh": "Un vero colpo completamente caricato contro un nemico valido del tipo corrispondente può ripristinare la carica. L’effetto primario rimane.",
+  "tooltip.enchantment_fusion.melee_fortune_stance": "Attiva la posizione normalmente per al massimo 8 secondi. Il prossimo colpo reale adatto può causare un colpo forte, tre lame virtuali o ripristinare la carica; colpi mancati o annullati non ritirano il risultato.",
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; la nuova posizione non si applica."
 }

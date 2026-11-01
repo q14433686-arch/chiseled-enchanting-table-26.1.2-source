@@ -1090,5 +1090,13 @@
   "message.enchantment_fusion.grapnel_durability_marked": "Durability action marked this location. Aim at an eligible enemy and activate grapnel recall.",
   "tooltip.enchantment_fusion.knockback_grapnel": "A real melee hit that damages and pushes an eligible enemy, with Knockback actually contributing, marks it for 8 seconds. Hold the same weapon and activate within 12 blocks with clear sight.",
   "tooltip.enchantment_fusion.breach_grapnel": "When Breach actually reduces an armored enemy’s protection during a damaging melee hit, mark it for 8 seconds. Hold the same weapon and activate within 12 blocks with clear sight.",
-  "tooltip.enchantment_fusion.density_grapnel": "When Density actually adds to a mace smash that damages an eligible enemy, mark it for 8 seconds. Hold the same mace and activate within 12 blocks with clear sight."
+  "tooltip.enchantment_fusion.density_grapnel": "When Density actually adds to a mace smash that damages an eligible enemy, mark it for 8 seconds. Hold the same mace and activate within 12 blocks with clear sight.",
+  "skill.enchantment_fusion.melee_fortune": "Fortune stance",
+  "message.enchantment_fusion.fortune_stance_ready": "Fortune stance prepared; its hidden roll is fixed until the next eligible hit or expiry.",
+  "message.enchantment_fusion.fortune_stance_wait": "The stance cannot be prepared again yet.",
+  "message.enchantment_fusion.fortune_refresh": "Attack charge refreshed.",
+  "message.enchantment_fusion.fortune_stance_spent": "Fortune stance spent.",
+  "tooltip.enchantment_fusion.melee_fortune_refresh": "A fully charged hit on a matching eligible enemy may refresh your attack charge. The primary’s normal effects remain.",
+  "tooltip.enchantment_fusion.melee_fortune_stance": "Activate a stance for up to 8 seconds by default. The next matching real hit may be a heavier strike, three virtual cutting rays, or an attack-charge refresh; a miss or cancelled hit does not reroll it.",
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Old incompatible carrier: its original behavior is retained; the new melee stance is not applied."
 }

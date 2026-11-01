@@ -32,6 +32,7 @@
     "GrindstoneAberrationGuardMixin",
     "ItemEntityProtectionMixin",
     "ItemStackDurabilityFusionMixin",
+    "LivingEntityAttackChargeAccessor",
     "LivingEntityBlastDefenseMixin",
     "LivingEntityConsumableFusionMixin",
     "LivingEntityFireThornsMixin",

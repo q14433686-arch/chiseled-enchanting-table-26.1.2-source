@@ -20,6 +20,7 @@ import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
+import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -133,9 +134,12 @@ public abstract class PlayerAmberAttackMixin {
                 try {
                     MeleeMendingSkills.Damage mending = MeleeMendingSkills.beginDamage(confirmed, damage);
                     try {
-                        succeeded = original.call(target, source, mending.damage());
-                        ConfirmedMelee.after(confirmed, succeeded);
-                        return succeeded;
+                        MeleeFortuneSkills.Damage fortune = MeleeFortuneSkills.beginDamage(confirmed, mending.damage());
+                        try {
+                            succeeded = original.call(target, source, fortune.damage());
+                            ConfirmedMelee.after(confirmed, succeeded);
+                            return succeeded;
+                        } finally { MeleeFortuneSkills.endDamage(fortune); }
                     } finally { MeleeMendingSkills.endDamage(mending); }
                 } finally {
                     try { SegmentThreadSkills.afterDamage(segment, succeeded); }
@@ -184,9 +188,12 @@ public abstract class PlayerAmberAttackMixin {
                 try {
                     MeleeMendingSkills.Damage mending = MeleeMendingSkills.beginDamage(confirmed, damage);
                     try {
-                        succeeded = original.call(target, source, mending.damage());
-                        ConfirmedMelee.after(confirmed, succeeded);
-                        return succeeded;
+                        MeleeFortuneSkills.Damage fortune = MeleeFortuneSkills.beginDamage(confirmed, mending.damage());
+                        try {
+                            succeeded = original.call(target, source, fortune.damage());
+                            ConfirmedMelee.after(confirmed, succeeded);
+                            return succeeded;
+                        } finally { MeleeFortuneSkills.endDamage(fortune); }
                     } finally { MeleeMendingSkills.endDamage(mending); }
                 } finally {
                     try { SegmentThreadSkills.afterDamage(segment, succeeded); }

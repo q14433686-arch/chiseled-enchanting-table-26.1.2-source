@@ -443,7 +443,11 @@
     "midas_cleave": {
       "primary": "minecraft:sharpness",
       "secondary": "minecraft:fortune",
-      "domain": "melee"
+      "domain": "melee",
+      "chance_base_percent": 10,
+      "chance_per_level_percent": 10,
+      "stance_ticks": 160,
+      "stance_cooldown_ticks": 40
     },
     "bounty_jackpot": {
       "primary": "minecraft:looting",

@@ -95,6 +95,12 @@ final class AcceptanceReport {
         plan("40.1-knockback-lure", "Knockback ▷ Lure: actual hit and resisted impulse, simulated recall", "Not reached if setup fails.");
         plan("40.1-breach-lure", "Breach ▷ Lure: actual armored hit and simulated recall", "Not reached if setup fails.");
         plan("40.1-density-lure", "Density ▷ Lure: actual mace hit with simulated fall and recall", "Not reached if setup fails.");
+        plan("33.2-sharp-fortune", "Sharpness ▷ Fortune: real melee and simulated charge refresh", "Not reached if setup fails.");
+        plan("33.2-fortune-sharp", "Fortune ▷ Sharpness: real melee and simulated stance timing", "Not reached if setup fails.");
+        plan("44.3-smite-fortune", "Smite ▷ Fortune: real melee and simulated charge refresh", "Not reached if setup fails.");
+        plan("44.3-fortune-smite", "Fortune ▷ Smite: real melee and simulated stance timing", "Not reached if setup fails.");
+        plan("44.3-bane-fortune", "Bane ▷ Fortune: real melee and simulated charge refresh", "Not reached if setup fails.");
+        plan("44.3-fortune-bane", "Fortune ▷ Bane: real melee and simulated stance timing", "Not reached if setup fails.");
         plan("40.1-runtime-compat", "40.1 natural key input and charge, spear, other players, claims, datapacks and remaining source adapters", "Not covered by the prepared single-player fixtures.");
         plan("42.3-sharp-swift", "Sharpness ▷ Swift Sneak: real hits and simulated imprint movement", "Not reached if setup fails.");
         plan("42.3-swift-sharp", "Swift Sneak ▷ Sharpness: worn leggings, simulated crouch and real hit", "Not reached if setup fails.");

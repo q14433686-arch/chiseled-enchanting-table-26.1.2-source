@@ -18,6 +18,7 @@ import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
+import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -58,6 +60,13 @@ public final class FusionSkillNetworking {
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
 
+    /** Server-authoritative refresh; the client copy keeps vanilla's charge indicator/input aligned. */
+    public record RefreshChargePayload(int ticks) implements CustomPacketPayload {
+        public static final Type<RefreshChargePayload> TYPE = new Type<>(EnchantmentFusion.id("refresh_attack_charge"));
+        public static final StreamCodec<ByteBuf, RefreshChargePayload> CODEC = ByteBufCodecs.VAR_INT.map(RefreshChargePayload::new, RefreshChargePayload::ticks);
+        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    }
+
     private enum Skill {
         BREATH("skill.enchantment_fusion.breath_mining"),
         FROST_WAVE("skill.enchantment_fusion.frost_wave"),
@@ -80,6 +89,7 @@ public final class FusionSkillNetworking {
         MELEE_WORK("skill.enchantment_fusion.melee_work"),
         MELEE_WATER_WORK("skill.enchantment_fusion.melee_water_work"),
         MELEE_MENDING("skill.enchantment_fusion.melee_mending"),
+        MELEE_FORTUNE("skill.enchantment_fusion.melee_fortune"),
         GRAPNEL("skill.enchantment_fusion.grapnel");
         final String translation;
         Skill(String translation) { this.translation = translation; }
@@ -114,6 +124,7 @@ public final class FusionSkillNetworking {
         if (MeleeWorkSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WORK);
         if (MeleeWorkSkills.hasEquipped(player, true)) skills.add(Skill.MELEE_WATER_WORK);
         if (MeleeMendingSkills.hasEquipped(player)) skills.add(Skill.MELEE_MENDING);
+        if (MeleeFortuneSkills.hasEquipped(player)) skills.add(Skill.MELEE_FORTUNE);
         if (GrapnelSkills.hasEquipped(player)) skills.add(Skill.GRAPNEL);
         return skills;
     }
@@ -179,11 +190,13 @@ public final class FusionSkillNetworking {
             case MELEE_WORK -> MeleeWorkSkills.activate(player, false);
             case MELEE_WATER_WORK -> MeleeWorkSkills.activate(player, true);
             case MELEE_MENDING -> MeleeMendingSkills.activate(player);
+            case MELEE_FORTUNE -> MeleeFortuneSkills.activate(player);
             case GRAPNEL -> GrapnelSkills.activate(player);
         }
     }
 
     public static void init() {
+        PayloadTypeRegistry.clientboundPlay().register(RefreshChargePayload.TYPE, RefreshChargePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ActivatePayload.TYPE, ActivatePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(CyclePayload.TYPE, CyclePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(AirAttackPayload.TYPE, AirAttackPayload.CODEC);
