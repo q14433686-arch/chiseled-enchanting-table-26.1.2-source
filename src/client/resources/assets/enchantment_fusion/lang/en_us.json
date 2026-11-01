@@ -1135,5 +1135,18 @@
   "message.enchantment_fusion.grapnel_channeling_marked": "A real Channeling strike marked this location. Aim at an eligible enemy nearby and activate while the original trident remains in the world.",
   "tooltip.enchantment_fusion.channeling_grapnel": "A thrown trident leaves a mark only when its Channeling actually summons lightning; the default requires a thunderstorm and open sky. An eligible enemy must take real damage; a valid block hit marks the location. Activate within 8 seconds while the original trident remains in the world. Target and mark must be within 12 blocks and clear sight; for a location mark, aim at an eligible enemy within 8 blocks of it. No extra lightning is created; normal lightning remains dangerous.",
   "tooltip.enchantment_fusion.looting_grapnel": "After a real eligible direct melee kill, mark only unchanged, verified original loot stacks that actually gained count or passed a necessary pool chance because of Looting. Hold the same weapon; after the pickup delay, activate within 8 seconds, 12 blocks and clear sight. Normal pickup applies. Equipment and unverifiable drops are left alone.",
-  "message.enchantment_fusion.grapnel_looting_marked": "Verified Looting drops marked. Hold the original weapon and activate after the pickup delay."
+  "message.enchantment_fusion.grapnel_looting_marked": "Verified Looting drops marked. Hold the original weapon and activate after the pickup delay.",
+  "tooltip.enchantment_fusion.ranged_wear_guard": "Three consecutive real arrows damaging eligible enemies within 10 seconds build a streak. Activate while holding this bow or crossbow to turn it into protection against later actual durability loss for 20 seconds. A miss resets the streak; the shooting primary remains.",
+  "tooltip.enchantment_fusion.ranged_wear_echo": "When this bow or crossbow actually saves durability through Unbreaking, gain an echo charge for 30 seconds. Activate while holding it to replay the most recent real central-arrow path from the last 10 seconds. The virtual echo cannot be picked up or duplicate ammunition; its effect follows Power, Punch or Flame.",
+  "tooltip.enchantment_fusion.legacy_ranged_wear_carrier": "An old incompatible carrier keeps its old effect. This redesign requires a durable bow or crossbow.",
+  "skill.enchantment_fusion.ranged_wear_guard": "Steady-string guard",
+  "skill.enchantment_fusion.ranged_wear_echo": "Resilient-string echo",
+  "message.enchantment_fusion.ranged_wear_guard_ready": "Streak ready: activate steady-string guard.",
+  "message.enchantment_fusion.ranged_wear_guard_active": "Steady-string guard is already active.",
+  "message.enchantment_fusion.ranged_wear_guard_need": "Land three consecutive real arrow hits first.",
+  "message.enchantment_fusion.ranged_wear_guard_set": "Steady-string guard: %s durability protected.",
+  "message.enchantment_fusion.ranged_wear_echo_need": "No observed Unbreaking saving is available.",
+  "message.enchantment_fusion.ranged_wear_path_need": "The latest real arrow needs a recorded path first.",
+  "message.enchantment_fusion.ranged_wear_echo_ready": "Unbreaking saved durability: an echo charge is ready.",
+  "message.enchantment_fusion.ranged_wear_echo_set": "Released one virtual arrow echo."
 }

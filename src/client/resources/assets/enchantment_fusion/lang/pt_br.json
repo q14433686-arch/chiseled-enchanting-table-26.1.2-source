@@ -1135,5 +1135,18 @@
   "message.enchantment_fusion.grapnel_channeling_marked": "Um raio real de Canalização marcou este local. Mire em um inimigo válido e ative enquanto o tridente original permanecer no mundo.",
   "tooltip.enchantment_fusion.channeling_grapnel": "Um tridente lançado só deixa uma marca se Canalização realmente invocar um raio; por padrão, são necessários uma tempestade e céu aberto. Um inimigo válido deve sofrer dano real; um impacto válido em bloco marca o local. Ative em até 8 segundos enquanto o tridente original permanecer no mundo. Alvo e marca devem estar a até 12 blocos e com visão livre; para uma marca de local, mire em um inimigo válido a até 8 blocos dela. Nenhum raio extra é criado; raios normais continuam perigosos.",
   "tooltip.enchantment_fusion.looting_grapnel": "Após uma morte real válida em combate corpo a corpo, apenas pilhas originais verificadas e inalteradas cuja quantidade ou chance necessária do grupo aumentou com Saque são marcadas. Segure a mesma arma e ative após o atraso de coleta, em até 8 segundos, 12 blocos e com visão livre. A coleta normal se aplica; equipamentos e itens não verificáveis permanecem.",
-  "message.enchantment_fusion.grapnel_looting_marked": "Itens de Saque verificados marcados. Segure a arma original e ative após o atraso de coleta."
+  "message.enchantment_fusion.grapnel_looting_marked": "Itens de Saque verificados marcados. Segure a arma original e ative após o atraso de coleta.",
+  "tooltip.enchantment_fusion.ranged_wear_guard": "Três flechas reais consecutivas que causem dano a inimigos válidos em 10 segundos preparam a proteção. Ative com este arco ou besta para absorver desgaste real por 20 segundos. Um erro interrompe a sequência; o efeito principal permanece.",
+  "tooltip.enchantment_fusion.ranged_wear_echo": "Quando Durabilidade evitar desgaste real neste arco ou besta, ganhe uma carga por 30 segundos. Ative para repetir a trajetória registrada da última flecha central real dos últimos 10 segundos. O eco não pode ser recolhido nem duplica munição; segue Força, Impacto ou Chama.",
+  "tooltip.enchantment_fusion.legacy_ranged_wear_carrier": "Itens antigos incompatíveis mantêm seu efeito; é necessário um arco ou besta com durabilidade.",
+  "skill.enchantment_fusion.ranged_wear_guard": "Proteção da corda",
+  "skill.enchantment_fusion.ranged_wear_echo": "Eco da corda",
+  "message.enchantment_fusion.ranged_wear_guard_ready": "Sequência pronta.",
+  "message.enchantment_fusion.ranged_wear_guard_active": "A proteção já está ativa.",
+  "message.enchantment_fusion.ranged_wear_guard_need": "Acerte três flechas reais consecutivas.",
+  "message.enchantment_fusion.ranged_wear_guard_set": "Proteção: %s de durabilidade.",
+  "message.enchantment_fusion.ranged_wear_echo_need": "Nenhuma economia real de durabilidade.",
+  "message.enchantment_fusion.ranged_wear_path_need": "Registre primeiro a trajetória da última flecha real.",
+  "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilidade economizada: eco pronto.",
+  "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtual liberado."
 }

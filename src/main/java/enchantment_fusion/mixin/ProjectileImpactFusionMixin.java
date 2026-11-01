@@ -10,6 +10,8 @@ import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
+import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
+import enchantment_fusion.mechanics.signatures.RangedPrimary;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
@@ -25,6 +27,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileDeflection;
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.FishingRodItem;
@@ -142,8 +145,7 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
 
     @Inject(method = "applyOnProjectileSpawned", at = @At("TAIL"))
     private void ef$nonNativeFlamePrimary(ServerLevel level, ItemStack ammunition, CallbackInfo ci) {
-        ThermalProjectileSkills.applyPrimarySpawn((Projectile) (Object) this);
-        GrapnelSkills.applyPrimarySpawn((Projectile) (Object) this);
+        RangedPrimary.spawned((Projectile) (Object) this);
     }
 
     @Unique
@@ -197,6 +199,7 @@ public abstract class ProjectileImpactFusionMixin implements ProjectileLaunchWea
     @Inject(method = "onHit", at = @At("TAIL"))
     private void ef$afterOnHit(HitResult hitResult, CallbackInfo ci) {
         Projectile self = (Projectile) (Object) this;
+        if (self instanceof AbstractArrow arrow) ConfirmedArrow.impact(arrow, hitResult);
         if (self.level() instanceof ServerLevel && PhantomVolley.isGhost(self)) {
             // The arrow still ran vanilla block collision, but never runs secondary fusion
             // dispatch or leaves behind recoverable ammunition.

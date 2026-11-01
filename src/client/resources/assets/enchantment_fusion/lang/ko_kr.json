@@ -1135,5 +1135,18 @@
   "message.enchantment_fusion.grapnel_channeling_marked": "실제 집전 번개가 이 위치에 표식을 남겼습니다. 원래 삼지창이 세계에 있는 동안 주변의 유효한 적을 조준하고 발동하세요.",
   "tooltip.enchantment_fusion.channeling_grapnel": "던진 삼지창의 집전이 실제 번개를 소환했을 때만 표식을 남깁니다. 기본적으로 뇌우와 탁 트인 하늘이 필요합니다. 유효한 적에게 실제 피해를 주면 적을, 유효한 블록에 맞으면 위치를 표시합니다. 원래 삼지창이 세계에 있는 동안 8초 안에, 12블록 이내의 시야가 확보된 곳에서 회수를 발동하세요. 위치 표식은 표식에서 8블록 이내의 유효한 적을 조준해야 합니다. 추가 번개는 생성되지 않으며 일반 번개는 여전히 위험합니다.",
   "tooltip.enchantment_fusion.looting_grapnel": "유효한 적을 손에 든 무기로 근접 공격해 실제로 처치한 뒤, 약탈로 수량이 늘었거나 전리품 묶음의 필수 확률을 통과한 검증된 원래 드롭 중 변하지 않은 것만 8초 동안 표시합니다. 같은 무기를 들고 획득 지연 후 12블록 이내와 시야가 확보된 곳에서 발동합니다. 일반 획득 규칙을 따르며 장비와 검증할 수 없는 드롭은 건드리지 않습니다.",
-  "message.enchantment_fusion.grapnel_looting_marked": "검증된 약탈 드롭이 표시되었습니다. 원래 무기를 들고 획득 지연 후 발동하세요."
+  "message.enchantment_fusion.grapnel_looting_marked": "검증된 약탈 드롭이 표시되었습니다. 원래 무기를 들고 획득 지연 후 발동하세요.",
+  "tooltip.enchantment_fusion.ranged_wear_guard": "10초 안에 실제 화살로 유효한 적에게 연속 세 번 피해를 주면 보호가 준비됩니다. 이 활이나 쇠뇌를 들고 발동하면 20초 동안 실제 내구도 손실을 막습니다. 빗나가면 연속 기록이 끊기며 사격 주 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.ranged_wear_echo": "이 활이나 쇠뇌의 내구성으로 실제 소모를 막으면 추격 충전이 30초간 생깁니다. 들고 발동하면 최근 10초 내 마지막 실제 중앙 화살의 기록된 경로를 재생합니다. 가상 메아리는 줍거나 탄약을 복제할 수 없으며 힘·밀어내기·화염에 따라 달라집니다.",
+  "tooltip.enchantment_fusion.legacy_ranged_wear_carrier": "오래된 부적합 장비는 원래 효과를 유지합니다. 새 효과에는 내구도가 있는 활이나 쇠뇌가 필요합니다.",
+  "skill.enchantment_fusion.ranged_wear_guard": "시위 보호",
+  "skill.enchantment_fusion.ranged_wear_echo": "시위 추격",
+  "message.enchantment_fusion.ranged_wear_guard_ready": "연속 명중 준비 완료.",
+  "message.enchantment_fusion.ranged_wear_guard_active": "보호가 이미 활성화되어 있습니다.",
+  "message.enchantment_fusion.ranged_wear_guard_need": "실제 화살로 세 번 연속 명중하세요.",
+  "message.enchantment_fusion.ranged_wear_guard_set": "내구도 %s만큼 보호합니다.",
+  "message.enchantment_fusion.ranged_wear_echo_need": "실제 내구도 절약 충전이 없습니다.",
+  "message.enchantment_fusion.ranged_wear_path_need": "먼저 마지막 실제 화살의 경로를 기록하세요.",
+  "message.enchantment_fusion.ranged_wear_echo_ready": "내구도 절약: 추격 준비 완료.",
+  "message.enchantment_fusion.ranged_wear_echo_set": "가상 화살 메아리를 발사했습니다."
 }

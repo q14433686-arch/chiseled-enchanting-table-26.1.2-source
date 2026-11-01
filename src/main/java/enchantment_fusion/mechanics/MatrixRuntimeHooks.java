@@ -31,6 +31,8 @@ import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
+import enchantment_fusion.mechanics.signatures.RangedWearSkills;
+import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -121,6 +123,8 @@ public final class MatrixRuntimeHooks {
             StealthBladeSkills.clearServer();
             WaterPressureSkills.clearServer();
             MeleeWearSkills.clearServer();
+            RangedWearSkills.clearServer();
+            ConfirmedArrow.clearServer();
             MeleeImpulseSkills.clearServer();
             MeleeGuardSkills.clearServer();
             MeleeWorkSkills.clearServer(server);
@@ -133,6 +137,9 @@ public final class MatrixRuntimeHooks {
             GrapnelSkills.clearServer();
             PrimaryLocationProjection.clearServer(server);
             FortuneBankSkills.clear();
+        });
+        ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
+            if (entity instanceof net.minecraft.world.entity.projectile.arrow.AbstractArrow arrow) ConfirmedArrow.sample(arrow);
         });
         ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
             AmberSealSkill.onEntityUnload(entity);
@@ -189,6 +196,8 @@ public final class MatrixRuntimeHooks {
             StealthBladeSkills.clearPlayer(pid);
             WaterPressureSkills.clearPlayer(pid);
             MeleeWearSkills.clearPlayer(pid);
+            RangedWearSkills.clearPlayer(pid);
+            ConfirmedArrow.clearPlayer(pid);
             MeleeImpulseSkills.clearPlayer(pid);
             MeleeGuardSkills.clearPlayer(pid);
             MeleeWorkSkills.clearPlayer(handler.getPlayer());
@@ -411,6 +420,8 @@ public final class MatrixRuntimeHooks {
                 StealthBladeSkills.clearPlayer(deadPlayer.getUUID());
                 WaterPressureSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeWearSkills.clearPlayer(deadPlayer.getUUID());
+                RangedWearSkills.clearPlayer(deadPlayer.getUUID());
+                ConfirmedArrow.clearPlayer(deadPlayer.getUUID());
                 MeleeImpulseSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeGuardSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeWorkSkills.clearPlayer(deadPlayer);
@@ -449,6 +460,8 @@ public final class MatrixRuntimeHooks {
             StealthBladeSkills.tickServer(server);
             WaterPressureSkills.tickServer(server);
             MeleeWearSkills.tickServer(server);
+            RangedWearSkills.tickServer(server);
+            ConfirmedArrow.tickServer(server);
             MeleeImpulseSkills.tickServer(server);
             MeleeGuardSkills.tickServer(server);
             MeleeWorkSkills.tickServer(server);

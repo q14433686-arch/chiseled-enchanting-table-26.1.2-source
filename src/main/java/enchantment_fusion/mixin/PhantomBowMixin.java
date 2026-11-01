@@ -4,6 +4,7 @@ import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import enchantment_fusion.mechanics.signatures.RangedCadenceSkills;
 import enchantment_fusion.mechanics.signatures.EchoPathSkills;
+import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
@@ -26,6 +27,7 @@ public abstract class PhantomBowMixin {
         PhantomVolley.configureBow(projectile, shooter, index);
         RangedCadenceSkills.trackBow(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
         EchoPathSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
+        ConfirmedArrow.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
         PiercingChainSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
         ThermalProjectileSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
         GrapnelSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));

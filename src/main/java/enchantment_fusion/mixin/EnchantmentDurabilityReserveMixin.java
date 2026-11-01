@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelDurability;
+import enchantment_fusion.mechanics.signatures.RangedWearSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -20,12 +21,15 @@ public abstract class EnchantmentDurabilityReserveMixin {
         float before = change.floatValue();
         MeleeWearSkills.WearFrame frame = MeleeWearSkills.beginEffect(stack);
         GrapnelDurability.WearFrame grapnel = GrapnelDurability.beginEffect(stack);
+        RangedWearSkills.WearFrame ranged = RangedWearSkills.beginEffect(stack);
         try {
             original.call(level, enchantmentLevel, stack, change);
             DurabilityReserveSkills.observed(level, (Enchantment) (Object) this, stack, before, change.floatValue());
             MeleeWearSkills.observedEffect(frame, level, (Enchantment) (Object) this, stack, before, change.floatValue());
             GrapnelDurability.observeEffect(grapnel, level, (Enchantment) (Object) this, enchantmentLevel, stack, before, change.floatValue());
+            RangedWearSkills.observeEffect(ranged, level, (Enchantment) (Object) this, enchantmentLevel, stack, before, change.floatValue());
         } finally {
+            RangedWearSkills.endEffect(ranged);
             GrapnelDurability.endEffect(grapnel);
             MeleeWearSkills.endEffect(frame);
         }

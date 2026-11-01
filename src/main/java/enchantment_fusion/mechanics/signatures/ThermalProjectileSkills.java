@@ -2,7 +2,6 @@ package enchantment_fusion.mechanics.signatures;
 
 import enchantment_fusion.config.FusionConfigStore;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
-import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mixin.AbstractArrowAccessor;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
@@ -15,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -32,14 +30,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantedItemInUse;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
 
 /** Heat shields follow real arrows; their reverse creates virtual fire after an actual knockback settles. */
@@ -133,28 +128,6 @@ public final class ThermalProjectileSkills {
             || PhantomVolley.isGhost(arrow) || FLIGHTS.size() >= MAX_FLIGHTS) return;
         FusedPair pair = selected(weapon);
         if (pair != null) FLIGHTS.put(arrow, new Flight(owner, weapon, pair));
-    }
-    /** On non-native crossbows, run the real datapack Flame projectile-spawn effect once. */
-    public static void applyPrimarySpawn(Projectile projectile) {
-        if (!(projectile instanceof AbstractArrow arrow) || !(arrow.level() instanceof ServerLevel level)
-            || !(arrow.getOwner() instanceof ServerPlayer owner) || PhantomVolley.isGhost(arrow)) return;
-        ItemStack weapon = arrow.getWeaponItem();
-        FusedPair pair = selected(weapon);
-        if (pair == null || !FLAME.equals(pair.primaryId())) return;
-        var nativeFlame = FusionStationOperations.lookupEnchantment(level.registryAccess(), FLAME);
-        if (nativeFlame.isEmpty() || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(nativeFlame.get()) > 0) return;
-        var item = new EnchantedItemInUse(weapon, null, owner, arrow::onItemBreak);
-        nativeFlame.get().value().onProjectileSpawned(level, pair.primaryLevel(), item, arrow);
-    }
-    /** Preserve the real datapack Punch value effect on a non-native crossbow, without double counting native Punch. */
-    public static float primaryKnockback(ServerLevel level, ItemStack weapon, Entity target, DamageSource source, float vanilla) {
-        FusedPair pair = selected(weapon);
-        if (pair == null || !PUNCH.equals(pair.primaryId()) || !(source.getDirectEntity() instanceof AbstractArrow)) return vanilla;
-        var nativePunch = FusionStationOperations.lookupEnchantment(level.registryAccess(), PUNCH);
-        if (nativePunch.isEmpty() || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(nativePunch.get()) > 0) return vanilla;
-        MutableFloat result = new MutableFloat(vanilla);
-        nativePunch.get().value().modifyKnockback(level, pair.primaryLevel(), weapon, target, source, result);
-        return Float.isFinite(result.floatValue()) ? result.floatValue() : vanilla;
     }
     private static boolean hostile(ServerPlayer owner, LivingEntity target) {
         if (!target.isAlive() || target == owner || target.isSpectator() || target.isInvulnerable()

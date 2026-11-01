@@ -1135,5 +1135,18 @@
   "message.enchantment_fusion.grapnel_channeling_marked": "実際の召雷がこの場所に標を残しました。元のトライデントが世界にある間に、近くの有効な敵を狙って発動してください。",
   "tooltip.enchantment_fusion.channeling_grapnel": "投げたトライデントの召雷が実際に雷を発生させた場合のみ標を残します。標準では雷雨と空が見える場所が必要です。有効な敵に実際のダメージを与えた場合は敵を、有効なブロックに命中した場合は場所を標記します。元のトライデントが世界にある間、8秒以内かつ12ブロック以内の見通せる範囲で回収を発動できます。場所の標では、その8ブロック以内の有効な敵を狙ってください。追加の雷は発生せず、通常の雷は危険なままです。",
   "tooltip.enchantment_fusion.looting_grapnel": "有効な敵を手持ち武器の近接攻撃で実際に倒した後、ドロップ増加で個数が増えたか、戦利品プールの必須確率に成功した、検証済みで未変化の元のドロップだけを8秒間記録する。同じ武器を持ち、拾得待ちの後、12ブロック以内かつ視線が通る状態で発動。通常の拾得規則に従い、装備品や検証不能な品は回収しない。",
-  "message.enchantment_fusion.grapnel_looting_marked": "検証済みのドロップ増加報酬を記録。元の武器を持ち、拾得待ちの後に発動。"
+  "message.enchantment_fusion.grapnel_looting_marked": "検証済みのドロップ増加報酬を記録。元の武器を持ち、拾得待ちの後に発動。",
+  "tooltip.enchantment_fusion.ranged_wear_guard": "10秒以内に実際の矢で有効な敵へ3回連続でダメージを与えると蓄積。弓かクロスボウを持って発動し、20秒間の実際の耐久消耗を防ぐ。外すと連続は途切れ、射撃主位の効果は残る。",
+  "tooltip.enchantment_fusion.ranged_wear_echo": "この弓かクロスボウの耐久力によって実際に消耗を防ぐと、30秒間追射を1回蓄積。持って発動すると、10秒以内に放った最後の実際の中央矢の記録軌跡を再生する。虚像は拾えず弾を複製しない。射撃副位に応じて威力・衝撃・炎が変化する。",
+  "tooltip.enchantment_fusion.legacy_ranged_wear_carrier": "旧来の不適合な装備は元の効果を維持する。新効果には耐久値のある弓かクロスボウが必要。",
+  "skill.enchantment_fusion.ranged_wear_guard": "弦の耐久護り",
+  "skill.enchantment_fusion.ranged_wear_echo": "弦の追射",
+  "message.enchantment_fusion.ranged_wear_guard_ready": "連続命中が準備完了。",
+  "message.enchantment_fusion.ranged_wear_guard_active": "耐久護りは発動中。",
+  "message.enchantment_fusion.ranged_wear_guard_need": "実際の矢で3回連続命中させてください。",
+  "message.enchantment_fusion.ranged_wear_guard_set": "耐久護り：耐久消耗を %s 防ぐ。",
+  "message.enchantment_fusion.ranged_wear_echo_need": "実際の耐久免耗がまだありません。",
+  "message.enchantment_fusion.ranged_wear_path_need": "最後の実際の矢の軌跡を先に記録してください。",
+  "message.enchantment_fusion.ranged_wear_echo_ready": "耐久免耗：追射準備完了。",
+  "message.enchantment_fusion.ranged_wear_echo_set": "虚像の追射を放った。"
 }

@@ -1135,5 +1135,18 @@
   "message.enchantment_fusion.grapnel_channeling_marked": "引雷在此处留下诱标。原三叉戟仍在世界中时，瞄准附近的合格敌人并发动收线。",
   "tooltip.enchantment_fusion.channeling_grapnel": "投出的三叉戟只有在本次引雷真正召出闪电时才留标；默认需要雷暴和露天。合格敌人受到实际伤害时标记敌人，命中有效方块时标记位置。原三叉戟仍在世界中时，可在8秒内、12格和视线范围内发动收线；位置标记须瞄准距标记8格内的合格敌人。不会额外召雷，原版闪电仍有危险。",
   "tooltip.enchantment_fusion.looting_grapnel": "手持武器近战真实击杀合格敌人后，仅标记经核验、未变化且确实因抢夺增加数量或通过战利池必要概率判定的原始掉落。手持同一武器，等待拾取延迟结束，在8秒、12格和视线范围内主动收回；遵守普通拾取规则。装备掉落及无法核验的物品不会被收走。",
-  "message.enchantment_fusion.grapnel_looting_marked": "已标记经核验的抢夺掉落；手持原武器，拾取延迟结束后使用技能键。"
+  "message.enchantment_fusion.grapnel_looting_marked": "已标记经核验的抢夺掉落；手持原武器，拾取延迟结束后使用技能键。",
+  "tooltip.enchantment_fusion.ranged_wear_guard": "10 秒内连续三支真实箭使合格敌人受到净伤害后积攒稳弦；手持此弓或弩主动释放，可在接下来 20 秒抵消实际耐久损耗。射失会中断连击，原射击主位保留。",
+  "tooltip.enchantment_fusion.ranged_wear_echo": "此弓或弩的耐久主位实际免耗时获得一次追射充能，保留 30 秒。手持并主动释放，重放最近 10 秒内最近一支真实中心箭的已记录轨迹。虚拟回声不可拾取、不复制弹药；效果按力量、冲击或火矢区分。",
+  "tooltip.enchantment_fusion.legacy_ranged_wear_carrier": "旧的不适用装备保留原效果；此重设计仅适用于有耐久的弓或弩。",
+  "skill.enchantment_fusion.ranged_wear_guard": "稳弦护器",
+  "skill.enchantment_fusion.ranged_wear_echo": "韧弦追射",
+  "message.enchantment_fusion.ranged_wear_guard_ready": "稳弦已就绪：可主动释放护器。",
+  "message.enchantment_fusion.ranged_wear_guard_active": "稳弦护器仍在生效。",
+  "message.enchantment_fusion.ranged_wear_guard_need": "先连续用真实箭命中三次。",
+  "message.enchantment_fusion.ranged_wear_guard_set": "稳弦护器可抵消 %s 点耐久损耗。",
+  "message.enchantment_fusion.ranged_wear_echo_need": "尚无真实耐久免耗充能。",
+  "message.enchantment_fusion.ranged_wear_path_need": "需要先记录最近一支真实箭的轨迹。",
+  "message.enchantment_fusion.ranged_wear_echo_ready": "耐久实际免耗：追射充能已就绪。",
+  "message.enchantment_fusion.ranged_wear_echo_set": "已释放一次虚拟追射。"
 }

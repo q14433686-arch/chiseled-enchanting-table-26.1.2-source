@@ -1135,5 +1135,18 @@
   "message.enchantment_fusion.grapnel_channeling_marked": "Un véritable éclair de Canalisation a marqué cet endroit. Visez un ennemi admissible et activez tant que le trident d’origine est dans le monde.",
   "tooltip.enchantment_fusion.channeling_grapnel": "Un trident lancé ne marque que si sa Canalisation invoque réellement un éclair ; par défaut, il faut un orage et un ciel dégagé. Un ennemi admissible doit subir de vrais dégâts ; un impact valide sur un bloc marque le lieu. Activez dans les 8 secondes tant que le trident d’origine reste dans le monde. Cible et marque doivent être à 12 blocs ou moins et visibles ; pour une marque de lieu, visez un ennemi admissible à 8 blocs ou moins de celle-ci. Aucun éclair supplémentaire n’est créé ; les éclairs normaux restent dangereux.",
   "tooltip.enchantment_fusion.looting_grapnel": "Après une élimination réelle admissible au corps à corps, seules les piles originales vérifiées et inchangées dont le nombre ou une chance nécessaire du groupe de butin a bénéficié de Butin sont marquées. Gardez la même arme et activez après le délai de ramassage, sous 8 secondes, à 12 blocs et à vue. Le ramassage normal s’applique ; équipement et butin non vérifiable restent au sol.",
-  "message.enchantment_fusion.grapnel_looting_marked": "Butin vérifié marqué. Gardez l’arme d’origine et activez après le délai de ramassage."
+  "message.enchantment_fusion.grapnel_looting_marked": "Butin vérifié marqué. Gardez l’arme d’origine et activez après le délai de ramassage.",
+  "tooltip.enchantment_fusion.ranged_wear_guard": "Trois flèches réelles consécutives blessant des ennemis valides en 10 secondes préparent la protection. Activez avec cet arc ou cette arbalète pour absorber la perte réelle de durabilité pendant 20 secondes. Un échec interrompt la série ; l’effet principal reste.",
+  "tooltip.enchantment_fusion.ranged_wear_echo": "Quand Solidité évite réellement une usure sur cet arc ou cette arbalète, une charge dure 30 secondes. Activez pour rejouer la trajectoire enregistrée de la dernière flèche centrale réelle des 10 dernières secondes. L’écho ne se ramasse pas, ne copie aucune munition et suit Puissance, Frappe ou Flamme.",
+  "tooltip.enchantment_fusion.legacy_ranged_wear_carrier": "Les anciens objets incompatibles gardent leur effet ; nécessite un arc ou une arbalète durable.",
+  "skill.enchantment_fusion.ranged_wear_guard": "Protection de corde",
+  "skill.enchantment_fusion.ranged_wear_echo": "Écho de corde",
+  "message.enchantment_fusion.ranged_wear_guard_ready": "Série prête.",
+  "message.enchantment_fusion.ranged_wear_guard_active": "La protection est déjà active.",
+  "message.enchantment_fusion.ranged_wear_guard_need": "Touchez trois fois de suite avec de vraies flèches.",
+  "message.enchantment_fusion.ranged_wear_guard_set": "Protection : %s points de durabilité.",
+  "message.enchantment_fusion.ranged_wear_echo_need": "Aucune économie réelle de Solidité.",
+  "message.enchantment_fusion.ranged_wear_path_need": "Enregistrez d’abord la trajectoire de la dernière vraie flèche.",
+  "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilité économisée : écho prêt.",
+  "message.enchantment_fusion.ranged_wear_echo_set": "Écho virtuel lancé."
 }

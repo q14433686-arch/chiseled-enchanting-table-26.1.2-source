@@ -1135,5 +1135,18 @@
   "message.enchantment_fusion.grapnel_channeling_marked": "Ein echter Entladungsblitz hat diesen Ort markiert. Ziele auf einen geeigneten Gegner und aktiviere, solange der ursprüngliche Dreizack in der Welt bleibt.",
   "tooltip.enchantment_fusion.channeling_grapnel": "Ein geworfener Dreizack markiert nur, wenn seine Entladung tatsächlich einen Blitz beschwört; standardmäßig sind Gewitter und freier Himmel nötig. Ein geeigneter Gegner muss echten Schaden erleiden; ein gültiger Blocktreffer markiert den Ort. Aktiviere binnen 8 Sekunden, solange der ursprüngliche Dreizack in der Welt bleibt. Ziel und Markierung müssen höchstens 12 Blöcke entfernt und sichtbar sein; bei einer Ortsmarkierung ziele auf einen geeigneten Gegner innerhalb von 8 Blöcken um sie. Es entsteht kein zusätzlicher Blitz; normale Blitze bleiben gefährlich.",
   "tooltip.enchantment_fusion.looting_grapnel": "Nach einem echten, zulässigen Nahkampftreffer mit Todesfolge werden nur unveränderte, geprüfte Beutestapel markiert, deren Anzahl oder notwendige Beutepool-Chance durch Plünderung erhöht wurde. Halte dieselbe Waffe und aktiviere nach der Aufhebeverzögerung innerhalb von 8 Sekunden, 12 Blöcken und freier Sicht. Normales Aufheben gilt; Ausrüstung und ungeprüfte Beute bleiben liegen.",
-  "message.enchantment_fusion.grapnel_looting_marked": "Geprüfte Plünderungsbeute markiert. Halte die ursprüngliche Waffe und aktiviere nach der Aufhebeverzögerung."
+  "message.enchantment_fusion.grapnel_looting_marked": "Geprüfte Plünderungsbeute markiert. Halte die ursprüngliche Waffe und aktiviere nach der Aufhebeverzögerung.",
+  "tooltip.enchantment_fusion.ranged_wear_guard": "Drei echte Pfeiltreffer gegen zulässige Gegner in Folge innerhalb von 10 Sekunden laden den Schutz. Mit diesem Bogen oder dieser Armbrust aktivieren, um tatsächlichen Verschleiß 20 Sekunden lang aufzufangen. Ein Fehlschuss unterbricht die Serie; der primäre Schusseffekt bleibt.",
+  "tooltip.enchantment_fusion.ranged_wear_echo": "Tatsächlich durch Haltbarkeit vermiedener Verschleiß lädt ein Echo für 30 Sekunden. In der Hand aktivieren, um die letzte aufgezeichnete Bahn eines echten zentralen Pfeils der letzten 10 Sekunden nachzuspielen. Das Echo ist nicht aufhebbar, kopiert keine Munition und nutzt Stärke, Schlag oder Flamme.",
+  "tooltip.enchantment_fusion.legacy_ranged_wear_carrier": "Ältere ungeeignete Gegenstände behalten ihren Effekt; benötigt wird ein haltbarer Bogen oder eine Armbrust.",
+  "skill.enchantment_fusion.ranged_wear_guard": "Sehnenschutz",
+  "skill.enchantment_fusion.ranged_wear_echo": "Sehnenecho",
+  "message.enchantment_fusion.ranged_wear_guard_ready": "Trefferserie bereit.",
+  "message.enchantment_fusion.ranged_wear_guard_active": "Sehnenschutz ist bereits aktiv.",
+  "message.enchantment_fusion.ranged_wear_guard_need": "Zuerst drei echte Pfeiltreffer in Folge landen.",
+  "message.enchantment_fusion.ranged_wear_guard_set": "Sehnenschutz absorbiert %s Haltbarkeit.",
+  "message.enchantment_fusion.ranged_wear_echo_need": "Noch keine echte Haltbarkeitsersparnis.",
+  "message.enchantment_fusion.ranged_wear_path_need": "Zuerst die Bahn des letzten echten Pfeils aufzeichnen.",
+  "message.enchantment_fusion.ranged_wear_echo_ready": "Haltbarkeit gespart: Echo bereit.",
+  "message.enchantment_fusion.ranged_wear_echo_set": "Virtuelles Pfeilecho ausgelöst."
 }

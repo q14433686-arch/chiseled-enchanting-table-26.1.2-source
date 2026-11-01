@@ -10,6 +10,8 @@ import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
+import enchantment_fusion.mechanics.signatures.RangedPrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelPiercing;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -35,6 +37,7 @@ public abstract class PhantomArrowMixin {
     private void ef$tickPhantom(CallbackInfo ci) {
         AbstractArrow arrow = (AbstractArrow) (Object) this;
         EchoPathSkills.sample(arrow);
+        ConfirmedArrow.sample(arrow);
         ThermalProjectileSkills.tickArrow(arrow);
         if (!PhantomVolley.tick(arrow)) ci.cancel();
     }
@@ -77,8 +80,7 @@ public abstract class PhantomArrowMixin {
     private float ef$nonNativePunchPrimary(ServerLevel level, ItemStack weapon, Entity target, DamageSource source,
                                            float base, Operation<Float> original) {
         float result = original.call(level, weapon, target, source, base);
-        float thermal = ThermalProjectileSkills.primaryKnockback(level, weapon, target, source, result);
-        return GrapnelSkills.nonNativeProjectileKnockback(level, weapon, target, source, thermal);
+        return RangedPrimary.knockback(level, weapon, target, source, result);
     }
 
     @WrapOperation(method = "doKnockback", at = @At(value = "INVOKE",
@@ -99,10 +101,12 @@ public abstract class PhantomArrowMixin {
         HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginProjectile(arrow, target, source);
         PiercingChainSkills.Impact chainHit = PiercingChainSkills.beginImpact(arrow, target, hit.getLocation());
         GrapnelSkills.ArrowHit grapnelHit = GrapnelSkills.beforeArrowHit(arrow, target, source, hit.getLocation());
+        ConfirmedArrow.Damage confirmed = ConfirmedArrow.beforeDamage(arrow, target, source, hit.getLocation());
         boolean succeeded = false;
         try {
             succeeded = original.call(target, source, amount);
             GrapnelSkills.afterArrowHit(grapnelHit, succeeded);
+            ConfirmedArrow.afterDamage(confirmed, succeeded);
             return succeeded;
         } finally {
             try {

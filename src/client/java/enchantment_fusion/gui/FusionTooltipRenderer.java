@@ -36,6 +36,7 @@ import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.StealthBladeSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
+import enchantment_fusion.mechanics.signatures.RangedWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -292,6 +293,9 @@ public final class FusionTooltipRenderer {
             boolean waterPressureTemplate = WaterPressureSkills.matches(pair);
             boolean legacyWaterPressureCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && waterPressureTemplate
                 && !WaterPressureSkills.applies(pair, stack);
+            boolean rangedWearTemplate = RangedWearSkills.matches(pair);
+            boolean legacyRangedWearCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && rangedWearTemplate
+                && !RangedWearSkills.applies(pair, stack);
             boolean meleeWearTemplate = MeleeWearSkills.matches(pair);
             boolean legacyMeleeWearCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeWearTemplate
                 && !MeleeWearSkills.applies(pair, stack);
@@ -365,6 +369,11 @@ public final class FusionTooltipRenderer {
                     lines.add(Component.translatable(WaterPressureSkills.isAttackFirst(pair)
                         ? "tooltip.enchantment_fusion.water_pressure_weapon"
                         : "tooltip.enchantment_fusion.water_pressure_helmet").withStyle(ChatFormatting.AQUA));
+                }
+                if (shift && rangedWearTemplate && !legacyRangedWearCarrier) {
+                    lines.add(Component.translatable(RangedWearSkills.shootingFirst(pair)
+                        ? "tooltip.enchantment_fusion.ranged_wear_guard"
+                        : "tooltip.enchantment_fusion.ranged_wear_echo").withStyle(ChatFormatting.AQUA));
                 }
                 if (shift && meleeWearTemplate && !legacyMeleeWearCarrier) {
                     lines.add(Component.translatable(MeleeWearSkills.isAttackFirst(pair)
@@ -449,6 +458,10 @@ public final class FusionTooltipRenderer {
                         lines.add(Component.translatable(WaterPressureSkills.isAttackFirst(pair)
                             ? "tooltip.enchantment_fusion.water_pressure_weapon"
                             : "tooltip.enchantment_fusion.water_pressure_helmet").withStyle(ChatFormatting.AQUA));
+                    } else if (rangedWearTemplate && !legacyRangedWearCarrier) {
+                        lines.add(Component.translatable(RangedWearSkills.shootingFirst(pair)
+                            ? "tooltip.enchantment_fusion.ranged_wear_guard"
+                            : "tooltip.enchantment_fusion.ranged_wear_echo").withStyle(ChatFormatting.AQUA));
                     } else if (meleeWearTemplate && !legacyMeleeWearCarrier) {
                         lines.add(Component.translatable(MeleeWearSkills.isAttackFirst(pair)
                             ? "tooltip.enchantment_fusion.melee_wear_guard"
@@ -492,6 +505,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacyWaterPressureCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_water_pressure_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyRangedWearCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_ranged_wear_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyMeleeWearCarrier) {
@@ -564,6 +581,11 @@ public final class FusionTooltipRenderer {
                     Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
             }
             if (shift && meleeWorkTemplate && MeleeWorkSkills.isAttackFirst(pair) && !legacyMeleeWorkCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
+                    Component.keybind("key.enchantment_fusion.activate_skill"),
+                    Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
+            }
+            if (shift && rangedWearTemplate && !legacyRangedWearCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
                     Component.keybind("key.enchantment_fusion.activate_skill"),
                     Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));

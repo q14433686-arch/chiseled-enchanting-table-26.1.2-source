@@ -1135,5 +1135,18 @@
   "message.enchantment_fusion.grapnel_channeling_marked": "Un rayo real de Canalización ha marcado este lugar. Apunta a un enemigo válido y activa mientras el tridente original siga en el mundo.",
   "tooltip.enchantment_fusion.channeling_grapnel": "Un tridente lanzado solo deja una marca si Canalización invoca realmente un rayo; por defecto se requiere tormenta y cielo abierto. Un enemigo válido debe recibir daño real; un impacto válido en un bloque marca el lugar. Activa en 8 segundos mientras el tridente original siga en el mundo. El objetivo y la marca deben estar a 12 bloques o menos y con visión despejada; para una marca de lugar, apunta a un enemigo válido a 8 bloques o menos de ella. No se generan rayos extra; los rayos normales siguen siendo peligrosos.",
   "tooltip.enchantment_fusion.looting_grapnel": "Tras una muerte real válida cuerpo a cuerpo, solo se marcan las pilas originales verificadas y sin cambios cuya cantidad o probabilidad necesaria de grupo aumentó por Botín. Sujeta la misma arma y activa tras el retraso de recogida, en 8 segundos, a 12 bloques y con visión directa. Se aplica la recogida normal; el equipo y los objetos no verificables permanecen.",
-  "message.enchantment_fusion.grapnel_looting_marked": "Botín verificado marcado. Sujeta el arma original y activa tras el retraso de recogida."
+  "message.enchantment_fusion.grapnel_looting_marked": "Botín verificado marcado. Sujeta el arma original y activa tras el retraso de recogida.",
+  "tooltip.enchantment_fusion.ranged_wear_guard": "Tres flechas reales consecutivas que dañen enemigos válidos en 10 segundos preparan la protección. Actívala con este arco o ballesta para evitar desgaste real durante 20 segundos. Fallar rompe la racha; se conserva el efecto principal.",
+  "tooltip.enchantment_fusion.ranged_wear_echo": "Cuando Irrompibilidad evite desgaste real en este arco o ballesta, obtienes una carga durante 30 segundos. Actívala para recorrer la trayectoria registrada de la última flecha central real de los últimos 10 segundos. El eco no se recoge ni duplica munición; usa Poder, Empuje o Fuego.",
+  "tooltip.enchantment_fusion.legacy_ranged_wear_carrier": "Los objetos antiguos incompatibles conservan su efecto; se necesita un arco o ballesta con durabilidad.",
+  "skill.enchantment_fusion.ranged_wear_guard": "Protección de cuerda",
+  "skill.enchantment_fusion.ranged_wear_echo": "Eco de cuerda",
+  "message.enchantment_fusion.ranged_wear_guard_ready": "Racha lista.",
+  "message.enchantment_fusion.ranged_wear_guard_active": "La protección ya está activa.",
+  "message.enchantment_fusion.ranged_wear_guard_need": "Acertar tres flechas reales consecutivas.",
+  "message.enchantment_fusion.ranged_wear_guard_set": "Protección: %s puntos de durabilidad.",
+  "message.enchantment_fusion.ranged_wear_echo_need": "No hay ahorro real de Irrompibilidad.",
+  "message.enchantment_fusion.ranged_wear_path_need": "Primero registra la trayectoria de la última flecha real.",
+  "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilidad ahorrada: eco listo.",
+  "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtual liberado."
 }

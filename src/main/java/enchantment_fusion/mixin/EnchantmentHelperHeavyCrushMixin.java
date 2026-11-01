@@ -13,6 +13,7 @@ import enchantment_fusion.mechanics.signatures.ChannelingTridentPrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelChanneling;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.RangedPrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelVolley;
 import enchantment_fusion.mechanics.signatures.GrapnelProjectilePrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelDefense;
@@ -104,7 +105,7 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
                     SoulThreadSkills.nonNativeDamage(level, weapon, victim, source, vanilla))));
         float knockbackPrimary = MeleeImpulseSkills.nonNativePrimaryDamage(level, weapon, victim, source, themed);
         float wear = MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
-        float projectile = GrapnelSkills.nonNativeProjectileDamage(level, weapon, victim, source, wear);
+        float projectile = RangedPrimary.damage(level, weapon, victim, source, wear);
         float lightning = ChannelingTridentPrimary.damage(level, weapon, victim, source, projectile);
         return GrapnelImpact.project(GrapnelImpact.Kind.DAMAGE, level, weapon, victim, source, lightning);
     }

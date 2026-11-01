@@ -36,12 +36,10 @@ import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
 
 /** 40.1 adapters: direct melee target marks and strictly proven block-drop marks. */
@@ -71,7 +69,6 @@ public final class GrapnelSkills {
     private static final Map<AbstractArrow, Flight> FLIGHTS = new WeakHashMap<>();
     private record PendingPush(UUID target, Flight flight, long tick) {}
     private static final Map<AbstractArrow, PendingPush> PENDING_PUSHES = new WeakHashMap<>();
-    private static final ThreadLocal<Boolean> PROJECTILE_REPLAY = ThreadLocal.withInitial(() -> false);
     public static final class ArrowHit {
         private final AbstractArrow arrow; private final ServerPlayer owner; private final LivingEntity target;
         private final Flight flight; private final float health, absorption; private final boolean burning, eligibleBefore;
@@ -276,53 +273,6 @@ public final class GrapnelSkills {
             }
         }
     }
-    /** Preserve a missing Power damage effect on the actual arrow's vanilla weapon copy once. */
-    public static float nonNativeProjectileDamage(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source, float value) {
-        if (Boolean.TRUE.equals(PROJECTILE_REPLAY.get()) || !(source.getDirectEntity() instanceof AbstractArrow arrow)
-            || !(arrow.getOwner() instanceof ServerPlayer owner) || source.getEntity() != owner || MatrixEffectExecutor.isExecuting()) return value;
-        Gear best = null;
-        for (Gear gear : rangedGears(weapon)) if (POWER.equals(gear.pair().primaryId())
-            && (best == null || gear.pair().primaryLevel() > best.pair().primaryLevel())) best = gear;
-        if (best == null) return value;
-        Holder<Enchantment> power = FusionStationOperations.lookupEnchantment(level.registryAccess(), POWER).orElse(null);
-        if (power == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(power) > 0) return value;
-        MutableFloat modified = new MutableFloat(value); PROJECTILE_REPLAY.set(true);
-        try { power.value().modifyDamage(level, best.pair().primaryLevel(), weapon, victim, source, modified); }
-        finally { PROJECTILE_REPLAY.remove(); }
-        return Float.isFinite(modified.floatValue()) ? modified.floatValue() : value;
-    }
-    /** Crossbows lacking native Punch replay the current data-pack knockback effect once. */
-    public static float nonNativeProjectileKnockback(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source, float value) {
-        if (Boolean.TRUE.equals(PROJECTILE_REPLAY.get()) || !(source.getDirectEntity() instanceof AbstractArrow arrow)
-            || !(arrow.getOwner() instanceof ServerPlayer owner) || source.getEntity() != owner || MatrixEffectExecutor.isExecuting()) return value;
-        Gear best = null;
-        for (Gear gear : rangedGears(weapon)) if (PUNCH.equals(gear.pair().primaryId())
-            && (best == null || gear.pair().primaryLevel() > best.pair().primaryLevel())) best = gear;
-        if (best == null) return value;
-        FusedPair thermal = ThermalProjectileSkills.selected(weapon);
-        if (thermal != null && PUNCH.equals(thermal.primaryId())) return value;
-        Holder<Enchantment> punch = FusionStationOperations.lookupEnchantment(level.registryAccess(), PUNCH).orElse(null);
-        if (punch == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(punch) > 0) return value;
-        MutableFloat modified = new MutableFloat(value); PROJECTILE_REPLAY.set(true);
-        try { punch.value().modifyKnockback(level, best.pair().primaryLevel(), weapon, victim, source, modified); }
-        finally { PROJECTILE_REPLAY.remove(); }
-        return Float.isFinite(modified.floatValue()) ? modified.floatValue() : value;
-    }
-    /** Crossbows lacking native Flame replay the current data-pack projectile-spawn effect once. */
-    public static void applyPrimarySpawn(Projectile projectile) {
-        if (!(projectile instanceof AbstractArrow arrow) || !(arrow.level() instanceof ServerLevel level)
-            || !(arrow.getOwner() instanceof ServerPlayer owner) || PhantomVolley.isGhost(arrow)) return;
-        ItemStack weapon = arrow.getWeaponItem(); Gear best = null;
-        for (Gear gear : rangedGears(weapon)) if (FLAME.equals(gear.pair().primaryId())
-            && (best == null || gear.pair().primaryLevel() > best.pair().primaryLevel())) best = gear;
-        if (best == null) return;
-        // The existing thermal direction owns its Flame replay when both pairs share one weapon.
-        FusedPair thermal = ThermalProjectileSkills.selected(weapon);
-        if (thermal != null && FLAME.equals(thermal.primaryId())) return;
-        Holder<Enchantment> flame = FusionStationOperations.lookupEnchantment(level.registryAccess(), FLAME).orElse(null);
-        if (flame == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(flame) > 0) return;
-        flame.value().onProjectileSpawned(level, best.pair().primaryLevel(), new EnchantedItemInUse(weapon, null, owner, arrow::onItemBreak), arrow);
-    }
     /** Project a missing Silk/Fortune primary only onto the copy used by the real block loot call. */
     public static ItemStack lootTool(ServerLevel level, ItemStack tool) {
         Gear gear = selected(tool, true);
@@ -483,7 +433,7 @@ public final class GrapnelSkills {
         PENDING_PUSHES.entrySet().removeIf(entry -> entry.getValue().flight().owner().equals(id));
     }
     public static void clearServer() {
-        MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear(); PROJECTILE_REPLAY.remove();
+        MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear();
         GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); GrapnelQuickCharge.clearServer(); GrapnelDurability.clearServer();
         GrapnelImpact.clearServer(); GrapnelWind.clearServer(); GrapnelThorns.clearServer(); GrapnelMotion.clearServer();
         GrapnelSweep.clearServer(); GrapnelBreath.clearServer(); GrapnelLunge.clearServer(); GrapnelChanneling.clearServer(); GrapnelLooting.clearServer(); GrapnelTridentFlight.clearServer(); ProtectionProjection.clear();

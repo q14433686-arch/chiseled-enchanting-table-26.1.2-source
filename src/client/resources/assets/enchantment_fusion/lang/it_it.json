@@ -1135,5 +1135,18 @@
   "message.enchantment_fusion.grapnel_channeling_marked": "Un vero fulmine di Canalizzazione ha segnato questo punto. Mira a un nemico valido e attiva mentre il tridente originale resta nel mondo.",
   "tooltip.enchantment_fusion.channeling_grapnel": "Un tridente lanciato lascia un segno solo se Canalizzazione evoca davvero un fulmine; per impostazione predefinita servono temporale e cielo aperto. Un nemico valido deve subire danni reali; un impatto valido su un blocco segna il punto. Attiva entro 8 secondi mentre il tridente originale resta nel mondo. Bersaglio e segno devono trovarsi entro 12 blocchi e in vista; per un punto segnato, mira a un nemico valido entro 8 blocchi da esso. Non vengono creati fulmini aggiuntivi; quelli normali restano pericolosi.",
   "tooltip.enchantment_fusion.looting_grapnel": "Dopo un’uccisione reale valida in mischia, vengono segnate solo le pile originali verificate e immutate la cui quantità o probabilità necessaria del gruppo bottino è aumentata con Saccheggio. Impugna la stessa arma e attiva dopo il ritardo di raccolta, entro 8 secondi, 12 blocchi e con visuale libera. Vale la raccolta normale; equipaggiamento e oggetti non verificabili restano a terra.",
-  "message.enchantment_fusion.grapnel_looting_marked": "Bottino verificato segnato. Impugna l’arma originale e attiva dopo il ritardo di raccolta."
+  "message.enchantment_fusion.grapnel_looting_marked": "Bottino verificato segnato. Impugna l’arma originale e attiva dopo il ritardo di raccolta.",
+  "tooltip.enchantment_fusion.ranged_wear_guard": "Tre frecce reali consecutive che danneggiano nemici validi entro 10 secondi preparano la protezione. Attivala con questo arco o balestra per assorbire il consumo reale per 20 secondi. Un errore interrompe la serie; l’effetto principale rimane.",
+  "tooltip.enchantment_fusion.ranged_wear_echo": "Quando Indistruttibilità evita davvero consumo su questo arco o balestra, ottieni una carica per 30 secondi. Attivala per ripercorrere la traiettoria registrata dell’ultima freccia centrale reale degli ultimi 10 secondi. L’eco non si raccoglie, non duplica munizioni e segue Potenza, Contraccolpo o Fiamma.",
+  "tooltip.enchantment_fusion.legacy_ranged_wear_carrier": "I vecchi oggetti incompatibili mantengono l’effetto; serve un arco o balestra con durabilità.",
+  "skill.enchantment_fusion.ranged_wear_guard": "Protezione della corda",
+  "skill.enchantment_fusion.ranged_wear_echo": "Eco della corda",
+  "message.enchantment_fusion.ranged_wear_guard_ready": "Serie pronta.",
+  "message.enchantment_fusion.ranged_wear_guard_active": "Protezione già attiva.",
+  "message.enchantment_fusion.ranged_wear_guard_need": "Colpisci tre volte di seguito con frecce reali.",
+  "message.enchantment_fusion.ranged_wear_guard_set": "Protezione: %s punti di durabilità.",
+  "message.enchantment_fusion.ranged_wear_echo_need": "Nessun risparmio reale di durabilità.",
+  "message.enchantment_fusion.ranged_wear_path_need": "Registra prima la traiettoria dell’ultima freccia reale.",
+  "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilità risparmiata: eco pronto.",
+  "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtuale lanciato."
 }
