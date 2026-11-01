@@ -6,6 +6,7 @@ import enchantment_fusion.mechanics.signatures.ConfirmedWindBurst;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import enchantment_fusion.mechanics.signatures.GrapnelAttribute;
+import enchantment_fusion.mechanics.signatures.GrapnelBreath;
 import enchantment_fusion.mechanics.signatures.GrapnelMotion;
 import enchantment_fusion.mechanics.signatures.GrapnelSweep;
 import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
@@ -45,7 +46,8 @@ final class GrapnelActionSourcesTest {
             FusedPair sweep = FusedPair.clean(GrapnelAttribute.SWEEP, 3, "minecraft:lure", 2);
             FusedPair soul = FusedPair.clean(GrapnelAttribute.SOUL, 3, "minecraft:lure", 2);
             FusedPair aqua = FusedPair.clean(GrapnelAttribute.AQUA, 1, "minecraft:lure", 2);
-            for (FusedPair pair : new FusedPair[]{swift, depth, sweep, soul, aqua}) {
+            FusedPair breath = FusedPair.clean(GrapnelAttribute.RESPIRATION, 3, "minecraft:lure", 2);
+            for (FusedPair pair : new FusedPair[]{swift, depth, sweep, soul, aqua, breath}) {
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
             assertTrue(GrapnelSkills.supportsCarrier(swift, Set.of(FusionCarrier.LEG_ARMOR)));
@@ -58,6 +60,9 @@ final class GrapnelActionSourcesTest {
             assertTrue(GrapnelSkills.supportsCarrier(aqua, Set.of(FusionCarrier.HEAD_ARMOR)));
             assertFalse(GrapnelSkills.supportsCarrier(aqua, Set.of(FusionCarrier.FOOT_ARMOR)));
             assertFalse(GrapnelSkills.supportsCarrier(aqua, Set.of(FusionCarrier.PICKAXE)));
+            assertTrue(GrapnelSkills.supportsCarrier(breath, Set.of(FusionCarrier.HEAD_ARMOR)));
+            assertFalse(GrapnelSkills.supportsCarrier(breath, Set.of(FusionCarrier.FOOT_ARMOR)));
+            assertFalse(GrapnelSkills.supportsCarrier(breath, Set.of(FusionCarrier.PICKAXE)));
             assertTrue(GrapnelSkills.supportsCarrier(sweep, Set.of(FusionCarrier.SWORD)));
             assertFalse(GrapnelSkills.supportsCarrier(sweep, Set.of(FusionCarrier.AXE)));
             SignatureCatalog.reloadFromJson(JsonParser.parseString("""
@@ -80,6 +85,19 @@ final class GrapnelActionSourcesTest {
         assertFalse(GrapnelSweep.improvesSweep(0, 1, 0.6, 0));
         assertFalse(GrapnelSweep.improvesSweep(4, 0, 0.6, 0));
         assertFalse(GrapnelSweep.improvesSweep(4, 1, Double.NaN, 0));
+    }
+    @Test void breathCreditUsesTheSameRandomRollAndTheCounterfactualThreshold() {
+        assertTrue(GrapnelBreath.savedByPrimary(0.5, 3, 0));
+        assertTrue(GrapnelBreath.savedByPrimary(0.25, 3, 0));
+        assertFalse(GrapnelBreath.savedByPrimary(0.249, 3, 0));
+        assertTrue(GrapnelBreath.savedByPrimary(0.4, 3, 1));
+        assertFalse(GrapnelBreath.savedByPrimary(0.5, 3, 1));
+        assertFalse(GrapnelBreath.savedByPrimary(0.8, 3, 1));
+        assertFalse(GrapnelBreath.savedByPrimary(0.5, 1, 1));
+        assertFalse(GrapnelBreath.savedByPrimary(1, 3, 0));
+        assertFalse(GrapnelBreath.savedByPrimary(-0.1, 3, 0));
+        assertFalse(GrapnelBreath.savedByPrimary(Double.NaN, 3, 0));
+        assertFalse(GrapnelBreath.savedByPrimary(0.5, Double.POSITIVE_INFINITY, 0));
     }
     @Test void reflectedDamageNeedsOneUnambiguousCompletedNetLoss() {
         GrapnelThorns.Evidence confirmed = new GrapnelThorns.Evidence();

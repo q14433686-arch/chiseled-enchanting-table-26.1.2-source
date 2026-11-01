@@ -380,7 +380,7 @@ public final class GrapnelSkills {
         owner.sendSystemMessage(Component.translatable(GrapnelDurability.isPair(pair)
             ? "message.enchantment_fusion.grapnel_durability_marked" : GrapnelWind.isPair(pair)
             ? "message.enchantment_fusion.grapnel_wind_marked" : GrapnelAttribute.isPair(pair)
-            ? "message.enchantment_fusion.grapnel_motion_marked" : "message.enchantment_fusion.grapnel_defense_marked"), true);
+            ? (GrapnelAttribute.RESPIRATION.equals(pair.primaryId()) ? "message.enchantment_fusion.grapnel_breath_marked" : "message.enchantment_fusion.grapnel_motion_marked") : "message.enchantment_fusion.grapnel_defense_marked"), true);
         return true;
     }
     private static boolean stillEquipped(ServerPlayer owner, EquipmentSlot slot, ItemStack stack, FusedPair pair) {
@@ -466,7 +466,7 @@ public final class GrapnelSkills {
     }
     public static void tickServer(MinecraftServer server) {
         GrapnelPiercing.tickServer(server); GrapnelQuickCharge.tickServer(server);
-        GrapnelWind.tickServer(server); GrapnelThorns.tickServer(server); GrapnelMotion.tickServer(server); GrapnelSweep.tickServer(server);
+        GrapnelWind.tickServer(server); GrapnelThorns.tickServer(server); GrapnelMotion.tickServer(server); GrapnelSweep.tickServer(server); GrapnelBreath.tickServer(server);
         FLIGHTS.entrySet().removeIf(entry -> {
             Flight flight = entry.getValue(); ServerPlayer owner = server.getPlayerList().getPlayer(flight.owner());
             return owner == null || !ready(owner) || !entry.getKey().isAlive() || owner.level() != entry.getKey().level()
@@ -485,7 +485,7 @@ public final class GrapnelSkills {
     public static void clearPlayer(UUID id) {
         MARKS.remove(id);
         GrapnelPiercing.clearPlayer(id); GrapnelQuickCharge.clearPlayer(id);
-        GrapnelWind.clearPlayer(id); GrapnelThorns.clearPlayer(id); GrapnelMotion.clearPlayer(id); GrapnelSweep.clearPlayer(id);
+        GrapnelWind.clearPlayer(id); GrapnelThorns.clearPlayer(id); GrapnelMotion.clearPlayer(id); GrapnelSweep.clearPlayer(id); GrapnelBreath.clearPlayer(id);
         MARKS.entrySet().removeIf(entry -> entry.getValue() instanceof TargetMark target && target.target().equals(id));
         FLIGHTS.entrySet().removeIf(entry -> entry.getValue().owner().equals(id));
         PENDING_PUSHES.entrySet().removeIf(entry -> entry.getValue().flight().owner().equals(id));
@@ -494,6 +494,6 @@ public final class GrapnelSkills {
         MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear(); PROJECTILE_REPLAY.remove();
         GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); GrapnelQuickCharge.clearServer(); GrapnelDurability.clearServer();
         GrapnelImpact.clearServer(); GrapnelWind.clearServer(); GrapnelThorns.clearServer(); GrapnelMotion.clearServer();
-        GrapnelSweep.clearServer(); ProtectionProjection.clear();
+        GrapnelSweep.clearServer(); GrapnelBreath.clearServer(); ProtectionProjection.clear();
     }
 }

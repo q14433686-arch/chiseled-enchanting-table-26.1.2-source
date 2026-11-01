@@ -1,5 +1,6 @@
 package enchantment_fusion.mechanics.signatures;
 
+import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
@@ -21,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 /** The attribute-driven Lure directions share slot, source, datapack and native/projection checks. */
 public final class GrapnelAttribute {
     public static final String SWIFT = "minecraft:swift_sneak", DEPTH = "minecraft:depth_strider", SWEEP = "minecraft:sweeping_edge";
-    public static final String SOUL = "minecraft:soul_speed", AQUA = "minecraft:aqua_affinity";
+    public static final String SOUL = "minecraft:soul_speed", AQUA = "minecraft:aqua_affinity", RESPIRATION = "minecraft:respiration";
     record Gear(EquipmentSlot slot, ItemStack stack, FusedPair pair) {
         PrimaryAttributeProjection.Source source() { return new PrimaryAttributeProjection.Source(slot, stack, pair); }
     }
@@ -32,27 +33,29 @@ public final class GrapnelAttribute {
         if (initialized) return;
         initialized = true;
         PrimaryAttributeProjection.register(GrapnelAttribute::sources);
+        PrimaryAttributeProjection.register(RespirationPrimary::sources);
         GrapnelMotion.init(); GrapnelSweep.init();
     }
     public static boolean isPair(@Nullable FusedPair pair) {
         return pair != null && GrapnelSkills.LURE.equals(pair.secondaryId())
             && (SWIFT.equals(pair.primaryId()) || DEPTH.equals(pair.primaryId()) || SWEEP.equals(pair.primaryId())
-                || SOUL.equals(pair.primaryId()) || AQUA.equals(pair.primaryId()));
+                || SOUL.equals(pair.primaryId()) || AQUA.equals(pair.primaryId()) || RESPIRATION.equals(pair.primaryId()));
     }
     public static boolean supportsCarrier(@Nullable FusedPair pair, @Nullable Set<FusionCarrier> roles) {
         if (!isPair(pair) || roles == null) return false;
         if (SWIFT.equals(pair.primaryId())) return roles.contains(FusionCarrier.LEG_ARMOR);
-        if (AQUA.equals(pair.primaryId())) return roles.contains(FusionCarrier.HEAD_ARMOR);
+        if (AQUA.equals(pair.primaryId()) || RESPIRATION.equals(pair.primaryId())) return roles.contains(FusionCarrier.HEAD_ARMOR);
         if (DEPTH.equals(pair.primaryId()) || SOUL.equals(pair.primaryId())) return roles.contains(FusionCarrier.FOOT_ARMOR);
         // Vanilla only executes doSweepAttack for a sword; ordinary axes do not sweep.
         return roles.contains(FusionCarrier.SWORD);
     }
     private static EquipmentSlot slot(String id) {
-        return SWIFT.equals(id) ? EquipmentSlot.LEGS : AQUA.equals(id) ? EquipmentSlot.HEAD
+        return SWIFT.equals(id) ? EquipmentSlot.LEGS : AQUA.equals(id) || RESPIRATION.equals(id) ? EquipmentSlot.HEAD
             : DEPTH.equals(id) || SOUL.equals(id) ? EquipmentSlot.FEET : EquipmentSlot.MAINHAND;
     }
     static Holder<Attribute> attribute(String id) {
         return SWIFT.equals(id) ? Attributes.SNEAKING_SPEED : AQUA.equals(id) ? Attributes.SUBMERGED_MINING_SPEED
+            : RESPIRATION.equals(id) ? Attributes.OXYGEN_BONUS
             : DEPTH.equals(id) ? Attributes.WATER_MOVEMENT_EFFICIENCY : Attributes.SWEEPING_DAMAGE_RATIO;
     }
     /** Different primaries on the same item must not shadow one another's environments. */
@@ -84,16 +87,20 @@ public final class GrapnelAttribute {
             .stream().noneMatch(retained -> id.equals(retained.id()));
     }
     static @Nullable PrimaryAttributeProjection.Evidence evidence(ServerPlayer player, @Nullable Gear gear) {
-        if (!stillEquipped(player, gear) || !unambiguous(gear)) return null;
+        if (!stillEquipped(player, gear) || !unambiguous(gear) || !matchingSlot(player, gear)) return null;
         if (SOUL.equals(gear.pair().primaryId())) return PrimaryLocationProjection.evidence(player, gear);
         return PrimaryAttributeProjection.evidence(player, gear.source(), attribute(gear.pair().primaryId()));
+    }
+    private static boolean matchingSlot(ServerPlayer player, Gear gear) {
+        return FusionStationOperations.lookupEnchantment(player.registryAccess(), gear.pair().primaryId())
+            .map(holder -> holder.value().matchingSlot(gear.slot())).orElse(false);
     }
     private static List<PrimaryAttributeProjection.Source> sources(ServerPlayer player) {
         List<PrimaryAttributeProjection.Source> result = new ArrayList<>();
         for (EquipmentSlot slot : List.of(EquipmentSlot.MAINHAND, EquipmentSlot.HEAD, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
             for (Gear gear : selectedAll(player, slot)) {
                 // Soul Speed is conditional LOCATION_CHANGED, not a permanent ATTRIBUTES effect.
-                if (!SOUL.equals(gear.pair().primaryId())) result.add(gear.source());
+                if (!SOUL.equals(gear.pair().primaryId()) && matchingSlot(player, gear)) result.add(gear.source());
             }
         }
         return result;

@@ -36,6 +36,7 @@
     "ItemStackDurabilityFusionMixin",
     "LivingEntityAttackChargeAccessor",
     "LivingEntityBlastDefenseMixin",
+    "LivingEntityBreathCaptureMixin",
     "LivingEntityConsumableFusionMixin",
     "LivingEntityFireThornsMixin",
     "LivingEntityFrostProtectionMixin",

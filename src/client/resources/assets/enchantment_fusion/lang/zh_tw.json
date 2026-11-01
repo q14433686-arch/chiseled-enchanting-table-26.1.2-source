@@ -1127,5 +1127,7 @@
   "tooltip.enchantment_fusion.soul_grapnel": "穿著這雙靴子在靈魂沙或靈魂土上，只有靈魂疾行的移動加成實際生效時，順著移動輸入走出的腳步才會留下持續8秒的位置標記。保持穿著原靴，距離標記不超過12格，瞄準標記8格內的合格敵人並在視線暢通時主動回鉤。靈魂疾行的原版條件和耐久消耗保留。",
   "tooltip.enchantment_fusion.aqua_grapnel": "穿戴此頭盔、眼部浸在水中且水下速掘屬性實際提升時，真實採掘會為本次嚴格歸屬的最多64個掉落實體留下8秒標記。保持穿戴原頭盔，在12格內且視線暢通時主動回收，仍走原版拾取。工具、耐久、權限和原掉落照常。",
   "tooltip.enchantment_fusion.sweep_grapnel": "劍的橫掃之刃屬性提高該次橫掃的初始傷害計算，且橫掃使額外合格敵人真正損失生命或吸收值時，為該敵人留標8秒。繼續手持同一把劍，在12格內且視線暢通時主動回鉤。普通未增強橫掃不留標。",
-  "message.enchantment_fusion.grapnel_motion_marked": "移動已留標。瞄準合格敵人並啟動回鉤。"
+  "message.enchantment_fusion.grapnel_motion_marked": "移動已留標。瞄準合格敵人並啟動回鉤。",
+  "tooltip.enchantment_fusion.breath_grapnel": "穿戴此頭盔時，水下呼吸確實為這次水下耗氧判定省下一點氧氣，才在目前位置留標8秒。保持穿戴同一頭盔，在標記12格內瞄準標記8格內的合格敵人，視線暢通時主動回鉤。原版氧氣及呼吸規則保留。",
+  "message.enchantment_fusion.grapnel_breath_marked": "水下呼吸已留標。瞄準合格敵人並啟動回鉤。"
 }
