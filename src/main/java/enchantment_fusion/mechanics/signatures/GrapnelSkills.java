@@ -478,7 +478,7 @@ public final class GrapnelSkills {
         for (var entry : List.copyOf(MARKS.entrySet())) {
             ServerPlayer owner = server.getPlayerList().getPlayer(entry.getKey()); Mark mark = entry.getValue();
             boolean noTarget = owner != null && (mark instanceof TargetMark target ? owner.level().getEntity(target.target()) == null
-                : mark instanceof DropsMark drops && drops.drops().stream().noneMatch(drop -> unchangedDrop(owner, drop)));
+                : mark instanceof DropsMark drops && drops.drops().stream().noneMatch(drop -> GrapnelDropTargets.unchanged(owner, drop.entity(), drop.stack(), drop.snapshot())));
             if (owner == null || !valid(owner, mark) || noTarget) MARKS.remove(entry.getKey(), mark);
         }
     }
