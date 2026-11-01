@@ -1,6 +1,7 @@
 package enchantment_fusion.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.PhantomVolley;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
@@ -9,6 +10,7 @@ import enchantment_fusion.mechanics.signatures.EchoPathSkills;
 import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelPiercing;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -17,6 +19,7 @@ import net.minecraft.world.entity.projectile.ProjectileDeflection;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,6 +48,15 @@ public abstract class PhantomArrowMixin {
             && target.isAlive() && target.canBeHitByProjectile() && PhantomVolley.protectedCollision(arrow, target)) {
             cir.setReturnValue(true);
         }
+    }
+
+    @WrapMethod(method = "stepMoveAndHit")
+    private void ef$observeContinuousPiercing(BlockHitResult block, Operation<Void> original) {
+        AbstractArrow arrow = (AbstractArrow) (Object) this;
+        if (!(arrow.level() instanceof ServerLevel)) { original.call(block); return; }
+        GrapnelPiercing.Step step = GrapnelPiercing.begin(arrow); boolean completed = false;
+        try { original.call(block); completed = true; }
+        finally { GrapnelPiercing.end(step, completed); }
     }
 
     // The entity list and block hit were computed for the incoming ray.  A redirected
@@ -86,7 +98,7 @@ public abstract class PhantomArrowMixin {
         boolean reserved = arrow.level() instanceof ServerLevel && PhantomVolley.reserveImpact(arrow);
         HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginProjectile(arrow, target, source);
         PiercingChainSkills.Impact chainHit = PiercingChainSkills.beginImpact(arrow, target, hit.getLocation());
-        GrapnelSkills.ArrowHit grapnelHit = GrapnelSkills.beforeArrowHit(arrow, target, source);
+        GrapnelSkills.ArrowHit grapnelHit = GrapnelSkills.beforeArrowHit(arrow, target, source, hit.getLocation());
         boolean succeeded = false;
         try {
             succeeded = original.call(target, source, amount);

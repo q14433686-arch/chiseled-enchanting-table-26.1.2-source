@@ -697,6 +697,8 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("40.1-flame-lure", () -> GrapnelProjectileProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame"));
         acceptance.run("40.1-punch-lure", () -> GrapnelProjectileProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch"));
         acceptance.run("40.1-multishot-lure", () -> GrapnelVolleyProbe.exercise(sp, tablePos.above(180).east(12)));
+        acceptance.run("40.1-infinity-lure", () -> GrapnelProjectileProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:infinity"));
+        acceptance.run("40.1-piercing-lure", () -> GrapnelPiercingProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("42.3-sharp-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("42.3-swift-sharp", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
         acceptance.run("42.3-smite-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));

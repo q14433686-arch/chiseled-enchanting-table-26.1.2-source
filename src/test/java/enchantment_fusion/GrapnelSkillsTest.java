@@ -12,7 +12,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class GrapnelSkillsTest {
-    @Test void defaultWildcardCoversOnlyTheTenExplicitActionAdapters() {
+    @Test void defaultWildcardCoversOnlyTheTwelveExplicitActionAdapters() {
         var old = SignatureCatalog.parseFromJson(null);
         try {
             SignatureCatalog.publish(SignatureCatalog.parseFromJson(JsonParser.parseString("""
@@ -26,11 +26,12 @@ final class GrapnelSkillsTest {
                 FusedPair pair = FusedPair.clean(work, 3, GrapnelSkills.LURE, 2);
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
-            for (String ranged : new String[]{GrapnelSkills.POWER, GrapnelSkills.FLAME, GrapnelSkills.PUNCH, GrapnelSkills.MULTISHOT}) {
+            for (String ranged : new String[]{GrapnelSkills.POWER, GrapnelSkills.FLAME, GrapnelSkills.PUNCH,
+                GrapnelSkills.MULTISHOT, GrapnelSkills.INFINITY, GrapnelSkills.PIERCING}) {
                 FusedPair pair = FusedPair.clean(ranged, 3, GrapnelSkills.LURE, 2);
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
-            assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:infinity", 1, GrapnelSkills.LURE, 1)));
+            assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:quick_charge", 1, GrapnelSkills.LURE, 1)));
         } finally { SignatureCatalog.publish(old); }
     }
     @Test void exactAndDifferentWildcardKeepTheirPriority() {
@@ -83,5 +84,13 @@ final class GrapnelSkillsTest {
         assertTrue(GrapnelSkills.supportsCarrier(multishot, Set.of(FusionCarrier.BOW)));
         assertTrue(GrapnelSkills.supportsCarrier(multishot, Set.of(FusionCarrier.CROSSBOW)));
         assertFalse(GrapnelSkills.supportsCarrier(multishot, Set.of(FusionCarrier.SWORD)));
+        FusedPair infinity = FusedPair.clean(GrapnelSkills.INFINITY, 1, GrapnelSkills.LURE, 1);
+        assertTrue(GrapnelSkills.supportsCarrier(infinity, Set.of(FusionCarrier.BOW)));
+        assertTrue(GrapnelSkills.supportsCarrier(infinity, Set.of(FusionCarrier.CROSSBOW)));
+        assertFalse(GrapnelSkills.supportsCarrier(infinity, Set.of(FusionCarrier.SWORD)));
+        FusedPair piercing = FusedPair.clean(GrapnelSkills.PIERCING, 2, GrapnelSkills.LURE, 1);
+        assertFalse(GrapnelSkills.supportsCarrier(piercing, Set.of(FusionCarrier.BOW)));
+        assertTrue(GrapnelSkills.supportsCarrier(piercing, Set.of(FusionCarrier.CROSSBOW)));
+        assertFalse(GrapnelSkills.supportsCarrier(piercing, Set.of(FusionCarrier.SWORD)));
     }
 }

@@ -43,6 +43,7 @@ import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
@@ -52,7 +53,7 @@ public final class GrapnelSkills {
     public static final String SIGNATURE = "spirit_grapnel", LURE = "minecraft:lure";
     public static final String EFFICIENCY = "minecraft:efficiency", SILK = "minecraft:silk_touch", FORTUNE = "minecraft:fortune";
     public static final String POWER = "minecraft:power", FLAME = "minecraft:flame", PUNCH = "minecraft:punch";
-    public static final String MULTISHOT = "minecraft:multishot";
+    public static final String MULTISHOT = "minecraft:multishot", INFINITY = "minecraft:infinity", PIERCING = "minecraft:piercing";
     private static final Set<FusionCarrier> TOOLS = Set.of(FusionCarrier.PICKAXE, FusionCarrier.AXE, FusionCarrier.SHOVEL, FusionCarrier.HOE);
     private static final Set<String> MINING_PRIMARIES = Set.of(EFFICIENCY, SILK, FORTUNE);
     private static final int MAX_OWNERS = 256, MAX_DROPS = 64, MAX_FLIGHTS = 4096, MAX_FLIGHT_GEARS = 16;
@@ -74,8 +75,11 @@ public final class GrapnelSkills {
     public static final class ArrowHit {
         private final AbstractArrow arrow; private final ServerPlayer owner; private final LivingEntity target;
         private final Flight flight; private final float health, absorption; private final boolean burning, eligibleBefore;
-        private ArrowHit(AbstractArrow arrow, ServerPlayer owner, LivingEntity target, Flight flight, boolean burning, boolean eligibleBefore) {
+        private final Vec3 location; private final AABB impactBounds;
+        private ArrowHit(AbstractArrow arrow, ServerPlayer owner, LivingEntity target, Flight flight, boolean burning,
+                         boolean eligibleBefore, Vec3 location) {
             this.arrow = arrow; this.owner = owner; this.target = target; this.flight = flight; this.burning = burning;
+            this.location = location; this.impactBounds = target.getBoundingBox();
             this.eligibleBefore = eligibleBefore; this.health = target.getHealth(); this.absorption = target.getAbsorptionAmount();
         }
     }
@@ -92,7 +96,8 @@ public final class GrapnelSkills {
     }
     public static boolean rangedFirst(@Nullable FusedPair pair) {
         return pair != null && (POWER.equals(pair.primaryId()) || FLAME.equals(pair.primaryId()) || PUNCH.equals(pair.primaryId())
-            || MULTISHOT.equals(pair.primaryId())) && LURE.equals(pair.secondaryId());
+            || MULTISHOT.equals(pair.primaryId()) || INFINITY.equals(pair.primaryId()) || PIERCING.equals(pair.primaryId()))
+            && LURE.equals(pair.secondaryId());
     }
     public static boolean matches(@Nullable FusedPair pair) {
         return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair))
@@ -103,8 +108,10 @@ public final class GrapnelSkills {
         if (roles == null) return false;
         if (attackFirst(pair)) return supportsCarrier(roles);
         if (miningFirst(pair)) return roles.stream().anyMatch(TOOLS::contains);
-        if (rangedFirst(pair)) return roles.contains(FusionCarrier.BOW)
-            || (!POWER.equals(pair.primaryId()) && roles.contains(FusionCarrier.CROSSBOW));
+        if (rangedFirst(pair)) {
+            if (PIERCING.equals(pair.primaryId())) return roles.contains(FusionCarrier.CROSSBOW);
+            return roles.contains(FusionCarrier.BOW) || (!POWER.equals(pair.primaryId()) && roles.contains(FusionCarrier.CROSSBOW));
+        }
         return false;
     }
     public static boolean applies(@Nullable FusedPair pair, @Nullable ItemStack stack) {
@@ -161,7 +168,7 @@ public final class GrapnelSkills {
             && owner.level().mayInteract(owner, target.blockPosition()) && (!(target instanceof Player other) || other.canHarmPlayer(owner));
     }
     /** Capture before the actual arrow damage call, rather than trusting collision alone. */
-    public static @Nullable ArrowHit beforeArrowHit(AbstractArrow arrow, Entity victim, DamageSource source) {
+    public static @Nullable ArrowHit beforeArrowHit(AbstractArrow arrow, Entity victim, DamageSource source, Vec3 location) {
         PENDING_PUSHES.remove(arrow);
         Flight flight = FLIGHTS.get(arrow);
         if (flight == null || !(victim instanceof LivingEntity target) || !(arrow.getOwner() instanceof ServerPlayer owner)
@@ -172,7 +179,7 @@ public final class GrapnelSkills {
             || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) || source.is(DamageTypeTags.BYPASSES_EFFECTS)
             || source.is(DamageTypeTags.BYPASSES_ENCHANTMENTS) || PhantomVolley.isGhost(arrow) || MatrixEffectExecutor.isExecuting()) return null;
         boolean eligible = flight.gears().stream().anyMatch(gear -> eligibleTarget(owner, target, gear.pair()));
-        return new ArrowHit(arrow, owner, target, flight, arrow.isOnFire(), eligible);
+        return new ArrowHit(arrow, owner, target, flight, arrow.isOnFire(), eligible, location);
     }
     public static void afterArrowHit(@Nullable ArrowHit hit, boolean accepted) {
         if (hit == null || !accepted || !hit.eligibleBefore || !ready(hit.owner) || !hit.target.isAlive()
@@ -181,9 +188,13 @@ public final class GrapnelSkills {
             || ConfirmedMeleeMath.actualLoss(hit.health, hit.absorption, hit.target.getHealth(), hit.target.getAbsorptionAmount()) <= 0) return;
         if (hit.flight.gears().stream().anyMatch(gear -> PUNCH.equals(gear.pair().primaryId()) && owns(hit.owner, gear)))
             PENDING_PUSHES.put(hit.arrow, new PendingPush(hit.target.getUUID(), hit.flight, hit.owner.level().getGameTime()));
+        if (hit.flight.gears().stream().anyMatch(gear -> PIERCING.equals(gear.pair().primaryId())
+            && owns(hit.owner, gear) && eligibleTarget(hit.owner, hit.target, gear.pair())))
+            GrapnelPiercing.prepare(hit.arrow, hit.owner, hit.target, hit.location, hit.impactBounds);
         for (Gear gear : hit.flight.gears()) {
             FusedPair pair = gear.pair();
-            if (PUNCH.equals(pair.primaryId()) || !owns(hit.owner, gear) || !eligibleTarget(hit.owner, hit.target, pair)
+            if (PUNCH.equals(pair.primaryId()) || PIERCING.equals(pair.primaryId())
+                || !owns(hit.owner, gear) || !eligibleTarget(hit.owner, hit.target, pair)
                 || (POWER.equals(pair.primaryId()) && !hit.flight.fullDraw())
                 || (FLAME.equals(pair.primaryId()) && !hit.burning)
                 || (MULTISHOT.equals(pair.primaryId()) && !GrapnelVolley.proven(hit.flight.volley()))) continue;
@@ -208,6 +219,20 @@ public final class GrapnelSkills {
         if (!Double.isFinite(delta.x) || !Double.isFinite(delta.z) || delta.horizontalDistanceSqr() < 0.0001D) return;
         for (Gear gear : pending.flight().gears()) {
             if (PUNCH.equals(gear.pair().primaryId()) && owns(owner, gear) && eligibleTarget(owner, target, gear.pair())) {
+                markTarget(owner, target, gear); return;
+            }
+        }
+    }
+    /** Invoked only after the real arrow's continuous movement has passed the hit-time target bounds. */
+    public static void confirmArrowPiercing(AbstractArrow arrow, LivingEntity target, UUID expectedOwner) {
+        Flight flight = FLIGHTS.get(arrow);
+        if (flight == null || !(arrow.getOwner() instanceof ServerPlayer owner) || !expectedOwner.equals(owner.getUUID())
+            || !flight.owner().equals(owner.getUUID()) || !ready(owner) || !canMark(owner) || owner.level() != arrow.level()
+            || target.level() != owner.level() || owner.level().getEntity(arrow.getUUID()) != arrow
+            || owner.level().getEntity(target.getUUID()) != target || !owner.level().dimension().equals(flight.dimension())
+            || owner.level().getGameTime() >= flight.expires() || PhantomVolley.isGhost(arrow)) return;
+        for (Gear gear : flight.gears()) {
+            if (PIERCING.equals(gear.pair().primaryId()) && owns(owner, gear) && eligibleTarget(owner, target, gear.pair())) {
                 markTarget(owner, target, gear); return;
             }
         }
@@ -360,6 +385,7 @@ public final class GrapnelSkills {
         return true;
     }
     public static void tickServer(MinecraftServer server) {
+        GrapnelPiercing.tickServer(server);
         FLIGHTS.entrySet().removeIf(entry -> {
             Flight flight = entry.getValue(); ServerPlayer owner = server.getPlayerList().getPlayer(flight.owner());
             return owner == null || !ready(owner) || !entry.getKey().isAlive() || owner.level() != entry.getKey().level()
@@ -377,9 +403,12 @@ public final class GrapnelSkills {
     }
     public static void clearPlayer(UUID id) {
         MARKS.remove(id);
+        GrapnelPiercing.clearPlayer(id);
         MARKS.entrySet().removeIf(entry -> entry.getValue() instanceof TargetMark target && target.target().equals(id));
         FLIGHTS.entrySet().removeIf(entry -> entry.getValue().owner().equals(id));
         PENDING_PUSHES.entrySet().removeIf(entry -> entry.getValue().flight().owner().equals(id));
     }
-    public static void clearServer() { MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear(); PROJECTILE_REPLAY.remove(); }
+    public static void clearServer() {
+        MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear(); PROJECTILE_REPLAY.remove(); GrapnelPiercing.clearServer();
+    }
 }

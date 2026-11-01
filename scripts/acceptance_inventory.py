@@ -79,6 +79,8 @@ DIRECTION_FIXTURES = {
     ("flame", "lure"): ("40.1-flame-lure", True),
     ("punch", "lure"): ("40.1-punch-lure", True),
     ("multishot", "lure"): ("40.1-multishot-lure", True),
+    ("infinity", "lure"): ("40.1-infinity-lure", True),
+    ("piercing", "lure"): ("40.1-piercing-lure", True),
     ("sharpness", "swift_sneak"): ("42.3-sharp-swift", True),
     ("swift_sneak", "sharpness"): ("42.3-swift-sharp", True),
     ("smite", "swift_sneak"): ("42.3-smite-swift", True),

@@ -1078,5 +1078,7 @@
   "tooltip.enchantment_fusion.power_grapnel": "滿蓄真實弓箭對合格敵人造成傷害時留標8秒；手持同一把弓，在12格內且視線暢通時主動牽引。保留力量主位。",
   "tooltip.enchantment_fusion.flame_grapnel": "弓或弩射出的真實燃燒箭對合格敵人造成傷害時留標8秒；手持同一武器，在12格內且視線暢通時主動牽引。不放置火方塊，保留火矢主位。",
   "tooltip.enchantment_fusion.punch_grapnel": "弓或弩的真實箭傷害並實際擊退合格敵人時留標8秒；手持同一武器，在12格內且視線暢通時主動牽引。保留衝擊主位。",
-  "tooltip.enchantment_fusion.multishot_grapnel": "弓或弩同一輪真實多箭射擊中，真實箭命中合格敵人時留標8秒；手持同一武器，在12格內且視線暢通時主動牽引。幻影箭不計入。"
+  "tooltip.enchantment_fusion.multishot_grapnel": "弓或弩同一輪真實多箭射擊中，真實箭命中合格敵人時留標8秒；手持同一武器，在12格內且視線暢通時主動牽引。幻影箭不計入。",
+  "tooltip.enchantment_fusion.infinity_grapnel": "弓或弩射出的真實箭傷害合格敵人時留標8秒；手持同一武器，在12格內且視線暢通時主動牽引。無限遵循真實彈藥規則。",
+  "tooltip.enchantment_fusion.piercing_grapnel": "弩的真實箭傷害並實際穿過合格敵人時留標8秒；手持同一把弩，在12格內且視線暢通時主動牽引。"
 }

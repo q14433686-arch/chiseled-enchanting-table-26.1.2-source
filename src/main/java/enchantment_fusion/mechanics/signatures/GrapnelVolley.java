@@ -1,14 +1,9 @@
 package enchantment_fusion.mechanics.signatures;
 
-import enchantment_fusion.mechanics.FusionStationOperations;
-import enchantment_fusion.model.FusedEnchantmentList;
-import enchantment_fusion.model.FusedPair;
-import enchantment_fusion.registry.FusionDataComponents;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -16,7 +11,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,15 +32,10 @@ public final class GrapnelVolley {
     private GrapnelVolley() {}
 
     private static int level(@Nullable ItemStack weapon) {
-        if (weapon == null || weapon.isEmpty()) return 0;
-        int best = 0;
-        for (FusedPair pair : weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs())
-            if (GrapnelSkills.MULTISHOT.equals(pair.primaryId()) && GrapnelSkills.applies(pair, weapon)) best = Math.max(best, pair.primaryLevel());
-        return best;
+        return GrapnelProjectilePrimary.level(weapon, GrapnelSkills.MULTISHOT);
     }
     private static @Nullable Holder<Enchantment> missing(ServerLevel level, ItemStack weapon) {
-        Holder<Enchantment> holder = FusionStationOperations.lookupEnchantment(level.registryAccess(), GrapnelSkills.MULTISHOT).orElse(null);
-        return holder == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(holder) > 0 ? null : holder;
+        return GrapnelProjectilePrimary.missing(level, weapon, GrapnelSkills.MULTISHOT);
     }
     /** Replays the data-pack projectile count at draw/load, before vanilla consumes ammunition. */
     public static int count(ServerLevel level, ItemStack weapon, Entity shooter, int vanilla) {
@@ -69,6 +58,12 @@ public final class GrapnelVolley {
         try { holder.value().modifyProjectileSpread(level, valueLevel, weapon, shooter, value); }
         finally { REPLAY.remove(); }
         return Float.isFinite(value.floatValue()) ? Math.max(0.0F, value.floatValue()) : vanilla;
+    }
+    /** The constructor must run inside the same held weapon's actual shooting scope. */
+    public static boolean isActualShot(ServerLevel level, ItemStack weapon) {
+        Batch frame = CURRENT.get();
+        return frame != null && frame.weapon == weapon && frame.shooter instanceof ServerPlayer owner
+            && owner.level() == level && (owner.getMainHandItem() == weapon || owner.getOffhandItem() == weapon);
     }
     /** Always masks nested shots, even when the nested weapon is not a grapnel carrier. */
     public static Batch begin(LivingEntity shooter, ItemStack weapon) {

@@ -28,6 +28,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.CrossbowItem;
@@ -45,6 +46,7 @@ final class GrapnelProjectileProbe {
     static void exercise(ServerPlayer player, BlockPos origin, String primary) throws Exception {
         ServerLevel level = player.level(); boolean power = GrapnelSkills.POWER.equals(primary);
         boolean flame = GrapnelSkills.FLAME.equals(primary), punch = GrapnelSkills.PUNCH.equals(primary);
+        boolean infinity = GrapnelSkills.INFINITY.equals(primary);
         FusedPair pair = FusedPair.clean(primary, power ? 3 : punch ? 2 : 1, GrapnelSkills.LURE, 2); checkStation(level, pair, power);
         GrapnelSkills.clearPlayer(player.getUUID());
         Vec3 oldPos = player.position(), oldVelocity = player.getDeltaMovement(); float oldYaw = player.getYRot(), oldPitch = player.getXRot();
@@ -85,8 +87,11 @@ final class GrapnelProjectileProbe {
                 enemy.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(0.0D);
             }
             enemy.setDeltaMovement(Vec3.ZERO);
+            int ammunitionBefore = player.getOffhandItem().getCount();
             Arrow arrow = fireBow(level, player, bow, area, 20);
             if (flame) require(arrow.isOnFire(), "Missing native Flame must ignite the actual arrow");
+            if (infinity) require(player.getOffhandItem().getCount() == ammunitionBefore && arrow.pickup != AbstractArrow.Pickup.ALLOWED,
+                "Missing native Infinity must preserve normal ammo without creating a survival-pickable copy");
             hit(arrow, enemy, false); require(enemy.getUUID().equals(marked(player)), "Real qualifying arrow damage must mark the target");
             if (punch) require(enemy.getDeltaMovement().x > 0.05D, "Missing native Punch must actually push the target");
             enemy.setDeltaMovement(Vec3.ZERO);
@@ -99,12 +104,23 @@ final class GrapnelProjectileProbe {
             if (!power) {
                 ItemStack crossbow = fused(level, Items.CROSSBOW, pair); crossbow.remove(DataComponents.ENCHANTMENTS);
                 player.setItemSlot(EquipmentSlot.MAINHAND, crossbow);
+                ammunitionBefore = player.getOffhandItem().getCount();
                 Arrow realCrossbowArrow = fireCrossbow(level, player, crossbow, area);
                 if (flame) require(realCrossbowArrow.isOnFire(), "Non-native crossbow Flame must use the real spawn effect");
+                if (infinity) require(player.getOffhandItem().getCount() == ammunitionBefore && realCrossbowArrow.pickup != AbstractArrow.Pickup.ALLOWED,
+                    "Non-native crossbow Infinity must act before real loading and forbid copied pickups");
                 enemy.setDeltaMovement(Vec3.ZERO); hit(realCrossbowArrow, enemy, false);
                 require(enemy.getUUID().equals(marked(player)), "A qualifying real crossbow arrow must mark");
                 if (punch) require(enemy.getDeltaMovement().x > 0.05D, "Non-native crossbow Punch must really push");
                 enemy.setDeltaMovement(Vec3.ZERO); require(GrapnelSkills.activate(player), "Crossbow mark must be actively recalled");
+                if (infinity) {
+                    player.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.TIPPED_ARROW, 4));
+                    Arrow tipped = fireCrossbow(level, player, crossbow, area);
+                    require(player.getOffhandItem().getCount() == 3 && tipped.pickup == AbstractArrow.Pickup.ALLOWED,
+                        "The default Infinity effect must not make a tipped arrow free or intangible");
+                    hit(tipped, enemy, false); require(enemy.getUUID().equals(marked(player)), "A consumed tipped arrow may still mark");
+                    enemy.setDeltaMovement(Vec3.ZERO); require(GrapnelSkills.activate(player), "Tipped-arrow mark must be recalled once");
+                }
             }
         } finally {
             deny.clear(); player.stopUsingItem(); GrapnelSkills.clearPlayer(player.getUUID()); enemy.discard(); protectedTarget.discard();
@@ -124,7 +140,7 @@ final class GrapnelProjectileProbe {
         require(((BowItem) bow.getItem()).releaseUsing(bow, level, player, bow.getUseDuration(player) - ticks), "Bow must release");
         player.stopUsingItem(); return oneArrow(level, area, before, player);
     }
-    private static Arrow fireCrossbow(ServerLevel level, ServerPlayer player, ItemStack crossbow, AABB area) {
+    static Arrow fireCrossbow(ServerLevel level, ServerPlayer player, ItemStack crossbow, AABB area) {
         CrossbowItem item = (CrossbowItem) crossbow.getItem(); player.startUsingItem(InteractionHand.MAIN_HAND);
         int duration = CrossbowItem.getChargeDuration(crossbow, player);
         item.onUseTick(level, player, crossbow, crossbow.getUseDuration(player) - duration); player.stopUsingItem();
@@ -149,6 +165,9 @@ final class GrapnelProjectileProbe {
         ItemStack result = new ItemStack(item); FusionStationOperations.applyFusedPairToGear(result, pair, level.registryAccess()); return result;
     }
     static void checkStation(ServerLevel level, FusedPair pair, boolean power) {
+        checkStation(level, pair, true, !power);
+    }
+    static void checkStation(ServerLevel level, FusedPair pair, boolean allowBow, boolean allowCrossbow) {
         var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
         var primary = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse(pair.primaryId())));
         var secondary = registry.getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse(pair.secondaryId())));
@@ -161,7 +180,7 @@ final class GrapnelProjectileProbe {
             for (Item item : List.of(Items.BOW, Items.CROSSBOW, Items.DIAMOND_SWORD, Items.DIAMOND_PICKAXE)) {
                 inv.setItem(FusionStationOperations.SLOT_TARGET, new ItemStack(item));
                 var preview = FusionStationOperations.inspect(inv, level.registryAccess(), FusionStationOperations.TAB_SOCKET, direct ? 0 : -1, direct ? 1 : -1);
-                boolean supported = item == Items.BOW || (!power && item == Items.CROSSBOW);
+                boolean supported = (allowBow && item == Items.BOW) || (allowCrossbow && item == Items.CROSSBOW);
                 require(supported ? preview.executable() : preview.rejectReason() == RejectReason.UNSUPPORTED_DIRECTION_HOST,
                     "Both station paths must require the direction's real launcher");
             }

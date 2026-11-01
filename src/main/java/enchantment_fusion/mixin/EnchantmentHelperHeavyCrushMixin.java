@@ -12,6 +12,7 @@ import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelVolley;
+import enchantment_fusion.mechanics.signatures.GrapnelProjectilePrimary;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -35,6 +36,11 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
         float knockbackPrimary = MeleeImpulseSkills.nonNativePrimaryDamage(level, weapon, victim, source, themed);
         float wear = MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
         return GrapnelSkills.nonNativeProjectileDamage(level, weapon, victim, source, wear);
+    }
+
+    @WrapMethod(method = "getPiercingCount")
+    private static int ef$grapnelPiercingCount(ServerLevel level, ItemStack weapon, ItemStack ammo, Operation<Integer> original) {
+        return GrapnelProjectilePrimary.piercing(level, weapon, ammo, original.call(level, weapon, ammo));
     }
 
     @WrapMethod(method = "processProjectileCount")
