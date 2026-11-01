@@ -1,6 +1,7 @@
 package enchantment_fusion.mixin;
 
 import enchantment_fusion.mechanics.HarvestDropCapture;
+import enchantment_fusion.mechanics.EntityLootProvenance;
 import java.util.List;
 import java.util.function.BiFunction;
 import net.minecraft.world.item.ItemStack;
@@ -24,13 +25,17 @@ public abstract class LootItemFunctionsProvenanceMixin {
         List<? extends BiFunction<ItemStack, LootContext, ItemStack>> terms = List.copyOf(functions);
         BiFunction<ItemStack, LootContext, ItemStack> original = cir.getReturnValue();
         cir.setReturnValue((stack, context) -> {
-            if (!HarvestDropCapture.canCaptureFortune(context)) return original.apply(stack, context);
+            boolean harvest = HarvestDropCapture.canCaptureFortune(context);
+            boolean entityLoot = EntityLootProvenance.canCapture(context);
+            if (!harvest && !entityLoot) return original.apply(stack, context);
             ItemStack current = stack;
             for (BiFunction<ItemStack, LootContext, ItemStack> function : terms) {
                 // Vanilla explosion decay is exactly a no-op without an explosion parameter.
                 if (!(function.getClass() == ApplyExplosionDecay.class
-                    && context.getOptionalParameter(LootContextParams.EXPLOSION_RADIUS) == null))
-                    HarvestDropCapture.invalidateFortuneOutput(context, current);
+                    && context.getOptionalParameter(LootContextParams.EXPLOSION_RADIUS) == null)) {
+                    if (harvest) HarvestDropCapture.invalidateFortuneOutput(context, current);
+                    if (entityLoot) EntityLootProvenance.invalidate(context, current);
+                }
                 current = function.apply(current, context);
             }
             return current;

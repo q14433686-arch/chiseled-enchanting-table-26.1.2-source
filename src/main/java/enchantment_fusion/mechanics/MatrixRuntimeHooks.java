@@ -41,6 +41,7 @@ import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelLooting;
 import enchantment_fusion.mechanics.signatures.PrimaryLocationProjection;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
@@ -382,6 +383,7 @@ public final class MatrixRuntimeHooks {
 
         // Entity Kill hooks
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            GrapnelLooting.afterDeath(entity, damageSource);
             AmberSealSkill.afterDeath(entity, damageSource);
             SoulThreadSkills.afterDeath(entity, damageSource);
             if (damageSource.getEntity() instanceof ServerPlayer attacker && entity.level() instanceof ServerLevel level) {

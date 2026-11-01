@@ -84,7 +84,7 @@ public abstract class ServerPlayerGameModeHarvestMixin {
             if (tracked) {
                 SealedOreSkills.sealDrop((ServerLevel) level, (ServerPlayer) breaker, pos, state, blockEntity, lootTool);
                 FortuneBankSkills.afterDestroy((ServerLevel) level, (ServerPlayer) breaker, pos, state, blockEntity, lootTool);
-                GrapnelSkills.afterMined((ServerLevel) level, (ServerPlayer) breaker, pos, state, lootTool);
+                GrapnelMining.afterMined((ServerLevel) level, (ServerPlayer) breaker, pos, state, lootTool);
             }
         } finally {
             if (tracked) HarvestDropCapture.leavePlayerDestroy((ServerLevel) level, (ServerPlayer) breaker, pos);

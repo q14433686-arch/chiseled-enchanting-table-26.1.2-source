@@ -1,6 +1,7 @@
 package enchantment_fusion.mixin;
 
 import enchantment_fusion.mechanics.HarvestDropCapture;
+import enchantment_fusion.mechanics.EntityLootProvenance;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -16,7 +17,9 @@ public abstract class ServerLevelHarvestCaptureMixin {
     @Inject(method = "addFreshEntity", at = @At("RETURN"))
     private void ef$captureFreshHarvestEntity(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValueZ() && (entity instanceof ItemEntity || entity instanceof ExperienceOrb)) {
-            HarvestDropCapture.record((ServerLevel) (Object) this, entity);
+            ServerLevel level = (ServerLevel) (Object) this;
+            HarvestDropCapture.record(level, entity);
+            if (entity instanceof ItemEntity item) EntityLootProvenance.added(level, item);
         }
     }
 }

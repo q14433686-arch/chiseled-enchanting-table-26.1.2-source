@@ -105,6 +105,7 @@ final class AcceptanceReport {
         plan("40.1-lunge-lure", "Lunge ▷ Lure: actual spear collision and impulse with prepared aim, charge and hunger", "Not reached if setup fails; natural input, multiplayer and third-party effects remain untested.");
         plan("40.1-impaling-lure", "Impaling ▷ Lure: real melee and trident release with a prepared collision and aquatic target", "Not reached if setup fails; natural flight, pickup/reload, multiplayer and datapacks remain untested.");
         plan("40.1-channeling-lure", "Channeling ▷ Lure: real trident release and lightning summons with prepared weather and collisions", "Not reached if setup fails; bolts are removed before ticking. Natural flight, storm, lightning damage, pickup/reload, multiplayer and datapacks remain untested.");
+        plan("40.1-looting-lure", "Looting ▷ Lure: real melee death, deterministic test loot, count/chance provenance and normal pickup", "Not reached if setup fails; data tables, delay and activation are prepared. Natural input, projectiles, equipment attribution, multiplayer and third-party loot remain untested.");
         plan("40.1-sweep-lure", "Sweeping Edge ▷ Lure: real sword sweep with prepared equipment and victims", "Not reached if setup fails.");
         plan("40.1-attribute-shared-regression", "Shared work, movement and sweep primary attribute projections", "Not reached if setup fails.");
         plan("43.3-smite-channel", "Smite ▷ Channeling: real marks and virtual chain", "Not reached if setup fails.");

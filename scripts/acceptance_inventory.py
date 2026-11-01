@@ -102,6 +102,7 @@ DIRECTION_FIXTURES = {
     ("lunge", "lure"): ("40.1-lunge-lure", True),
     ("impaling", "lure"): ("40.1-impaling-lure", True),
     ("channeling", "lure"): ("40.1-channeling-lure", True),
+    ("looting", "lure"): ("40.1-looting-lure", True),
     ("sweeping_edge", "lure"): ("40.1-sweep-lure", True),
     ("smite", "channeling"): ("43.3-smite-channel", True),
     ("sharpness", "wind_burst"): ("43.4-sharp-wind", True),

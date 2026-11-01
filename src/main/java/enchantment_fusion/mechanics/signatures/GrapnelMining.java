@@ -3,6 +3,7 @@ package enchantment_fusion.mechanics.signatures;
 import enchantment_fusion.mechanics.ExtraBlockHarvest;
 import enchantment_fusion.mechanics.HarvestDropCapture;
 import enchantment_fusion.mechanics.MatrixEffectExecutor;
+import enchantment_fusion.model.FusedPair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -61,6 +62,23 @@ public final class GrapnelMining {
         if (scope == null) return;
         if (CURRENT.get() != scope) { CURRENT.remove(); if (scope.previous != null) scope.previous.ambiguous = true; return; }
         if (scope.previous == null) CURRENT.remove(); else CURRENT.set(scope.previous);
+    }
+    /** Share the exact same proven-item publisher with entity death loot. */
+    public static void afterMined(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state, ItemStack lootTool) {
+        if (!player.isAlive() || player.isSpectator() || player.isCreative() || player.level() != level
+            || ExtraBlockHarvest.isActive() || MatrixEffectExecutor.isExecuting() || !level.hasChunkAt(pos)
+            || !level.isInWorldBounds(pos) || !level.mayInteract(player, pos)
+            || level.getServer().isUnderSpawnProtection(level, pos, player) || state.isAir()) return;
+        ItemStack held = player.getMainHandItem();
+        FusedPair pair = GrapnelSkills.miningPair(held), loot = GrapnelSkills.miningPair(lootTool);
+        if (pair != null && pair.equals(loot) && HarvestDropCapture.isOriginalMainHand(level, player, pos, held)) {
+            GrapnelSkills.markDrops(player, held, pair, null, pos, HarvestDropCapture.verifiedBlockItems(level, pos, lootTool));
+            return;
+        }
+        // Held tools keep priority; otherwise require the helmet's proven underwater action.
+        GrapnelAttribute.Gear helmet = confirmed(level, player, pos, state);
+        if (helmet != null) GrapnelSkills.markDrops(player, helmet.stack(), helmet.pair(), helmet.slot(), pos,
+            HarvestDropCapture.verifiedBlockItems(level, pos, lootTool));
     }
     /** Called only inside that same real playerDestroy after successful vanilla block loot spawns. */
     static @Nullable GrapnelAttribute.Gear confirmed(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState block) {
