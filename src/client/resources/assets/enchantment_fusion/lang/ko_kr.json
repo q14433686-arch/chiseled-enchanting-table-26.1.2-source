@@ -1129,5 +1129,6 @@
   "tooltip.enchantment_fusion.sweep_grapnel": "검의 휩쓸기 속성이 휩쓸기의 초기 피해 계산을 높이고 별도의 적격 적이 체력이나 흡수량을 잃으면 그 적을 8초간 표시합니다. 같은 검을 들고 12블록 이내에서 시야가 확보될 때 회수합니다. 강화되지 않은 일반 휩쓸기는 표시하지 않습니다.",
   "message.enchantment_fusion.grapnel_motion_marked": "이동으로 위치를 표시했습니다. 적격 적을 조준하고 회수하세요.",
   "tooltip.enchantment_fusion.breath_grapnel": "이 투구의 호흡이 실제 수중 산소 소모를 막으면 현재 위치를 8초 동안 표시합니다. 같은 투구를 착용하고 표시에서 12블록 이내에 머물며 표시에서 8블록 이내의 유효한 적을 시야가 열린 상태로 조준해 회수하세요. 일반 산소와 호흡 규칙은 유지됩니다.",
-  "message.enchantment_fusion.grapnel_breath_marked": "호흡으로 위치를 표시했습니다. 유효한 적을 조준하고 갈고리를 회수하세요."
+  "message.enchantment_fusion.grapnel_breath_marked": "호흡으로 위치를 표시했습니다. 유효한 적을 조준하고 갈고리를 회수하세요.",
+  "tooltip.enchantment_fusion.lunge_grapnel": "실제 창 찌르기가 유효한 적에게 명중하고 같은 공격의 돌진이 실제 전방 충격을 만든 경우에만 적을 8초간 표시합니다. 같은 창을 주 손에 들고 12블록 이내에서 시야가 열린 상태로 발동해 당깁니다. 돌진의 일반 조건과 허기·내구도 소모는 유지됩니다."
 }

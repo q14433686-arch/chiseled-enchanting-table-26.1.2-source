@@ -1129,5 +1129,6 @@
   "tooltip.enchantment_fusion.sweep_grapnel": "Um golpe de varredura real com espada marca uma vítima secundária elegível por 8 segundos se o atributo do encantamento aumentar o cálculo inicial do dano e a vítima realmente perder vida ou absorção. Segure a mesma espada e ative a até 12 blocos com visão livre. Uma varredura sem melhoria não basta.",
   "message.enchantment_fusion.grapnel_motion_marked": "O movimento marcou o local. Mire em um inimigo elegível e ative o gancho.",
   "tooltip.enchantment_fusion.breath_grapnel": "Quando a respiração deste capacete realmente evita uma perda de ar debaixo d’água, marca o local por 8 segundos. Use o mesmo capacete, fique a até 12 blocos da marca e ative com visão livre para um inimigo válido a até 8 blocos dela. As regras normais de ar e respiração permanecem.",
-  "message.enchantment_fusion.grapnel_breath_marked": "Respiração marcou o local. Mire em um inimigo válido e ative o recolhimento."
+  "message.enchantment_fusion.grapnel_breath_marked": "Respiração marcou o local. Mire em um inimigo válido e ative o recolhimento.",
+  "tooltip.enchantment_fusion.lunge_grapnel": "Uma estocada real de lança marca um inimigo válido por 8 segundos somente se o avanço produzir um impulso real para a frente no mesmo ataque. Mantenha a mesma lança na mão principal e ative a até 12 blocos, com visão livre. As condições, a exaustão e a durabilidade normais permanecem."
 }

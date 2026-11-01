@@ -49,6 +49,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelDefense;
 import enchantment_fusion.mechanics.signatures.GrapnelDurability;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
+import enchantment_fusion.mechanics.signatures.GrapnelLunge;
 import enchantment_fusion.mechanics.signatures.GrapnelWind;
 import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import enchantment_fusion.mechanics.signatures.GrapnelAttribute;
@@ -103,6 +104,7 @@ public final class FusionTooltipRenderer {
         if (GrapnelImpact.KNOCKBACK.equals(pair.primaryId())) return "tooltip.enchantment_fusion.knockback_grapnel";
         if (GrapnelImpact.BREACH.equals(pair.primaryId())) return "tooltip.enchantment_fusion.breach_grapnel";
         if (GrapnelImpact.DENSITY.equals(pair.primaryId())) return "tooltip.enchantment_fusion.density_grapnel";
+        if (GrapnelLunge.isPair(pair)) return "tooltip.enchantment_fusion.lunge_grapnel";
         if (GrapnelDefense.FEATHER.equals(pair.primaryId())) return "tooltip.enchantment_fusion.feather_grapnel";
         if (GrapnelDefense.isPair(pair)) return "tooltip.enchantment_fusion.defense_grapnel";
         if (GrapnelSkills.miningFirst(pair)) return "tooltip.enchantment_fusion.mining_grapnel";

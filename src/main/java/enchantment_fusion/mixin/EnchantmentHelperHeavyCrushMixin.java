@@ -18,6 +18,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelDefense;
 import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
+import enchantment_fusion.mechanics.signatures.GrapnelLunge;
 import enchantment_fusion.mechanics.signatures.PrimaryLocationProjection;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
@@ -35,6 +36,12 @@ import org.spongepowered.asm.mixin.Mixin;
 /** Keep the same native-effect ordering for both orientations of Density/Breach. */
 @Mixin(EnchantmentHelper.class)
 public abstract class EnchantmentHelperHeavyCrushMixin {
+    @WrapMethod(method = "doPostPiercingAttackEffects")
+    private static void ef$replayLunge(ServerLevel level, LivingEntity user, Operation<Void> original) {
+        original.call(level, user);
+        GrapnelLunge.replayMissing(level, user);
+    }
+
     @WrapMethod(method = "runLocationChangedEffects(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)V")
     private static void ef$conditionalLocation(ServerLevel level, LivingEntity entity, Operation<Void> original) {
         if (PrimaryLocationProjection.replaying()) {

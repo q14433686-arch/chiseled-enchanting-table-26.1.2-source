@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import enchantment_fusion.mechanics.signatures.GrapnelAttribute;
 import enchantment_fusion.mechanics.signatures.GrapnelBreath;
+import enchantment_fusion.mechanics.signatures.GrapnelLunge;
 import enchantment_fusion.mechanics.signatures.GrapnelMotion;
 import enchantment_fusion.mechanics.signatures.GrapnelSweep;
 import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
@@ -85,6 +86,23 @@ final class GrapnelActionSourcesTest {
         assertFalse(GrapnelSweep.improvesSweep(0, 1, 0.6, 0));
         assertFalse(GrapnelSweep.improvesSweep(4, 0, 0.6, 0));
         assertFalse(GrapnelSweep.improvesSweep(4, 1, Double.NaN, 0));
+    }
+    @Test void lungeUsesOnlyTheSpearCarrierAndRespectsExactPriority() {
+        SignatureCatalog.reloadFromJson(null);
+        try {
+            FusedPair pair = FusedPair.clean("minecraft:lunge", 3, "minecraft:lure", 2);
+            assertTrue(GrapnelSkills.matches(pair));
+            assertFalse(GrapnelSkills.matches(pair.flipped()));
+            assertTrue(GrapnelSkills.supportsCarrier(pair, Set.of(FusionCarrier.SPEAR)));
+            assertFalse(GrapnelSkills.supportsCarrier(pair, Set.of(FusionCarrier.TRIDENT)));
+            assertFalse(GrapnelSkills.supportsCarrier(pair, Set.of(FusionCarrier.SWORD)));
+            assertFalse(GrapnelLunge.supportsCarrier(null));
+            SignatureCatalog.reloadFromJson(JsonParser.parseString("""
+                {"signatures":{"custom":{"primary":"minecraft:lunge","secondary":"minecraft:lure"},
+                    "spirit_grapnel":{"primary":"*","secondary":"minecraft:lure"}}}
+                """).getAsJsonObject());
+            assertFalse(GrapnelSkills.matches(pair));
+        } finally { SignatureCatalog.reloadFromJson(null); }
     }
     @Test void breathCreditUsesTheSameRandomRollAndTheCounterfactualThreshold() {
         assertTrue(GrapnelBreath.savedByPrimary(0.5, 3, 0));

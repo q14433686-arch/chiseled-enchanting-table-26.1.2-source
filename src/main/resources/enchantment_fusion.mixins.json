@@ -47,6 +47,7 @@
     "PhantomBowBatchMixin",
     "PhantomBowMixin",
     "PhantomCrossbowMixin",
+    "PiercingWeaponGrapnelMixin",
     "PlayerAmberAttackMixin",
     "PlayerBlastDefenseMixin",
     "PlayerExperienceFusionMixin",

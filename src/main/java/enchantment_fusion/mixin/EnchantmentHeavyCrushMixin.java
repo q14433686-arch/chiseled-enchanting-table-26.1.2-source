@@ -3,12 +3,14 @@ package enchantment_fusion.mixin;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
+import enchantment_fusion.mechanics.signatures.GrapnelLunge;
 import enchantment_fusion.mechanics.signatures.HeavyCrushMath;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.Enchantment;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +21,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /** Defer only the selected pair's relevant native effect; the helper replays it once. */
 @Mixin(Enchantment.class)
 public abstract class EnchantmentHeavyCrushMixin {
+    @WrapMethod(method = "doPostPiercingAttack")
+    private void ef$observeLunge(ServerLevel level, int rank, EnchantedItemInUse item, Entity user, Operation<Void> original) {
+        GrapnelLunge.Effect effect = GrapnelLunge.beginEffect((Enchantment) (Object) this, level, rank, item, user);
+        boolean completed = false;
+        try { original.call(level, rank, item, user); completed = true; }
+        finally { GrapnelLunge.endEffect(effect, completed); }
+    }
+
     @WrapMethod(method = "modifyKnockback")
     private void ef$observeKnockback(ServerLevel level, int rank, ItemStack weapon, Entity victim,
                                      DamageSource source, MutableFloat value, Operation<Void> original) {

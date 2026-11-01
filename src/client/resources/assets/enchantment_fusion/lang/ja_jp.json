@@ -1129,5 +1129,6 @@
   "tooltip.enchantment_fusion.sweep_grapnel": "剣の範囲ダメージ増加属性がなぎ払いの初期ダメージ計算を増やし、別の適格な敵の体力または吸収量が減ると、その敵を8秒間標識する。同じ剣を持ち、12ブロック以内で見通して発動する。通常の未強化なぎ払いでは標識しない。",
   "message.enchantment_fusion.grapnel_motion_marked": "移動で位置を標識した。適格な敵を狙って回鉤を発動。",
   "tooltip.enchantment_fusion.breath_grapnel": "このヘルメットの水中呼吸が実際の水中酸素消費を防いだ時、現在地を8秒間マークする。同じヘルメットを着け、マークから12ブロック以内で、マークの8ブロック以内にいる適格な敵を見通して発動する。通常の酸素と呼吸の規則は残る。",
-  "message.enchantment_fusion.grapnel_breath_marked": "水中呼吸で位置をマークした。適格な敵を狙って回鉤を発動。"
+  "message.enchantment_fusion.grapnel_breath_marked": "水中呼吸で位置をマークした。適格な敵を狙って回鉤を発動。",
+  "tooltip.enchantment_fusion.lunge_grapnel": "実際の槍の突きが適格な敵に命中し、同じ攻撃で突進が実際に前方への力を生んだ場合だけ、その敵を8秒間マークする。同じ槍をメインハンドに持ち、12ブロック以内で見通して発動する。突進の通常条件、空腹消耗と耐久消費は残る。"
 }

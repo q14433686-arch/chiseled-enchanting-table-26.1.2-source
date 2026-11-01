@@ -1129,5 +1129,6 @@
   "tooltip.enchantment_fusion.sweep_grapnel": "A real sword sweep marks an eligible secondary victim for 8 seconds only when this sword’s Sweeping Edge attribute increases the sweep’s initial damage calculation and the victim actually loses health or absorption. Keep the same sword and activate within 12 blocks with clear sight. A normal, unenhanced sweep does not qualify.",
   "message.enchantment_fusion.grapnel_motion_marked": "Movement marked this location. Aim at an eligible enemy and activate grapnel recall.",
   "tooltip.enchantment_fusion.breath_grapnel": "When this helmet’s Respiration actually saves an underwater breath, mark your location for 8 seconds. Keep the same helmet equipped, stay within 12 blocks of the mark, aim at an eligible enemy within 8 blocks of it and activate with clear sight. Normal oxygen and breathing rules remain.",
-  "message.enchantment_fusion.grapnel_breath_marked": "Respiration marked this location. Aim at an eligible enemy and activate grapnel recall."
+  "message.enchantment_fusion.grapnel_breath_marked": "Respiration marked this location. Aim at an eligible enemy and activate grapnel recall.",
+  "tooltip.enchantment_fusion.lunge_grapnel": "A real spear thrust that hits an eligible enemy marks them for 8 seconds only if this spear’s Lunge also produces an actual forward impulse in the same attack. Keep the spear in your main hand and activate within 12 blocks and clear sight to pull the marked enemy. Normal Lunge conditions, exhaustion and durability remain."
 }
