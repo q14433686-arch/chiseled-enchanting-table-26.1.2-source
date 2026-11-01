@@ -659,6 +659,12 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("45.3-respiration-punch", () -> RangedBreathProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", true));
         acceptance.run("45.3-flame-respiration", () -> RangedBreathProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", false));
         acceptance.run("45.3-respiration-flame", () -> RangedBreathProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", true));
+        acceptance.run("46.1-power-swift", () -> RangedSneakProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", false));
+        acceptance.run("46.1-swift-power", () -> RangedSneakProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", true));
+        acceptance.run("46.1-punch-swift", () -> RangedSneakProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", false));
+        acceptance.run("46.1-swift-punch", () -> RangedSneakProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", true));
+        acceptance.run("46.1-flame-swift", () -> RangedSneakProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", false));
+        acceptance.run("46.1-swift-flame", () -> RangedSneakProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", true));
         acceptance.run("46.2-power-depth", () -> RangedTideProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", false));
         acceptance.run("46.2-depth-power", () -> RangedTideProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", true));
         acceptance.run("46.2-punch-depth", () -> RangedTideProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", false));

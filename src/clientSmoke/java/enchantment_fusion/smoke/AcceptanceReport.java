@@ -38,6 +38,13 @@ final class AcceptanceReport {
         plan("45.3-flame-respiration", "flame ▷ respiration: prepared underwater real-arrow hit and owner bubble", "Not reached if setup fails; fluid and flight are prepared.");
         plan("45.3-respiration-flame", "respiration ▷ flame: air payment and real-arrow water inertia", "Not reached if setup fails; fluid and flight are prepared.");
         plan("45.3-runtime-compat", "45.3 natural fluid updates and input, arrow velocity sync, datapacks, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
+        plan("46.1-power-swift", "power ▷ swift_sneak: real sneaking hit, sustained aim and next bow/crossbow charge", "Not reached if setup fails; pose, aim and projectile flight are prepared.");
+        plan("46.1-swift-power", "swift_sneak ▷ power: real sneaking shot and one collision-respecting retreat", "Not reached if setup fails; pose, input, wall and flight are prepared.");
+        plan("46.1-punch-swift", "punch ▷ swift_sneak: real sneaking hit, sustained aim and next bow/crossbow charge", "Not reached if setup fails; pose, aim and projectile flight are prepared.");
+        plan("46.1-swift-punch", "swift_sneak ▷ punch: real sneaking shot and one collision-respecting retreat", "Not reached if setup fails; pose, input, wall and flight are prepared.");
+        plan("46.1-flame-swift", "flame ▷ swift_sneak: real sneaking hit, sustained aim and next bow/crossbow charge", "Not reached if setup fails; pose, aim and projectile flight are prepared.");
+        plan("46.1-swift-flame", "swift_sneak ▷ flame: real sneaking shot and one collision-respecting retreat", "Not reached if setup fails; pose, input, wall and flight are prepared.");
+        plan("46.1-runtime-compat", "46.1 actual keyboard, target tracking, client item model, latency, terrain, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
         plan("46.2-power-depth", "power ▷ depth_strider: real submerged arrow path, protected hits and current ride", "Not reached if setup fails; water, flight and input are prepared.");
         plan("46.2-depth-power", "depth_strider ▷ power: observed water movement and prepared real-arrow inertia", "Not reached if setup fails; water, flight and input are prepared.");
         plan("46.2-punch-depth", "punch ▷ depth_strider: real submerged arrow path, protected hits and current ride", "Not reached if setup fails; water, flight and input are prepared.");

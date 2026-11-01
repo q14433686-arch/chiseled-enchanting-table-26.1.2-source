@@ -70,6 +70,13 @@ class AcceptanceInventoryTest(unittest.TestCase):
         self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
         self.assertNotIn(("multishot", "respiration"), DIRECTION_FIXTURES)
 
+    def test_ranged_sneak_six_directions_have_separate_candidates(self):
+        pairs = {(theme, "swift_sneak") for theme in ("power", "punch", "flame")}
+        pairs |= {(right, left) for left, right in pairs.copy()}
+        self.assertEqual(6, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
+        self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
+        self.assertNotIn(("multishot", "swift_sneak"), DIRECTION_FIXTURES)
+
     def test_ranged_tide_six_directions_have_separate_candidates(self):
         pairs = {(theme, "depth_strider") for theme in ("power", "punch", "flame")}
         pairs |= {(right, left) for left, right in pairs.copy()}

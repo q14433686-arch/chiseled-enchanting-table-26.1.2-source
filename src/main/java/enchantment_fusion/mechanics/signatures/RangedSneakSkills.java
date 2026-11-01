@@ -254,7 +254,8 @@ public final class RangedSneakSkills {
     public static void tickServer(MinecraftServer server) {
         SHOTS.entrySet().removeIf(entry -> {
             Shot shot = entry.getValue(); ServerPlayer owner = server.getPlayerList().getPlayer(shot.owner());
-            return owner == null || !ready(owner) || !within(owner, shot.dimension(), shot.born()) || !owns(owner, shot.gear())
+            return owner == null || !ready(owner) || !owner.isShiftKeyDown() || !within(owner, shot.dimension(), shot.born())
+                || !owns(owner, shot.gear()) || !held(owner, shot.gear().stack())
                 || entry.getKey().isRemoved() || entry.getKey().level() != owner.level();
         });
         for (var entry : List.copyOf(AIMS.entrySet())) {
