@@ -683,6 +683,12 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("46.3-efficiency-punch", () -> RangedWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", true));
         acceptance.run("46.3-flame-efficiency", () -> RangedWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", false));
         acceptance.run("46.3-efficiency-flame", () -> RangedWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", true));
+        acceptance.run("45.4-power-silk", () -> RangedSilkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", false));
+        acceptance.run("45.4-silk-power", () -> RangedSilkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", true));
+        acceptance.run("45.4-punch-silk", () -> RangedSilkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", false));
+        acceptance.run("45.4-silk-punch", () -> RangedSilkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", true));
+        acceptance.run("45.4-flame-silk", () -> RangedSilkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", false));
+        acceptance.run("45.4-silk-flame", () -> RangedSilkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", true));
         acceptance.run("46.4-power-mending", () -> RangedMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", false));
         acceptance.run("46.4-mending-power", () -> RangedMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", true));
         acceptance.run("46.4-punch-mending", () -> RangedMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", false));

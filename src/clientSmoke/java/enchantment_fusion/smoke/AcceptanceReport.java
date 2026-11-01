@@ -66,6 +66,13 @@ final class AcceptanceReport {
         plan("46.3-flame-efficiency", "flame ▷ efficiency: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
         plan("46.3-efficiency-flame", "efficiency ▷ flame: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
         plan("46.3-runtime-compat", "46.3 natural input, client mining synchronization, trajectory changes, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
+        plan("45.4-power-silk", "power ▷ silk: real marked target and later real arrow", "Not reached if setup fails; targets, flight, pickup and obstacles are prepared.");
+        plan("45.4-silk-power", "silk ▷ power: original grounded arrow through vanilla pickup", "Not reached if setup fails; targets, flight, pickup and obstacles are prepared.");
+        plan("45.4-punch-silk", "punch ▷ silk: real marked target and later real arrow", "Not reached if setup fails; targets, flight, pickup and obstacles are prepared.");
+        plan("45.4-silk-punch", "silk ▷ punch: original grounded arrow through vanilla pickup", "Not reached if setup fails; targets, flight, pickup and obstacles are prepared.");
+        plan("45.4-flame-silk", "flame ▷ silk: real marked target and later real arrow", "Not reached if setup fails; targets, flight, pickup and obstacles are prepared.");
+        plan("45.4-silk-flame", "silk ▷ flame: original grounded arrow through vanilla pickup", "Not reached if setup fails; targets, flight, pickup and obstacles are prepared.");
+        plan("45.4-runtime-compat", "45.4 natural aiming, projectile travel, item pickup, save/reload, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
         plan("46.4-power-mending", "power ▷ mending: actual arrow death XP, route and original-orb pickup", "Not reached if setup fails; XP values, aim, flight and pickup are prepared.");
         plan("46.4-mending-power", "mending ▷ power: actual orb repair and prepared damage arrow", "Not reached if setup fails; aim, flight and pickup are prepared.");
         plan("46.4-punch-mending", "punch ▷ mending: actual arrow death XP, route and original-orb pickup", "Not reached if setup fails; XP values, aim, flight and pickup are prepared.");
