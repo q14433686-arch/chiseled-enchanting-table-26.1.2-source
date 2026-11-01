@@ -9,6 +9,7 @@
     "ApplyBonusFortuneCaptureMixin",
     "ApplyBonusSafeFormulaMixin",
     "ArrowHeavyCrushMixin",
+    "BlockDropProvenanceMixin",
     "BowHeavyCrushMixin",
     "CrossbowHeavyCrushMixin",
     "CombatRulesHeavyCrushMixin",

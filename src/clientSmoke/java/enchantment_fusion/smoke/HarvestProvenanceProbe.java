@@ -59,6 +59,7 @@ final class HarvestProvenanceProbe {
             deny[0] = false;
             exerciseMagnet(level, player, pos);
             exerciseScopesAndLimit(level, player, pos);
+            exerciseExactProvenance(level, player, pos);
         } finally {
             deny[0] = false;
             for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(4), e -> e.isAlive())) {
@@ -154,6 +155,29 @@ final class HarvestProvenanceProbe {
             outerFirst.discard(); outerLast.discard(); inner.discard();
             generated.forEach(ItemEntity::discard);
         }
+    }
+
+    /** Directly exercises identity/ambiguity rules; SealedOreProbe separately uses a real block break. */
+    private static void exerciseExactProvenance(ServerLevel level, ServerPlayer player, BlockPos pos) {
+        ItemStack tool = new ItemStack(Items.DIAMOND_PICKAXE), output = new ItemStack(Items.RAW_IRON);
+        ItemEntity exact = new ItemEntity(level, pos.getX(), pos.getY(), pos.getZ(), output);
+        ItemEntity unrelated = fixture(level, pos); BlockState state = Blocks.IRON_ORE.defaultBlockState();
+        try (var scope = HarvestDropCapture.begin(level, player, pos)) {
+            HarvestDropCapture.enterPlayerDestroy(level, player, pos, tool, state);
+            try {
+                HarvestDropCapture.recordBlockLoot(level, pos, state, player, tool.copy(), List.of(unrelated.getItem()));
+                require(HarvestDropCapture.verifiedBlockItems(level, pos, tool).isEmpty(), "A different tool cannot define loot provenance");
+                HarvestDropCapture.recordBlockLoot(level, pos, state, player, tool, List.of(output));
+                HarvestDropCapture.recordBlockLootSpawn(level, unrelated, unrelated.getItem());
+                HarvestDropCapture.recordBlockLootSpawn(level, exact, output);
+                var verified = HarvestDropCapture.verifiedBlockItems(level, pos, tool);
+                require(verified.size() == 1 && verified.getFirst() == exact, "Only the actual loot-list identity can be verified");
+                output.grow(1); require(HarvestDropCapture.verifiedBlockItems(level, pos, tool).isEmpty(), "Changed count or components invalidate identity");
+                output.shrink(1);
+                HarvestDropCapture.recordBlockLoot(level, pos, state, player, tool, List.of(new ItemStack(Items.RAW_IRON)));
+                require(HarvestDropCapture.verifiedBlockItems(level, pos, tool).isEmpty(), "Repeated matching loot rolls are ambiguous");
+            } finally { HarvestDropCapture.leavePlayerDestroy(level, player, pos); }
+        } finally { exact.discard(); unrelated.discard(); }
     }
 
     private static ItemEntity fixture(ServerLevel level, BlockPos pos) {

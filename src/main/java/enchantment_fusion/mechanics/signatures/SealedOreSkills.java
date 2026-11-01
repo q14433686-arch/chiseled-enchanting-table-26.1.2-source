@@ -28,7 +28,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -84,8 +83,7 @@ public final class SealedOreSkills {
                                 @Nullable BlockEntity blockEntity, ItemStack lootTool) {
         FusedPair pair = selected(lootTool);
         if (pair == null || player.isCreative() || blockEntity != null || !ORES.containsKey(state.getBlock())) return;
-        AABB area = AABB.ofSize(Vec3.atCenterOf(pos), 6.0D, 6.0D, 6.0D);
-        for (ItemEntity entity : HarvestDropCapture.items(level, pos, area)) {
+        for (ItemEntity entity : HarvestDropCapture.verifiedBlockItems(level, pos, lootTool)) {
             ItemStack drop = entity.getItem();
             if (drop.getCount() != 1 || !drop.is(state.getBlock().asItem()) || drop.has(FusionDataComponents.SEALED_ORE_FORTUNE)) continue;
             if (!HarvestDropCapture.claimTransform(level, pos, entity)) continue;

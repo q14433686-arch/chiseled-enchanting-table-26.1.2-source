@@ -44,10 +44,15 @@ public final class HarvestDropCapture {
 
     /** Identity and before/after count from one actual Fortune function, never a second loot roll. */
     public record FortuneOutcome(ItemStack output, ItemStack snapshot, int before, int after, boolean ambiguous) {}
+    private record VerifiedDrop(ItemEntity entity, ItemStack stack, ItemStack snapshot) {}
     private static final class LootFrame {
         final ItemStack tool; final BlockState state; final boolean sneaking;
         final Map<ItemStack, FortuneOutcome> outcomes = new IdentityHashMap<>();
-        boolean overflowed;
+        // Exact identities produced by one real Block.getDrops call, not neighboring entities.
+        final Map<ItemStack, ItemStack> expected = new IdentityHashMap<>();
+        final Set<ItemStack> spawned = Collections.newSetFromMap(new IdentityHashMap<>());
+        final List<VerifiedDrop> verified = new ArrayList<>();
+        int verifiedCalls; boolean verifiedAmbiguous, overflowed;
         LootFrame(ItemStack tool, BlockState state, boolean sneaking) { this.tool = tool; this.state = state; this.sneaking = sneaking; }
     }
 
@@ -193,6 +198,47 @@ public final class HarvestDropCapture {
         if (frame == null || frame.overflowed || loot == null || loot.tool != lootTool || loot.overflowed
             || frame.breaker.isShiftKeyDown() != loot.sneaking) return List.of();
         return List.copyOf(loot.outcomes.values());
+    }
+
+    /**
+     * Capture only the already-rolled list returned to Block.dropResources for this player's
+     * exact tool and block. A repeated or nested matching list is ambiguous and invalidates it.
+     */
+    public static void recordBlockLoot(ServerLevel level, BlockPos pos, BlockState state, @org.jetbrains.annotations.Nullable Entity breaker,
+                                       net.minecraft.world.item.ItemInstance tool, List<ItemStack> drops) {
+        Frame frame = current(level, pos); LootFrame loot = frame == null ? null : frame.lootFrames.peekFirst();
+        if (frame == null || frame.collecting <= 0 || loot == null || breaker != frame.breaker || tool != loot.tool
+            || !loot.state.equals(state)) return;
+        if (++loot.verifiedCalls != 1 || drops == null || drops.size() > MAX_ENTITIES) { loot.verifiedAmbiguous = true; return; }
+        for (ItemStack stack : drops) {
+            if (stack == null) { loot.verifiedAmbiguous = true; return; }
+            if (stack.isEmpty()) continue;
+            if (loot.expected.put(stack, stack.copy()) != null) { loot.verifiedAmbiguous = true; return; }
+        }
+    }
+
+    /** Called at the actual Block.popResource spawn after addFreshEntity succeeds. */
+    public static void recordBlockLootSpawn(ServerLevel level, Entity entity, ItemStack stack) {
+        Deque<Frame> frames = FRAMES.get();
+        if (frames == null || frames.isEmpty() || stack == null) return;
+        Frame frame = frames.peekFirst(); LootFrame loot = frame.lootFrames.peekFirst();
+        if (frame.level != level || frame.collecting <= 0 || loot == null || loot.verifiedCalls != 1 || loot.verifiedAmbiguous) return;
+        ItemStack snapshot = loot.expected.get(stack);
+        if (snapshot == null) return; // a different item spawn during the same break is not our loot
+        if (!loot.spawned.add(stack)) { loot.verifiedAmbiguous = true; return; }
+        if (!(entity instanceof ItemEntity item) || !item.isAlive() || item.level() != level || item.getItem() != stack
+            || !ItemStack.matches(stack, snapshot) || !belongsToFrame(frame, item)) return;
+        loot.verified.add(new VerifiedDrop(item, stack, snapshot));
+    }
+
+    /** Strict provenance: exact loot-list object, exact successful popResource entity, unchanged stack. */
+    public static List<ItemEntity> verifiedBlockItems(ServerLevel level, BlockPos pos, ItemStack lootTool) {
+        Frame frame = current(level, pos); LootFrame loot = frame == null ? null : frame.lootFrames.peekFirst();
+        if (frame == null || frame.overflowed || loot == null || loot.tool != lootTool || loot.verifiedCalls != 1 || loot.verifiedAmbiguous)
+            return List.of();
+        return loot.verified.stream().filter(drop -> drop.entity().isAlive() && drop.entity().level() == level
+            && drop.entity().getItem() == drop.stack() && ItemStack.matches(drop.stack(), drop.snapshot())
+            && belongsToFrame(frame, drop.entity())).map(VerifiedDrop::entity).toList();
     }
 
     /** Called only after ServerLevel.addFreshEntity has succeeded. */
