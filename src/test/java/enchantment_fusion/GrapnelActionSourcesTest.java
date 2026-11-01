@@ -44,7 +44,8 @@ final class GrapnelActionSourcesTest {
             FusedPair depth = FusedPair.clean(GrapnelAttribute.DEPTH, 3, "minecraft:lure", 2);
             FusedPair sweep = FusedPair.clean(GrapnelAttribute.SWEEP, 3, "minecraft:lure", 2);
             FusedPair soul = FusedPair.clean(GrapnelAttribute.SOUL, 3, "minecraft:lure", 2);
-            for (FusedPair pair : new FusedPair[]{swift, depth, sweep, soul}) {
+            FusedPair aqua = FusedPair.clean(GrapnelAttribute.AQUA, 1, "minecraft:lure", 2);
+            for (FusedPair pair : new FusedPair[]{swift, depth, sweep, soul, aqua}) {
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
             assertTrue(GrapnelSkills.supportsCarrier(swift, Set.of(FusionCarrier.LEG_ARMOR)));
@@ -54,6 +55,9 @@ final class GrapnelActionSourcesTest {
             assertTrue(GrapnelSkills.supportsCarrier(soul, Set.of(FusionCarrier.FOOT_ARMOR)));
             assertFalse(GrapnelSkills.supportsCarrier(soul, Set.of(FusionCarrier.LEG_ARMOR)));
             assertFalse(GrapnelSkills.supportsCarrier(soul, Set.of(FusionCarrier.SWORD)));
+            assertTrue(GrapnelSkills.supportsCarrier(aqua, Set.of(FusionCarrier.HEAD_ARMOR)));
+            assertFalse(GrapnelSkills.supportsCarrier(aqua, Set.of(FusionCarrier.FOOT_ARMOR)));
+            assertFalse(GrapnelSkills.supportsCarrier(aqua, Set.of(FusionCarrier.PICKAXE)));
             assertTrue(GrapnelSkills.supportsCarrier(sweep, Set.of(FusionCarrier.SWORD)));
             assertFalse(GrapnelSkills.supportsCarrier(sweep, Set.of(FusionCarrier.AXE)));
             SignatureCatalog.reloadFromJson(JsonParser.parseString("""

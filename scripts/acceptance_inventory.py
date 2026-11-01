@@ -97,6 +97,7 @@ DIRECTION_FIXTURES = {
     ("swift_sneak", "lure"): ("40.1-swift-lure", True),
     ("depth_strider", "lure"): ("40.1-depth-lure", True),
     ("soul_speed", "lure"): ("40.1-soul-lure", True),
+    ("aqua_affinity", "lure"): ("40.1-aqua-lure", True),
     ("sweeping_edge", "lure"): ("40.1-sweep-lure", True),
     ("smite", "channeling"): ("43.3-smite-channel", True),
     ("sharpness", "wind_burst"): ("43.4-sharp-wind", True),

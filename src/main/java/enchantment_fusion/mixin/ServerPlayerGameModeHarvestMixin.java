@@ -10,6 +10,7 @@ import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelMining;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -43,11 +44,15 @@ public abstract class ServerPlayerGameModeHarvestMixin {
         ExtraBlockHarvest.begin();
         boolean completed = false;
         HarvestDropCapture.Scope capture = null;
+        GrapnelMining.Scope underwater = null;
         try {
             ServerLevel level = this.player != null && this.player.level() instanceof ServerLevel serverLevel ? serverLevel : null;
             BlockState state = level == null ? null : level.getBlockState(pos);
             ItemStack tool = this.player == null ? ItemStack.EMPTY : this.player.getMainHandItem().copy();
-            if (level != null && this.player != null) capture = HarvestDropCapture.begin(level, this.player, pos);
+            if (level != null && this.player != null) {
+                underwater = GrapnelMining.begin(level, this.player, pos, state);
+                capture = HarvestDropCapture.begin(level, this.player, pos);
+            }
             boolean destroyed = original.call(pos);
             if (destroyed && level != null && this.player != null && this.player.level() == level && !this.player.isCreative()) {
                 SignaturePairs.onPostDestroyHarvestDrops(level, this.player, tool, pos, state);
@@ -59,7 +64,8 @@ public abstract class ServerPlayerGameModeHarvestMixin {
             try {
                 if (capture != null) capture.close();
             } finally {
-                ExtraBlockHarvest.finish(completed);
+                try { GrapnelMining.end(underwater); }
+                finally { ExtraBlockHarvest.finish(completed); }
             }
         }
     }

@@ -95,6 +95,7 @@ public final class FusionTooltipRenderer {
         if (GrapnelAttribute.SWIFT.equals(pair.primaryId())) return "tooltip.enchantment_fusion.swift_grapnel";
         if (GrapnelAttribute.DEPTH.equals(pair.primaryId())) return "tooltip.enchantment_fusion.depth_grapnel";
         if (GrapnelAttribute.SOUL.equals(pair.primaryId())) return "tooltip.enchantment_fusion.soul_grapnel";
+        if (GrapnelAttribute.AQUA.equals(pair.primaryId())) return "tooltip.enchantment_fusion.aqua_grapnel";
         if (GrapnelAttribute.SWEEP.equals(pair.primaryId())) return "tooltip.enchantment_fusion.sweep_grapnel";
         if (GrapnelDurability.MENDING.equals(pair.primaryId())) return "tooltip.enchantment_fusion.mending_grapnel";
         if (GrapnelDurability.UNBREAKING.equals(pair.primaryId())) return "tooltip.enchantment_fusion.unbreaking_grapnel";

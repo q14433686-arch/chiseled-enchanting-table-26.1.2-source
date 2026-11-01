@@ -5,7 +5,6 @@ import enchantment_fusion.mechanics.ExtraBlockHarvest;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.HarvestDropCapture;
 import enchantment_fusion.mechanics.MatrixEffectExecutor;
-import enchantment_fusion.mechanics.transmute.DroppedItemOwnerAccess;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
@@ -65,7 +64,7 @@ public final class GrapnelSkills {
     }
     private record TargetMark(Gear gear, ResourceKey<Level> dimension, long until, @Nullable EquipmentSlot slot, UUID target) implements Mark {}
     private record Drop(ItemEntity entity, ItemStack stack, ItemStack snapshot) {}
-    private record DropsMark(Gear gear, ResourceKey<Level> dimension, long until, BlockPos origin, List<Drop> drops) implements Mark {}
+    private record DropsMark(Gear gear, ResourceKey<Level> dimension, long until, @Nullable EquipmentSlot slot, BlockPos origin, List<Drop> drops) implements Mark {}
     private record PositionMark(Gear gear, ResourceKey<Level> dimension, long until, EquipmentSlot slot, Vec3 origin) implements Mark {}
     private static final Map<UUID, Mark> MARKS = new HashMap<>();
     private record Flight(UUID owner, ResourceKey<Level> dimension, List<Gear> gears, boolean fullDraw,
@@ -337,8 +336,15 @@ public final class GrapnelSkills {
             || !level.hasChunkAt(pos) || !level.isInWorldBounds(pos) || !level.mayInteract(player, pos)
             || level.getServer().isUnderSpawnProtection(level, pos, player) || state.isAir() || !canMark(player)) return;
         Gear gear = selected(player.getMainHandItem(), true), loot = selected(lootTool, true);
-        if (gear == null || loot == null || !gear.pair().equals(loot.pair()) || !owns(player, gear)
-            || !HarvestDropCapture.isOriginalMainHand(level, player, pos, gear.stack())) return;
+        EquipmentSlot slot = null;
+        boolean originalTool = gear != null && loot != null && gear.pair().equals(loot.pair()) && owns(player, gear)
+            && HarvestDropCapture.isOriginalMainHand(level, player, pos, gear.stack());
+        if (!originalTool) {
+            // Held tools keep priority; otherwise require the helmet's proven underwater action.
+            GrapnelAttribute.Gear helmet = GrapnelMining.confirmed(level, player, pos, state);
+            if (helmet == null) return;
+            gear = new Gear(helmet.stack(), helmet.pair()); slot = helmet.slot();
+        }
         List<ItemEntity> verified = HarvestDropCapture.verifiedBlockItems(level, pos, lootTool);
         if (verified.isEmpty() || verified.size() > MAX_DROPS) return;
         List<Drop> drops = new ArrayList<>(verified.size());
@@ -348,11 +354,11 @@ public final class GrapnelSkills {
         }
         if (drops.isEmpty()) return;
         MARKS.put(player.getUUID(), new DropsMark(gear, level.dimension(), level.getGameTime() + MARK_TICKS,
-            pos.immutable(), List.copyOf(drops)));
+            slot, pos.immutable(), List.copyOf(drops)));
         level.sendParticles(ParticleTypes.FISHING, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 8, 0.2D, 0.2D, 0.2D, 0.02D);
         player.sendSystemMessage(Component.translatable("message.enchantment_fusion.grapnel_drops_marked"), true);
     }
-    /** Called only for a proven real defensive contribution or real shield block. */
+    /** Position marks from a real defensive contribution or shield block. */
     public static void markDefense(ServerPlayer owner, GrapnelDefense.Gear defensive, Vec3 origin) {
         markPosition(owner, defensive.slot(), defensive.stack(), defensive.pair(), origin);
     }
@@ -386,23 +392,14 @@ public final class GrapnelSkills {
     private static boolean valid(ServerPlayer owner, Mark mark) {
         if (!ready(owner) || !owner.level().dimension().equals(mark.dimension()) || owner.level().getGameTime() >= mark.until()) return false;
         if (mark instanceof PositionMark position) return stillEquipped(owner, position.slot(), position.gear().stack(), position.gear().pair());
+        if (mark instanceof DropsMark drops && drops.slot() != null)
+            return stillEquipped(owner, drops.slot(), drops.gear().stack(), drops.gear().pair());
         if (mark instanceof TargetMark target && target.slot() != null)
             return stillEquipped(owner, target.slot(), target.gear().stack(), target.gear().pair());
         return owns(owner, mark.gear());
     }
-    private static boolean unchangedDrop(ServerPlayer owner, Drop drop) {
-        ItemEntity entity = drop.entity();
-        if (!entity.isAlive() || entity.level() != owner.level() || owner.level().getEntity(entity.getUUID()) != entity
-            || entity.getItem() != drop.stack() || !ItemStack.matches(drop.stack(), drop.snapshot())) return false;
-        DroppedItemOwnerAccess metadata = (DroppedItemOwnerAccess) (Object) entity;
-        var thrower = metadata.ef$throwerReference();
-        return HarvestDropCapture.ownerCompatible(owner.getUUID(), thrower == null ? null : thrower.getUUID(), metadata.ef$pickupTarget());
-    }
     private static boolean reachableDrop(ServerPlayer owner, DropsMark mark, Drop drop) {
-        if (!unchangedDrop(owner, drop) || drop.entity().hasPickUpDelay() || !owner.level().hasChunkAt(drop.entity().blockPosition())
-            || !owner.level().mayInteract(owner, mark.origin()) || !owner.level().mayInteract(owner, drop.entity().blockPosition())) return false;
-        Vec3 from = owner.getEyePosition(), to = drop.entity().getBoundingBox().getCenter();
-        return from.distanceToSqr(to) <= 12.0D * 12.0D && VirtualCombatSight.clear(owner.level(), owner, from, to);
+        return GrapnelDropTargets.reachable(owner, mark.origin(), drop.entity(), drop.stack(), drop.snapshot());
     }
     public static boolean hasEquipped(ServerPlayer player) {
         return selected(player.getMainHandItem(), false) != null || selected(player.getMainHandItem(), true) != null
@@ -421,6 +418,7 @@ public final class GrapnelSkills {
             return target != null && eligibleTarget(owner, target, position.gear().pair()) && pull(owner, position, target);
         }
         if (mark instanceof TargetMark target && target.slot() != null) return recallTarget(owner, target);
+        if (mark instanceof DropsMark drops && drops.slot() != null) return recallDrops(owner, drops);
         if (owner.getMainHandItem() != mark.gear().stack()) return false;
         return mark instanceof TargetMark target ? recallTarget(owner, target) : recallDrops(owner, (DropsMark) mark);
     }
@@ -450,7 +448,9 @@ public final class GrapnelSkills {
         if (mark.drops().stream().noneMatch(drop -> reachableDrop(owner, mark, drop)) || !MARKS.remove(owner.getUUID(), mark)) return false;
         int recovered = 0;
         for (Drop drop : mark.drops()) {
-            if (!ready(owner) || !owner.level().dimension().equals(mark.dimension()) || owner.getMainHandItem() != mark.gear().stack()
+            boolean sameSource = mark.slot() == null ? owner.getMainHandItem() == mark.gear().stack()
+                : stillEquipped(owner, mark.slot(), mark.gear().stack(), mark.gear().pair());
+            if (!ready(owner) || !owner.level().dimension().equals(mark.dimension()) || !sameSource
                 || !reachableDrop(owner, mark, drop)) continue;
             int before = drop.stack().getCount();
             drop.entity().playerTouch(owner); // vanilla pickup delay, restrictions, inventory insertion and pickup hooks
