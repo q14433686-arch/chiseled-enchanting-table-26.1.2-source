@@ -1148,5 +1148,7 @@
   "message.enchantment_fusion.ranged_wear_echo_need": "尚无真实耐久免耗充能。",
   "message.enchantment_fusion.ranged_wear_path_need": "需要先记录最近一支真实箭的轨迹。",
   "message.enchantment_fusion.ranged_wear_echo_ready": "耐久实际免耗：追射充能已就绪。",
-  "message.enchantment_fusion.ranged_wear_echo_set": "已释放一次虚拟追射。"
+  "message.enchantment_fusion.ranged_wear_echo_set": "已释放一次虚拟追射。",
+  "tooltip.enchantment_fusion.riptide_grapnel": "激流成功释放且确实推动你移动后，在新位置留标8秒。保持同一只手持原三叉戟；在标记12格内瞄准标记8格内的合格敌人，视线畅通时主动回钩。原版蓄力、水或雨、耐久等激流规则保留。",
+  "message.enchantment_fusion.grapnel_riptide_marked": "激流冲刺已留标。瞄准合格敌人并激活回钩。"
 }

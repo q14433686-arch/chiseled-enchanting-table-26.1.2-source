@@ -1148,5 +1148,7 @@
   "message.enchantment_fusion.ranged_wear_echo_need": "Nenhuma economia real de durabilidade.",
   "message.enchantment_fusion.ranged_wear_path_need": "Registre primeiro a trajetória da última flecha real.",
   "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilidade economizada: eco pronto.",
-  "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtual liberado."
+  "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtual liberado.",
+  "tooltip.enchantment_fusion.riptide_grapnel": "Uma ativação de Correnteza que realmente mova você marca a nova posição por 8 segundos. Mantenha o mesmo tridente na mesma mão; a até 12 blocos da marca, mire em um inimigo válido a até 8 blocos dela e ative o arpão com visão livre. As regras normais de carga, água ou chuva e desgaste continuam valendo.",
+  "message.enchantment_fusion.grapnel_riptide_marked": "Correnteza marcou este local. Mire em um inimigo válido e ative o arpão."
 }

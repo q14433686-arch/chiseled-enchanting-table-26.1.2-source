@@ -1148,5 +1148,7 @@
   "message.enchantment_fusion.ranged_wear_echo_need": "No hay ahorro real de Irrompibilidad.",
   "message.enchantment_fusion.ranged_wear_path_need": "Primero registra la trayectoria de la última flecha real.",
   "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilidad ahorrada: eco listo.",
-  "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtual liberado."
+  "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtual liberado.",
+  "tooltip.enchantment_fusion.riptide_grapnel": "Una activación de Propulsión que te desplace de verdad marca tu nueva posición durante 8 segundos. Mantén el mismo tridente en la misma mano; a 12 bloques o menos de la marca, apunta a un enemigo válido a 8 bloques o menos de ella y activa el gancho con visión despejada. Se conservan la carga, el agua o la lluvia y el desgaste normales.",
+  "message.enchantment_fusion.grapnel_riptide_marked": "Propulsión ha marcado este lugar. Apunta a un enemigo válido y activa el gancho."
 }

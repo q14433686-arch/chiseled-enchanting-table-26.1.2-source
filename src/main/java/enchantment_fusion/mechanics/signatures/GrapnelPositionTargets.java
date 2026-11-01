@@ -27,6 +27,7 @@ final class GrapnelPositionTargets {
         String key = projectile ? "message.enchantment_fusion.grapnel_channeling_marked"
             : GrapnelDurability.isPair(pair) ? "message.enchantment_fusion.grapnel_durability_marked"
             : GrapnelWind.isPair(pair) ? "message.enchantment_fusion.grapnel_wind_marked"
+            : GrapnelRiptide.isPair(pair) ? "message.enchantment_fusion.grapnel_riptide_marked"
             : GrapnelAttribute.isPair(pair) ? (GrapnelAttribute.RESPIRATION.equals(pair.primaryId())
                 ? "message.enchantment_fusion.grapnel_breath_marked" : "message.enchantment_fusion.grapnel_motion_marked")
             : "message.enchantment_fusion.grapnel_defense_marked";

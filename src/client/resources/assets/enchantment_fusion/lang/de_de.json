@@ -1148,5 +1148,7 @@
   "message.enchantment_fusion.ranged_wear_echo_need": "Noch keine echte Haltbarkeitsersparnis.",
   "message.enchantment_fusion.ranged_wear_path_need": "Zuerst die Bahn des letzten echten Pfeils aufzeichnen.",
   "message.enchantment_fusion.ranged_wear_echo_ready": "Haltbarkeit gespart: Echo bereit.",
-  "message.enchantment_fusion.ranged_wear_echo_set": "Virtuelles Pfeilecho ausgelöst."
+  "message.enchantment_fusion.ranged_wear_echo_set": "Virtuelles Pfeilecho ausgelöst.",
+  "tooltip.enchantment_fusion.riptide_grapnel": "Eine erfolgreiche Sog-Aktivierung mit tatsächlicher Bewegung markiert den neuen Ort für 8 Sekunden. Halte denselben Dreizack in derselben Hand; ziele höchstens 12 Blöcke von der Markierung entfernt auf einen geeigneten Gegner innerhalb von 8 Blöcken um sie und aktiviere bei freier Sicht den Rückholhaken. Aufladen, Wasser oder Regen und Haltbarkeit gelten wie gewohnt.",
+  "message.enchantment_fusion.grapnel_riptide_marked": "Sog hat diesen Ort markiert. Ziele auf einen geeigneten Gegner und aktiviere den Rückholhaken."
 }

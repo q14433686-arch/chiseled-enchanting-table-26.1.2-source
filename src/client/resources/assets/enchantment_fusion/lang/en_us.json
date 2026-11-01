@@ -1148,5 +1148,7 @@
   "message.enchantment_fusion.ranged_wear_echo_need": "No observed Unbreaking saving is available.",
   "message.enchantment_fusion.ranged_wear_path_need": "The latest real arrow needs a recorded path first.",
   "message.enchantment_fusion.ranged_wear_echo_ready": "Unbreaking saved durability: an echo charge is ready.",
-  "message.enchantment_fusion.ranged_wear_echo_set": "Released one virtual arrow echo."
+  "message.enchantment_fusion.ranged_wear_echo_set": "Released one virtual arrow echo.",
+  "tooltip.enchantment_fusion.riptide_grapnel": "A successful Riptide release that actually moves you marks your new location for 8 seconds. Keep the same trident in the same hand; within 12 blocks of the mark, aim at an eligible enemy within 8 blocks of it and activate with clear sight. Normal charge, water or rain, wear and other Riptide rules remain.",
+  "message.enchantment_fusion.grapnel_riptide_marked": "Riptide marked this location. Aim at an eligible enemy and activate grapnel recall."
 }

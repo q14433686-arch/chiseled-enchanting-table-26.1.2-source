@@ -1148,5 +1148,7 @@
   "message.enchantment_fusion.ranged_wear_echo_need": "Nessun risparmio reale di durabilità.",
   "message.enchantment_fusion.ranged_wear_path_need": "Registra prima la traiettoria dell’ultima freccia reale.",
   "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilità risparmiata: eco pronto.",
-  "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtuale lanciato."
+  "message.enchantment_fusion.ranged_wear_echo_set": "Eco virtuale lanciato.",
+  "tooltip.enchantment_fusion.riptide_grapnel": "Una carica di Risacca che ti sposta davvero segna la nuova posizione per 8 secondi. Tieni lo stesso tridente nella stessa mano; entro 12 blocchi dal segno, mira a un nemico valido entro 8 blocchi da esso e attiva il rampino con visuale libera. Restano le normali condizioni di carica, acqua o pioggia e usura.",
+  "message.enchantment_fusion.grapnel_riptide_marked": "Risacca ha segnato questa posizione. Mira a un nemico valido e attiva il rampino."
 }

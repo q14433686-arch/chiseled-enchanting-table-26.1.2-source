@@ -24,6 +24,7 @@
     "EnchantedCountLootProvenanceMixin",
     "EnchantmentAttributeLocationMixin",
     "EnchantmentDurabilityReserveMixin",
+    "EnchantmentRiptideObservationMixin",
     "EnchantmentFrostEffectsMixin",
     "EnchantmentHeavyCrushMixin",
     "EnchantmentHelperHeavyCrushMixin",

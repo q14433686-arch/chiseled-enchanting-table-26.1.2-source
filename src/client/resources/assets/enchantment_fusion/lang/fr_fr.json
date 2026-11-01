@@ -1148,5 +1148,7 @@
   "message.enchantment_fusion.ranged_wear_echo_need": "Aucune économie réelle de Solidité.",
   "message.enchantment_fusion.ranged_wear_path_need": "Enregistrez d’abord la trajectoire de la dernière vraie flèche.",
   "message.enchantment_fusion.ranged_wear_echo_ready": "Durabilité économisée : écho prêt.",
-  "message.enchantment_fusion.ranged_wear_echo_set": "Écho virtuel lancé."
+  "message.enchantment_fusion.ranged_wear_echo_set": "Écho virtuel lancé.",
+  "tooltip.enchantment_fusion.riptide_grapnel": "Une activation d’Impulsion qui vous déplace réellement marque votre nouvelle position pendant 8 secondes. Gardez le même trident dans la même main ; à 12 blocs ou moins de la marque, visez un ennemi admissible à 8 blocs ou moins de celle-ci et activez le grappin à vue dégagée. La charge, l’eau ou la pluie et l’usure normales restent nécessaires.",
+  "message.enchantment_fusion.grapnel_riptide_marked": "Impulsion a marqué cet endroit. Visez un ennemi admissible et activez le grappin."
 }

@@ -1148,5 +1148,7 @@
   "message.enchantment_fusion.ranged_wear_echo_need": "Реальной экономии прочности пока нет.",
   "message.enchantment_fusion.ranged_wear_path_need": "Сначала запишите путь последней настоящей стрелы.",
   "message.enchantment_fusion.ranged_wear_echo_ready": "Прочность сэкономлена: эхо готово.",
-  "message.enchantment_fusion.ranged_wear_echo_set": "Виртуальное эхо выпущено."
+  "message.enchantment_fusion.ranged_wear_echo_set": "Виртуальное эхо выпущено.",
+  "tooltip.enchantment_fusion.riptide_grapnel": "Успешный бросок с «Тягуном», действительно переместивший игрока, отмечает новое место на 8 секунд. Держите тот же трезубец в той же руке; находясь не дальше 12 блоков от метки, наведитесь на допустимого врага не дальше 8 блоков от неё и активируйте крюк при свободном обзоре. Обычные условия заряда, воды или дождя и износ сохраняются.",
+  "message.enchantment_fusion.grapnel_riptide_marked": "«Тягун» отметил это место. Наведитесь на допустимого врага и активируйте крюк."
 }

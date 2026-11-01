@@ -1148,5 +1148,7 @@
   "message.enchantment_fusion.ranged_wear_echo_need": "実際の耐久免耗がまだありません。",
   "message.enchantment_fusion.ranged_wear_path_need": "最後の実際の矢の軌跡を先に記録してください。",
   "message.enchantment_fusion.ranged_wear_echo_ready": "耐久免耗：追射準備完了。",
-  "message.enchantment_fusion.ranged_wear_echo_set": "虚像の追射を放った。"
+  "message.enchantment_fusion.ranged_wear_echo_set": "虚像の追射を放った。",
+  "tooltip.enchantment_fusion.riptide_grapnel": "激流を発動して実際に移動すると、移動先に8秒間の印を残す。同じ手で元のトライデントを持ち、印から12ブロック以内で、印から8ブロック以内の対象となる敵を見通して能動発動すると引き寄せる。チャージ、水や雨、耐久など通常の激流条件は維持される。",
+  "message.enchantment_fusion.grapnel_riptide_marked": "激流の移動先に印を残した。対象となる敵を狙って回収を発動。"
 }

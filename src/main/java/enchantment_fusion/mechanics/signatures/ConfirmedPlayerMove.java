@@ -18,18 +18,20 @@ public final class ConfirmedPlayerMove {
     public record Step(Vec3 from, Vec3 to) {}
     public interface Observer {
         boolean interested(ServerPlayer player);
+        /** Most observers remain limited to 2 blocks; an observed dash may request a bounded larger step. */
+        default double maxStep() { return 2.0D; }
         default @Nullable Object before(ServerPlayer player, Vec3 requested) { return null; }
         void moved(ServerPlayer player, Step step, @Nullable Object evidence);
         void invalid(ServerPlayer player);
     }
     private static final List<Observer> OBSERVERS = new CopyOnWriteArrayList<>();
     private static final ThreadLocal<Scope> CURRENT = new ThreadLocal<>();
-    private record Watched(Observer observer, @Nullable Object evidence) {}
+    private record Watched(Observer observer, @Nullable Object evidence, double maxStep) {}
     public static final class Scope {
         final @Nullable Scope previous; final ServerPlayer player; final ServerLevel level;
-        final Vec3 from; final AABB bounds; final List<Watched> observers = new ArrayList<>(); boolean ambiguous;
-        Scope(@Nullable Scope previous, ServerPlayer player) {
-            this.previous = previous; this.player = player; this.level = player.level();
+        final Vec3 from, requested; final AABB bounds; final List<Watched> observers = new ArrayList<>(); boolean ambiguous;
+        Scope(@Nullable Scope previous, ServerPlayer player, Vec3 requested) {
+            this.previous = previous; this.player = player; this.level = player.level(); this.requested = requested;
             this.from = player.position(); this.bounds = player.getBoundingBox();
         }
     }
@@ -44,13 +46,16 @@ public final class ConfirmedPlayerMove {
         for (Observer observer : OBSERVERS) try { if (observer.interested(player)) interested.add(observer); }
         catch (RuntimeException error) { EnchantmentFusion.LOGGER.error("Player movement observer failed", error); }
         if (interested.isEmpty()) return null;
-        Scope scope = new Scope(previous, player);
-        if (previous != null || !finite(requested) || requested.lengthSqr() > 4.0D) scope.ambiguous = true;
+        Scope scope = new Scope(previous, player, requested);
+        if (previous != null || !finite(requested) || requested.lengthSqr() > 144.0D) scope.ambiguous = true;
         CURRENT.set(scope);
         for (Observer observer : interested) {
-            try { scope.observers.add(new Watched(observer, observer.before(player, requested))); }
-            catch (RuntimeException error) {
-                scope.ambiguous = true; scope.observers.add(new Watched(observer, null));
+            try {
+                double max = observer.maxStep();
+                if (!Double.isFinite(max) || max <= 0 || max > 12.0D) throw new IllegalArgumentException("invalid movement limit");
+                scope.observers.add(new Watched(observer, observer.before(player, requested), max));
+            } catch (RuntimeException error) {
+                scope.ambiguous = true; scope.observers.add(new Watched(observer, null, 2.0D));
                 EnchantmentFusion.LOGGER.error("Player movement observer failed", error);
             }
         }
@@ -62,13 +67,18 @@ public final class ConfirmedPlayerMove {
         if (scope.previous == null) CURRENT.remove(); else CURRENT.set(scope.previous);
         Vec3 end = scope.player.position(), movement = end.subtract(scope.from); AABB next = scope.player.getBoundingBox(), old = scope.bounds;
         boolean valid = completed && !scope.ambiguous && scope.player.level() == scope.level && finite(scope.from) && finite(end) && finite(movement)
-            && movement.lengthSqr() <= 4.0D && same(next.getXsize(), old.getXsize()) && same(next.getYsize(), old.getYsize())
+            && movement.lengthSqr() <= 144.0D && same(next.getXsize(), old.getXsize()) && same(next.getYsize(), old.getYsize())
             && same(next.getZsize(), old.getZsize()) && same(next.minX - old.minX, movement.x)
             && same(next.minY - old.minY, movement.y) && same(next.minZ - old.minZ, movement.z);
         if (!valid) { invalidate(scope); return; }
-        if (movement.lengthSqr() > 1.0E-10D) for (Watched watched : scope.observers) {
-            try { watched.observer().moved(scope.player, new Step(scope.from, end), watched.evidence()); }
-            catch (RuntimeException error) {
+        for (Watched watched : scope.observers) {
+            try {
+                double maxSquared = watched.maxStep() * watched.maxStep();
+                if (scope.requested.lengthSqr() > maxSquared || movement.lengthSqr() > maxSquared)
+                    watched.observer().invalid(scope.player);
+                else if (movement.lengthSqr() > 1.0E-10D)
+                    watched.observer().moved(scope.player, new Step(scope.from, end), watched.evidence());
+            } catch (RuntimeException error) {
                 EnchantmentFusion.LOGGER.error("Player movement observer failed", error);
                 invalidate(scope); return;
             }
@@ -82,11 +92,14 @@ public final class ConfirmedPlayerMove {
     private static boolean finite(@Nullable Vec3 v) { return v != null && Double.isFinite(v.x) && Double.isFinite(v.y) && Double.isFinite(v.z); }
     private static boolean near(Vec3 a, Vec3 b) { return finite(a) && finite(b) && a.distanceToSqr(b) <= 1.0E-6D; }
     /** A gap indicates teleport, correction, unloaded data or an unobserved movement type. */
-    public static boolean connected(Vec3 initial, Vec3 actual, List<Step> steps) {
-        if (!finite(initial) || !finite(actual) || steps == null || steps.size() > 4) return false;
+    public static boolean connected(Vec3 initial, Vec3 actual, List<Step> steps) { return connected(initial, actual, steps, 2.0D); }
+    public static boolean connected(Vec3 initial, Vec3 actual, List<Step> steps, double maxStep) {
+        if (!finite(initial) || !finite(actual) || steps == null || steps.size() > 4
+            || !Double.isFinite(maxStep) || maxStep <= 0 || maxStep > 12.0D) return false;
         Vec3 cursor = initial;
         for (Step step : steps) {
-            if (step == null || !near(cursor, step.from()) || !finite(step.to()) || step.from().distanceToSqr(step.to()) > 4.0D) return false;
+            if (step == null || !near(cursor, step.from()) || !finite(step.to())
+                || step.from().distanceToSqr(step.to()) > maxStep * maxStep) return false;
             cursor = step.to();
         }
         return near(cursor, actual);
