@@ -1048,5 +1048,16 @@
   "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "旧载体保留旧效果；新方向要求近战武器。",
   "tooltip.enchantment_fusion.melee_guard_blade": "主手真实命中合格敌人形成正面护刃，持续3秒、最多拨开3次敌方飞行物的真实撞击；再次挥击收起。部分特殊飞行物不受影响。",
   "tooltip.enchantment_fusion.melee_guard_counter": "穿护甲或持盾时，本件装备可验证的实际保护减伤（含盾牌真实格挡）积攒护锋。下一次合格近战消耗2–4点沿视线释放反击刃；原版受击无敌时间仍生效。",
-  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "旧载体保留旧效果；新方向要求近战武器或防护装备。"
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "旧载体保留旧效果；新方向要求近战武器或防护装备。",
+  "skill.enchantment_fusion.melee_work": "战意作业",
+  "skill.enchantment_fusion.melee_water_work": "水战作业",
+  "message.enchantment_fusion.melee_work_ready": "三次合格命中已积蓄作业势。",
+  "message.enchantment_fusion.melee_work_active": "已有采掘加速准备中。",
+  "message.enchantment_fusion.melee_work_need": "请先连续三次合格命中。",
+  "message.enchantment_fusion.melee_work_set": "作业势已准备：持工具可加快一次合法采掘。",
+  "tooltip.enchantment_fusion.melee_work_boost": "连续三次合格近战积势，主动释放后10秒内换用真实工具，加快一次合法采掘。",
+  "tooltip.enchantment_fusion.melee_work_water_boost": "水下连续三次合格近战积势，主动释放后10秒内加快一次合法水下采掘。",
+  "tooltip.enchantment_fusion.melee_work_blade": "持此工具合法采掘积攒至多三层锋势、持续10秒；再持此工具合格近战释放定向短刃。",
+  "tooltip.enchantment_fusion.melee_work_water_blade": "穿此头盔合法水下采掘积攒至多三层水锋、持续10秒；之后合格近战释放定向水刃。",
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "旧载体保留旧效果；新方向分别要求对应近战武器、工具或头盔。"
 }

@@ -671,6 +671,18 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("42.5-knockback-smite", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
         acceptance.run("42.5-bane-knockback", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
         acceptance.run("42.5-knockback-bane", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));
+        acceptance.run("42.6-sharp-efficiency", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false, false));
+        acceptance.run("42.6-efficiency-sharp", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false, true));
+        acceptance.run("42.6-smite-efficiency", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false, false));
+        acceptance.run("42.6-efficiency-smite", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false, true));
+        acceptance.run("42.6-bane-efficiency", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false, false));
+        acceptance.run("42.6-efficiency-bane", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false, true));
+        acceptance.run("44.4-sharp-aqua", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true, false));
+        acceptance.run("44.4-aqua-sharp", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true, true));
+        acceptance.run("44.4-smite-aqua", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true, false));
+        acceptance.run("44.4-aqua-smite", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true, true));
+        acceptance.run("44.4-bane-aqua", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true, false));
+        acceptance.run("44.4-aqua-bane", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true, true));
         acceptance.run("42.3-sharp-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("42.3-swift-sharp", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
         acceptance.run("42.3-smite-swift", () -> StealthBladeProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));

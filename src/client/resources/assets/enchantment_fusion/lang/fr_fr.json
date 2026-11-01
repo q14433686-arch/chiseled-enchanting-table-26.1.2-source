@@ -1048,5 +1048,16 @@
   "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "L’ancien support conserve son effet ; cette direction exige une arme de mêlée.",
   "tooltip.enchantment_fusion.melee_guard_blade": "Un coup valide crée une garde frontale pendant 3 secondes et dévie jusqu’à 3 impacts réels de projectiles hostiles ; une autre attaque la retire. Certains projectiles spéciaux sont exclus.",
   "tooltip.enchantment_fusion.melee_guard_counter": "L’armure ou le bouclier tenu stocke sa réduction de dégâts vérifiée, y compris un vrai blocage au bouclier. Un coup de mêlée valide dépense 2 à 4 points pour une lame de riposte ; l’immunité normale reste active.",
-  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "L’ancien support garde son effet ; la nouvelle direction exige une arme de mêlée ou une protection."
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "L’ancien support garde son effet ; la nouvelle direction exige une arme de mêlée ou une protection.",
+  "skill.enchantment_fusion.melee_work": "Labeur combatif",
+  "skill.enchantment_fusion.melee_water_work": "Labeur subaquatique",
+  "message.enchantment_fusion.melee_work_ready": "Trois coups valides ont chargé l’élan de travail.",
+  "message.enchantment_fusion.melee_work_active": "Une accélération de minage est déjà prête.",
+  "message.enchantment_fusion.melee_work_need": "Réussissez d’abord trois coups valides consécutifs.",
+  "message.enchantment_fusion.melee_work_set": "Élan prêt : équipez un outil pour accélérer un bloc autorisé.",
+  "tooltip.enchantment_fusion.melee_work_boost": "Trois coups de mêlée valides chargent l’élan. Activez-le puis utilisez un vrai outil pour accélérer un bloc autorisé sous 10 secondes.",
+  "tooltip.enchantment_fusion.melee_work_water_boost": "Trois coups valides sous l’eau chargent l’élan. Activez-le pour accélérer un bloc sous-marin autorisé sous 10 secondes.",
+  "tooltip.enchantment_fusion.melee_work_blade": "Miner légalement avec cet outil stocke jusqu’à trois tranchants pendant 10 secondes. Un coup valide avec lui libère une courte lame dirigée.",
+  "tooltip.enchantment_fusion.melee_work_water_blade": "Miner légalement sous l’eau avec ce casque stocke jusqu’à trois tranchants aquatiques pendant 10 secondes. Un coup valide libère la lame.",
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "L’ancien support garde son effet ; cette direction exige l’arme, l’outil ou le casque approprié."
 }

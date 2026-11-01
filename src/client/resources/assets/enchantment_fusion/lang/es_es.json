@@ -1048,5 +1048,16 @@
   "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "El objeto antiguo conserva su efecto; esta dirección requiere un arma cuerpo a cuerpo.",
   "tooltip.enchantment_fusion.melee_guard_blade": "Un golpe válido crea una guardia frontal durante 3 segundos que desvía hasta 3 impactos reales de proyectiles enemigos; otro golpe la retira. Se excluyen algunos proyectiles especiales.",
   "tooltip.enchantment_fusion.melee_guard_counter": "La armadura o el escudo sostenido acumula su propia reducción verificable, incluido un bloqueo real con escudo. Un golpe cuerpo a cuerpo válido gasta 2–4 puntos en una hoja de contraataque; se conserva la inmunidad normal.",
-  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "El soporte antiguo conserva su efecto; la nueva dirección requiere arma cuerpo a cuerpo o protección."
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "El soporte antiguo conserva su efecto; la nueva dirección requiere arma cuerpo a cuerpo o protección.",
+  "skill.enchantment_fusion.melee_work": "Labor bélica",
+  "skill.enchantment_fusion.melee_water_work": "Labor bélica submarina",
+  "message.enchantment_fusion.melee_work_ready": "Tres golpes válidos prepararon el impulso de trabajo.",
+  "message.enchantment_fusion.melee_work_active": "Ya hay una aceleración de minería preparada.",
+  "message.enchantment_fusion.melee_work_need": "Primero acierta tres golpes válidos consecutivos.",
+  "message.enchantment_fusion.melee_work_set": "Impulso preparado: equipa una herramienta para acelerar un bloque permitido.",
+  "tooltip.enchantment_fusion.melee_work_boost": "Tres golpes válidos de melee acumulan impulso. Actívalo y usa una herramienta real para acelerar un bloque permitido en 10 segundos.",
+  "tooltip.enchantment_fusion.melee_work_water_boost": "Tres golpes válidos bajo el agua acumulan impulso. Actívalo para acelerar un bloque submarino permitido en 10 segundos.",
+  "tooltip.enchantment_fusion.melee_work_blade": "Minar legalmente con esta herramienta guarda hasta tres filos durante 10 segundos. Otro golpe válido con ella libera una hoja corta dirigida.",
+  "tooltip.enchantment_fusion.melee_work_water_blade": "Minar legalmente bajo el agua con este casco guarda hasta tres filos acuáticos durante 10 segundos. Un golpe válido libera la hoja dirigida.",
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "El objeto antiguo conserva su efecto; la nueva dirección requiere el arma, herramienta o casco indicado."
 }

@@ -38,6 +38,7 @@ import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
+import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
@@ -74,6 +75,13 @@ import net.minecraft.world.item.enchantment.Enchantment;
  */
 public final class FusionTooltipRenderer {
     private FusionTooltipRenderer() {}
+
+    private static String meleeWorkTooltip(FusedPair pair) {
+        boolean attackFirst = MeleeWorkSkills.isAttackFirst(pair);
+        boolean water = MeleeWorkSkills.AQUA.equals(attackFirst ? pair.secondaryId() : pair.primaryId());
+        return attackFirst ? (water ? "tooltip.enchantment_fusion.melee_work_water_boost" : "tooltip.enchantment_fusion.melee_work_boost")
+            : (water ? "tooltip.enchantment_fusion.melee_work_water_blade" : "tooltip.enchantment_fusion.melee_work_blade");
+    }
 
     public static void register() {
         ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipFlag, lines) -> {
@@ -246,6 +254,9 @@ public final class FusionTooltipRenderer {
             boolean meleeGuardTemplate = MeleeGuardSkills.matches(pair);
             boolean legacyMeleeGuardCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeGuardTemplate
                 && !MeleeGuardSkills.applies(pair, stack);
+            boolean meleeWorkTemplate = MeleeWorkSkills.matches(pair);
+            boolean legacyMeleeWorkCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeWorkTemplate
+                && !MeleeWorkSkills.applies(pair, stack);
             boolean legacyRetainedVolleyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && RetainedVolleyHosts.matches(pair, sigOpt.get().id()) && !RetainedVolleyHosts.supportsHost(stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
@@ -302,6 +313,9 @@ public final class FusionTooltipRenderer {
                         ? "tooltip.enchantment_fusion.melee_guard_blade"
                         : "tooltip.enchantment_fusion.melee_guard_counter").withStyle(ChatFormatting.AQUA));
                 }
+                if (shift && meleeWorkTemplate && !legacyMeleeWorkCarrier) {
+                    lines.add(Component.translatable(meleeWorkTooltip(pair)).withStyle(ChatFormatting.AQUA));
+                }
             } else if (sigOpt.isPresent()) {
                 Component sigTitle = Component.translatable(sigOpt.get().titleKey());
                 lines.add(Component.translatable(
@@ -347,6 +361,8 @@ public final class FusionTooltipRenderer {
                         lines.add(Component.translatable(MeleeGuardSkills.isAttackFirst(pair)
                             ? "tooltip.enchantment_fusion.melee_guard_blade"
                             : "tooltip.enchantment_fusion.melee_guard_counter").withStyle(ChatFormatting.AQUA));
+                    } else if (meleeWorkTemplate && !legacyMeleeWorkCarrier) {
+                        lines.add(Component.translatable(meleeWorkTooltip(pair)).withStyle(ChatFormatting.AQUA));
                     } else {
                         lines.add(buildMatrixSentence(pair, hostForm).copy().withStyle(ChatFormatting.AQUA));
                     }
@@ -371,6 +387,15 @@ public final class FusionTooltipRenderer {
             if (legacyMeleeGuardCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_guard_carrier")
                     .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyMeleeWorkCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_work_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (shift && meleeWorkTemplate && MeleeWorkSkills.isAttackFirst(pair) && !legacyMeleeWorkCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
+                    Component.keybind("key.enchantment_fusion.activate_skill"),
+                    Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
             }
             if (shift && meleeWearTemplate && !legacyMeleeWearCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",

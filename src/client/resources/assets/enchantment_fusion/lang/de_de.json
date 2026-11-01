@@ -1048,5 +1048,16 @@
   "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "Alter Träger behält den alten Effekt; diese Richtung benötigt eine Nahkampfwaffe.",
   "tooltip.enchantment_fusion.melee_guard_blade": "Ein gültiger Nahkampftreffer erzeugt 3 Sekunden lang einen frontalen Schutz und lenkt bis zu 3 tatsächliche feindliche Geschosstreffer ab; erneut schlagen ruft ihn zurück. Spezialgeschosse sind teils ausgenommen.",
   "tooltip.enchantment_fusion.melee_guard_counter": "Rüstung oder gehaltener Schild speichert den nachweisbaren Schutz dieses Gegenstands, einschließlich echtem Schildblock. Ein gültiger Nahkampftreffer verbraucht 2–4 Punkte für eine Gegenklinge; normale Trefferimmunität bleibt bestehen.",
-  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "Alte Träger behalten ihre Wirkung; neu sind Nahkampfwaffen oder Schutzausrüstung erforderlich."
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "Alte Träger behalten ihre Wirkung; neu sind Nahkampfwaffen oder Schutzausrüstung erforderlich.",
+  "skill.enchantment_fusion.melee_work": "Kampfarbeit",
+  "skill.enchantment_fusion.melee_water_work": "Unterwasser-Kampfarbeit",
+  "message.enchantment_fusion.melee_work_ready": "Drei gültige Treffer haben Arbeitsschwung geladen.",
+  "message.enchantment_fusion.melee_work_active": "Ein Abbauschub ist bereits vorbereitet.",
+  "message.enchantment_fusion.melee_work_need": "Zuerst drei gültige Treffer in Folge landen.",
+  "message.enchantment_fusion.melee_work_set": "Arbeitsschwung bereit: Mit einem Werkzeug einen zulässigen Block schneller abbauen.",
+  "tooltip.enchantment_fusion.melee_work_boost": "Drei gültige Nahkampftreffer laden Schwung. Aktivieren und binnen 10 Sekunden einen zulässigen Block mit echtem Werkzeug schneller abbauen.",
+  "tooltip.enchantment_fusion.melee_work_water_boost": "Drei gültige Nahkampftreffer unter Wasser laden Schwung. Aktivieren, um binnen 10 Sekunden einen zulässigen Block unter Wasser schneller abzubauen.",
+  "tooltip.enchantment_fusion.melee_work_blade": "Zulässiger Abbau mit diesem Werkzeug speichert bis zu drei Klingen für 10 Sekunden. Ein gültiger Nahkampftreffer damit löst eine kurze Klinge aus.",
+  "tooltip.enchantment_fusion.melee_work_water_blade": "Zulässiger Unterwasserabbau mit diesem Helm speichert bis zu drei Wasserklingen für 10 Sekunden. Ein gültiger Nahkampftreffer löst sie aus.",
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "Alter Träger behält seinen Effekt; die neue Richtung verlangt die passende Nahkampfwaffe, das Werkzeug oder den Helm."
 }

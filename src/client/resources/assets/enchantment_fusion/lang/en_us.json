@@ -1048,5 +1048,16 @@
   "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "Legacy carrier keeps its old effect; this direction requires a melee weapon.",
   "tooltip.enchantment_fusion.melee_guard_blade": "A real eligible main-hand hit forms a frontal guard for 3 seconds, deflecting up to 3 actual hostile projectile impacts; swing again to recall. Some special projectiles are excluded.",
   "tooltip.enchantment_fusion.melee_guard_counter": "Worn armor or a held shield stores this item’s verified mitigation, including an actual shield block. A later eligible melee hit spends 2–4 guard to release an aimed counterblade; vanilla hit immunity still applies.",
-  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "Legacy carrier retains its old effect; this direction now requires melee weapons or protective gear."
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "Legacy carrier retains its old effect; this direction now requires melee weapons or protective gear.",
+  "skill.enchantment_fusion.melee_work": "Warwork",
+  "skill.enchantment_fusion.melee_water_work": "Underwater warwork",
+  "message.enchantment_fusion.melee_work_ready": "Three qualified hits ready your work momentum.",
+  "message.enchantment_fusion.melee_work_active": "A mining boost is already prepared.",
+  "message.enchantment_fusion.melee_work_need": "Land three consecutive qualified hits first.",
+  "message.enchantment_fusion.melee_work_set": "Work momentum prepared: equip a tool to hasten one legal block.",
+  "tooltip.enchantment_fusion.melee_work_boost": "Three qualified melee hits build momentum. Activate, then use a real tool to hasten one legal block within 10 seconds.",
+  "tooltip.enchantment_fusion.melee_work_water_boost": "Three qualified underwater melee hits build momentum. Activate to hasten one legal underwater block within 10 seconds.",
+  "tooltip.enchantment_fusion.melee_work_blade": "Real tool mining stores up to three edges for 10 seconds. A later qualified hit with this tool releases an aimed short blade.",
+  "tooltip.enchantment_fusion.melee_work_water_blade": "Real underwater tool mining while wearing this helmet stores up to three water edges for 10 seconds. A later qualified melee hit releases an aimed water blade.",
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "Legacy carrier keeps its old effect; this direction now requires the specified weapon, tool or helmet."
 }

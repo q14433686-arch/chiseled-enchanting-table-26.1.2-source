@@ -1048,5 +1048,16 @@
   "tooltip.enchantment_fusion.legacy_melee_impulse_carrier": "旧アイテムは旧効果を維持する。新しい組み合わせには近接武器が必要。",
   "tooltip.enchantment_fusion.melee_guard_blade": "利き手で有効な敵に実際に命中すると、3秒間前方に護刃を作り、敵の飛翔体の実際の衝突を最大3回そらす。再度振ると解除。一部の特殊飛翔体は対象外。",
   "tooltip.enchantment_fusion.melee_guard_counter": "装着中の防具または持った盾は、実際の盾防御を含む、その装備による確認済みの軽減を蓄える。有効な近接命中で2〜4点を使い、視線方向へ反撃刃を放つ。通常の無敵時間は残る。",
-  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "旧装備は旧効果を保持。新方向には近接武器または防具が必要。"
+  "tooltip.enchantment_fusion.legacy_melee_guard_carrier": "旧装備は旧効果を保持。新方向には近接武器または防具が必要。",
+  "skill.enchantment_fusion.melee_work": "戦意採掘",
+  "skill.enchantment_fusion.melee_water_work": "水戦採掘",
+  "message.enchantment_fusion.melee_work_ready": "有効な命中3回で採掘の勢いが整った。",
+  "message.enchantment_fusion.melee_work_active": "採掘加速はすでに準備中。",
+  "message.enchantment_fusion.melee_work_need": "先に有効な命中を3回続けよう。",
+  "message.enchantment_fusion.melee_work_set": "採掘の勢いを準備。道具を持つと1ブロックの正当な採掘が速くなる。",
+  "tooltip.enchantment_fusion.melee_work_boost": "有効な近接命中を3回続けて発動し、10秒以内に本物の道具で1ブロックを正当に速く採掘する。",
+  "tooltip.enchantment_fusion.melee_work_water_boost": "水中で有効な近接命中を3回続けて発動し、10秒以内の水中採掘1回を速くする。",
+  "tooltip.enchantment_fusion.melee_work_blade": "この道具で正当に採掘すると刃の勢いが最大3段階、10秒間蓄積。次の有効な近接攻撃で短い刃を放つ。",
+  "tooltip.enchantment_fusion.melee_work_water_blade": "この兜を装着して水中で正当に採掘すると水刃が最大3段階、10秒間蓄積。次の有効な近接攻撃で放つ。",
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "旧装備は旧効果を維持。新方向には対応する近接武器、道具または兜が必要。"
 }
