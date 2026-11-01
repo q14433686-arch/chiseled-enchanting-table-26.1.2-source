@@ -66,6 +66,13 @@ final class AcceptanceReport {
         plan("46.3-flame-efficiency", "flame ▷ efficiency: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
         plan("46.3-efficiency-flame", "efficiency ▷ flame: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
         plan("46.3-runtime-compat", "46.3 natural input, client mining synchronization, trajectory changes, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
+        plan("46.4-power-mending", "power ▷ mending: actual arrow death XP, route and original-orb pickup", "Not reached if setup fails; XP values, aim, flight and pickup are prepared.");
+        plan("46.4-mending-power", "mending ▷ power: actual orb repair and prepared damage arrow", "Not reached if setup fails; aim, flight and pickup are prepared.");
+        plan("46.4-punch-mending", "punch ▷ mending: actual arrow death XP, route and original-orb pickup", "Not reached if setup fails; XP values, aim, flight and pickup are prepared.");
+        plan("46.4-mending-punch", "mending ▷ punch: actual orb repair and prepared knockback arrow", "Not reached if setup fails; aim, flight and pickup are prepared.");
+        plan("46.4-flame-mending", "flame ▷ mending: actual arrow death XP, route and original-orb pickup", "Not reached if setup fails; XP values, aim, flight and pickup are prepared.");
+        plan("46.4-mending-flame", "mending ▷ flame: actual orb repair and prepared fire arrow", "Not reached if setup fails; aim, flight and pickup are prepared.");
+        plan("46.4-runtime-compat", "46.4 natural XP routing/pickup, merge and nested awards, datapack Mending, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
         plan("45.1-runtime-compat", "45.1 natural input, projectile deflection, save/reload, multiplayer and third-party projectile/durability mods", "Not covered by the simulated single-player fixture.");
         plan("42.1-sharp-unbreaking", "Sharpness ▷ Unbreaking: confirmed combo and actual guarded wear", "Not reached if setup fails.");
         plan("42.1-unbreaking-sharp", "Unbreaking ▷ Sharpness: real prevented wear and prepared melee bonus", "Not reached if setup fails.");

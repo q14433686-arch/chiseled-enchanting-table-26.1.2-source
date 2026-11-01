@@ -683,6 +683,12 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("46.3-efficiency-punch", () -> RangedWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", true));
         acceptance.run("46.3-flame-efficiency", () -> RangedWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", false));
         acceptance.run("46.3-efficiency-flame", () -> RangedWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", true));
+        acceptance.run("46.4-power-mending", () -> RangedMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", false));
+        acceptance.run("46.4-mending-power", () -> RangedMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", true));
+        acceptance.run("46.4-punch-mending", () -> RangedMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", false));
+        acceptance.run("46.4-mending-punch", () -> RangedMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", true));
+        acceptance.run("46.4-flame-mending", () -> RangedMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", false));
+        acceptance.run("46.4-mending-flame", () -> RangedMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", true));
         acceptance.run("42.1-sharp-unbreaking", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("42.1-unbreaking-sharp", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
         acceptance.run("42.1-smite-unbreaking", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));
