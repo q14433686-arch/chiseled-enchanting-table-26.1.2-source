@@ -103,6 +103,7 @@ final class AcceptanceReport {
         plan("40.1-aqua-lure", "Aqua Affinity ▷ Lure: prepared water, real block loot and normal pickup", "Not reached if setup fails; client timing and other mods remain untested.");
         plan("40.1-breath-lure", "Respiration ▷ Lure: prepared water, real breathing rolls and shared oxygen projection", "Not reached if setup fails; positive sample is probabilistic and natural client timing remains untested.");
         plan("40.1-lunge-lure", "Lunge ▷ Lure: actual spear collision and impulse with prepared aim, charge and hunger", "Not reached if setup fails; natural input, multiplayer and third-party effects remain untested.");
+        plan("40.1-impaling-lure", "Impaling ▷ Lure: real melee and trident release with a prepared collision and aquatic target", "Not reached if setup fails; natural flight, pickup/reload, multiplayer and datapacks remain untested.");
         plan("40.1-sweep-lure", "Sweeping Edge ▷ Lure: real sword sweep with prepared equipment and victims", "Not reached if setup fails.");
         plan("40.1-attribute-shared-regression", "Shared work, movement and sweep primary attribute projections", "Not reached if setup fails.");
         plan("43.3-smite-channel", "Smite ▷ Channeling: real marks and virtual chain", "Not reached if setup fails.");

@@ -104,7 +104,8 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
         float knockbackPrimary = MeleeImpulseSkills.nonNativePrimaryDamage(level, weapon, victim, source, themed);
         float wear = MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
         float projectile = GrapnelSkills.nonNativeProjectileDamage(level, weapon, victim, source, wear);
-        return MeleeLightningSkills.nonNativeTridentDamage(level, weapon, victim, source, projectile);
+        float lightning = MeleeLightningSkills.nonNativeTridentDamage(level, weapon, victim, source, projectile);
+        return GrapnelImpact.project(GrapnelImpact.Kind.DAMAGE, level, weapon, victim, source, lightning);
     }
 
     @WrapMethod(method = "modifyCrossbowChargingTime")

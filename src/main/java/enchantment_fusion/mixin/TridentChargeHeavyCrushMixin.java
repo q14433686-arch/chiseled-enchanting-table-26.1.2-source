@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelTridentFlight;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -35,6 +36,7 @@ public abstract class TridentChargeHeavyCrushMixin {
                                              Operation<Projectile> original) {
         Projectile projectile = original.call(factory, level, consumed, owner, angle, power, uncertainty);
         MeleeLightningSkills.launched(projectile, owner, consumed);
+        GrapnelTridentFlight.launched(projectile, owner, consumed);
         return projectile;
     }
 }

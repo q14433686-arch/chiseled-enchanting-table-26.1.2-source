@@ -104,6 +104,7 @@ public final class FusionTooltipRenderer {
         if (GrapnelImpact.KNOCKBACK.equals(pair.primaryId())) return "tooltip.enchantment_fusion.knockback_grapnel";
         if (GrapnelImpact.BREACH.equals(pair.primaryId())) return "tooltip.enchantment_fusion.breach_grapnel";
         if (GrapnelImpact.DENSITY.equals(pair.primaryId())) return "tooltip.enchantment_fusion.density_grapnel";
+        if (GrapnelImpact.IMPALING.equals(pair.primaryId())) return "tooltip.enchantment_fusion.impaling_grapnel";
         if (GrapnelLunge.isPair(pair)) return "tooltip.enchantment_fusion.lunge_grapnel";
         if (GrapnelDefense.FEATHER.equals(pair.primaryId())) return "tooltip.enchantment_fusion.feather_grapnel";
         if (GrapnelDefense.isPair(pair)) return "tooltip.enchantment_fusion.defense_grapnel";

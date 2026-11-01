@@ -29,6 +29,16 @@ public abstract class EnchantmentHeavyCrushMixin {
         finally { GrapnelLunge.endEffect(effect, completed); }
     }
 
+    @WrapMethod(method = "modifyDamage")
+    private void ef$observeImpaling(ServerLevel level, int rank, ItemStack weapon, Entity victim,
+                                    DamageSource source, MutableFloat value, Operation<Void> original) {
+        GrapnelImpact.Effect effect = GrapnelImpact.beginEffect(GrapnelImpact.Kind.DAMAGE, level,
+            (Enchantment) (Object) this, rank, weapon, victim, source, value.floatValue());
+        boolean completed = false;
+        try { original.call(level, rank, weapon, victim, source, value); completed = true; }
+        finally { GrapnelImpact.endEffect(effect, value.floatValue(), completed); }
+    }
+
     @WrapMethod(method = "modifyKnockback")
     private void ef$observeKnockback(ServerLevel level, int rank, ItemStack weapon, Entity victim,
                                      DamageSource source, MutableFloat value, Operation<Void> original) {

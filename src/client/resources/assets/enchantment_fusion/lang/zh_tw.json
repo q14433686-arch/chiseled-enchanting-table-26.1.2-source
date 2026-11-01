@@ -1130,5 +1130,6 @@
   "message.enchantment_fusion.grapnel_motion_marked": "移動已留標。瞄準合格敵人並啟動回鉤。",
   "tooltip.enchantment_fusion.breath_grapnel": "穿戴此頭盔時，水下呼吸確實為這次水下耗氧判定省下一點氧氣，才在目前位置留標8秒。保持穿戴同一頭盔，在標記12格內瞄準標記8格內的合格敵人，視線暢通時主動回鉤。原版氧氣及呼吸規則保留。",
   "message.enchantment_fusion.grapnel_breath_marked": "水下呼吸已留標。瞄準合格敵人並啟動回鉤。",
-  "tooltip.enchantment_fusion.lunge_grapnel": "長矛的真實刺擊命中合格敵人，且同次攻擊中的突進主位確實產生向前衝量時，才為敵人留標8秒。繼續主手持原矛，在12格內且視線暢通時主動回鉤牽引。突進原版條件、飢餓消耗及耐久保留。"
+  "tooltip.enchantment_fusion.lunge_grapnel": "長矛的真實刺擊命中合格敵人，且同次攻擊中的突進主位確實產生向前衝量時，才為敵人留標8秒。繼續主手持原矛，在12格內且視線暢通時主動回鉤牽引。突進原版條件、飢餓消耗及耐久保留。",
+  "tooltip.enchantment_fusion.impaling_grapnel": "三叉戟命中合格敵人，且該次傷害實際得到穿刺主位增強時，才留標8秒。近戰後須主手持原三叉戟；投擲後可在同一把真實三叉戟仍在世界中時主動收線。12格內且視線暢通時牽引目標；拾取或失去投出的三叉戟會結束該標記。"
 }
