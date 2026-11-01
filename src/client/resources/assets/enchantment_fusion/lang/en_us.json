@@ -1076,5 +1076,6 @@
   "message.enchantment_fusion.grapnel_recovered": "Recovered %s item(s) from this break.",
   "tooltip.enchantment_fusion.mining_grapnel": "A real permitted block break marks its proven, unchanged item drops for 8 seconds. Hold the same tool and activate within 12 blocks with clear sight, after the pickup delay. Normal pickup applies; the attempt consumes the mark and full or unverified drops remain in the world.",
   "tooltip.enchantment_fusion.power_grapnel": "A fully drawn real bow arrow that damages an eligible enemy marks it for 8 seconds. Hold the same bow and activate within 12 blocks with clear sight to reel it in. The Power effect remains.",
-  "tooltip.enchantment_fusion.flame_grapnel": "A real burning arrow from the bow or crossbow that damages an eligible enemy marks it for 8 seconds. Hold the same weapon and activate within 12 blocks with clear sight to reel it in. No fire blocks are placed; the Flame effect remains."
+  "tooltip.enchantment_fusion.flame_grapnel": "A real burning arrow from the bow or crossbow that damages an eligible enemy marks it for 8 seconds. Hold the same weapon and activate within 12 blocks with clear sight to reel it in. No fire blocks are placed; the Flame effect remains.",
+  "tooltip.enchantment_fusion.punch_grapnel": "When a real bow or crossbow arrow damages and actually pushes an eligible enemy, mark it for 8 seconds. Hold the same weapon and activate within 12 blocks with clear sight to reel it in. Punch remains."
 }

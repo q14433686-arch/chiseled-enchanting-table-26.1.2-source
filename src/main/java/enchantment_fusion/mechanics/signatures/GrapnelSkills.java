@@ -51,7 +51,7 @@ import org.jetbrains.annotations.Nullable;
 public final class GrapnelSkills {
     public static final String SIGNATURE = "spirit_grapnel", LURE = "minecraft:lure";
     public static final String EFFICIENCY = "minecraft:efficiency", SILK = "minecraft:silk_touch", FORTUNE = "minecraft:fortune";
-    public static final String POWER = "minecraft:power", FLAME = "minecraft:flame";
+    public static final String POWER = "minecraft:power", FLAME = "minecraft:flame", PUNCH = "minecraft:punch";
     private static final Set<FusionCarrier> TOOLS = Set.of(FusionCarrier.PICKAXE, FusionCarrier.AXE, FusionCarrier.SHOVEL, FusionCarrier.HOE);
     private static final Set<String> MINING_PRIMARIES = Set.of(EFFICIENCY, SILK, FORTUNE);
     private static final int MAX_OWNERS = 256, MAX_DROPS = 64, MAX_FLIGHTS = 4096, MAX_FLIGHT_GEARS = 16;
@@ -66,6 +66,8 @@ public final class GrapnelSkills {
     private static final Map<UUID, Mark> MARKS = new HashMap<>();
     private record Flight(UUID owner, ResourceKey<Level> dimension, List<Gear> gears, boolean fullDraw, long expires) {}
     private static final Map<AbstractArrow, Flight> FLIGHTS = new WeakHashMap<>();
+    private record PendingPush(UUID target, Flight flight, long tick) {}
+    private static final Map<AbstractArrow, PendingPush> PENDING_PUSHES = new WeakHashMap<>();
     private static final ThreadLocal<Boolean> PROJECTILE_REPLAY = ThreadLocal.withInitial(() -> false);
     public static final class ArrowHit {
         private final AbstractArrow arrow; private final ServerPlayer owner; private final LivingEntity target;
@@ -87,7 +89,7 @@ public final class GrapnelSkills {
         return pair != null && MINING_PRIMARIES.contains(pair.primaryId()) && LURE.equals(pair.secondaryId());
     }
     public static boolean rangedFirst(@Nullable FusedPair pair) {
-        return pair != null && (POWER.equals(pair.primaryId()) || FLAME.equals(pair.primaryId())) && LURE.equals(pair.secondaryId());
+        return pair != null && (POWER.equals(pair.primaryId()) || FLAME.equals(pair.primaryId()) || PUNCH.equals(pair.primaryId())) && LURE.equals(pair.secondaryId());
     }
     public static boolean matches(@Nullable FusedPair pair) {
         return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair))
@@ -99,7 +101,7 @@ public final class GrapnelSkills {
         if (attackFirst(pair)) return supportsCarrier(roles);
         if (miningFirst(pair)) return roles.stream().anyMatch(TOOLS::contains);
         if (rangedFirst(pair)) return roles.contains(FusionCarrier.BOW)
-            || (FLAME.equals(pair.primaryId()) && roles.contains(FusionCarrier.CROSSBOW));
+            || (!POWER.equals(pair.primaryId()) && roles.contains(FusionCarrier.CROSSBOW));
         return false;
     }
     public static boolean applies(@Nullable FusedPair pair, @Nullable ItemStack stack) {
@@ -154,6 +156,7 @@ public final class GrapnelSkills {
     }
     /** Capture before the actual arrow damage call, rather than trusting collision alone. */
     public static @Nullable ArrowHit beforeArrowHit(AbstractArrow arrow, Entity victim, DamageSource source) {
+        PENDING_PUSHES.remove(arrow);
         Flight flight = FLIGHTS.get(arrow);
         if (flight == null || !(victim instanceof LivingEntity target) || !(arrow.getOwner() instanceof ServerPlayer owner)
             || source.getDirectEntity() != arrow || source.getEntity() != owner || !flight.owner().equals(owner.getUUID())
@@ -169,17 +172,36 @@ public final class GrapnelSkills {
             || hit.owner.level() != hit.target.level() || hit.owner.level() != hit.arrow.level()
             || hit.arrow.getOwner() != hit.owner || FLIGHTS.get(hit.arrow) != hit.flight || !canMark(hit.owner)
             || ConfirmedMeleeMath.actualLoss(hit.health, hit.absorption, hit.target.getHealth(), hit.target.getAbsorptionAmount()) <= 0) return;
+        if (hit.flight.gears().stream().anyMatch(gear -> PUNCH.equals(gear.pair().primaryId()) && owns(hit.owner, gear)))
+            PENDING_PUSHES.put(hit.arrow, new PendingPush(hit.target.getUUID(), hit.flight, hit.owner.level().getGameTime()));
         for (Gear gear : hit.flight.gears()) {
             FusedPair pair = gear.pair();
-            if (!owns(hit.owner, gear) || !eligibleTarget(hit.owner, hit.target, pair)
+            if (PUNCH.equals(pair.primaryId()) || !owns(hit.owner, gear) || !eligibleTarget(hit.owner, hit.target, pair)
                 || (POWER.equals(pair.primaryId()) && !hit.flight.fullDraw())
                 || (FLAME.equals(pair.primaryId()) && !hit.burning)) continue;
-            MARKS.put(hit.owner.getUUID(), new TargetMark(gear, hit.owner.level().dimension(),
-                hit.owner.level().getGameTime() + MARK_TICKS, hit.target.getUUID()));
-            hit.owner.level().sendParticles(ParticleTypes.FISHING, hit.target.getX(), hit.target.getY(0.6D), hit.target.getZ(),
-                8, 0.2D, 0.2D, 0.2D, 0.02D);
-            hit.owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.grapnel_marked"), true);
-            return;
+            markTarget(hit.owner, hit.target, gear); return;
+        }
+    }
+    private static void markTarget(ServerPlayer owner, LivingEntity target, Gear gear) {
+        MARKS.put(owner.getUUID(), new TargetMark(gear, owner.level().dimension(),
+            owner.level().getGameTime() + MARK_TICKS, target.getUUID()));
+        owner.level().sendParticles(ParticleTypes.FISHING, target.getX(), target.getY(0.6D), target.getZ(),
+            8, 0.2D, 0.2D, 0.2D, 0.02D);
+        owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.grapnel_marked"), true);
+    }
+    /** A Punch mark is committed only after this confirmed hit really pushed the same target. */
+    public static void afterArrowPush(AbstractArrow arrow, LivingEntity target, Vec3 before) {
+        PendingPush pending = PENDING_PUSHES.remove(arrow);
+        if (pending == null || FLIGHTS.get(arrow) != pending.flight() || !(arrow.getOwner() instanceof ServerPlayer owner)
+            || !pending.flight().owner().equals(owner.getUUID()) || !pending.target().equals(target.getUUID())
+            || owner.level() != arrow.level() || owner.level() != target.level() || owner.level().getGameTime() != pending.tick()
+            || !ready(owner) || !canMark(owner)) return;
+        Vec3 delta = target.getDeltaMovement().subtract(before);
+        if (!Double.isFinite(delta.x) || !Double.isFinite(delta.z) || delta.horizontalDistanceSqr() < 0.0001D) return;
+        for (Gear gear : pending.flight().gears()) {
+            if (PUNCH.equals(gear.pair().primaryId()) && owns(owner, gear) && eligibleTarget(owner, target, gear.pair())) {
+                markTarget(owner, target, gear); return;
+            }
         }
     }
     /** Preserve a missing Power damage effect on the actual arrow's vanilla weapon copy once. */
@@ -194,6 +216,23 @@ public final class GrapnelSkills {
         if (power == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(power) > 0) return value;
         MutableFloat modified = new MutableFloat(value); PROJECTILE_REPLAY.set(true);
         try { power.value().modifyDamage(level, best.pair().primaryLevel(), weapon, victim, source, modified); }
+        finally { PROJECTILE_REPLAY.remove(); }
+        return Float.isFinite(modified.floatValue()) ? modified.floatValue() : value;
+    }
+    /** Crossbows lacking native Punch replay the current data-pack knockback effect once. */
+    public static float nonNativeProjectileKnockback(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source, float value) {
+        if (Boolean.TRUE.equals(PROJECTILE_REPLAY.get()) || !(source.getDirectEntity() instanceof AbstractArrow arrow)
+            || !(arrow.getOwner() instanceof ServerPlayer owner) || source.getEntity() != owner || MatrixEffectExecutor.isExecuting()) return value;
+        Gear best = null;
+        for (Gear gear : rangedGears(weapon)) if (PUNCH.equals(gear.pair().primaryId())
+            && (best == null || gear.pair().primaryLevel() > best.pair().primaryLevel())) best = gear;
+        if (best == null) return value;
+        FusedPair thermal = ThermalProjectileSkills.selected(weapon);
+        if (thermal != null && PUNCH.equals(thermal.primaryId())) return value;
+        Holder<Enchantment> punch = FusionStationOperations.lookupEnchantment(level.registryAccess(), PUNCH).orElse(null);
+        if (punch == null || weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(punch) > 0) return value;
+        MutableFloat modified = new MutableFloat(value); PROJECTILE_REPLAY.set(true);
+        try { punch.value().modifyKnockback(level, best.pair().primaryLevel(), weapon, victim, source, modified); }
         finally { PROJECTILE_REPLAY.remove(); }
         return Float.isFinite(modified.floatValue()) ? modified.floatValue() : value;
     }
@@ -319,6 +358,8 @@ public final class GrapnelSkills {
                 || !owner.level().dimension().equals(flight.dimension()) || owner.level().getGameTime() >= flight.expires()
                 || flight.gears().stream().noneMatch(gear -> owns(owner, gear));
         });
+        PENDING_PUSHES.entrySet().removeIf(entry -> FLIGHTS.get(entry.getKey()) != entry.getValue().flight()
+            || entry.getKey().level().getGameTime() != entry.getValue().tick());
         for (var entry : List.copyOf(MARKS.entrySet())) {
             ServerPlayer owner = server.getPlayerList().getPlayer(entry.getKey()); Mark mark = entry.getValue();
             boolean noTarget = owner != null && (mark instanceof TargetMark target ? owner.level().getEntity(target.target()) == null
@@ -330,6 +371,7 @@ public final class GrapnelSkills {
         MARKS.remove(id);
         MARKS.entrySet().removeIf(entry -> entry.getValue() instanceof TargetMark target && target.target().equals(id));
         FLIGHTS.entrySet().removeIf(entry -> entry.getValue().owner().equals(id));
+        PENDING_PUSHES.entrySet().removeIf(entry -> entry.getValue().flight().owner().equals(id));
     }
-    public static void clearServer() { MARKS.clear(); FLIGHTS.clear(); PROJECTILE_REPLAY.remove(); }
+    public static void clearServer() { MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear(); PROJECTILE_REPLAY.remove(); }
 }

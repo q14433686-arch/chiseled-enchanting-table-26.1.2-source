@@ -1076,5 +1076,6 @@
   "message.enchantment_fusion.grapnel_recovered": "%s item(ns) recolhido(s) desta mineração.",
   "tooltip.enchantment_fusion.mining_grapnel": "Uma mineração real e permitida marca os itens verificados e inalterados por 8 segundos. Segure a mesma ferramenta e ative após o atraso de coleta, em até 12 blocos e com visão livre. A coleta normal é usada; a tentativa consome a marca e deixa o restante no mundo.",
   "tooltip.enchantment_fusion.power_grapnel": "Uma flecha real de arco totalmente puxado marca por 8 segundos o inimigo válido que sofrer dano. Use o mesmo arco a até 12 blocos e com visão livre para puxá-lo. Força permanece.",
-  "tooltip.enchantment_fusion.flame_grapnel": "Uma flecha real em chamas de arco ou besta marca por 8 segundos o inimigo válido que sofrer dano. Use a mesma arma a até 12 blocos e com visão livre para puxá-lo. Não coloca fogo; Chama permanece."
+  "tooltip.enchantment_fusion.flame_grapnel": "Uma flecha real em chamas de arco ou besta marca por 8 segundos o inimigo válido que sofrer dano. Use a mesma arma a até 12 blocos e com visão livre para puxá-lo. Não coloca fogo; Chama permanece.",
+  "tooltip.enchantment_fusion.punch_grapnel": "Uma flecha real de arco ou besta marca por 8 segundos o inimigo válido que ela ferir e realmente empurrar. Use a mesma arma a até 12 blocos e com visão livre para puxá-lo. Impacto permanece."
 }

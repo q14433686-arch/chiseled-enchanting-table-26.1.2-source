@@ -1076,5 +1076,6 @@
   "message.enchantment_fusion.grapnel_recovered": "%s objet(s) récupéré(s) de ce minage.",
   "tooltip.enchantment_fusion.mining_grapnel": "Un minage réel autorisé marque son butin vérifié et inchangé pendant 8 secondes. Gardez le même outil et activez après le délai de ramassage, à 12 blocs maximum et en ligne de vue. Le ramassage normal s’applique ; la tentative consomme la marque et laisse le reste dans le monde.",
   "tooltip.enchantment_fusion.power_grapnel": "Une vraie flèche tirée à pleine charge marque pendant 8 secondes l’ennemi valide qu’elle blesse. Avec le même arc, activez à 12 blocs maximum et en ligne de vue pour le ramener. Puissance reste active.",
-  "tooltip.enchantment_fusion.flame_grapnel": "Une vraie flèche enflammée d’arc ou d’arbalète marque pendant 8 secondes l’ennemi valide qu’elle blesse. Avec la même arme, activez à 12 blocs maximum et en ligne de vue pour le ramener. Aucun bloc de feu ; Flamme reste active."
+  "tooltip.enchantment_fusion.flame_grapnel": "Une vraie flèche enflammée d’arc ou d’arbalète marque pendant 8 secondes l’ennemi valide qu’elle blesse. Avec la même arme, activez à 12 blocs maximum et en ligne de vue pour le ramener. Aucun bloc de feu ; Flamme reste active.",
+  "tooltip.enchantment_fusion.punch_grapnel": "Une vraie flèche d’arc ou d’arbalète marque 8 secondes l’ennemi valide qu’elle blesse et repousse réellement. Avec la même arme, activez à 12 blocs maximum et en ligne de vue pour le ramener. Frappe reste active."
 }

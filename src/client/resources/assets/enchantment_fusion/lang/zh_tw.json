@@ -1076,5 +1076,6 @@
   "message.enchantment_fusion.grapnel_recovered": "已收回本次採掘的 %s 件物品。",
   "tooltip.enchantment_fusion.mining_grapnel": "合法真實採掘後標記經核驗且未變化的本次掉落8秒；持同一工具，等拾取延遲結束後，在12格內且視線暢通時主動收回。走一般拾取流程；嘗試後消耗標記，滿包及無法核驗的物品留在世界中。",
   "tooltip.enchantment_fusion.power_grapnel": "滿蓄真實弓箭對合格敵人造成傷害時留標8秒；手持同一把弓，在12格內且視線暢通時主動牽引。保留力量主位。",
-  "tooltip.enchantment_fusion.flame_grapnel": "弓或弩射出的真實燃燒箭對合格敵人造成傷害時留標8秒；手持同一武器，在12格內且視線暢通時主動牽引。不放置火方塊，保留火矢主位。"
+  "tooltip.enchantment_fusion.flame_grapnel": "弓或弩射出的真實燃燒箭對合格敵人造成傷害時留標8秒；手持同一武器，在12格內且視線暢通時主動牽引。不放置火方塊，保留火矢主位。",
+  "tooltip.enchantment_fusion.punch_grapnel": "弓或弩的真實箭傷害並實際擊退合格敵人時留標8秒；手持同一武器，在12格內且視線暢通時主動牽引。保留衝擊主位。"
 }

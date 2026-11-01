@@ -65,7 +65,8 @@ public abstract class PhantomArrowMixin {
     private float ef$nonNativePunchPrimary(ServerLevel level, ItemStack weapon, Entity target, DamageSource source,
                                            float base, Operation<Float> original) {
         float result = original.call(level, weapon, target, source, base);
-        return ThermalProjectileSkills.primaryKnockback(level, weapon, target, source, result);
+        float thermal = ThermalProjectileSkills.primaryKnockback(level, weapon, target, source, result);
+        return GrapnelSkills.nonNativeProjectileKnockback(level, weapon, target, source, thermal);
     }
 
     @WrapOperation(method = "doKnockback", at = @At(value = "INVOKE",
@@ -74,6 +75,7 @@ public abstract class PhantomArrowMixin {
         Vec3 before = target.getDeltaMovement();
         original.call(target, x, y, z);
         ThermalProjectileSkills.knockedBack((AbstractArrow) (Object) this, target, before);
+        GrapnelSkills.afterArrowPush((AbstractArrow) (Object) this, target, before);
     }
 
     @WrapOperation(method = "onHitEntity", at = @At(value = "INVOKE",

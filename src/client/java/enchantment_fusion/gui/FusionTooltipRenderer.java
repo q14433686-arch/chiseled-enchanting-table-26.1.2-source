@@ -82,6 +82,7 @@ public final class FusionTooltipRenderer {
         if (GrapnelSkills.miningFirst(pair)) return "tooltip.enchantment_fusion.mining_grapnel";
         if (GrapnelSkills.POWER.equals(pair.primaryId())) return "tooltip.enchantment_fusion.power_grapnel";
         if (GrapnelSkills.FLAME.equals(pair.primaryId())) return "tooltip.enchantment_fusion.flame_grapnel";
+        if (GrapnelSkills.PUNCH.equals(pair.primaryId())) return "tooltip.enchantment_fusion.punch_grapnel";
         return "tooltip.enchantment_fusion.melee_grapnel";
     }
 

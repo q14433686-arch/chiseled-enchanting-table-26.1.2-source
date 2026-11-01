@@ -44,7 +44,8 @@ final class GrapnelProjectileProbe {
     private GrapnelProjectileProbe() {}
     static void exercise(ServerPlayer player, BlockPos origin, String primary) throws Exception {
         ServerLevel level = player.level(); boolean power = GrapnelSkills.POWER.equals(primary);
-        FusedPair pair = FusedPair.clean(primary, power ? 3 : 1, GrapnelSkills.LURE, 2); checkStation(level, pair, power);
+        boolean flame = GrapnelSkills.FLAME.equals(primary), punch = GrapnelSkills.PUNCH.equals(primary);
+        FusedPair pair = FusedPair.clean(primary, power ? 3 : punch ? 2 : 1, GrapnelSkills.LURE, 2); checkStation(level, pair, power);
         GrapnelSkills.clearPlayer(player.getUUID());
         Vec3 oldPos = player.position(), oldVelocity = player.getDeltaMovement(); float oldYaw = player.getYRot(), oldPitch = player.getXRot();
         GameType mode = player.gameMode.getGameModeForPlayer(); ItemStack main = player.getMainHandItem(), off = player.getOffhandItem();
@@ -77,9 +78,17 @@ final class GrapnelProjectileProbe {
             hit(synthetic, enemy, false); require(marked(player) == null, "An arrow outside a real shot cannot establish a mark");
             Arrow cancelled = fireBow(level, player, bow, area, 20); deny.add(enemy.getUUID());
             hit(cancelled, enemy, true); deny.clear(); require(marked(player) == null, "Cancelled damage cannot mark");
+            if (punch) {
+                enemy.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0D);
+                Arrow resisted = fireBow(level, player, bow, area, 20);
+                hit(resisted, enemy, false); require(marked(player) == null, "Fully resisted push cannot mark");
+                enemy.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(0.0D);
+            }
+            enemy.setDeltaMovement(Vec3.ZERO);
             Arrow arrow = fireBow(level, player, bow, area, 20);
-            if (!power) require(arrow.isOnFire(), "Missing native Flame must ignite the actual arrow");
+            if (flame) require(arrow.isOnFire(), "Missing native Flame must ignite the actual arrow");
             hit(arrow, enemy, false); require(enemy.getUUID().equals(marked(player)), "Real qualifying arrow damage must mark the target");
+            if (punch) require(enemy.getDeltaMovement().x > 0.05D, "Missing native Punch must actually push the target");
             enemy.setDeltaMovement(Vec3.ZERO);
             require(GrapnelSkills.activate(player) && enemy.getDeltaMovement().x < 0 && marked(player) == null,
                 "The marked target must be pulled toward the shooter once");
@@ -91,8 +100,10 @@ final class GrapnelProjectileProbe {
                 ItemStack crossbow = fused(level, Items.CROSSBOW, pair); crossbow.remove(DataComponents.ENCHANTMENTS);
                 player.setItemSlot(EquipmentSlot.MAINHAND, crossbow);
                 Arrow realCrossbowArrow = fireCrossbow(level, player, crossbow, area);
-                require(realCrossbowArrow.isOnFire(), "Non-native crossbow Flame must use the real spawn effect");
-                hit(realCrossbowArrow, enemy, false); require(enemy.getUUID().equals(marked(player)), "Real crossbow fire arrow must mark");
+                if (flame) require(realCrossbowArrow.isOnFire(), "Non-native crossbow Flame must use the real spawn effect");
+                enemy.setDeltaMovement(Vec3.ZERO); hit(realCrossbowArrow, enemy, false);
+                require(enemy.getUUID().equals(marked(player)), "A qualifying real crossbow arrow must mark");
+                if (punch) require(enemy.getDeltaMovement().x > 0.05D, "Non-native crossbow Punch must really push");
                 enemy.setDeltaMovement(Vec3.ZERO); require(GrapnelSkills.activate(player), "Crossbow mark must be actively recalled");
             }
         } finally {
