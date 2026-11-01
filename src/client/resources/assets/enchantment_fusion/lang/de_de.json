@@ -1167,5 +1167,13 @@
   "message.enchantment_fusion.ranged_water_full": "Kapazität für Wasserpfeile erreicht; die Vorbereitung wurde verbraucht.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "Ein echter Pfeil, der unter Wasser einem zulässigen Ziel Schaden zufügt, erzeugt am Treffer eine kurzlebige virtuelle Blase. Berühre deine Blase unter Wasser, um Luft zu erhalten. Wasser bleibt unverändert; der Schuss-Haupteffekt bleibt.",
   "tooltip.enchantment_fusion.ranged_breath_drag": "Unter Wasser aktivieren, um Luft zu zahlen und einen echten Bogen-/Armbrustpfeil für bis zu 10 Sekunden vorzubereiten. Solange du diesen Helm trägst, verliert der Pfeil im Wasser weniger Tempo. Bei Ablauf oder Ausrüstungswechsel keine Luftrückgabe; Atmung bleibt.",
-  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, Atmung-Haupteffekte einen Helm."
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, Atmung-Haupteffekte einen Helm.",
+  "skill.enchantment_fusion.ranged_tide": "Strömungspfeil",
+  "message.enchantment_fusion.ranged_water_prepared": "Ein Wasserpfeil ist bereits vorbereitet.",
+  "message.enchantment_fusion.ranged_tide_ready": "Deine echte Schwimmbewegung hat Strömung geladen.",
+  "message.enchantment_fusion.ranged_tide_need_swim": "Schwimme zuerst mindestens drei Blöcke gezielt im Wasser.",
+  "message.enchantment_fusion.ranged_tide_set": "Strömung bereit für den nächsten echten Pfeil binnen 10 Sekunden.",
+  "tooltip.enchantment_fusion.ranged_tide_current": "Ein zulässiger Treffer eines echten Unterwasserpfeils hinterlässt entlang von bis zu 32 Blöcken seiner tatsächlichen Unterwasserbahn eine kurze virtuelle Strömung. Schwimme einmal vorwärts hindurch, um einen kollisionsbegrenzten Schub zu erhalten. Wasser und Schuss-Haupteffekt bleiben.",
+  "tooltip.enchantment_fusion.ranged_tide_drag": "Mit diesen Stiefeln mindestens drei Blöcke gezielt schwimmen und im Wasser aktivieren: Der nächste echte Bogen-/Armbrustpfeil hat binnen 10 Sekunden weniger Wasserwiderstand, solange du sie trägst. Nur eine Wasserpfeil-Vorbereitung zugleich; Wasserläufer bleibt.",
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, Wasserläufer-Haupteffekte Stiefel."
 }

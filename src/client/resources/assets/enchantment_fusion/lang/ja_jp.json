@@ -1167,5 +1167,13 @@
   "message.enchantment_fusion.ranged_water_full": "水中矢の上限に達したため、準備は消費されました。",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "水中で本物の矢が有効な対象へ実ダメージを与えると、命中地点に短命の仮想気泡が生まれる。水中で自分の気泡に触れると酸素を回復する。水を置き換えず、射撃の主効果を維持。",
   "tooltip.enchantment_fusion.ranged_breath_drag": "水中で発動して酸素を消費し、10秒以内の本物の弓・クロスボウの矢1本を準備。このヘルメットを着用中、その矢の水中抵抗が減る。期限切れや装備変更時に酸素は戻らず、水中呼吸の主効果は維持。",
-  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、水中呼吸主位はヘルメットが必要。"
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、水中呼吸主位はヘルメットが必要。",
+  "skill.enchantment_fusion.ranged_tide": "流勢の矢",
+  "message.enchantment_fusion.ranged_water_prepared": "水中矢はすでに準備済み。",
+  "message.enchantment_fusion.ranged_tide_ready": "実際の遊泳で流勢が溜まった。",
+  "message.enchantment_fusion.ranged_tide_need_swim": "まず水中を意図的に3ブロック以上泳ぐ。",
+  "message.enchantment_fusion.ranged_tide_set": "流勢準備完了：10秒以内の次の本物の矢に適用。",
+  "tooltip.enchantment_fusion.ranged_tide_current": "水中で本物の矢が有効な対象へ実ダメージを与えると、実際の水中軌道を最大32ブロック辿る短命の仮想水流を残す。流れに沿って実際に泳ぐと一度だけ衝突制限付きで加速。水を置き換えず、射撃の主効果を維持。",
+  "tooltip.enchantment_fusion.ranged_tide_drag": "このブーツで水中を意図的に3ブロック泳いでから発動。10秒以内の次の本物の弓・クロスボウの矢は、着用中に水中抵抗が減る。水中矢の準備は同時に1つまで。水中移動の主効果は維持。",
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、水中移動主位はブーツが必要。"
 }

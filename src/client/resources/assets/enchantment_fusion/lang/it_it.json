@@ -1167,5 +1167,13 @@
   "message.enchantment_fusion.ranged_water_full": "Capacità delle frecce acquatiche raggiunta; la preparazione è consumata.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "Una freccia vera che danneggia un bersaglio valido sott’acqua crea una breve bolla virtuale all’impatto. Tocca la tua bolla sott’acqua per recuperare aria. L’acqua non cambia e l’effetto principale di tiro rimane.",
   "tooltip.enchantment_fusion.ranged_breath_drag": "Sott’acqua attiva e paga aria per preparare una freccia vera di arco o balestra per 10 secondi. Finché indossi questo elmo, la freccia rallenta meno in acqua. Nessun rimborso alla scadenza o al cambio di equipaggiamento; respirazione rimane.",
-  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale ed elmo per respirazione principale."
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale ed elmo per respirazione principale.",
+  "skill.enchantment_fusion.ranged_tide": "Freccia di corrente",
+  "message.enchantment_fusion.ranged_water_prepared": "Una freccia acquatica è già pronta.",
+  "message.enchantment_fusion.ranged_tide_ready": "La nuotata reale ha accumulato corrente.",
+  "message.enchantment_fusion.ranged_tide_need_swim": "Nuota volontariamente per almeno tre blocchi nell’acqua.",
+  "message.enchantment_fusion.ranged_tide_set": "Corrente pronta per la prossima freccia vera entro 10 secondi.",
+  "tooltip.enchantment_fusion.ranged_tide_current": "Una freccia vera sott’acqua che danneggia un bersaglio valido lascia una breve corrente virtuale lungo fino a 32 blocchi della traiettoria subacquea reale. Nuota una volta nel suo verso per ricevere una spinta soggetta alle collisioni. Acqua ed effetto principale di tiro restano.",
+  "tooltip.enchantment_fusion.ranged_tide_drag": "Nuota volontariamente tre blocchi con questi stivali e attiva nell’acqua: la prossima freccia vera di arco/balestra entro 10 secondi rallenta meno in acqua finché li indossi. Una sola preparazione acquatica alla volta; passo anfibio rimane.",
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale e stivali per passo anfibio principale."
 }

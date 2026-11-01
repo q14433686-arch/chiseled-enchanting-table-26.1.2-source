@@ -1167,5 +1167,13 @@
   "message.enchantment_fusion.ranged_water_full": "水下箭效果已達上限，本次準備已消耗。",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "水下真實箭使合格目標受到淨傷害時，在命中處產生短暫虛擬氣泡；水下觸碰自己的氣泡可補充氧氣。不替換水，保留原射擊主位。",
   "tooltip.enchantment_fusion.ranged_breath_drag": "水下主動消耗氧氣，準備 10 秒內的一支真實弓弩箭；繼續穿戴此頭盔時，該箭在水中阻力降低。過期或換裝備不退還氧氣，保留原水下呼吸主位。",
-  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新水下呼吸主位要求頭盔。"
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新水下呼吸主位要求頭盔。",
+  "skill.enchantment_fusion.ranged_tide": "流勢貫矢",
+  "message.enchantment_fusion.ranged_water_prepared": "已有水下箭準備，請先射出或等待過期。",
+  "message.enchantment_fusion.ranged_tide_ready": "真實游動已積滿流勢。",
+  "message.enchantment_fusion.ranged_tide_need_swim": "請先在水中有意游動至少三格。",
+  "message.enchantment_fusion.ranged_tide_set": "流勢已準備：10 秒內下一支真實箭降低水阻。",
+  "tooltip.enchantment_fusion.ranged_tide_current": "水下真實箭使合格目標受到淨傷害後，沿實際水下箭途最多 32 格留下短暫虛擬水流。順流真實游過一次可借流推進，移動仍受碰撞限制。不替換水，保留原射擊主位。",
+  "tooltip.enchantment_fusion.ranged_tide_drag": "穿此靴在水中有意游動至少三格後主動準備；10 秒內下一支真實弓弩箭在繼續穿靴時水中阻力降低。同一時間只能準備一種水下箭，保留原深海探索者主位。",
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新深海探索者主位要求靴子。"
 }

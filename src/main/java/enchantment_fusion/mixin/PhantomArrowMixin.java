@@ -13,6 +13,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.RangedWorkBlade;
 import enchantment_fusion.mechanics.signatures.RangedWaterDrag;
+import enchantment_fusion.mechanics.signatures.RangedTideTrail;
 import enchantment_fusion.mechanics.signatures.RangedPrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelPiercing;
 import net.minecraft.server.level.ServerLevel;
@@ -66,11 +67,15 @@ public abstract class PhantomArrowMixin {
         AbstractArrow arrow = (AbstractArrow) (Object) this;
         if (!(arrow.level() instanceof ServerLevel)) { original.call(block); return; }
         GrapnelPiercing.Step step = GrapnelPiercing.begin(arrow, block);
-        RangedWorkBlade.Step blade = RangedWorkBlade.begin(arrow, block); boolean completed = false;
+        RangedWorkBlade.Step blade = RangedWorkBlade.begin(arrow, block);
+        RangedTideTrail.Step tide = RangedTideTrail.begin(arrow, block); boolean completed = false;
         try { original.call(block); completed = true; }
         finally {
             try { GrapnelPiercing.end(step, completed); }
-            finally { RangedWorkBlade.end(blade, completed); }
+            finally {
+                try { RangedWorkBlade.end(blade, completed); }
+                finally { RangedTideTrail.end(tide, completed); }
+            }
         }
     }
 

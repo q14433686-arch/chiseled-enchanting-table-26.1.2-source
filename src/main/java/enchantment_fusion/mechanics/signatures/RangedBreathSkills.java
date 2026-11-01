@@ -96,14 +96,19 @@ public final class RangedBreathSkills {
         return now >= prepared.born() && now < prepared.until()
             && source(owner, EquipmentSlot.HEAD, prepared.gear().item(), prepared.gear().pair());
     }
+    public static boolean hasPreparation(ServerPlayer owner) {
+        Prepared prepared = PREPARED.get(owner.getUUID());
+        if (prepared != null && !valid(owner, prepared)) { PREPARED.remove(owner.getUUID(), prepared); return false; }
+        return prepared != null;
+    }
     /** Paying air is an explicit choice: cancellation, timeout or changing equipment does not refund it. */
     public static boolean activate(ServerPlayer owner) {
         if (!owner.isAlive() || owner.isSpectator() || owner.isCreative() || owner.containerMenu != owner.inventoryMenu
             || !owner.isEyeInFluid(FluidTags.WATER)) return false;
         Gear gear = worn(owner); if (gear == null) return false;
-        Prepared old = PREPARED.get(owner.getUUID());
-        if (valid(owner, old)) return false;
-        if (old != null) PREPARED.remove(owner.getUUID(), old);
+        if (hasPreparation(owner) || RangedTideSkills.hasPreparation(owner)) {
+            owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.ranged_water_prepared"), true); return false;
+        }
         if (PREPARED.size() >= MAX_OWNERS) return false;
         int cost = UnderwaterMiningSkills.airCost(owner.getMaxAirSupply());
         if (owner.getAirSupply() < cost + UnderwaterMiningSkills.airReserve(owner.getMaxAirSupply())) {

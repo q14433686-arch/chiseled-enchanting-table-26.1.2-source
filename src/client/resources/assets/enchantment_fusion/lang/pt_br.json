@@ -1167,5 +1167,13 @@
   "message.enchantment_fusion.ranged_water_full": "Limite de flechas aquáticas atingido; a preparação foi consumida.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "Uma flecha real que cause dano a um alvo válido debaixo d’água cria uma bolha virtual temporária no impacto. Toque sua própria bolha submerso para recuperar ar. A água não é substituída e o efeito principal de tiro permanece.",
   "tooltip.enchantment_fusion.ranged_breath_drag": "Submerso, ative e gaste ar para preparar uma flecha real de arco ou besta por 10 segundos. Enquanto usar este capacete, a flecha perde menos velocidade na água. O ar não é devolvido ao expirar ou trocar o equipamento; respiração permanece.",
-  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e capacete para respiração principal."
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e capacete para respiração principal.",
+  "skill.enchantment_fusion.ranged_tide": "Flecha de corrente",
+  "message.enchantment_fusion.ranged_water_prepared": "Já existe uma flecha aquática preparada.",
+  "message.enchantment_fusion.ranged_tide_ready": "Seu nado real acumulou uma corrente.",
+  "message.enchantment_fusion.ranged_tide_need_swim": "Nade intencionalmente pelo menos três blocos na água.",
+  "message.enchantment_fusion.ranged_tide_set": "Corrente pronta para a próxima flecha real em até 10 segundos.",
+  "tooltip.enchantment_fusion.ranged_tide_current": "Uma flecha real submersa que cause dano a um alvo válido deixa uma breve corrente virtual em até 32 blocos de sua trajetória subaquática real. Nade uma vez a favor dela para receber um impulso sujeito a colisões. A água e o efeito principal de tiro permanecem.",
+  "tooltip.enchantment_fusion.ranged_tide_drag": "Nade intencionalmente três blocos com estas botas e ative na água: a próxima flecha real de arco/besta em 10 segundos perde menos velocidade na água enquanto você as usar. Apenas uma preparação aquática por vez; passos profundos permanece.",
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e botas para passos profundos principal."
 }

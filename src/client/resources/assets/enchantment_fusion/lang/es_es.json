@@ -1167,5 +1167,13 @@
   "message.enchantment_fusion.ranged_water_full": "Capacidad de flechas acuáticas alcanzada; se consumió la preparación.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "Una flecha real que dañe a un objetivo válido bajo el agua crea una burbuja virtual breve en el impacto. Toca tu burbuja bajo el agua para recuperar aire. El agua no se sustituye y se conserva el efecto principal de disparo.",
   "tooltip.enchantment_fusion.ranged_breath_drag": "Activa bajo el agua y paga aire para preparar una flecha real de arco o ballesta durante 10 segundos. Mientras lleves este casco, la flecha pierde menos velocidad en el agua. No se devuelve aire al caducar o cambiar equipo; se conserva respiración.",
-  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Los objetos antiguos mantienen su efecto. Los nuevos requieren arco o ballesta para disparo principal, y casco para respiración principal."
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Los objetos antiguos mantienen su efecto. Los nuevos requieren arco o ballesta para disparo principal, y casco para respiración principal.",
+  "skill.enchantment_fusion.ranged_tide": "Flecha de corriente",
+  "message.enchantment_fusion.ranged_water_prepared": "Ya hay una flecha acuática preparada.",
+  "message.enchantment_fusion.ranged_tide_ready": "Tu nado real ha acumulado corriente.",
+  "message.enchantment_fusion.ranged_tide_need_swim": "Nada voluntariamente al menos tres bloques en el agua.",
+  "message.enchantment_fusion.ranged_tide_set": "Corriente preparada para la próxima flecha real durante 10 segundos.",
+  "tooltip.enchantment_fusion.ranged_tide_current": "Un impacto submarino real que dañe a un objetivo válido deja una breve corriente virtual sobre hasta 32 bloques de su trayectoria real bajo el agua. Nada una vez a favor de la corriente para recibir un impulso sujeto a colisiones. El agua y el efecto principal de disparo permanecen.",
+  "tooltip.enchantment_fusion.ranged_tide_drag": "Nada voluntariamente tres bloques con estas botas y activa en el agua: la próxima flecha real de arco o ballesta durante 10 segundos tendrá menos resistencia mientras las uses. Solo puede haber una preparación acuática activa; agilidad acuática permanece.",
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Los objetos antiguos mantienen su efecto. Los nuevos requieren arco/ballesta para disparo principal y botas para agilidad acuática principal."
 }

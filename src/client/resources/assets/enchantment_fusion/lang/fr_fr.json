@@ -1167,5 +1167,13 @@
   "message.enchantment_fusion.ranged_water_full": "Capacité des flèches aquatiques atteinte ; la préparation est consommée.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "Une vraie flèche blessant une cible valide sous l’eau crée une bulle virtuelle temporaire à l’impact. Touchez votre bulle sous l’eau pour récupérer de l’air. L’eau reste intacte et l’effet principal de tir demeure.",
   "tooltip.enchantment_fusion.ranged_breath_drag": "Sous l’eau, activez et payez de l’air pour préparer une vraie flèche d’arc ou d’arbalète pendant 10 secondes. Tant que vous portez ce casque, la flèche ralentit moins dans l’eau. Aucun remboursement à expiration ou au changement d’équipement ; respiration demeure.",
-  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et casque pour respiration principale."
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et casque pour respiration principale.",
+  "skill.enchantment_fusion.ranged_tide": "Flèche de courant",
+  "message.enchantment_fusion.ranged_water_prepared": "Une flèche aquatique est déjà préparée.",
+  "message.enchantment_fusion.ranged_tide_ready": "Votre nage réelle a accumulé un courant.",
+  "message.enchantment_fusion.ranged_tide_need_swim": "Nagez volontairement au moins trois blocs dans l’eau.",
+  "message.enchantment_fusion.ranged_tide_set": "Courant prêt pour la prochaine vraie flèche pendant 10 secondes.",
+  "tooltip.enchantment_fusion.ranged_tide_current": "Une vraie flèche sous-marine blessant une cible valide laisse un bref courant virtuel sur 32 blocs au plus de sa trajectoire sous l’eau. Nagez une fois dans son sens pour recevoir une poussée soumise aux collisions. L’eau et l’effet principal de tir restent.",
+  "tooltip.enchantment_fusion.ranged_tide_drag": "Nagez volontairement trois blocs avec ces bottes, puis activez dans l’eau : la prochaine vraie flèche d’arc/arbalète ralentit moins dans l’eau pendant 10 secondes tant que vous les portez. Une seule préparation aquatique à la fois ; agilité aquatique reste.",
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et bottes pour agilité aquatique principale."
 }

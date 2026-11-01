@@ -1167,5 +1167,13 @@
   "message.enchantment_fusion.ranged_water_full": "수중 화살 효과가 가득 차 준비가 소모되었습니다.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "물속에서 실제 화살로 유효한 대상에게 피해를 주면 명중 지점에 잠시 가상 기포가 생깁니다. 물속에서 자신의 기포에 닿으면 산소가 회복됩니다. 물을 바꾸지 않으며 사격 주 효과는 유지됩니다.",
   "tooltip.enchantment_fusion.ranged_breath_drag": "물속에서 산소를 소모해 10초 안의 실제 활·쇠뇌 화살 한 발을 준비합니다. 이 투구를 계속 착용하면 화살의 수중 저항이 줄어듭니다. 만료 또는 장비 교체 시 산소는 반환되지 않으며 호흡 주 효과는 유지됩니다.",
-  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 호흡 주 효과에는 투구가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 호흡 주 효과에는 투구가 필요합니다.",
+  "skill.enchantment_fusion.ranged_tide": "물살 화살",
+  "message.enchantment_fusion.ranged_water_prepared": "이미 수중 화살이 준비되어 있습니다.",
+  "message.enchantment_fusion.ranged_tide_ready": "실제 수영으로 물살 기세가 모였습니다.",
+  "message.enchantment_fusion.ranged_tide_need_swim": "먼저 물속에서 의도적으로 세 블록 이상 수영하세요.",
+  "message.enchantment_fusion.ranged_tide_set": "물살 준비: 10초 안의 다음 실제 화살에 적용됩니다.",
+  "tooltip.enchantment_fusion.ranged_tide_current": "물속 실제 화살이 유효한 대상에게 피해를 주면 실제 수중 경로를 최대 32블록 따라 짧은 가상 물살이 남습니다. 물살 방향으로 실제 수영해 통과하면 충돌을 따르는 추진을 한 번 얻습니다. 물과 사격 주 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.ranged_tide_drag": "이 장화를 신고 물속에서 의도적으로 세 블록 수영한 뒤 발동합니다. 10초 안의 다음 실제 활·쇠뇌 화살은 계속 착용하는 동안 수중 저항이 줄어듭니다. 수중 화살 준비는 한 번에 하나만 가능하며 물갈퀴 주 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.legacy_ranged_tide_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 물갈퀴 주 효과에는 장화가 필요합니다."
 }
