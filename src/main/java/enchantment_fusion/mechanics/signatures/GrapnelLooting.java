@@ -9,6 +9,8 @@ import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
 import enchantment_fusion.model.RetainedEnchant;
 import enchantment_fusion.registry.FusionDataComponents;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -73,6 +75,7 @@ public final class GrapnelLooting {
         boolean inDeath;
         int lootCalls;
         @Nullable EntityLootProvenance.Scope loot;
+        final Deque<EntityLootProvenance.Scope> lootScopes = new ArrayDeque<>();
         @Nullable BlockPos origin;
         List<EntityLootProvenance.Verified> drops = List.of();
         private Frame(@Nullable Frame previous, @Nullable ServerLevel level, @Nullable ServerPlayer owner,
@@ -240,15 +243,22 @@ public final class GrapnelLooting {
         Frame frame = DAMAGE.get();
         if (frame == null || !frame.inDeath || frame.victim != victim || frame.level != level || frame.source != source || !held(frame)) return null;
         if (++frame.lootCalls != 1 || frame.loot != null) frame.evidence.nested();
-        frame.loot = EntityLootProvenance.open(level, frame.owner, victim, source);
-        return frame.loot;
+        EntityLootProvenance.Scope scope = EntityLootProvenance.open(level, frame.owner, victim, source);
+        frame.lootScopes.push(scope); frame.loot = scope;
+        return scope;
     }
     public static void endLoot(@Nullable EntityLootProvenance.Scope scope, boolean completed) {
         if (scope == null) return;
         Frame frame = DAMAGE.get();
         List<EntityLootProvenance.Verified> drops = EntityLootProvenance.close(scope, completed);
-        if (frame == null || frame.loot != scope) { if (frame != null) frame.evidence.nested(); return; }
-        frame.loot = null; frame.origin = scope.origin(); frame.drops = drops;
+        if (frame == null || frame.loot != scope || frame.lootScopes.peek() != scope) {
+            if (frame != null) { frame.evidence.nested(); frame.loot = null; frame.lootScopes.clear(); }
+            return;
+        }
+        frame.lootScopes.pop(); frame.loot = frame.lootScopes.peek();
+        // Nested provenance is ambiguous, but its completion must not disable the enclosing
+        // action's native-primary projection for the rest of the original loot table.
+        if (frame.loot == null) { frame.origin = scope.origin(); frame.drops = drops; }
     }
     public static void endDamage(@Nullable Frame frame, boolean accepted) {
         if (frame == null) return;
@@ -257,7 +267,7 @@ public final class GrapnelLooting {
         }
         if (frame.previous == null) DAMAGE.remove(); else DAMAGE.set(frame.previous);
         Action action = ACTION.get();
-        if (!frame.eligible || !frame.evidence.confirmed(accepted) || frame.inDeath || frame.loot != null || frame.lootCalls != 1
+        if (!frame.eligible || !frame.evidence.confirmed(accepted) || frame.inDeath || frame.loot != null || !frame.lootScopes.isEmpty() || frame.lootCalls != 1
             || action == null || action.ambiguous || action.victim != frame.victim || action.source != frame.source) return;
         if (action.frame != null) { action.ambiguous = true; return; }
         action.frame = frame;

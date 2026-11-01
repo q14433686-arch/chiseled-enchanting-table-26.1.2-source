@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -48,6 +49,14 @@ final class GrapnelLootingProbe {
         ServerLevel level = player.level(); AABB area = new AABB(origin).inflate(12);
         Set<UUID> oldItems = itemIds(level, area), oldOrbs = orbIds(level, area), denied = new HashSet<>();
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((target, source, amount) -> !denied.contains(target.getUUID()));
+        Reentry[] reentry = {null};
+        ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> {
+            Reentry active = reentry[0];
+            if (active != null && !active.called && world == active.level && entity instanceof ItemEntity) {
+                active.called = true;
+                active.victim.dropFromLootTable(world, active.source, true, tableKey("looting_count"));
+            }
+        });
         int size = player.getInventory().getContainerSize(); ItemStack[] inventory = new ItemStack[size];
         for (int i = 0; i < size; i++) { inventory[i] = player.getInventory().getItem(i); player.getInventory().setItem(i, ItemStack.EMPTY); }
         try (SharedMeleeFixture f = new SharedMeleeFixture(player, origin)) {
@@ -104,6 +113,17 @@ final class GrapnelLootingProbe {
                 checkNoMark(f, area, "looting_chance_baseline", 1, 1);
 
                 GrapnelSkills.clearPlayer(player.getUUID());
+                EquipmentZombie nested = spawn(f, "looting_nested_outer"); Set<UUID> nestedBefore = itemIds(level, area);
+                DamageSource source = level.damageSources().playerAttack(player);
+                Reentry active = new Reentry(level, nested, source); reentry[0] = active;
+                try { require(nested.hurtOrSimulate(source, 100), "Nested-loot fixture damage must succeed"); }
+                finally { reentry[0] = null; }
+                List<ItemEntity> nestedDrops = level.getEntitiesOfClass(ItemEntity.class, area, item -> !nestedBefore.contains(item.getUUID()));
+                require(active.called && nestedDrops.size() == 3 && nestedDrops.stream().allMatch(item -> item.getItem().getCount() == 4)
+                    && markedItem(player) == null, "Reentrant loot must preserve both nested and remaining primary results, without a secondary mark");
+                nestedDrops.forEach(ItemEntity::discard);
+
+                GrapnelSkills.clearPlayer(player.getUUID());
                 EquipmentZombie untracked = spawn(f, "looting_count"); before = itemIds(level, area);
                 require(untracked.hurtServer(level, level.damageSources().playerAttack(player), 100), "Direct server damage control must be accepted");
                 ItemEntity direct = onlyNew(level, area, before);
@@ -118,7 +138,7 @@ final class GrapnelLootingProbe {
             retained.set(FusionDataComponents.RETAINED_ENCHANTS, List.of(new RetainedEnchant(GrapnelLooting.LOOTING, 5)));
             checkNoMark(f, area, "looting_count", 1, 6);
         } finally {
-            denied.clear(); GrapnelSkills.clearPlayer(player.getUUID());
+            denied.clear(); reentry[0] = null; GrapnelSkills.clearPlayer(player.getUUID());
             for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, area)) if (!oldItems.contains(item.getUUID())) item.discard();
             for (ExperienceOrb orb : level.getEntitiesOfClass(ExperienceOrb.class, area)) if (!oldOrbs.contains(orb.getUUID())) orb.discard();
             for (int i = 0; i < size; i++) player.getInventory().setItem(i, inventory[i]);
@@ -135,8 +155,17 @@ final class GrapnelLootingProbe {
     private static EquipmentZombie spawn(SharedMeleeFixture f, String table) throws Exception {
         EquipmentZombie zombie = f.spawn(new EquipmentZombie(f.level), 2.8D, 0);
         Field field = Mob.class.getDeclaredField("lootTable"); field.setAccessible(true);
-        ResourceKey<LootTable> key = ResourceKey.create(Registries.LOOT_TABLE, Identifier.fromNamespaceAndPath("ef_client_smoke", table));
-        field.set(zombie, Optional.of(key)); zombie.setHealth(1); return zombie;
+        field.set(zombie, Optional.of(tableKey(table))); zombie.setHealth(1); return zombie;
+    }
+    private static ResourceKey<LootTable> tableKey(String table) {
+        return ResourceKey.create(Registries.LOOT_TABLE, Identifier.fromNamespaceAndPath("ef_client_smoke", table));
+    }
+    private static final class Reentry {
+        final ServerLevel level; final EquipmentZombie victim; final DamageSource source;
+        boolean called;
+        Reentry(ServerLevel level, EquipmentZombie victim, DamageSource source) {
+            this.level = level; this.victim = victim; this.source = source;
+        }
     }
     private static ItemEntity onlyNew(ServerLevel level, AABB area, Set<UUID> before) {
         List<ItemEntity> found = level.getEntitiesOfClass(ItemEntity.class, area, item -> !before.contains(item.getUUID()));
