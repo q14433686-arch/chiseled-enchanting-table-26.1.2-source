@@ -1188,5 +1188,12 @@
   "message.enchantment_fusion.ranged_guard_set": "Protezione pronta per la prossima freccia vera entro 10 secondi.",
   "tooltip.enchantment_fusion.ranged_guard_screen": "Una freccia vera che danneggia un bersaglio valido lascia un breve schermo virtuale all’impatto. Devia un numero limitato di veri proiettili ostili che colpirebbero proprietario, alleati o abitanti nel raggio; il proiettile originale rimane reale. L’effetto principale di tiro resta.",
   "tooltip.enchantment_fusion.ranged_guard_arrow": "La riduzione Protezione attribuibile o il blocco reale dello scudo caricano l’equipaggiamento. Dopo almeno due danni evitati, attiva per proteggere la prossima freccia vera di arco/balestra entro 10 secondi mentre mantieni lo stesso oggetto. Una vera collisione con proiettile ostile viene deviata; nessuna munizione copiata. Protezione resta.",
-  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale e armatura o scudo per Protezione principale."
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale e armatura o scudo per Protezione principale.",
+  "skill.enchantment_fusion.ranged_mending": "Freccia col sigillo di riparazione",
+  "message.enchantment_fusion.ranged_mending_need": "Prima una sfera di esperienza deve riparare davvero quest’arma impugnata.",
+  "message.enchantment_fusion.ranged_mending_set": "Sigillo di riparazione pronto per la prossima freccia reale.",
+  "message.enchantment_fusion.ranged_mending_full": "Troppe frecce segnate; il sigillo resta pronto.",
+  "tooltip.enchantment_fusion.ranged_mending_route": "Un’uccisione valida con una freccia reale guida solo le nuove sfere esperienza non unite lungo la traiettoria libera. Raccogliendole, questo arco o balestra viene riparato per primo; l’esperienza restante va a te. Le sfere incerte restano normali.",
+  "tooltip.enchantment_fusion.ranged_mending_arrow": "Le sfere che riparano davvero questo arco o balestra impugnato creano marchi temporanei. Attivali per la prossima freccia reale: Potenza aumenta i danni, Impatto la spinta e Fiamma incendia il bersaglio valido.",
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "Il vecchio oggetto inadatto mantiene il comportamento precedente. Le nuove fusioni richiedono un arco o una balestra con durabilità."
 }

@@ -127,6 +127,9 @@ public final class DurabilityEconomy {
             if (melee != null && (pair == null || melee.primaryLevel() > pair.primaryLevel())) pair = melee;
             FusedPair grapnel = GrapnelDurability.nonNativeMending(stack);
             if (grapnel != null && (pair == null || grapnel.primaryLevel() > pair.primaryLevel())) pair = grapnel;
+            FusedPair ranged = slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND
+                ? RangedMendingSkills.nonNativeMending(stack) : null;
+            if (ranged != null && (pair == null || ranged.primaryLevel() > pair.primaryLevel())) pair = ranged;
             if (pair == null || !seen.add(stack) || !stack.isDamaged()) continue;
             boolean nativeMending = containsNative(stack, mending);
             if (nativeMending && mending.value().matchingSlot(slot)) continue;
@@ -151,6 +154,7 @@ public final class DurabilityEconomy {
                 GrapnelDurability.afterOrbRepair(player, stack, before, actual, true);
                 afterOrbRepair(player, stack, actual);
                 MeleeMendingSkills.afterOrbRepair(player, stack, actual);
+                RangedMendingSkills.afterOrbRepair(player, stack, before, actual, true);
                 if (amount <= 0) return 0;
             } finally { GrapnelDurability.endRepair(frame); }
         }

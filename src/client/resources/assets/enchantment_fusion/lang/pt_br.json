@@ -1188,5 +1188,12 @@
   "message.enchantment_fusion.ranged_guard_set": "Proteção pronta para a próxima flecha real em até 10 segundos.",
   "tooltip.enchantment_fusion.ranged_guard_screen": "Uma flecha real que cause dano a um alvo válido deixa uma breve proteção virtual no impacto. Ela desvia um número limitado de projéteis inimigos reais que atingiriam o dono, aliados ou aldeões dentro do raio; o projétil original continua real. O efeito principal de tiro permanece.",
   "tooltip.enchantment_fusion.ranged_guard_arrow": "Redução de Proteção atribuível ou bloqueio real de escudo carregam o equipamento. Após evitar ao menos dois de dano, ative para proteger a próxima flecha real de arco/besta em 10 segundos enquanto mantiver o mesmo equipamento. Uma colisão real com projétil hostil é desviada; munição não é copiada. Proteção permanece.",
-  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e armadura ou escudo para Proteção principal."
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e armadura ou escudo para Proteção principal.",
+  "skill.enchantment_fusion.ranged_mending": "Flecha de selo reparador",
+  "message.enchantment_fusion.ranged_mending_need": "Primeiro um orbe de experiência deve reparar de fato esta arma empunhada.",
+  "message.enchantment_fusion.ranged_mending_set": "Selo reparador preparado para a próxima flecha real.",
+  "message.enchantment_fusion.ranged_mending_full": "Há flechas marcadas demais; o selo permanece preparado.",
+  "tooltip.enchantment_fusion.ranged_mending_route": "Uma morte válida por flecha real guia apenas orbes de experiência novos e não mesclados pela trajetória livre. Ao recolhê-los, este arco ou besta é reparado primeiro; a experiência restante é sua. Orbes incertos continuam normais.",
+  "tooltip.enchantment_fusion.ranged_mending_arrow": "Orbes que realmente reparam este arco ou besta empunhado criam marcas temporárias. Ative para a próxima flecha real: Força aumenta o dano, Impacto o empurrão e Chama incendeia o alvo válido.",
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "O item antigo inadequado mantém o comportamento anterior. Novas fusões exigem arco ou besta com durabilidade."
 }

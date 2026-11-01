@@ -15,6 +15,19 @@ import org.spongepowered.asm.mixin.Mixin;
 /** Observe the real, normally rolled Unbreaking effect; never repeat the random roll. */
 @Mixin(Enchantment.class)
 public abstract class EnchantmentDurabilityReserveMixin {
+    @WrapMethod(method = "modifyDurabilityToRepairFromXp")
+    private void ef$observeActualMending(ServerLevel level, int rank, ItemStack stack,
+                                         MutableFloat change, Operation<Void> original) {
+        float before = change.floatValue();
+        GrapnelDurability.RepairFrame frame = GrapnelDurability.beginRepairEffect(level, stack);
+        boolean completed = false;
+        try { original.call(level, rank, stack, change); completed = true; }
+        finally {
+            GrapnelDurability.endRepairEffect(frame, level, (Enchantment) (Object) this, rank, stack,
+                before, change.floatValue(), completed);
+        }
+    }
+
     @WrapMethod(method = "modifyDurabilityChange")
     private void ef$observeActualUnbreaking(ServerLevel level, int enchantmentLevel, ItemStack stack,
                                             MutableFloat change, Operation<Void> original) {

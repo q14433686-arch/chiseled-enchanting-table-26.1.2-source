@@ -27,6 +27,7 @@ public final class RangedPrimary {
             Math.max(Math.max(RangedWorkSkills.primaryLevel(weapon, primary), RangedBreathSkills.primaryLevel(weapon, primary)),
                 Math.max(Math.max(RangedTideSkills.primaryLevel(weapon, primary), RangedSneakSkills.primaryLevel(weapon, primary)),
                     RangedGuardSkills.primaryLevel(weapon, primary))));
+        result = Math.max(result, RangedMendingSkills.primaryLevel(weapon, primary));
         FusedPair thermal = ThermalProjectileSkills.selected(weapon);
         return thermal != null && primary.equals(thermal.primaryId()) ? Math.max(result, thermal.primaryLevel()) : result;
     }

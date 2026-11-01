@@ -1188,5 +1188,12 @@
   "message.enchantment_fusion.ranged_guard_set": "Protection prepared for the next real arrow within 10 seconds.",
   "tooltip.enchantment_fusion.ranged_guard_screen": "A real arrow damaging a valid target leaves a short virtual screen at the impact. It deflects a limited number of actual hostile projectiles that would hit the owner, allies or villagers within its radius; the original projectile remains real. The shooting primary remains.",
   "tooltip.enchantment_fusion.ranged_guard_arrow": "Actual attributable Protection reduction or shield blocking charges this gear. Activate with at least two prevented damage to guard the next real bow/crossbow arrow for 10 seconds while this exact gear stays equipped. One genuine hostile projectile collision is deflected; no ammunition is copied. Protection remains.",
-  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Legacy items keep their old effect. New shooting-first fusions need a bow/crossbow; Protection-first fusions need armor or a shield."
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Legacy items keep their old effect. New shooting-first fusions need a bow/crossbow; Protection-first fusions need armor or a shield.",
+  "skill.enchantment_fusion.ranged_mending": "Mending seal arrow",
+  "message.enchantment_fusion.ranged_mending_need": "A real Mending repair on this held weapon is needed first.",
+  "message.enchantment_fusion.ranged_mending_set": "Mending seal loaded onto the next real arrow.",
+  "message.enchantment_fusion.ranged_mending_full": "Too many marked arrows; the seal stays ready.",
+  "tooltip.enchantment_fusion.ranged_mending_route": "An eligible real-arrow kill guides its newly spawned, unmerged XP along the clear arrow path. If you pick it up, this bow or crossbow repairs first; leftover XP goes to you. Uncertain or merged orbs stay normal.",
+  "tooltip.enchantment_fusion.ranged_mending_arrow": "XP orbs that actually repair this held bow or crossbow build temporary marks. Activate to load the next real arrow once: Power adds damage, Punch adds knockback, Flame ignites an eligible target.",
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "This old item keeps its legacy behavior. New fusions require a damageable bow or crossbow."
 }

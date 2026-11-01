@@ -1188,5 +1188,12 @@
   "message.enchantment_fusion.ranged_guard_set": "Protección preparada para la próxima flecha real durante 10 segundos.",
   "tooltip.enchantment_fusion.ranged_guard_screen": "Una flecha real que daña a un objetivo válido deja una breve pantalla virtual en el impacto. Desvía un número limitado de proyectiles enemigos reales que golpearían al dueño, aliados o aldeanos dentro de su radio; el proyectil original sigue existiendo. El efecto principal de disparo permanece.",
   "tooltip.enchantment_fusion.ranged_guard_arrow": "La reducción de Protección atribuible o el bloqueo real del escudo cargan el equipo. Activa tras evitar al menos dos de daño para proteger la próxima flecha real de arco/ballesta durante 10 segundos mientras mantengas equipado el mismo objeto. Se desvía una colisión real con proyectil enemigo; no se copia munición. Protección permanece.",
-  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Los objetos antiguos mantienen su efecto. Los nuevos requieren arco/ballesta para disparo principal y armadura o escudo para Protección principal."
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Los objetos antiguos mantienen su efecto. Los nuevos requieren arco/ballesta para disparo principal y armadura o escudo para Protección principal.",
+  "skill.enchantment_fusion.ranged_mending": "Flecha con sello reparador",
+  "message.enchantment_fusion.ranged_mending_need": "Primero, un orbe de experiencia debe reparar realmente esta arma sostenida.",
+  "message.enchantment_fusion.ranged_mending_set": "Sello reparador preparado para la próxima flecha real.",
+  "message.enchantment_fusion.ranged_mending_full": "Hay demasiadas flechas marcadas; el sello sigue preparado.",
+  "tooltip.enchantment_fusion.ranged_mending_route": "Una muerte válida por flecha real guía solo los orbes de experiencia nuevos y no fusionados por la trayectoria despejada. Al recogerlos, se repara primero este arco o ballesta; la experiencia restante es tuya. Los orbes dudosos conservan su comportamiento normal.",
+  "tooltip.enchantment_fusion.ranged_mending_arrow": "La reparación real de este arco o ballesta sostenido mediante orbes crea sellos temporales. Activa uno para la siguiente flecha real: Poder aumenta el daño, Empuje el retroceso y Fuego prende a objetivos válidos.",
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "El objeto antiguo no apto conserva su comportamiento anterior. Las nuevas fusiones requieren un arco o ballesta con durabilidad."
 }

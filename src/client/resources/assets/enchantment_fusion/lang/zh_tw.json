@@ -1188,5 +1188,12 @@
   "message.enchantment_fusion.ranged_guard_set": "盾勢已準備：10 秒內下一支真實箭獲得保護。",
   "tooltip.enchantment_fusion.ranged_guard_screen": "真實箭使合格目標受到淨傷後，在命中點留下短暫虛擬護屏。本人、盟友或村民在範圍內即將被真實敵方飛行物命中時，護屏偏轉有限次數；原飛行物仍然存在。保留射擊主位。",
   "tooltip.enchantment_fusion.ranged_guard_arrow": "該裝備可歸因的真實保護減傷或盾牌格擋積攢盾勢；至少減免 2 點後主動準備，10 秒內下一支真實弓弩箭在持續穿戴或持握原裝備時獲得護矢。一次真實敵方彈體碰撞會被偏轉，不複製彈藥；保留保護主位。",
-  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新保護主位要求護甲或盾牌。"
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "舊裝備保留舊效果；新射擊主位要求弓或弩，新保護主位要求護甲或盾牌。",
+  "skill.enchantment_fusion.ranged_mending": "修補印矢",
+  "message.enchantment_fusion.ranged_mending_need": "先讓經驗球實際修復手持的這把武器。",
+  "message.enchantment_fusion.ranged_mending_set": "修補印已準備，將載入下一支真實箭。",
+  "message.enchantment_fusion.ranged_mending_full": "標記箭過多，修補印繼續保留。",
+  "tooltip.enchantment_fusion.ranged_mending_route": "真實箭擊殺合格目標後，只有確定新生成且未合併的經驗球會沿暢通的真實箭跡回流；本人拾取時優先修復這把弓弩，剩餘經驗歸本人。不確定或合併的經驗球維持原樣。",
+  "tooltip.enchantment_fusion.ranged_mending_arrow": "經驗球實際修復手持弓弩後累積限時修補印；主動準備後載入下一支真實箭：力量增加傷害、衝擊增強擊退、火矢點燃合格目標。",
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "舊的不適用裝備保留舊效果；新融合需要可損耗的弓或弩。"
 }

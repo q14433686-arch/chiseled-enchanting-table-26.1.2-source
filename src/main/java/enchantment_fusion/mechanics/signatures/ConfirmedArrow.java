@@ -101,6 +101,35 @@ public final class ConfirmedArrow {
             this.burning = arrow.isOnFire();
         }
     }
+    /** Immutable snapshot for a subscriber that must inspect an action before death-loot runs. */
+    public record DamageEvidence(ServerPlayer owner, ItemStack launcher, AbstractArrow arrow,
+                                 LivingEntity target, List<FusedPair> pairs, List<Vec3> path,
+                                 float beforeHealth, float beforeAbsorption) {}
+    public static @Nullable DamageEvidence evidence(@Nullable Damage damage) {
+        return evidence(damage, true);
+    }
+    /** XP from a real kill may include ordinary passive mobs, but never protected entities. */
+    public static @Nullable DamageEvidence experienceEvidence(@Nullable Damage damage) {
+        if (damage == null || !(damage.target instanceof net.minecraft.world.entity.Mob)
+            || PhantomVolley.isProtected(damage.owner, damage.target)
+            || !damage.owner.level().mayInteract(damage.owner, damage.target.blockPosition())) return null;
+        return evidence(damage, false);
+    }
+    private static @Nullable DamageEvidence evidence(@Nullable Damage damage, boolean requireEligible) {
+        if (damage == null || (requireEligible && !damage.eligible) || damage.flight.invalid || damage.flight.resolved
+            || FLIGHTS.get(damage.arrow) != damage.flight || !valid(damage.owner, damage.flight)
+            || damage.arrow.getOwner() != damage.owner || damage.owner.level() != damage.target.level()
+            || !RangedTideMath.finite(damage.location)) return null;
+        List<Vec3> path = new ArrayList<>(damage.flight.nodes);
+        if (path.isEmpty()) return null;
+        double distance = path.getLast().distanceToSqr(damage.location);
+        if (!Double.isFinite(distance) || distance > MAX_STEP_SQUARED || path.size() >= MAX_NODES) return null;
+        if (distance >= 1.0E-7D) path.add(damage.location);
+        if (path.size() < 2) return null;
+        return new DamageEvidence(damage.owner, damage.flight.launcher, damage.arrow, damage.target,
+            damage.flight.pairs.stream().filter(pair -> contains(damage.flight, pair)).toList(), List.copyOf(path),
+            damage.health, damage.absorption);
+    }
     private ConfirmedArrow() {}
     public static void register(Listener listener) { if (listener != null && !LISTENERS.contains(listener)) LISTENERS.add(listener); }
     public static void registerInsertion(InsertionListener listener) {

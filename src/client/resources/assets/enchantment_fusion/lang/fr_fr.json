@@ -1188,5 +1188,12 @@
   "message.enchantment_fusion.ranged_guard_set": "Protection prête pour la prochaine vraie flèche pendant 10 secondes.",
   "tooltip.enchantment_fusion.ranged_guard_screen": "Une vraie flèche blessant une cible valide laisse un bref écran virtuel au point d’impact. Il dévie un nombre limité de vrais projectiles ennemis qui toucheraient le propriétaire, ses alliés ou des villageois dans son rayon ; le projectile d’origine reste réel. L’effet principal de tir reste.",
   "tooltip.enchantment_fusion.ranged_guard_arrow": "La réduction Protection attribuable ou un vrai blocage au bouclier charge l’équipement. Après au moins deux dégâts évités, activez pour protéger la prochaine vraie flèche d’arc/arbalète pendant 10 secondes tant que cet équipement reste porté. Une vraie collision avec un projectile hostile est déviée ; aucune munition copiée. Protection reste.",
-  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et armure ou bouclier pour Protection principale."
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et armure ou bouclier pour Protection principale.",
+  "skill.enchantment_fusion.ranged_mending": "Flèche au sceau de réparation",
+  "message.enchantment_fusion.ranged_mending_need": "Un orbe doit d’abord réparer réellement cette arme tenue.",
+  "message.enchantment_fusion.ranged_mending_set": "Sceau de réparation prêt pour la prochaine vraie flèche.",
+  "message.enchantment_fusion.ranged_mending_full": "Trop de flèches marquées ; le sceau reste prêt.",
+  "tooltip.enchantment_fusion.ranged_mending_route": "Une vraie flèche tuant une cible admissible guide uniquement les nouveaux orbes non fusionnés le long de sa trajectoire dégagée. En les ramassant, cet arc ou cette arbalète est réparé en priorité ; le reste de l’expérience vous revient. Les orbes incertains restent normaux.",
+  "tooltip.enchantment_fusion.ranged_mending_arrow": "Les orbes qui réparent réellement cet arc ou cette arbalète tenue créent des marques temporaires. Activez-les pour la prochaine vraie flèche : Puissance augmente les dégâts, Frappe le recul et Flamme enflamme une cible admissible.",
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "Cet ancien objet inadapté conserve son comportement précédent. Les nouvelles fusions exigent un arc ou une arbalète à durabilité."
 }

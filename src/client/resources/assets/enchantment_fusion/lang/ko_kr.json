@@ -1188,5 +1188,12 @@
   "message.enchantment_fusion.ranged_guard_set": "보호 준비: 10초 안의 다음 실제 화살에 적용됩니다.",
   "tooltip.enchantment_fusion.ranged_guard_screen": "실제 화살이 유효한 대상에게 피해를 주면 명중 지점에 잠시 가상 방벽이 생깁니다. 범위 안의 본인, 아군 또는 주민에게 실제로 맞을 적 투사체를 제한된 횟수만큼 튕깁니다. 원래 투사체와 사격 주 효과는 유지됩니다.",
   "tooltip.enchantment_fusion.ranged_guard_arrow": "이 장비에 귀속되는 실제 보호 피해 감소 또는 방패 막기로 충전합니다. 피해를 2 이상 막고 발동하면 같은 장비를 착용하거나 든 동안 10초 안의 다음 실제 활·쇠뇌 화살을 보호합니다. 실제 적 투사체와의 충돌 한 번을 튕기며 탄약을 복제하지 않습니다. 보호 주 효과는 유지됩니다.",
-  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 보호 주 효과에는 방어구 또는 방패가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 보호 주 효과에는 방어구 또는 방패가 필요합니다.",
+  "skill.enchantment_fusion.ranged_mending": "수선 인장 화살",
+  "message.enchantment_fusion.ranged_mending_need": "먼저 손에 든 이 무기를 경험치 구슬로 실제 수리해야 합니다.",
+  "message.enchantment_fusion.ranged_mending_set": "수선 인장이 준비되어 다음 실제 화살에 장전됩니다.",
+  "message.enchantment_fusion.ranged_mending_full": "표시된 화살이 너무 많아 인장을 준비 상태로 유지합니다.",
+  "tooltip.enchantment_fusion.ranged_mending_route": "실제 화살로 적합한 대상을 처치하면 새로 생성되고 합쳐지지 않은 경험치 구슬만 막히지 않은 화살 경로를 따라 돌아옵니다. 직접 주우면 이 활이나 쇠뇌를 먼저 수리하고 남은 경험치를 받습니다. 불확실한 구슬은 그대로 유지됩니다.",
+  "tooltip.enchantment_fusion.ranged_mending_arrow": "손에 든 활이나 쇠뇌를 경험치 구슬이 실제 수리하면 임시 인장이 쌓입니다. 활성화하면 다음 실제 화살 한 발에 장전됩니다. 힘은 피해, 밀어내기는 넉백을 늘리고 화염은 적합한 대상에 불을 붙입니다.",
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "적합하지 않은 기존 장비는 기존 효과를 유지합니다. 새 융합에는 내구도가 있는 활이나 쇠뇌가 필요합니다."
 }

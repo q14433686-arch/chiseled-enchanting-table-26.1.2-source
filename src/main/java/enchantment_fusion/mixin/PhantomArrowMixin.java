@@ -15,6 +15,8 @@ import enchantment_fusion.mechanics.signatures.RangedWorkBlade;
 import enchantment_fusion.mechanics.signatures.RangedWaterDrag;
 import enchantment_fusion.mechanics.signatures.RangedTideTrail;
 import enchantment_fusion.mechanics.signatures.RangedPrimary;
+import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
+import enchantment_fusion.mechanics.signatures.RangedMendingCapture;
 import enchantment_fusion.mechanics.signatures.GrapnelPiercing;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -98,7 +100,8 @@ public abstract class PhantomArrowMixin {
     private float ef$nonNativePunchPrimary(ServerLevel level, ItemStack weapon, Entity target, DamageSource source,
                                            float base, Operation<Float> original) {
         float result = original.call(level, weapon, target, source, base);
-        return RangedPrimary.knockback(level, weapon, target, source, result);
+        return RangedMendingSkills.bonusKnockback((AbstractArrow) (Object) this, target, source,
+            RangedPrimary.knockback(level, weapon, target, source, result));
     }
 
     @WrapOperation(method = "doKnockback", at = @At(value = "INVOKE",
@@ -120,9 +123,14 @@ public abstract class PhantomArrowMixin {
         PiercingChainSkills.Impact chainHit = PiercingChainSkills.beginImpact(arrow, target, hit.getLocation());
         GrapnelSkills.ArrowHit grapnelHit = GrapnelSkills.beforeArrowHit(arrow, target, source, hit.getLocation());
         ConfirmedArrow.Damage confirmed = ConfirmedArrow.beforeDamage(arrow, target, source, hit.getLocation());
+        RangedMendingCapture.Frame mending = RangedMendingCapture.begin(confirmed, source);
         boolean succeeded = false;
         try {
-            succeeded = original.call(target, source, amount);
+            boolean completed = false;
+            try {
+                succeeded = original.call(target, source, RangedMendingSkills.bonusDamage(confirmed, amount));
+                completed = true;
+            } finally { RangedMendingCapture.end(mending, completed, succeeded); }
             GrapnelSkills.afterArrowHit(grapnelHit, succeeded);
             ConfirmedArrow.afterDamage(confirmed, succeeded);
             return succeeded;

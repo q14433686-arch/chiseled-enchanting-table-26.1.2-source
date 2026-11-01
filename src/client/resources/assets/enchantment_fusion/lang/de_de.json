@@ -1188,5 +1188,12 @@
   "message.enchantment_fusion.ranged_guard_set": "Schutz für den nächsten echten Pfeil innerhalb von 10 Sekunden vorbereitet.",
   "tooltip.enchantment_fusion.ranged_guard_screen": "Ein echter Pfeil, der ein gültiges Ziel verletzt, hinterlässt kurz einen virtuellen Schirm am Trefferpunkt. Er lenkt begrenzt viele echte feindliche Geschosse ab, die Besitzer, Verbündete oder Dorfbewohner im Radius treffen würden; das ursprüngliche Geschoss bleibt bestehen. Der Schuss-Haupteffekt bleibt.",
   "tooltip.enchantment_fusion.ranged_guard_arrow": "Tatsächlich zurechenbare Schutzminderung oder Schildblocken lädt diese Ausrüstung. Nach mindestens zwei verhindertem Schaden aktivieren: Der nächste echte Bogen-/Armbrustpfeil ist binnen 10 Sekunden geschützt, solange dieselbe Ausrüstung angelegt bleibt. Eine echte feindliche Geschosskollision wird abgelenkt; keine Munition wird kopiert. Schutz bleibt.",
-  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, Schutz-Haupteffekte Rüstung oder Schild."
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "Alte Gegenstände behalten ihren Effekt. Neue Schuss-Haupteffekte benötigen Bogen/Armbrust, Schutz-Haupteffekte Rüstung oder Schild.",
+  "skill.enchantment_fusion.ranged_mending": "Reparatursiegel-Pfeil",
+  "message.enchantment_fusion.ranged_mending_need": "Zuerst muss eine Erfahrungskugel diese gehaltene Waffe wirklich reparieren.",
+  "message.enchantment_fusion.ranged_mending_set": "Reparatursiegel für den nächsten echten Pfeil bereit.",
+  "message.enchantment_fusion.ranged_mending_full": "Zu viele markierte Pfeile; das Siegel bleibt bereit.",
+  "tooltip.enchantment_fusion.ranged_mending_route": "Ein gültiger Tod durch einen echten Pfeil führt nur neu erzeugte, nicht verschmolzene Erfahrungskugeln auf der freien Pfeilbahn zurück. Beim eigenen Aufheben wird dieser Bogen oder diese Armbrust zuerst repariert; übrige Erfahrung gehört dir. Unklare Kugeln bleiben unverändert.",
+  "tooltip.enchantment_fusion.ranged_mending_arrow": "Tatsächliche Reparatur dieser gehaltenen Waffe durch Erfahrungskugeln erzeugt zeitlich begrenzte Siegel. Aktiviere sie für den nächsten echten Pfeil: Stärke erhöht Schaden, Schlag Rückstoß und Flamme entzündet gültige Ziele.",
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "Alte ungeeignete Gegenstände behalten ihr bisheriges Verhalten. Neue Fusionen benötigen einen beschädigbaren Bogen oder eine Armbrust."
 }

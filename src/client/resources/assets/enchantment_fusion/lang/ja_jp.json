@@ -1188,5 +1188,12 @@
   "message.enchantment_fusion.ranged_guard_set": "護り準備完了：10秒以内の次の本物の矢に適用。",
   "tooltip.enchantment_fusion.ranged_guard_screen": "本物の矢が有効な対象へ実ダメージを与えると、命中地点に短命の仮想防壁を残す。範囲内の本人・味方・村人に実際に当たる敵の飛翔体を有限回だけ反らす。元の飛翔体は残り、射撃の主効果も維持。",
   "tooltip.enchantment_fusion.ranged_guard_arrow": "この装備に帰属する実際のダメージ軽減または盾の防御で蓄積。2ダメージ以上を防いだ後に発動すると、同じ装備を着用・持続中、10秒以内の次の本物の弓・クロスボウの矢を保護する。実際の敵飛翔体との衝突を一度反らし、弾薬を複製しない。ダメージ軽減の主効果は維持。",
-  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、ダメージ軽減主位は防具または盾が必要。"
+  "tooltip.enchantment_fusion.legacy_ranged_guard_carrier": "旧アイテムは旧効果を維持。新規の射撃主位は弓・クロスボウ、ダメージ軽減主位は防具または盾が必要。",
+  "skill.enchantment_fusion.ranged_mending": "修繕印の矢",
+  "message.enchantment_fusion.ranged_mending_need": "まず手に持ったこの武器を経験値オーブで実際に修理してください。",
+  "message.enchantment_fusion.ranged_mending_set": "修繕印を準備しました。次の実際の矢に装填します。",
+  "message.enchantment_fusion.ranged_mending_full": "印付きの矢が多すぎるため、修繕印は準備状態を保ちます。",
+  "tooltip.enchantment_fusion.ranged_mending_route": "実際の矢で対象を倒すと、確実に新規生成され合体していない経験値オーブだけが、遮られていない矢の軌跡を戻ります。自分で拾うとこの弓かクロスボウを優先修理し、残りの経験値を獲得します。不確かなオーブは通常どおりです。",
+  "tooltip.enchantment_fusion.ranged_mending_arrow": "手に持った弓かクロスボウを経験値オーブが実際に修理すると、一時的な印がたまります。発動すると次の実際の矢に一度装填し、射撃ダメージ増加はダメージ、パンチはノックバック、フレイムは対象への着火を強めます。",
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "適用外の旧装備は従来の効果を維持します。新しい融合には耐久値のある弓かクロスボウが必要です。"
 }

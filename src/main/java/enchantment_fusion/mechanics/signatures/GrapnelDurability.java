@@ -35,6 +35,7 @@ public final class GrapnelDurability {
     public static final class RepairFrame {
         final @Nullable RepairFrame previous; final ServerPlayer player; final ServerLevel level; final Vec3 origin;
         @Nullable ItemStack stack, snapshot; int input, output; boolean seen, active, ambiguous;
+        final RealRepairObservation observation = new RealRepairObservation();
         RepairFrame(@Nullable RepairFrame previous, ServerPlayer player) {
             this.previous = previous; this.player = player; this.level = player.level(); this.origin = player.position();
         }
@@ -162,7 +163,7 @@ public final class GrapnelDurability {
     /** Nested vanilla recursion gets a separate frame; reentry during an effect invalidates the parent. */
     public static RepairFrame beginRepair(ServerPlayer player) {
         RepairFrame previous = REPAIR.get();
-        if (previous != null && previous.active) previous.ambiguous = true;
+        if (previous != null && previous.active) { previous.ambiguous = true; previous.observation.nested(); }
         RepairFrame frame = new RepairFrame(previous, player); REPAIR.set(frame); return frame;
     }
     public static @Nullable RepairFrame beginRepairCalculation(ServerPlayer player, ServerLevel level, ItemStack stack) {
@@ -173,33 +174,60 @@ public final class GrapnelDurability {
         frame.seen = true; frame.active = true; frame.stack = stack; frame.snapshot = stack.copy();
         return frame;
     }
+    /** Observe the actual value effect once. Never re-run a datapack effect just to prove it. */
+    public static @Nullable RepairFrame beginRepairEffect(ServerLevel level, ItemStack stack) {
+        RepairFrame frame = REPAIR.get();
+        if (frame == null || !frame.active) return null;
+        if (frame.level != level || frame.stack != stack) { frame.ambiguous = true; return null; }
+        frame.observation.enter(); return frame;
+    }
+    public static void endRepairEffect(@Nullable RepairFrame frame, ServerLevel level, Enchantment enchantment,
+                                       int rank, ItemStack stack, float before, float after, boolean completed) {
+        if (frame == null) return;
+        if (REPAIR.get() != frame || frame.level != level || frame.stack != stack) frame.ambiguous = true;
+        Holder<Enchantment> mending = FusionStationOperations.lookupEnchantment(level.registryAccess(), MENDING).orElse(null);
+        frame.observation.record(mending != null && mending.value() == enchantment, rank, before, after, completed);
+        frame.observation.exit();
+    }
     public static void finishRepairCalculation(@Nullable RepairFrame frame, int input, int output) {
         if (frame == null) return;
         if (REPAIR.get() != frame || !frame.active || frame.stack == null || frame.snapshot == null
             || !ItemStack.matches(frame.stack, frame.snapshot)) frame.ambiguous = true;
         frame.input = input; frame.output = output; frame.active = false;
     }
-    /** A real repair counts only for this calculation and a sole, positively contributing Mending effect. */
-    public static void afterOrbRepair(ServerPlayer player, ItemStack stack, int before, int repaired, boolean projected) {
+    /** One real orb calculation with uniquely attributable, positive Mending contribution. */
+    public static boolean provenMendingRepair(ServerPlayer player, ItemStack stack, FusedPair pair,
+                                               int before, int repaired, boolean projected) {
         RepairFrame frame = REPAIR.get();
         if (frame == null || frame.player != player || frame.level != player.level() || frame.stack != stack
             || frame.snapshot == null || frame.active || frame.ambiguous || !frame.seen
             || !GrapnelDurabilityMath.improvedRepair(frame.input, frame.output)
-            || frame.snapshot.getDamageValue() != before || !ready(player) || repaired <= 0) return;
+            || !frame.observation.proved(pair == null ? 0 : pair.primaryLevel(), frame.input, frame.output)
+            || frame.snapshot.getDamageValue() != before || !ready(player) || repaired <= 0
+            || pair == null || !MENDING.equals(pair.primaryId()) || !unambiguous(stack, MENDING)
+            || !stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().contains(pair)) return false;
         ItemStack expected = frame.snapshot.copy(); expected.setDamageValue(stack.getDamageValue());
-        if (!ItemStack.matches(expected, stack)) return;
-        EquipmentSlot slot = equippedSlot(player, stack); FusedPair pair = selected(stack, MENDING);
-        if (slot == null || pair == null || !stillSame(player, slot, stack, pair) || !unambiguous(stack, MENDING)) return;
+        if (!ItemStack.matches(expected, stack)) return false;
+        EquipmentSlot slot = equippedSlot(player, stack);
+        if (slot == null) return false;
         Holder<Enchantment> mending = FusionStationOperations.lookupEnchantment(player.registryAccess(), MENDING).orElse(null);
-        if (mending == null || !mending.value().effects().has(EnchantmentEffectComponents.REPAIR_WITH_XP)) return;
+        if (mending == null || !mending.value().effects().has(EnchantmentEffectComponents.REPAIR_WITH_XP)) return false;
         ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         int nativeLevel = enchantments.getLevel(mending);
-        if (nativeLevel > 0 && nativeLevel != pair.primaryLevel()) return;
-        if (!projected && (nativeLevel == 0 || !mending.value().matchingSlot(slot))) return;
+        if (nativeLevel > 0 && nativeLevel != pair.primaryLevel()) return false;
+        if (!projected && (nativeLevel == 0 || !mending.value().matchingSlot(slot))) return false;
         for (var entry : enchantments.entrySet()) {
             Holder<Enchantment> other = entry.getKey();
-            if (other.value() != mending.value() && other.value().effects().has(EnchantmentEffectComponents.REPAIR_WITH_XP)) return;
+            if (other.value() != mending.value() && other.value().effects().has(EnchantmentEffectComponents.REPAIR_WITH_XP)) return false;
         }
+        return true;
+    }
+    /** A real repair counts only for this calculation and a sole, positively contributing Mending effect. */
+    public static void afterOrbRepair(ServerPlayer player, ItemStack stack, int before, int repaired, boolean projected) {
+        RepairFrame frame = REPAIR.get(); FusedPair pair = selected(stack, MENDING);
+        EquipmentSlot slot = equippedSlot(player, stack);
+        if (frame == null || slot == null || pair == null || !stillSame(player, slot, stack, pair)
+            || !provenMendingRepair(player, stack, pair, before, repaired, projected)) return;
         GrapnelSkills.markPosition(player, slot, stack, pair, frame.origin);
     }
     public static void endRepair(RepairFrame frame) {
