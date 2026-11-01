@@ -89,7 +89,7 @@ final class RangedGuardProbe {
             if (protectionFirst) exerciseArrow(player, target, shooter, pair, deny, armor, projectiles);
             else exerciseScreen(player, target, shooter, villager, pair, deny, projectiles);
         } finally {
-            deny.clear(); RangedGuardSkills.clearPlayer(player.getUUID()); ConfirmedArrow.clearPlayer(player); player.stopUsingItem();
+            deny.clear(); RangedGuardSkills.clearPlayer(player.getUUID()); ConfirmedArrow.clearPlayer(player.getUUID()); player.stopUsingItem();
             target.discard(); shooter.discard(); villager.discard(); for (Projectile projectile : projectiles) projectile.discard();
             for (int i = 0; i < SLOTS.length; i++) player.setItemSlot(SLOTS[i], old[i]); player.getInventory().setItem(ammoSlot, oldAmmo);
             armor.replaceFrom(armorBackup); max.setBaseValue(maxValue); player.removeAllEffects(); for (MobEffectInstance effect : effects) player.addEffect(effect);
