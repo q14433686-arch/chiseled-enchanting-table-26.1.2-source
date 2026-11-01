@@ -2,6 +2,7 @@ package enchantment_fusion.mechanics.signatures;
 
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.model.FusedEnchantmentList;
+import enchantment_fusion.model.RetainedEnchant;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -73,7 +74,7 @@ public final class MeleeGuardCapture {
             found.calls++;
             long sameName = item.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().stream()
                 .filter(pair -> pair.involves(MeleeGuardSkills.PROTECTION)).count();
-            boolean retained = item.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.of()).stream()
+            boolean retained = item.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).stream()
                 .anyMatch(entry -> MeleeGuardSkills.PROTECTION.equals(entry.id()));
             if (found.calls != 1 || sameName != 1 || retained || enchantmentLevel != gear.pair().primaryLevel()) found.ambiguous = true;
             found.contribution += Math.max(0.0F, after - before);
