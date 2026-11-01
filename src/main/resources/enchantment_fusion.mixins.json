@@ -60,6 +60,7 @@
     "ServerLevelHarvestCaptureMixin",
     "ServerPlayerGameModeHarvestMixin",
     "ServerSwingWindCoreMixin",
+    "SummonEntityLightningGrapnelMixin",
     "TridentChargeHeavyCrushMixin",
     "TridentHeavyCrushMixin",
     "VibrationSoulStepMixin"

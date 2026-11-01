@@ -9,7 +9,8 @@ import enchantment_fusion.mechanics.signatures.SegmentThreadSkills;
 import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
-import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
+import enchantment_fusion.mechanics.signatures.ChannelingTridentPrimary;
+import enchantment_fusion.mechanics.signatures.GrapnelChanneling;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelVolley;
@@ -104,7 +105,7 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
         float knockbackPrimary = MeleeImpulseSkills.nonNativePrimaryDamage(level, weapon, victim, source, themed);
         float wear = MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
         float projectile = GrapnelSkills.nonNativeProjectileDamage(level, weapon, victim, source, wear);
-        float lightning = MeleeLightningSkills.nonNativeTridentDamage(level, weapon, victim, source, projectile);
+        float lightning = ChannelingTridentPrimary.damage(level, weapon, victim, source, projectile);
         return GrapnelImpact.project(GrapnelImpact.Kind.DAMAGE, level, weapon, victim, source, lightning);
     }
 
@@ -137,21 +138,28 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
     private static void ef$guardVictimPostEffects(ServerLevel level, Entity victim, DamageSource source,
                                                   ItemStack weapon, Consumer<Item> attackerlessOnBreak,
                                                   Operation<Void> original) {
+        GrapnelChanneling.Chain chain = GrapnelChanneling.beginPost(level, weapon, victim, source);
         try {
             original.call(level, victim, source, weapon, attackerlessOnBreak);
             MeleeGuardSkills.replayVictimPostAttack(level, victim, source);
             GrapnelDefense.replayVictimPostAttack(level, victim, source);
             GrapnelThorns.replayVictimPostAttack(level, victim, source);
-            MeleeLightningSkills.nonNativeTridentPost(level, weapon, victim, source);
-        } finally { GrapnelThorns.afterPostAttack(level, victim, source); }
+            if (chain != null) ChannelingTridentPrimary.post(level, weapon, victim, source, chain.seen());
+        } finally {
+            try { GrapnelThorns.afterPostAttack(level, victim, source); }
+            finally { GrapnelChanneling.endChain(chain); }
+        }
     }
 
     @WrapMethod(method = "onHitBlock")
     private static void ef$tridentBlockPrimary(ServerLevel level, ItemStack weapon, LivingEntity owner, Entity projectile,
                                               EquipmentSlot slot, Vec3 position, BlockState state, Consumer<Item> onBreak,
                                               Operation<Void> original) {
-        original.call(level, weapon, owner, projectile, slot, position, state, onBreak);
-        MeleeLightningSkills.nonNativeTridentBlock(level, weapon, projectile, position, state, onBreak);
+        GrapnelChanneling.Chain chain = GrapnelChanneling.beginBlockEffects(level, weapon, owner, projectile, slot, position, state);
+        try {
+            original.call(level, weapon, owner, projectile, slot, position, state, onBreak);
+            if (chain != null) ChannelingTridentPrimary.block(level, weapon, projectile, position, state, onBreak, chain.seen());
+        } finally { GrapnelChanneling.endChain(chain); }
     }
 
     @WrapMethod(method = "modifyArmorEffectiveness")

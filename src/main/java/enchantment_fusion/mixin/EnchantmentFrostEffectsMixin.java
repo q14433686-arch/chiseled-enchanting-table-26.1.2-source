@@ -14,6 +14,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedWindBurst;
 import enchantment_fusion.mechanics.signatures.GrapnelThorns;
+import enchantment_fusion.mechanics.signatures.GrapnelChanneling;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -23,6 +24,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentTarget;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.spongepowered.asm.mixin.Mixin;
@@ -59,6 +61,7 @@ public abstract class EnchantmentFrostEffectsMixin {
                                      EnchantmentTarget side, Entity victim, DamageSource source, Operation<Void> original) {
         Enchantment enchantment = (Enchantment) (Object) this;
         GrapnelThorns.Scope thorns = GrapnelThorns.begin(enchantment, level, enchantmentLevel, item, side, victim, source);
+        GrapnelChanneling.Effect channel = GrapnelChanneling.beginPostEffect(enchantment, level, enchantmentLevel, item, side, victim, source);
         boolean completed = false;
         try {
             if (!FireThornsSkills.suppressInstantThorns(enchantment, level, item, side, victim, source)) {
@@ -69,7 +72,20 @@ public abstract class EnchantmentFrostEffectsMixin {
                 ConfirmedWindBurst.observe(enchantment, level, enchantmentLevel, item, side, victim, source, windBefore);
             }
             completed = true;
-        } finally { GrapnelThorns.finish(thorns, completed); }
+        } finally {
+            try { GrapnelChanneling.endEffect(channel, completed); }
+            finally { GrapnelThorns.finish(thorns, completed); }
+        }
+    }
+
+    @WrapMethod(method = "onHitBlock")
+    private void ef$observeChannelingBlock(ServerLevel level, int rank, EnchantedItemInUse item, Entity projectile,
+                                           Vec3 position, BlockState state, Operation<Void> original) {
+        GrapnelChanneling.Effect effect = GrapnelChanneling.beginBlockEffect((Enchantment) (Object) this,
+            level, rank, item, projectile, position, state);
+        boolean completed = false;
+        try { original.call(level, rank, item, projectile, position, state); completed = true; }
+        finally { GrapnelChanneling.endEffect(effect, completed); }
     }
 
     @WrapMethod(method = "runLocationChangedEffects")

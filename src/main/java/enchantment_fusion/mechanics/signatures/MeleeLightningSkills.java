@@ -2,7 +2,6 @@ package enchantment_fusion.mechanics.signatures;
 
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.MatrixEffectExecutor;
-import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
@@ -12,10 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
-import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -30,16 +26,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantedItemInUse;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentTarget;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
 
 /** 43.3: a real melee mark chains virtual current; a real thrown trident leaves a bounded trace. */
@@ -56,7 +45,6 @@ public final class MeleeLightningSkills {
     }
     private static final Map<UUID, Trace> TRACES = new HashMap<>();
     private static final ThreadLocal<Damage> DAMAGE = new ThreadLocal<>();
-    private static final ThreadLocal<Boolean> PRIMARY_REPLAY = ThreadLocal.withInitial(() -> false);
     private MeleeLightningSkills() {}
 
     public static void init() {
@@ -126,45 +114,14 @@ public final class MeleeLightningSkills {
         if (pair == null || consumed == null || !ItemStack.matches(stack, consumed)) return;
         FLIGHTS.put(trident, new Flight(owner.getUUID(), owner.level().dimension(), stack, pair, owner.level().getGameTime() + 1200L));
     }
-    private static @Nullable FusedPair primaryProjectile(ServerLevel level, ItemStack stack, Entity projectile) {
-        if (Boolean.TRUE.equals(PRIMARY_REPLAY.get()) || MatrixEffectExecutor.isExecuting() || !(projectile instanceof ThrownTrident trident)
+    static @Nullable FusedPair primaryProjectile(ServerLevel level, ItemStack stack, Entity projectile) {
+        if (ChannelingTridentPrimary.replaying() || MatrixEffectExecutor.isExecuting() || !(projectile instanceof ThrownTrident trident)
             || !(trident.getOwner() instanceof ServerPlayer owner) || owner.level() != level || trident.level() != level
             || trident.getWeaponItem() != stack) return null;
         Flight flight = FLIGHTS.get(trident);
         return flight != null && flight.owner().equals(owner.getUUID()) && flight.dimension().equals(level.dimension())
             && level.getGameTime() < flight.expires() && flight.stack() == stack && applies(flight.pair(), stack)
             && stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().contains(flight.pair()) ? flight.pair() : null;
-    }
-    /** Project only the missing current data-pack primary, without a second native roll. */
-    public static float nonNativeTridentDamage(ServerLevel level, ItemStack stack, Entity victim, DamageSource source, float value) {
-        Entity projectile = source.getDirectEntity(); FusedPair pair = primaryProjectile(level, stack, projectile);
-        if (pair == null || source.getEntity() != ((ThrownTrident) projectile).getOwner()) return value;
-        Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), CHANNELING).orElse(null);
-        if (primary == null || stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary) > 0) return value;
-        MutableFloat out = new MutableFloat(value); PRIMARY_REPLAY.set(true);
-        try { primary.value().modifyDamage(level, pair.primaryLevel(), stack, victim, source, out); }
-        finally { PRIMARY_REPLAY.remove(); }
-        return Float.isFinite(out.floatValue()) ? out.floatValue() : value;
-    }
-    public static void nonNativeTridentPost(ServerLevel level, ItemStack stack, Entity victim, DamageSource source) {
-        Entity projectile = source.getDirectEntity(); FusedPair pair = primaryProjectile(level, stack, projectile);
-        if (pair == null || source.getEntity() != ((ThrownTrident) projectile).getOwner()) return;
-        Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), CHANNELING).orElse(null);
-        if (primary == null || (stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary) > 0
-            && primary.value().matchingSlot(EquipmentSlot.MAINHAND))) return;
-        ServerPlayer owner = (ServerPlayer) ((ThrownTrident) projectile).getOwner(); PRIMARY_REPLAY.set(true);
-        try { primary.value().doPostAttack(level, pair.primaryLevel(), new EnchantedItemInUse(stack, EquipmentSlot.MAINHAND, owner),
-            EnchantmentTarget.ATTACKER, victim, source); }
-        finally { PRIMARY_REPLAY.remove(); }
-    }
-    public static void nonNativeTridentBlock(ServerLevel level, ItemStack stack, Entity projectile, Vec3 position, BlockState state,
-                                              @Nullable Consumer<Item> onBreak) {
-        FusedPair pair = primaryProjectile(level, stack, projectile); if (pair == null) return;
-        Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), CHANNELING).orElse(null);
-        if (primary == null || stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary) > 0) return;
-        ServerPlayer owner = (ServerPlayer) ((ThrownTrident) projectile).getOwner(); PRIMARY_REPLAY.set(true);
-        try { primary.value().onHitBlock(level, pair.primaryLevel(), new EnchantedItemInUse(stack, null, owner, onBreak), projectile, position, state); }
-        finally { PRIMARY_REPLAY.remove(); }
     }
     public static final class TridentHit {
         final ServerPlayer owner; final LivingEntity target; final ThrownTrident projectile; final ItemStack stack;
@@ -265,5 +222,5 @@ public final class MeleeLightningSkills {
         });
     }
     public static void clearPlayer(UUID id) { MARKS.clearPlayer(id); TRACES.remove(id); FLIGHTS.values().removeIf(f -> f.owner().equals(id)); }
-    public static void clearServer() { MARKS.clear(); TRACES.clear(); FLIGHTS.clear(); DAMAGE.remove(); PRIMARY_REPLAY.remove(); }
+    public static void clearServer() { MARKS.clear(); TRACES.clear(); FLIGHTS.clear(); DAMAGE.remove(); }
 }
