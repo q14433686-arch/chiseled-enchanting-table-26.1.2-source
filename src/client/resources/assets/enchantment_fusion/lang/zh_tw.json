@@ -1070,5 +1070,9 @@
   "message.enchantment_fusion.grapnel_marked": "已標記目標；手持這把武器並使用技能鍵收線。",
   "message.enchantment_fusion.grapnel_need": "沒有有效的誘標。",
   "tooltip.enchantment_fusion.melee_grapnel": "鋒利須滿蓄；不死剋星和節肢殺手須命中對應目標。真實近擊留標8秒，手持同一武器、12格內且視線暢通時主動收線。保留主位效果，受擊退抗性影響。",
-  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "舊載體保留舊效果；此方向需要近戰武器。"
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "舊載體保留舊效果；請使用能執行此方向動作的載體。",
+  "message.enchantment_fusion.grapnel_drops_marked": "已標記本次掉落；手持原工具，拾取延遲結束後使用技能鍵。",
+  "message.enchantment_fusion.grapnel_no_room": "未能收回物品；背包已滿或無法確認歸屬的掉落留在世界中。",
+  "message.enchantment_fusion.grapnel_recovered": "已收回本次採掘的 %s 件物品。",
+  "tooltip.enchantment_fusion.mining_grapnel": "合法真實採掘後標記經核驗且未變化的本次掉落8秒；持同一工具，等拾取延遲結束後，在12格內且視線暢通時主動收回。走一般拾取流程；嘗試後消耗標記，滿包及無法核驗的物品留在世界中。"
 }

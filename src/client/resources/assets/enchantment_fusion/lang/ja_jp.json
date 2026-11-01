@@ -1070,5 +1070,9 @@
   "message.enchantment_fusion.grapnel_marked": "対象を標記しました。この武器を持ってスキルキーで引き寄せます。",
   "message.enchantment_fusion.grapnel_need": "有効な標記がありません。",
   "tooltip.enchantment_fusion.melee_grapnel": "ダメージ増加は最大溜め、不死特効と虫特効は対応する対象が必要。実際の近接攻撃で8秒標記。同じ武器を持ち、12ブロック以内で視線が通る時に発動。主効果とノックバック耐性は維持。",
-  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "旧来の装備は旧効果を維持します。この方向には近接武器が必要です。"
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "旧来の装備は旧効果を維持します。この方向の動作に対応した装備を使ってください。",
+  "message.enchantment_fusion.grapnel_drops_marked": "今回のドロップを標記。元の道具を持ち、拾得待機後に発動。",
+  "message.enchantment_fusion.grapnel_no_room": "回収できません。満杯または確認不能のドロップは世界に残ります。",
+  "message.enchantment_fusion.grapnel_recovered": "今回の採掘から %s 個を回収しました。",
+  "tooltip.enchantment_fusion.mining_grapnel": "正当に採掘した本物の未変更ドロップを8秒標記。同じ道具を持ち、拾得待機後に12ブロック以内・視線が通る状態で発動。通常の拾得処理を使い、試行で標記を消費。満杯や確認不能の品は世界に残ります。"
 }

@@ -47,11 +47,12 @@ class AcceptanceInventoryTest(unittest.TestCase):
             self.assertEqual(6, len(fixtures))
             self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
 
-    def test_grapnel_has_three_separate_melee_fixtures_not_all_40_directions(self):
-        pairs = {(attack, "lure") for attack in ("sharpness", "smite", "bane_of_arthropods")}
-        self.assertEqual(3, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
+    def test_grapnel_has_six_action_specific_fixtures_not_all_40_directions(self):
+        pairs = {(primary, "lure") for primary in
+                 ("sharpness", "smite", "bane_of_arthropods", "efficiency", "silk_touch", "fortune")}
+        self.assertEqual(6, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
         self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
-        self.assertNotIn(("efficiency", "lure"), DIRECTION_FIXTURES)
+        self.assertNotIn(("power", "lure"), DIRECTION_FIXTURES)
 
     def test_mending_template_has_four_direction_specific_fixtures(self):
         pairs = {(attack, "mending") for attack in ("smite", "bane_of_arthropods")}

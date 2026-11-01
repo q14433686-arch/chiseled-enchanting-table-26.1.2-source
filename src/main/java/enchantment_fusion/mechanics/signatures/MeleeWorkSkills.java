@@ -257,7 +257,8 @@ public final class MeleeWorkSkills {
                                            EquipmentSlot slot, String primary) {
         ItemStack stack = player.getItemBySlot(slot); FusedPair best = null;
         for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
-            if (primary.equals(pair.primaryId()) && isWorkFirst(pair) && applies(pair, stack)
+            if (primary.equals(pair.primaryId())
+                && ((isWorkFirst(pair) && applies(pair, stack)) || (GrapnelSkills.miningFirst(pair) && GrapnelSkills.applies(pair, stack)))
                 && (best == null || pair.primaryLevel() > best.primaryLevel())) best = pair;
         }
         if (best != null) sources.add(new PrimaryAttributeProjection.Source(slot, stack, best));

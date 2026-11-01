@@ -1070,5 +1070,9 @@
   "message.enchantment_fusion.grapnel_marked": "대상을 표식했습니다. 같은 무기를 들고 스킬 키로 당기세요.",
   "message.enchantment_fusion.grapnel_need": "유효한 표식이 없습니다.",
   "tooltip.enchantment_fusion.melee_grapnel": "날카로움은 완전 충전, 강타와 살충은 해당 대상이 필요합니다. 실제 근접 타격으로 8초 표식; 같은 무기를 들고 12블록 안에서 시야가 트였을 때 발동합니다. 주 효과와 밀치기 저항은 유지됩니다.",
-  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "기존 장비는 이전 효과를 유지합니다. 이 방향에는 근접 무기가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "기존 장비는 이전 효과를 유지합니다. 이 방향의 동작이 가능한 장비를 사용하세요.",
+  "message.enchantment_fusion.grapnel_drops_marked": "이번 전리품을 표식했습니다. 원래 도구를 들고 줍기 지연 후 발동하세요.",
+  "message.enchantment_fusion.grapnel_no_room": "회수하지 못했습니다. 가방이 가득 찼거나 확인할 수 없는 아이템은 남습니다.",
+  "message.enchantment_fusion.grapnel_recovered": "이번 채굴에서 아이템 %s개를 회수했습니다.",
+  "tooltip.enchantment_fusion.mining_grapnel": "정상 채굴의 출처가 확인되고 변하지 않은 아이템을 8초 동안 표식합니다. 같은 도구를 들고 줍기 지연이 끝난 뒤 12블록 안에서 시야가 트이면 발동합니다. 일반 줍기 절차를 따르며 시도 후 표식을 소모합니다. 가방이 차거나 확인되지 않은 아이템은 남습니다."
 }

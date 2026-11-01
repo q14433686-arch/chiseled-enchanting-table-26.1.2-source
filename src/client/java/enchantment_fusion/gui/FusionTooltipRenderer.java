@@ -78,6 +78,10 @@ import net.minecraft.world.item.enchantment.Enchantment;
 public final class FusionTooltipRenderer {
     private FusionTooltipRenderer() {}
 
+    private static String grapnelTooltip(FusedPair pair) {
+        return GrapnelSkills.miningFirst(pair) ? "tooltip.enchantment_fusion.mining_grapnel" : "tooltip.enchantment_fusion.melee_grapnel";
+    }
+
     private static String meleeWorkTooltip(FusedPair pair) {
         boolean attackFirst = MeleeWorkSkills.isAttackFirst(pair);
         boolean water = MeleeWorkSkills.AQUA.equals(attackFirst ? pair.secondaryId() : pair.primaryId());
@@ -329,7 +333,7 @@ public final class FusionTooltipRenderer {
                         ? "tooltip.enchantment_fusion.melee_mending_repair" : "tooltip.enchantment_fusion.melee_mending_blade").withStyle(ChatFormatting.AQUA));
                 }
                 if (shift && grapnelTemplate && !legacyGrapnelCarrier) {
-                    lines.add(Component.translatable("tooltip.enchantment_fusion.melee_grapnel").withStyle(ChatFormatting.AQUA));
+                    lines.add(Component.translatable(grapnelTooltip(pair)).withStyle(ChatFormatting.AQUA));
                 }
             } else if (sigOpt.isPresent()) {
                 Component sigTitle = Component.translatable(grapnelTemplate && !legacyGrapnelCarrier
@@ -349,7 +353,7 @@ public final class FusionTooltipRenderer {
                     && !legacySoulBladeCarrier && !legacySegmentThreadCarrier && !legacySealedOreCarrier
                     && !legacyFortuneBankCarrier && !legacyGlazeAmberCarrier) {
                     lines.add(Component.translatable(grapnelTemplate && !legacyGrapnelCarrier
-                        ? "tooltip.enchantment_fusion.melee_grapnel" : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
+                        ? grapnelTooltip(pair) : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
                 lines.add(Component.translatable(

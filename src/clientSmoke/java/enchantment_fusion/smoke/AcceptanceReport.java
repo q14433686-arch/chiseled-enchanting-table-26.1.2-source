@@ -75,6 +75,9 @@ final class AcceptanceReport {
         plan("40.1-sharp-lure", "Sharpness ▷ Lure: real hit and simulated active target recall", "Not reached if setup fails.");
         plan("40.1-smite-lure", "Smite ▷ Lure: real undead hit and simulated active target recall", "Not reached if setup fails.");
         plan("40.1-bane-lure", "Bane ▷ Lure: real arthropod hit and simulated active target recall", "Not reached if setup fails.");
+        plan("40.1-efficiency-lure", "Efficiency ▷ Lure: real block break and simulated pickup activation", "Not reached if setup fails.");
+        plan("40.1-silk-lure", "Silk Touch ▷ Lure: real block loot and simulated pickup activation", "Not reached if setup fails.");
+        plan("40.1-fortune-lure", "Fortune ▷ Lure: real block loot and simulated pickup activation", "Not reached if setup fails.");
         plan("40.1-runtime-compat", "40.1 natural key input and charge, spear, other players, claims, datapacks and remaining source adapters", "Not covered by the prepared single-player fixtures.");
         plan("42.3-sharp-swift", "Sharpness ▷ Swift Sneak: real hits and simulated imprint movement", "Not reached if setup fails.");
         plan("42.3-swift-sharp", "Swift Sneak ▷ Sharpness: worn leggings, simulated crouch and real hit", "Not reached if setup fails.");

@@ -1070,5 +1070,9 @@
   "message.enchantment_fusion.grapnel_marked": "Cible marquée. Tenez cette arme et activez la compétence pour la ramener.",
   "message.enchantment_fusion.grapnel_need": "Aucune marque valide.",
   "tooltip.enchantment_fusion.melee_grapnel": "Tranchant exige un coup chargé ; Châtiment et Fléau, le type de cible correspondant. Un vrai coup de mêlée marque 8 secondes. Activez avec la même arme à 12 blocs maximum et en ligne de vue. L’effet principal et la résistance au recul restent actifs.",
-  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "Le support ancien conserve son ancien effet ; cette direction exige une arme de mêlée."
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "Le support ancien conserve son effet ; utilisez un support capable de cette action.",
+  "message.enchantment_fusion.grapnel_drops_marked": "Butin marqué. Gardez le même outil et activez après le délai de ramassage.",
+  "message.enchantment_fusion.grapnel_no_room": "Rien de récupéré. Le butin invérifiable ou sans place reste dans le monde.",
+  "message.enchantment_fusion.grapnel_recovered": "%s objet(s) récupéré(s) de ce minage.",
+  "tooltip.enchantment_fusion.mining_grapnel": "Un minage réel autorisé marque son butin vérifié et inchangé pendant 8 secondes. Gardez le même outil et activez après le délai de ramassage, à 12 blocs maximum et en ligne de vue. Le ramassage normal s’applique ; la tentative consomme la marque et laisse le reste dans le monde."
 }

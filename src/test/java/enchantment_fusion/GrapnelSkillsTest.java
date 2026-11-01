@@ -12,7 +12,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class GrapnelSkillsTest {
-    @Test void defaultWildcardCoversOnlyThreeAttackFirstDirections() {
+    @Test void defaultWildcardCoversTheSixExplicitActionAdapters() {
         var old = SignatureCatalog.parseFromJson(null);
         try {
             SignatureCatalog.publish(SignatureCatalog.parseFromJson(JsonParser.parseString("""
@@ -22,7 +22,11 @@ final class GrapnelSkillsTest {
                 FusedPair pair = FusedPair.clean(attack, 3, GrapnelSkills.LURE, 2);
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
-            assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:efficiency", 1, GrapnelSkills.LURE, 1)));
+            for (String work : new String[]{GrapnelSkills.EFFICIENCY, GrapnelSkills.SILK, GrapnelSkills.FORTUNE}) {
+                FusedPair pair = FusedPair.clean(work, 3, GrapnelSkills.LURE, 2);
+                assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
+            }
+            assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:power", 1, GrapnelSkills.LURE, 1)));
         } finally { SignatureCatalog.publish(old); }
     }
     @Test void exactAndDifferentWildcardKeepTheirPriority() {
@@ -31,10 +35,13 @@ final class GrapnelSkillsTest {
             SignatureCatalog.publish(SignatureCatalog.parseFromJson(JsonParser.parseString("""
                 {"signatures":{
                   "spirit_grapnel":{"primary":"*","secondary":"minecraft:lure"},
-                  "custom_exact":{"primary":"minecraft:smite","secondary":"minecraft:lure"}
+                  "custom_exact":{"primary":"minecraft:smite","secondary":"minecraft:lure"},
+                  "custom_silk":{"primary":"minecraft:silk_touch","secondary":"minecraft:lure"}
                 }}
                 """).getAsJsonObject()));
             assertFalse(GrapnelSkills.matches(FusedPair.clean(MeleeAttackThemes.SMITE, 1, GrapnelSkills.LURE, 1)));
+            assertFalse(GrapnelSkills.matches(FusedPair.clean(GrapnelSkills.SILK, 1, GrapnelSkills.LURE, 1)));
+            assertTrue(GrapnelSkills.matches(FusedPair.clean(GrapnelSkills.FORTUNE, 1, GrapnelSkills.LURE, 1)));
             assertTrue(GrapnelSkills.matches(FusedPair.clean(MeleeAttackThemes.BANE, 1, GrapnelSkills.LURE, 1)));
             SignatureCatalog.publish(SignatureCatalog.parseFromJson(JsonParser.parseString("""
                 {"signatures":{"custom_wildcard":{"primary":"*","secondary":"minecraft:lure"}}}
@@ -50,5 +57,10 @@ final class GrapnelSkillsTest {
         assertFalse(GrapnelSkills.supportsCarrier(Set.of(FusionCarrier.BOW)));
         assertFalse(GrapnelSkills.supportsCarrier(Set.of(FusionCarrier.PICKAXE)));
         assertFalse(GrapnelSkills.supportsCarrier(Set.of()));
+        FusedPair tool = FusedPair.clean(GrapnelSkills.EFFICIENCY, 1, GrapnelSkills.LURE, 1);
+        assertTrue(GrapnelSkills.supportsCarrier(tool, Set.of(FusionCarrier.PICKAXE)));
+        assertTrue(GrapnelSkills.supportsCarrier(tool, Set.of(FusionCarrier.AXE)));
+        assertFalse(GrapnelSkills.supportsCarrier(tool, Set.of(FusionCarrier.SWORD)));
+        assertFalse(GrapnelSkills.supportsCarrier(tool, Set.of(FusionCarrier.BOW)));
     }
 }

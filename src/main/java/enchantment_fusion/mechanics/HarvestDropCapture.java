@@ -60,6 +60,7 @@ public final class HarvestDropCapture {
         final ServerLevel level;
         final UUID player;
         final ServerPlayer breaker;
+        final ItemStack originalMainHand;
         final BlockPos pos;
         final List<ItemEntity> items = new ArrayList<>();
         final List<ExperienceOrb> orbs = new ArrayList<>();
@@ -71,7 +72,8 @@ public final class HarvestDropCapture {
         boolean overflowWarned;
         boolean smeltOverflowWarned;
         Frame(ServerLevel level, ServerPlayer player, BlockPos pos) {
-            this.level = level; this.player = player.getUUID(); this.breaker = player; this.pos = pos.immutable();
+            this.level = level; this.player = player.getUUID(); this.breaker = player;
+            this.originalMainHand = player.getMainHandItem(); this.pos = pos.immutable();
         }
     }
 
@@ -229,6 +231,13 @@ public final class HarvestDropCapture {
         if (!(entity instanceof ItemEntity item) || !item.isAlive() || item.level() != level || item.getItem() != stack
             || !ItemStack.matches(stack, snapshot) || !belongsToFrame(frame, item)) return;
         loot.verified.add(new VerifiedDrop(item, stack, snapshot));
+    }
+
+    /** Compare the live hand with the actual object held when this destroyBlock frame started. */
+    public static boolean isOriginalMainHand(ServerLevel level, ServerPlayer player, BlockPos pos, ItemStack stack) {
+        Frame frame = current(level, pos);
+        return frame != null && frame.breaker == player && stack != null && !stack.isEmpty()
+            && frame.originalMainHand == stack && player.getMainHandItem() == stack;
     }
 
     /** Strict provenance: exact loot-list object, exact successful popResource entity, unchanged stack. */

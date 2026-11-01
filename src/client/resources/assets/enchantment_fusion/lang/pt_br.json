@@ -1070,5 +1070,9 @@
   "message.enchantment_fusion.grapnel_marked": "Alvo marcado. Segure esta arma e use a habilidade para puxá-lo.",
   "message.enchantment_fusion.grapnel_need": "Nenhuma marca válida.",
   "tooltip.enchantment_fusion.melee_grapnel": "Afiação exige golpe totalmente carregado; Julgamento e Ruína exigem o tipo certo de alvo. Um golpe corpo a corpo real marca por 8 segundos. Ative com a mesma arma a até 12 blocos e com visão livre. O efeito principal e a resistência ao recuo permanecem.",
-  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "O suporte antigo mantém seu efeito anterior; esta direção exige arma corpo a corpo."
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "O suporte antigo mantém seu efeito; use um suporte capaz da ação desta direção.",
+  "message.enchantment_fusion.grapnel_drops_marked": "Itens marcados. Segure a mesma ferramenta e ative após o atraso de coleta.",
+  "message.enchantment_fusion.grapnel_no_room": "Nada recolhido. Itens sem espaço ou sem origem verificável permanecem no mundo.",
+  "message.enchantment_fusion.grapnel_recovered": "%s item(ns) recolhido(s) desta mineração.",
+  "tooltip.enchantment_fusion.mining_grapnel": "Uma mineração real e permitida marca os itens verificados e inalterados por 8 segundos. Segure a mesma ferramenta e ative após o atraso de coleta, em até 12 blocos e com visão livre. A coleta normal é usada; a tentativa consome a marca e deixa o restante no mundo."
 }

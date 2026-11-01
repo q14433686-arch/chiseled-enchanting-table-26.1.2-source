@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.HarvestDropCapture;
 import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -70,12 +71,14 @@ public abstract class ServerPlayerGameModeHarvestMixin {
         boolean tracked = level instanceof ServerLevel && breaker instanceof ServerPlayer;
         ItemStack lootTool = tracked ? SealedOreSkills.lootTool((ServerLevel) level, tool) : tool;
         if (tracked) lootTool = FortuneBankSkills.lootTool((ServerLevel) level, lootTool);
+        if (tracked) lootTool = GrapnelSkills.lootTool((ServerLevel) level, lootTool);
         if (tracked) HarvestDropCapture.enterPlayerDestroy((ServerLevel) level, (ServerPlayer) breaker, pos, lootTool, state);
         try {
             original.call(block, level, breaker, pos, state, blockEntity, lootTool);
             if (tracked) {
                 SealedOreSkills.sealDrop((ServerLevel) level, (ServerPlayer) breaker, pos, state, blockEntity, lootTool);
                 FortuneBankSkills.afterDestroy((ServerLevel) level, (ServerPlayer) breaker, pos, state, blockEntity, lootTool);
+                GrapnelSkills.afterMined((ServerLevel) level, (ServerPlayer) breaker, pos, state, lootTool);
             }
         } finally {
             if (tracked) HarvestDropCapture.leavePlayerDestroy((ServerLevel) level, (ServerPlayer) breaker, pos);

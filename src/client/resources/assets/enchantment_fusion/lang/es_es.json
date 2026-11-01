@@ -1070,5 +1070,9 @@
   "message.enchantment_fusion.grapnel_marked": "Objetivo marcado. Sujeta esta arma y usa la habilidad para atraerlo.",
   "message.enchantment_fusion.grapnel_need": "No queda ninguna marca válida.",
   "tooltip.enchantment_fusion.melee_grapnel": "Filo requiere un golpe completamente cargado; Castigo y Perdición, su tipo de objetivo. Un golpe cuerpo a cuerpo real marca durante 8 segundos. Activa con la misma arma, a 12 bloques o menos y con visión despejada. Se mantienen el efecto principal y la resistencia al empuje.",
-  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "El soporte antiguo conserva su efecto anterior; esta dirección requiere un arma cuerpo a cuerpo."
+  "tooltip.enchantment_fusion.legacy_grapnel_carrier": "El soporte antiguo conserva su efecto anterior; usa uno capaz de ejecutar la acción de esta dirección.",
+  "message.enchantment_fusion.grapnel_drops_marked": "Botín marcado. Sujeta la herramienta original y activa tras la espera de recogida.",
+  "message.enchantment_fusion.grapnel_no_room": "No se ha recogido nada. El botín sin espacio o no verificable permanece en el mundo.",
+  "message.enchantment_fusion.grapnel_recovered": "Recogidos %s objeto(s) de esta extracción.",
+  "tooltip.enchantment_fusion.mining_grapnel": "Una extracción real y permitida marca sus objetos verificados y sin cambios durante 8 segundos. Usa la misma herramienta y activa tras la espera de recogida, a 12 bloques o menos y con visión despejada. Se aplica la recogida normal; el intento consume la marca y deja el resto en el mundo."
 }
