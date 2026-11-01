@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.RangedSneakMath;
 import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
+import enchantment_fusion.mechanics.signatures.RangedPrimary;
 import enchantment_fusion.mechanics.signatures.RangedWearSkills;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
@@ -103,7 +104,9 @@ final class RangedSneakProbe {
         GrapnelProjectileProbe.hit(fake, target, false); require(!state(player, "AIMS"), "Forged arrow cannot earn aim");
         target.invulnerableTime = 0; deny.add(target.getUUID()); Arrow cancelled = fireBow(player, bow, area, 20); fly(cancelled); deny.clear(); cancelled.discard();
         require(!state(player, "AIMS"), "Cancelled damage cannot earn aim");
-        target.invulnerableTime = 0; Arrow shot = fireBow(player, bow, area, 20); checkPrimary(level, player, shot, target, theme); fly(shot);
+        target.invulnerableTime = 0; target.setDeltaMovement(Vec3.ZERO);
+        Arrow shot = fireBow(player, bow, area, 20); checkPrimary(level, player, shot, target, theme); fly(shot);
+        if (RangedWearSkills.PUNCH.equals(theme)) require(target.getDeltaMovement().x > .05D, "A genuine bow hit retains Punch knockback");
         require(state(player, "AIMS") && RangedSneakSkills.bowTicks(player, bow, 10) == 10 + RangedSneakMath.credit(pair.secondaryLevel()),
             "Actual sneak hit and aim accelerate the next bow draw");
         player.setYRot(90); require(RangedSneakSkills.bowTicks(player, bow, 10) == 10, "Looking away removes the acceleration immediately");
@@ -120,7 +123,10 @@ final class RangedSneakProbe {
             "A genuine accelerated bow shot spends one aim and ordinary ammunition"); accelerated.discard();
         ItemStack crossbow = GrapnelProjectileProbe.fused(level, Items.CROSSBOW, pair); crossbow.remove(DataComponents.ENCHANTMENTS);
         player.setItemSlot(EquipmentSlot.MAINHAND, crossbow); aim(player, target); target.invulnerableTime = 0;
-        fly(GrapnelProjectileProbe.fireCrossbow(level, player, crossbow, area)); require(state(player, "AIMS"), "A real crossbow hit earns aim");
+        target.setDeltaMovement(Vec3.ZERO); Arrow bolt = GrapnelProjectileProbe.fireCrossbow(level, player, crossbow, area);
+        checkPrimary(level, player, bolt, target, theme); fly(bolt);
+        if (RangedWearSkills.PUNCH.equals(theme)) require(target.getDeltaMovement().x > .05D, "A genuine crossbow hit retains projected Punch knockback");
+        require(state(player, "AIMS"), "A real crossbow hit earns aim");
         int duration = CrossbowItem.getChargeDuration(crossbow, player);
         require(duration < 25, "Aimed arrow loading must be shorter than the normal crossbow duration");
         player.startUsingItem(InteractionHand.MAIN_HAND);
@@ -190,6 +196,8 @@ final class RangedSneakProbe {
         if (RangedWearSkills.POWER.equals(theme)) require(EnchantmentHelper.modifyDamage(level, arrow.getWeaponItem(), target,
             level.damageSources().arrow(arrow, player), 2.0F) > 2, "Missing Power must project once");
         if (RangedWearSkills.FLAME.equals(theme)) require(arrow.isOnFire(), "Missing Flame must affect the real arrow");
+        if (RangedWearSkills.PUNCH.equals(theme)) require(RangedPrimary.knockback(level, arrow.getWeaponItem(), target,
+            level.damageSources().arrow(arrow, player), 0) > 0, "Missing Punch must project once");
     }
     private static void checkStation(ServerLevel level, FusedPair pair, boolean reverse) {
         var registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
