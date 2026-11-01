@@ -75,10 +75,14 @@ public final class RangedWorkBlade {
     public static @Nullable Step begin(AbstractArrow arrow, BlockHitResult block) {
         Blade blade = FLIGHTS.get(arrow);
         if (blade == null || !(arrow.getOwner() instanceof ServerPlayer owner)) return null;
-        Vec3 start = arrow.position(), velocity = arrow.getDeltaMovement(), limit = block.getLocation();
+        Vec3 start = arrow.position(), delta = arrow.getDeltaMovement(), limit = block.getLocation();
+        // AbstractArrow computes this collision ray before applying water inertia. Use
+        // the ray for observed-step length rather than the already-damped current delta.
+        Vec3 velocity = limit.subtract(start);
         if (blade.settling || !valid(owner, arrow, blade) || owner.level().getEntity(arrow.getUUID()) != arrow
-            || !finite(start) || !finite(velocity) || !finite(limit) || velocity.lengthSqr() < 1.0E-8D
-            || velocity.lengthSqr() > MAX_STEP * MAX_STEP || start.distanceToSqr(limit) > MAX_STEP * MAX_STEP
+            || !finite(start) || !finite(delta) || !finite(velocity) || !finite(limit) || velocity.lengthSqr() < 1.0E-8D
+            || delta.lengthSqr() > MAX_STEP * MAX_STEP || velocity.lengthSqr() > MAX_STEP * MAX_STEP
+            || delta.dot(velocity) < 0.0D
             || !GrapnelPiercingMath.continuous(point(blade.previous), point(start))
             || !VirtualCombatSight.loaded(owner.level(), start, limit) || ++blade.steps > MAX_STEPS) {
             FLIGHTS.remove(arrow); return null;

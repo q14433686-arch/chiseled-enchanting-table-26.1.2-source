@@ -5,6 +5,9 @@ import enchantment_fusion.mixin.AbstractArrowAccessor;
 import enchantment_fusion.model.FusedPair;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -12,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,6 +43,7 @@ final class GrapnelPiercingProbe {
         AABB area = new AABB(origin).inflate(20); Set<UUID> oldArrows = GrapnelProjectileProbe.arrowIds(level, area);
         BlockPos wall = origin.offset(2, 1, 0); BlockState oldWall = level.getBlockState(wall); boolean placedWall = false;
         Zombie enemy = new Zombie(EntityType.ZOMBIE, level); Villager villager = new Villager(EntityType.VILLAGER, level);
+        Map<BlockPos, BlockState> water = new LinkedHashMap<>();
         Set<UUID> deny = new HashSet<>(); ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !deny.contains(entity.getUUID()));
         try {
             require(level.hasChunkAt(origin) && level.isInWorldBounds(origin) && oldWall.isAir(), "Fixture needs loaded empty disposable space");
@@ -96,7 +101,23 @@ final class GrapnelPiercingProbe {
             enemy.setDeltaMovement(Vec3.ZERO);
             require(GrapnelSkills.activate(player) && enemy.getDeltaMovement().x < 0 && GrapnelProjectileProbe.marked(player) == null,
                 "The penetrated target must be actively reeled once");
+
+            // Vanilla damps the velocity before its collision step in water, while the
+            // collision ray was computed with the earlier, faster velocity.
+            for (int x = 0; x <= 7; x++) for (int y = 1; y <= 2; y++) {
+                BlockPos cell = origin.offset(x, y, 0); BlockState previous = level.getBlockState(cell);
+                require(level.hasChunkAt(cell) && previous.isAir(), "Water regression requires disposable loaded air");
+                water.put(cell, previous); level.setBlockAndUpdate(cell, Blocks.WATER.defaultBlockState());
+            }
+            GrapnelSkills.clearPlayer(player.getUUID()); enemy.invulnerableTime = 0; health = enemy.getHealth();
+            Arrow wet = GrapnelProjectileProbe.fireCrossbow(level, player, crossbow, area);
+            wet.setPos(enemy.getX() - 2.0D, enemy.getY() + .8D, enemy.getZ()); wet.setNoGravity(true); wet.shoot(1, 0, 0, 3, 0);
+            Method refresh = Entity.class.getDeclaredMethod("updateFluidInteraction"); refresh.setAccessible(true); refresh.invoke(wet);
+            require(wet.isInWater(), "Water regression must use real fluid state"); wet.tick();
+            require(enemy.getHealth() < health && enemy.getUUID().equals(GrapnelProjectileProbe.marked(player)),
+                "A fast piercing arrow must be credited for its real complete underwater pass");
         } finally {
+            for (var entry : water.entrySet()) level.setBlockAndUpdate(entry.getKey(), entry.getValue());
             deny.clear(); if (placedWall) level.setBlock(wall, oldWall, 3);
             player.stopUsingItem(); GrapnelSkills.clearPlayer(player.getUUID()); enemy.discard(); villager.discard();
             for (Arrow arrow : level.getEntitiesOfClass(Arrow.class, area)) if (!oldArrows.contains(arrow.getUUID())) arrow.discard();

@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.RangedBreathSkills;
 import enchantment_fusion.mechanics.signatures.RangedWaterDrag;
+import enchantment_fusion.mechanics.signatures.RangedWorkSkills;
 import enchantment_fusion.mechanics.signatures.RangedWearSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
 import enchantment_fusion.model.FusedEnchantmentList;
@@ -60,6 +61,7 @@ final class RangedBreathProbe {
         if (reverse) pair = pair.flipped(); checkStation(level, pair, reverse);
         RangedBreathSkills.clearPlayer(player.getUUID()); ConfirmedArrow.clearPlayer(player.getUUID());
         ItemStack main = player.getMainHandItem(), off = player.getOffhandItem(), helmet = player.getItemBySlot(EquipmentSlot.HEAD);
+        ItemStack savedSlot = player.getInventory().getItem(20);
         Vec3 position = player.position(), velocity = player.getDeltaMovement(); float yaw = player.getYRot(), pitch = player.getXRot();
         boolean ground = player.onGround(); int air = player.getAirSupply(); GameType mode = player.gameMode.getGameModeForPlayer();
         AttributeInstance oxygen = player.getAttribute(Attributes.OXYGEN_BONUS);
@@ -92,17 +94,17 @@ final class RangedBreathProbe {
             for (BlockPos cell : saved.keySet()) level.setBlockAndUpdate(cell, Blocks.WATER.defaultBlockState());
             refreshWater(player); refreshWater(target); refreshWater(villager);
             require(player.isEyeInFluid(FluidTags.WATER) && target.isInWater(), "Fixture must be genuinely underwater");
-            if (reverse) reverse(player, pair, area);
+            if (reverse) reverse(player, pair, area, origin, target);
             else forward(player, pair, theme, target, villager, area, deny);
             for (BlockPos cell : saved.keySet()) require(level.getFluidState(cell).is(FluidTags.WATER), "Neither ability may replace water");
         } finally {
             deny.clear(); player.stopUsingItem(); RangedBreathSkills.clearPlayer(player.getUUID());
             ConfirmedArrow.clearPlayer(player.getUUID()); UnderwaterMiningSkills.onPlayerDisconnect(player);
-            MeleeWorkSkills.clearPlayer(player); oxygen.replaceFrom(savedOxygen);
+            RangedWorkSkills.clearPlayer(player); MeleeWorkSkills.clearPlayer(player); oxygen.replaceFrom(savedOxygen);
             target.discard(); villager.discard();
             for (Arrow arrow : level.getEntitiesOfClass(Arrow.class, area)) if (!existing.contains(arrow.getUUID())) arrow.discard();
             for (var entry : saved.entrySet()) level.setBlockAndUpdate(entry.getKey(), entry.getValue());
-            player.setItemSlot(EquipmentSlot.MAINHAND, main); player.setItemSlot(EquipmentSlot.OFFHAND, off);
+            player.getInventory().setItem(20, savedSlot); player.setItemSlot(EquipmentSlot.MAINHAND, main); player.setItemSlot(EquipmentSlot.OFFHAND, off);
             player.setItemSlot(EquipmentSlot.HEAD, helmet); player.setGameMode(mode); player.setPos(position);
             player.setDeltaMovement(velocity); player.setYRot(yaw); player.setXRot(pitch); player.setOnGround(ground); player.setAirSupply(air);
             refreshWater(player);
@@ -133,7 +135,7 @@ final class RangedBreathProbe {
         refreshWater(bolt); checkPrimary(level, player, bolt, target, theme); GrapnelProjectileProbe.hit(bolt, target, false);
         require(bubbles(player).size() == 1, "A genuine crossbow hit uses the same bounded bubble effect");
     }
-    private static void reverse(ServerPlayer player, FusedPair pair, AABB area) throws Exception {
+    private static void reverse(ServerPlayer player, FusedPair pair, AABB area, BlockPos origin, Zombie target) throws Exception {
         ServerLevel level = player.level(); ItemStack helmet = GrapnelProjectileProbe.fused(level, Items.DIAMOND_HELMET, pair);
         player.setItemSlot(EquipmentSlot.HEAD, helmet);
         var holder = FusionStationOperations.lookupEnchantment(level.registryAccess(), RangedBreathSkills.RESPIRATION).orElseThrow();
@@ -166,6 +168,22 @@ final class RangedBreathProbe {
         ItemStack crossbow = new ItemStack(Items.CROSSBOW); player.setItemSlot(EquipmentSlot.MAINHAND, crossbow);
         Arrow bolt = GrapnelProjectileProbe.fireCrossbow(level, player, crossbow, area); ConfirmedArrow.sample(bolt); refreshWater(bolt);
         require(!prepared(player) && RangedWaterDrag.inertia(bolt, .6F) > .6F, "A genuine crossbow arrow receives the shared effect");
+        bolt.discard();
+        // Regression: the water-damped current velocity differs from the collision ray.
+        // A fast real underwater arrow must still drive 46.3's blade along its observed path.
+        FusedPair work = FusedPair.clean(RangedWorkSkills.EFFICIENCY, 3, RangedWearSkills.POWER, 2);
+        ItemStack tool = GrapnelProjectileProbe.fused(level, Items.DIAMOND_PICKAXE, work);
+        player.setItemSlot(EquipmentSlot.MAINHAND, tool); BlockPos block = origin.offset(-2, 1, -2);
+        level.setBlockAndUpdate(block, Blocks.GLASS.defaultBlockState());
+        require(player.gameMode.destroyBlock(block) && RangedWorkSkills.activate(player, false), "A real break prepares an underwater blade");
+        level.setBlockAndUpdate(block, Blocks.WATER.defaultBlockState());
+        player.getInventory().setItem(20, tool); player.setItemSlot(EquipmentSlot.MAINHAND, bow);
+        player.setAirSupply(150); require(RangedBreathSkills.activate(player), "Water drag and mining blade can prepare independently");
+        target.setPos(player.getX() + 2.5D, player.getY(), player.getZ() + 1.0D); target.invulnerableTime = 0;
+        float before = target.getHealth(); Arrow combined = fireBow(player, bow, area); ConfirmedArrow.sample(combined); refreshWater(combined);
+        combined.setNoGravity(true); combined.shoot(1, 0, 0, 3, 0); combined.tick();
+        require(target.getHealth() < before, "Fast water inertia must not erase a valid actual-path virtual blade");
+        combined.discard();
     }
     private static List<?> bubbles(ServerPlayer owner) throws Exception {
         Field field = UnderwaterMiningSkills.class.getDeclaredField("BUBBLES"); field.setAccessible(true);

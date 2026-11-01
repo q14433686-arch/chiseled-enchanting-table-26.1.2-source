@@ -65,7 +65,7 @@ public abstract class PhantomArrowMixin {
     private void ef$observeContinuousPiercing(BlockHitResult block, Operation<Void> original) {
         AbstractArrow arrow = (AbstractArrow) (Object) this;
         if (!(arrow.level() instanceof ServerLevel)) { original.call(block); return; }
-        GrapnelPiercing.Step step = GrapnelPiercing.begin(arrow);
+        GrapnelPiercing.Step step = GrapnelPiercing.begin(arrow, block);
         RangedWorkBlade.Step blade = RangedWorkBlade.begin(arrow, block); boolean completed = false;
         try { original.call(block); completed = true; }
         finally {

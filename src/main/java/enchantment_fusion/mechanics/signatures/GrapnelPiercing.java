@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,9 +39,11 @@ public final class GrapnelPiercing {
         private final AbstractArrow arrow;
         private final Point start, velocity;
         private final long id;
-        private Step(@Nullable Step previous, AbstractArrow arrow, long id) {
+        private Step(@Nullable Step previous, AbstractArrow arrow, BlockHitResult ray, long id) {
             this.previous = previous; this.arrow = arrow; this.start = point(arrow.position());
-            this.velocity = point(arrow.getDeltaMovement()); this.id = id;
+            // The collision ray uses velocity from before water inertia is applied. The
+            // current delta is already damped, and would falsely reject real underwater steps.
+            this.velocity = point(ray.getLocation().subtract(arrow.position())); this.id = id;
         }
     }
     private static final Map<AbstractArrow, List<Candidate>> PENDING = new WeakHashMap<>();
@@ -49,8 +52,8 @@ public final class GrapnelPiercing {
     private GrapnelPiercing() {}
     private static Point point(Vec3 vector) { return new Point(vector.x, vector.y, vector.z); }
     private static Box box(AABB box) { return new Box(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ); }
-    public static Step begin(AbstractArrow arrow) {
-        Step frame = new Step(CURRENT.get(), arrow, ++nextStep); CURRENT.set(frame); return frame;
+    public static Step begin(AbstractArrow arrow, BlockHitResult ray) {
+        Step frame = new Step(CURRENT.get(), arrow, ray, ++nextStep); CURRENT.set(frame); return frame;
     }
     /** Only a confirmed damage call inside this arrow's actual collision step may be reserved. */
     public static void prepare(AbstractArrow arrow, ServerPlayer owner, LivingEntity target, Vec3 impact, AABB impactBounds) {
