@@ -14,10 +14,12 @@ import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelVolley;
 import enchantment_fusion.mechanics.signatures.GrapnelProjectilePrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelDefense;
+import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -37,6 +39,14 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
         float knockbackPrimary = MeleeImpulseSkills.nonNativePrimaryDamage(level, weapon, victim, source, themed);
         float wear = MeleeWearSkills.modifyDamage(level, weapon, victim, source, knockbackPrimary);
         return GrapnelSkills.nonNativeProjectileDamage(level, weapon, victim, source, wear);
+    }
+
+    @WrapMethod(method = "modifyCrossbowChargingTime")
+    private static float ef$grapnelQuickCharge(ItemStack weapon, LivingEntity user, float input, Operation<Float> original) {
+        float vanilla = original.call(weapon, user, input);
+        float result = GrapnelQuickCharge.chargeTime(weapon, user, vanilla);
+        GrapnelQuickCharge.finishTime(weapon, user, input, result);
+        return result;
     }
 
     @WrapMethod(method = "getPiercingCount")

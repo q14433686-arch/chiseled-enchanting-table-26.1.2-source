@@ -10,6 +10,7 @@ import enchantment_fusion.mechanics.signatures.PiercingChainSkills;
 import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.HeavyCrushProjectiles;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -37,6 +38,22 @@ public abstract class PhantomCrossbowMixin {
         GrapnelSkills.launched(projectile, shooter, index, HeavyCrushProjectiles.exactLauncher(shooter));
     }
 
+    @WrapMethod(method = "onUseTick")
+    private void ef$scopeQuickLoad(Level level, LivingEntity user, ItemStack weapon, int remaining, Operation<Void> original) {
+        GrapnelQuickCharge.Loading frame = GrapnelQuickCharge.beginLoading(user, weapon);
+        try { original.call(level, user, weapon, remaining); }
+        finally { GrapnelQuickCharge.endLoading(frame); }
+    }
+
+    @WrapOperation(method = "onUseTick", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/item/CrossbowItem;getChargingSounds(Lnet/minecraft/world/item/ItemStack;)Lnet/minecraft/world/item/CrossbowItem$ChargingSounds;"))
+    private CrossbowItem.ChargingSounds ef$quickChargingSounds(CrossbowItem self, ItemStack weapon,
+                                                               Operation<CrossbowItem.ChargingSounds> original,
+                                                               Level level, LivingEntity user, ItemStack actual, int remaining) {
+        CrossbowItem.ChargingSounds vanilla = original.call(self, weapon);
+        return weapon == actual ? GrapnelQuickCharge.chargingSounds(weapon, user, vanilla) : vanilla;
+    }
+
     @WrapOperation(method = "onUseTick", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/item/CrossbowItem;tryLoadProjectiles(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;)Z"))
     private boolean ef$realArrowLoad(LivingEntity shooter, ItemStack weapon, Operation<Boolean> original) {
@@ -44,6 +61,7 @@ public abstract class PhantomCrossbowMixin {
         if (loaded) {
             RangedCadenceSkills.loadedCrossbow(shooter, weapon);
             PiercingChainSkills.loaded(shooter, weapon);
+            GrapnelQuickCharge.loaded(shooter, weapon);
         }
         return loaded;
     }
@@ -52,11 +70,11 @@ public abstract class PhantomCrossbowMixin {
     private void ef$scopeChargedArrow(Level level, LivingEntity shooter, InteractionHand hand, ItemStack weapon,
                                       float power, float inaccuracy, @Nullable LivingEntity targetOverride,
                                       Operation<Void> original) {
-        RangedCadenceSkills.beginCrossbowShot(shooter, weapon);
+        GrapnelQuickCharge.Shot quick = GrapnelQuickCharge.beginShot(shooter, weapon);
         try {
-            original.call(level, shooter, hand, weapon, power, inaccuracy, targetOverride);
-        } finally {
-            RangedCadenceSkills.endCrossbowShot();
-        }
+            RangedCadenceSkills.beginCrossbowShot(shooter, weapon);
+            try { original.call(level, shooter, hand, weapon, power, inaccuracy, targetOverride); }
+            finally { RangedCadenceSkills.endCrossbowShot(); }
+        } finally { GrapnelQuickCharge.endShot(quick); }
     }
 }

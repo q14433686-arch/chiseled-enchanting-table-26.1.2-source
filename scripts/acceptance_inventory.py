@@ -85,6 +85,8 @@ DIRECTION_FIXTURES = {
     ("fire_protection", "lure"): ("40.1-fire-protection-lure", True),
     ("blast_protection", "lure"): ("40.1-blast-protection-lure", True),
     ("projectile_protection", "lure"): ("40.1-projectile-protection-lure", True),
+    ("feather_falling", "lure"): ("40.1-feather-lure", True),
+    ("quick_charge", "lure"): ("40.1-quick-lure", True),
     ("sharpness", "swift_sneak"): ("42.3-sharp-swift", True),
     ("swift_sneak", "sharpness"): ("42.3-swift-sharp", True),
     ("smite", "swift_sneak"): ("42.3-smite-swift", True),

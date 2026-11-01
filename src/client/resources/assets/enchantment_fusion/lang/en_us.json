@@ -1082,5 +1082,7 @@
   "tooltip.enchantment_fusion.infinity_grapnel": "A real bow or crossbow arrow that damages an eligible enemy marks it for 8 seconds. Hold the same weapon and activate within 12 blocks with clear sight to reel it in. Infinity follows the real ammunition rules.",
   "tooltip.enchantment_fusion.piercing_grapnel": "A real crossbow arrow that damages an eligible enemy and actually passes through it marks it for 8 seconds. Hold the same crossbow and activate within 12 blocks with clear sight to reel it in.",
   "tooltip.enchantment_fusion.defense_grapnel": "Real mitigation of this enchantment’s danger, or a real shield block, marks your location for 8 seconds. Keep the same armor equipped or shield held; aim at an eligible enemy within 8 blocks of the mark, stay within 12 blocks, and activate with clear sight.",
-  "message.enchantment_fusion.grapnel_defense_marked": "Defense marked this location. Aim at an eligible enemy and activate grapnel recall."
+  "message.enchantment_fusion.grapnel_defense_marked": "Defense marked this location. Aim at an eligible enemy and activate grapnel recall.",
+  "tooltip.enchantment_fusion.feather_grapnel": "When these boots actually reduce fall-type damage, mark your location for 8 seconds. Keep the same boots equipped; aim at an eligible enemy within 8 blocks of the mark and activate within 12 blocks with clear sight.",
+  "tooltip.enchantment_fusion.quick_grapnel": "When Quick Charge actually shortens a real crossbow load, that load’s real arrow can mark a damaged eligible enemy for 8 seconds. Hold the same crossbow and activate within 12 blocks with clear sight to reel it in."
 }

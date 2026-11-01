@@ -13,7 +13,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class GrapnelSkillsTest {
-    @Test void defaultWildcardCoversOnlyTheSixteenExplicitActionAdapters() {
+    @Test void defaultWildcardCoversOnlyTheEighteenExplicitActionAdapters() {
         var old = SignatureCatalog.parseFromJson(null);
         try {
             SignatureCatalog.publish(SignatureCatalog.parseFromJson(JsonParser.parseString("""
@@ -28,15 +28,15 @@ final class GrapnelSkillsTest {
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
             for (String ranged : new String[]{GrapnelSkills.POWER, GrapnelSkills.FLAME, GrapnelSkills.PUNCH,
-                GrapnelSkills.MULTISHOT, GrapnelSkills.INFINITY, GrapnelSkills.PIERCING}) {
+                GrapnelSkills.MULTISHOT, GrapnelSkills.INFINITY, GrapnelSkills.PIERCING, GrapnelSkills.QUICK}) {
                 FusedPair pair = FusedPair.clean(ranged, 3, GrapnelSkills.LURE, 2);
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
-            for (String defense : new String[]{GrapnelDefense.PROTECTION, GrapnelDefense.FIRE, GrapnelDefense.BLAST, GrapnelDefense.PROJECTILE}) {
+            for (String defense : new String[]{GrapnelDefense.PROTECTION, GrapnelDefense.FIRE, GrapnelDefense.BLAST, GrapnelDefense.PROJECTILE, GrapnelDefense.FEATHER}) {
                 FusedPair pair = FusedPair.clean(defense, 3, GrapnelSkills.LURE, 2);
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
-            assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:quick_charge", 1, GrapnelSkills.LURE, 1)));
+            assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:density", 1, GrapnelSkills.LURE, 1)));
         } finally { SignatureCatalog.publish(old); }
     }
     @Test void exactAndDifferentWildcardKeepTheirPriority() {
@@ -99,6 +99,9 @@ final class GrapnelSkillsTest {
         assertFalse(GrapnelSkills.supportsCarrier(piercing, Set.of(FusionCarrier.BOW)));
         assertTrue(GrapnelSkills.supportsCarrier(piercing, Set.of(FusionCarrier.CROSSBOW)));
         assertFalse(GrapnelSkills.supportsCarrier(piercing, Set.of(FusionCarrier.SWORD)));
+        FusedPair quick = FusedPair.clean(GrapnelSkills.QUICK, 2, GrapnelSkills.LURE, 1);
+        assertTrue(GrapnelSkills.supportsCarrier(quick, Set.of(FusionCarrier.CROSSBOW)));
+        assertFalse(GrapnelSkills.supportsCarrier(quick, Set.of(FusionCarrier.BOW)));
         for (String id : new String[]{GrapnelDefense.PROTECTION, GrapnelDefense.BLAST, GrapnelDefense.PROJECTILE}) {
             FusedPair defense = FusedPair.clean(id, 2, GrapnelSkills.LURE, 1);
             assertTrue(GrapnelSkills.supportsCarrier(defense, Set.of(FusionCarrier.CHEST_ARMOR)));
@@ -108,5 +111,9 @@ final class GrapnelSkillsTest {
         FusedPair fireDefense = FusedPair.clean(GrapnelDefense.FIRE, 2, GrapnelSkills.LURE, 1);
         assertTrue(GrapnelSkills.supportsCarrier(fireDefense, Set.of(FusionCarrier.CHEST_ARMOR)));
         assertFalse(GrapnelSkills.supportsCarrier(fireDefense, Set.of(FusionCarrier.SHIELD)));
+        FusedPair feather = FusedPair.clean(GrapnelDefense.FEATHER, 2, GrapnelSkills.LURE, 1);
+        assertTrue(GrapnelSkills.supportsCarrier(feather, Set.of(FusionCarrier.FOOT_ARMOR)));
+        assertFalse(GrapnelSkills.supportsCarrier(feather, Set.of(FusionCarrier.CHEST_ARMOR)));
+        assertFalse(GrapnelSkills.supportsCarrier(feather, Set.of(FusionCarrier.SHIELD)));
     }
 }

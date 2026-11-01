@@ -80,6 +80,7 @@ public final class FusionTooltipRenderer {
     private FusionTooltipRenderer() {}
 
     private static String grapnelTooltip(FusedPair pair) {
+        if (GrapnelDefense.FEATHER.equals(pair.primaryId())) return "tooltip.enchantment_fusion.feather_grapnel";
         if (GrapnelDefense.isPair(pair)) return "tooltip.enchantment_fusion.defense_grapnel";
         if (GrapnelSkills.miningFirst(pair)) return "tooltip.enchantment_fusion.mining_grapnel";
         if (GrapnelSkills.POWER.equals(pair.primaryId())) return "tooltip.enchantment_fusion.power_grapnel";
@@ -88,6 +89,7 @@ public final class FusionTooltipRenderer {
         if (GrapnelSkills.MULTISHOT.equals(pair.primaryId())) return "tooltip.enchantment_fusion.multishot_grapnel";
         if (GrapnelSkills.INFINITY.equals(pair.primaryId())) return "tooltip.enchantment_fusion.infinity_grapnel";
         if (GrapnelSkills.PIERCING.equals(pair.primaryId())) return "tooltip.enchantment_fusion.piercing_grapnel";
+        if (GrapnelSkills.QUICK.equals(pair.primaryId())) return "tooltip.enchantment_fusion.quick_grapnel";
         return "tooltip.enchantment_fusion.melee_grapnel";
     }
 

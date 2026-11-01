@@ -1082,5 +1082,7 @@
   "tooltip.enchantment_fusion.infinity_grapnel": "Una vera freccia di arco o balestra marca per 8 secondi il nemico valido danneggiato. Usa la stessa arma entro 12 blocchi e con visuale libera per attirarlo. Infinito segue le vere regole delle munizioni.",
   "tooltip.enchantment_fusion.piercing_grapnel": "Una vera freccia di balestra marca per 8 secondi il nemico valido che danneggia e attraversa davvero. Usa la stessa balestra entro 12 blocchi e con visuale libera per attirarlo.",
   "tooltip.enchantment_fusion.defense_grapnel": "Una vera riduzione del pericolo corrispondente o un vero blocco con scudo marca la posizione per 8 secondi. Mantieni la stessa armatura o lo stesso scudo, resta entro 12 blocchi dal segno e mira con visuale libera a un nemico valido entro 8 blocchi dal segno.",
-  "message.enchantment_fusion.grapnel_defense_marked": "Difesa marcata. Mira a un nemico valido e attiva il recupero."
+  "message.enchantment_fusion.grapnel_defense_marked": "Difesa marcata. Mira a un nemico valido e attiva il recupero.",
+  "tooltip.enchantment_fusion.feather_grapnel": "Quando questi stivali riducono davvero danni da caduta, marcano la posizione per 8 secondi. Indossa gli stessi stivali, resta entro 12 blocchi dal segno e mira con visuale libera a un nemico valido entro 8 blocchi dal segno.",
+  "tooltip.enchantment_fusion.quick_grapnel": "Se Ricarica rapida abbrevia una vera ricarica della balestra, la sua freccia reale può marcare per 8 secondi un nemico valido ferito. Tieni la stessa balestra e richiamalo entro 12 blocchi con visuale libera."
 }

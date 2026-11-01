@@ -1082,5 +1082,7 @@
   "tooltip.enchantment_fusion.infinity_grapnel": "弓或弩射出的真實箭傷害合格敵人時留標8秒；手持同一武器，在12格內且視線暢通時主動牽引。無限遵循真實彈藥規則。",
   "tooltip.enchantment_fusion.piercing_grapnel": "弩的真實箭傷害並實際穿過合格敵人時留標8秒；手持同一把弩，在12格內且視線暢通時主動牽引。",
   "tooltip.enchantment_fusion.defense_grapnel": "這件裝備實際減免對應危險，或盾牌真實格擋時，在目前位置留標8秒。繼續穿戴原護甲或持原盾，在距標記12格內瞄準距標記8格內的合格敵人，視線暢通時主動牽引。",
-  "message.enchantment_fusion.grapnel_defense_marked": "防護已留標。瞄準合格敵人並啟動回鉤。"
+  "message.enchantment_fusion.grapnel_defense_marked": "防護已留標。瞄準合格敵人並啟動回鉤。",
+  "tooltip.enchantment_fusion.feather_grapnel": "穿此靴實際減免墜落類傷害時，在目前位置留標8秒。繼續穿原靴，在距標記12格內瞄準距標記8格內的合格敵人，視線暢通時主動牽引。",
+  "tooltip.enchantment_fusion.quick_grapnel": "快速裝填確實縮短一次真實弩裝填時，此次裝填的真實箭傷害合格敵人可留標8秒。手持原弩並在12格內視線暢通時主動牽引。"
 }

@@ -1082,5 +1082,7 @@
   "tooltip.enchantment_fusion.infinity_grapnel": "Ein echter Bogen- oder Armbrustpfeil markiert einen verletzten gültigen Gegner 8 Sekunden. Mit derselben Waffe innerhalb von 12 Blöcken und bei freier Sicht einholen. Unendlichkeit folgt den echten Munitionsregeln.",
   "tooltip.enchantment_fusion.piercing_grapnel": "Ein echter Armbrustpfeil markiert einen gültigen Gegner 8 Sekunden, wenn er ihn verletzt und tatsächlich durchdringt. Mit derselben Armbrust innerhalb von 12 Blöcken und bei freier Sicht einholen.",
   "tooltip.enchantment_fusion.defense_grapnel": "Echte Minderung der passenden Gefahr oder ein echter Schildblock markiert deinen Standort 8 Sekunden. Trage dieselbe Rüstung bzw. halte denselben Schild, bleibe innerhalb von 12 Blöcken und ziele bei freier Sicht auf einen gültigen Gegner höchstens 8 Blöcke vom Mal entfernt.",
-  "message.enchantment_fusion.grapnel_defense_marked": "Abwehrstelle markiert. Ziele auf einen gültigen Gegner und aktiviere den Rückholhaken."
+  "message.enchantment_fusion.grapnel_defense_marked": "Abwehrstelle markiert. Ziele auf einen gültigen Gegner und aktiviere den Rückholhaken.",
+  "tooltip.enchantment_fusion.feather_grapnel": "Mindern diese Stiefel tatsächlich Fallschaden, markieren sie den Standort 8 Sekunden. Trage dieselben Stiefel und ziele innerhalb von 12 Blöcken bei freier Sicht auf einen gültigen Gegner bis zu 8 Blöcke vom Mal entfernt.",
+  "tooltip.enchantment_fusion.quick_grapnel": "Verkürzt Schnellladen eine echte Armbrustladung, markiert deren echter Pfeil einen verletzten gültigen Gegner 8 Sekunden. Halte dieselbe Armbrust und ziehe ihn bei freier Sicht innerhalb von 12 Blöcken heran."
 }

@@ -39,7 +39,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
-/** Four bounded server probes: actual hurt/block paths, simulated danger sources, aim and activation. */
+/** Five bounded server probes: actual hurt/block paths, simulated danger sources, aim and activation. */
 final class GrapnelDefenseProbe {
     private static final EquipmentSlot[] SLOTS = {EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD,
         EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
@@ -70,9 +70,11 @@ final class GrapnelDefenseProbe {
             arrow.setPos(player.getX() + 2, player.getY() + 1.0D, player.getZ()); arrow.setDeltaMovement(new Vec3(-1, 0, 0));
             require(level.addFreshEntity(enemy) && level.addFreshEntity(villager) && level.addFreshEntity(arrow), "Fixture entities must enter the world");
             DamageSource source = source(level, defense, arrow, enemy);
-            ItemStack chest = fused(level, Items.DIAMOND_CHESTPLATE, pair);
+            boolean feather = GrapnelDefense.FEATHER.equals(defense);
+            EquipmentSlot armorSlot = feather ? EquipmentSlot.FEET : EquipmentSlot.CHEST;
+            ItemStack chest = fused(level, feather ? Items.DIAMOND_BOOTS : Items.DIAMOND_CHESTPLATE, pair);
             // Exercise actual fallback of the non-native primary, rather than merely detecting a vanilla enchantment.
-            chest.remove(DataComponents.ENCHANTMENTS); player.setItemSlot(EquipmentSlot.CHEST, chest);
+            chest.remove(DataComponents.ENCHANTMENTS); player.setItemSlot(armorSlot, chest);
             require(GrapnelSkills.hasEquipped(player) && !GrapnelSkills.activate(player), "A worn carrier exposes activation, but no mark cannot pull");
             deny.add(player.getUUID()); hit(player, source); deny.clear(); require(!marked(player), "Cancelled hurt cannot mark a defense");
             if (!GrapnelDefense.PROTECTION.equals(defense)) {
@@ -93,15 +95,15 @@ final class GrapnelDefenseProbe {
             require(level.setBlock(wall, Blocks.STONE.defaultBlockState(), 3), "Fixture wall must be placed"); changedWall = true;
             require(!GrapnelSkills.activate(player) && marked(player), "A wall must block active recall without spending the mark");
             level.removeBlock(wall, false); changedWall = false;
-            player.setItemSlot(EquipmentSlot.CHEST, chest.copy());
+            player.setItemSlot(armorSlot, chest.copy());
             require(!GrapnelSkills.activate(player), "A copied armor piece must not spend the original mark");
-            player.setItemSlot(EquipmentSlot.CHEST, chest); hit(player, source); require(marked(player), "The original armor can establish a fresh mark");
+            player.setItemSlot(armorSlot, chest); hit(player, source); require(marked(player), "The original armor can establish a fresh mark");
             enemy.setDeltaMovement(Vec3.ZERO);
             require(GrapnelSkills.activate(player) && enemy.getDeltaMovement().x < 0 && !marked(player),
                 "Aimed activation must pull the eligible enemy once");
             require(!GrapnelSkills.activate(player), "A spent position mark cannot pull again");
 
-            if (!GrapnelDefense.FIRE.equals(defense)) {
+            if (!GrapnelDefense.FIRE.equals(defense) && !feather) {
                 player.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY); GrapnelSkills.clearPlayer(player.getUUID());
                 ItemStack shield = fused(level, Items.SHIELD, pair); player.setItemSlot(EquipmentSlot.OFFHAND, shield);
                 hit(player, source); require(marked(player), "An actively held non-native shield primary must project actual protection");
@@ -136,6 +138,7 @@ final class GrapnelDefenseProbe {
             case GrapnelDefense.FIRE -> level.damageSources().inFire();
             case GrapnelDefense.BLAST -> level.damageSources().explosion(null, null);
             case GrapnelDefense.PROJECTILE -> level.damageSources().arrow(arrow, enemy);
+            case GrapnelDefense.FEATHER -> level.damageSources().fall();
             default -> level.damageSources().generic();
         };
     }
@@ -159,11 +162,13 @@ final class GrapnelDefenseProbe {
                 inventory.setItem(FusionStationOperations.SLOT_PRIMARY, FusionStationOperations.createSingleEnchantedBook(primary, pair.primaryLevel()));
                 inventory.setItem(FusionStationOperations.SLOT_SECONDARY, FusionStationOperations.createSingleEnchantedBook(secondary, pair.secondaryLevel()));
             } else inventory.setItem(FusionStationOperations.SLOT_PRIMARY, FusedEnchantedBookItem.createForPair(pair));
-            for (Item item : List.of(Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.SHIELD, Items.DIAMOND_SWORD, Items.BOW)) {
+            for (Item item : List.of(Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_BOOTS, Items.SHIELD, Items.DIAMOND_SWORD, Items.BOW)) {
                 inventory.setItem(FusionStationOperations.SLOT_TARGET, new ItemStack(item));
                 var result = FusionStationOperations.inspect(inventory, level.registryAccess(), FusionStationOperations.TAB_SOCKET, direct ? 0 : -1, direct ? 1 : -1);
-                boolean supported = item == Items.DIAMOND_HELMET || item == Items.DIAMOND_CHESTPLATE
-                    || item == Items.SHIELD && !GrapnelDefense.FIRE.equals(pair.primaryId());
+                boolean feather = GrapnelDefense.FEATHER.equals(pair.primaryId());
+                boolean supported = feather ? item == Items.DIAMOND_BOOTS
+                    : item == Items.DIAMOND_HELMET || item == Items.DIAMOND_CHESTPLATE || item == Items.DIAMOND_BOOTS
+                        || item == Items.SHIELD && !GrapnelDefense.FIRE.equals(pair.primaryId());
                 require(supported ? result.executable() : result.rejectReason() == RejectReason.UNSUPPORTED_DIRECTION_HOST,
                     "Both station paths must accept only carriers with this directional defense");
             }

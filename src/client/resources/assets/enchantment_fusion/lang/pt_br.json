@@ -1082,5 +1082,7 @@
   "tooltip.enchantment_fusion.infinity_grapnel": "Uma flecha real de arco ou besta marca por 8 segundos o inimigo válido que sofrer dano. Use a mesma arma a até 12 blocos e com visão livre para puxá-lo. Infinidade segue as regras reais de munição.",
   "tooltip.enchantment_fusion.piercing_grapnel": "Uma flecha real de besta marca por 8 segundos o inimigo válido que ela ferir e realmente atravessar. Use a mesma besta a até 12 blocos e com visão livre para puxá-lo.",
   "tooltip.enchantment_fusion.defense_grapnel": "Mitigar de fato o perigo correspondente ou bloquear de fato com o escudo marca sua posição por 8 segundos. Mantenha a mesma armadura ou escudo, fique a até 12 blocos da marca e mire com visão livre em um inimigo válido a até 8 blocos dela.",
-  "message.enchantment_fusion.grapnel_defense_marked": "Defesa marcada. Mire em um inimigo válido e ative o recolhimento."
+  "message.enchantment_fusion.grapnel_defense_marked": "Defesa marcada. Mire em um inimigo válido e ative o recolhimento.",
+  "tooltip.enchantment_fusion.feather_grapnel": "Quando estas botas reduzirem de fato dano de queda, marcarão sua posição por 8 segundos. Use as mesmas botas, fique a até 12 blocos da marca e mire com visão livre em um inimigo válido a até 8 blocos dela.",
+  "tooltip.enchantment_fusion.quick_grapnel": "Quando Carga rápida realmente encurta uma recarga da besta, a flecha real dessa carga pode marcar por 8 segundos um inimigo válido ferido. Segure a mesma besta e puxe-o com visão livre a até 12 blocos."
 }

@@ -10,7 +10,9 @@ import enchantment_fusion.mechanics.signatures.FireThornsSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardCapture;
 import enchantment_fusion.mechanics.signatures.GrapnelDefenseCapture;
 import enchantment_fusion.mechanics.signatures.ProtectionProjection;
+import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,6 +41,13 @@ public abstract class EnchantmentFrostEffectsMixin {
             source, before, protection.floatValue());
         GrapnelDefenseCapture.observe((Enchantment) (Object) this, level, enchantmentLevel, item, victim,
             source, before, protection.floatValue());
+    }
+
+    @WrapMethod(method = "modifyCrossbowChargeTime")
+    private void ef$observeQuickCharge(RandomSource random, int enchantmentLevel, MutableFloat time, Operation<Void> original) {
+        float before = time.floatValue();
+        original.call(random, enchantmentLevel, time);
+        GrapnelQuickCharge.observe((Enchantment) (Object) this, enchantmentLevel, before, time.floatValue());
     }
 
     @WrapMethod(method = "doPostAttack(Lnet/minecraft/server/level/ServerLevel;ILnet/minecraft/world/item/enchantment/EnchantedItemInUse;Lnet/minecraft/world/item/enchantment/EnchantmentTarget;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;)V")

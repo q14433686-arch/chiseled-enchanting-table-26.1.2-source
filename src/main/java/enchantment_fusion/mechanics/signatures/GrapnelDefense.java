@@ -29,7 +29,8 @@ import org.jetbrains.annotations.Nullable;
 public final class GrapnelDefense {
     public static final String PROTECTION = "minecraft:protection", FIRE = "minecraft:fire_protection";
     public static final String BLAST = "minecraft:blast_protection", PROJECTILE = "minecraft:projectile_protection";
-    private static final Set<String> PRIMARIES = Set.of(PROTECTION, FIRE, BLAST, PROJECTILE);
+    public static final String FEATHER = "minecraft:feather_falling";
+    private static final Set<String> PRIMARIES = Set.of(PROTECTION, FIRE, BLAST, PROJECTILE, FEATHER);
     private static final Set<FusionCarrier> ARMOR = Set.of(FusionCarrier.HEAD_ARMOR, FusionCarrier.CHEST_ARMOR,
         FusionCarrier.LEG_ARMOR, FusionCarrier.FOOT_ARMOR);
     private static final EquipmentSlot[] SLOTS = {EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
@@ -44,6 +45,7 @@ public final class GrapnelDefense {
     }
     public static boolean supportsCarrier(@Nullable FusedPair pair, @Nullable Set<FusionCarrier> roles) {
         if (!isPair(pair) || roles == null) return false;
+        if (FEATHER.equals(pair.primaryId())) return roles.contains(FusionCarrier.FOOT_ARMOR);
         boolean armor = roles.stream().anyMatch(ARMOR::contains);
         return armor || (!FIRE.equals(pair.primaryId()) && roles.contains(FusionCarrier.SHIELD));
     }
@@ -58,6 +60,7 @@ public final class GrapnelDefense {
             case FIRE -> source.is(DamageTypeTags.IS_FIRE);
             case BLAST -> source.is(DamageTypeTags.IS_EXPLOSION);
             case PROJECTILE -> source.is(DamageTypeTags.IS_PROJECTILE);
+            case FEATHER -> source.is(DamageTypeTags.IS_FALL);
             default -> false;
         };
     }

@@ -54,6 +54,7 @@ public final class GrapnelSkills {
     public static final String EFFICIENCY = "minecraft:efficiency", SILK = "minecraft:silk_touch", FORTUNE = "minecraft:fortune";
     public static final String POWER = "minecraft:power", FLAME = "minecraft:flame", PUNCH = "minecraft:punch";
     public static final String MULTISHOT = "minecraft:multishot", INFINITY = "minecraft:infinity", PIERCING = "minecraft:piercing";
+    public static final String QUICK = "minecraft:quick_charge";
     private static final Set<FusionCarrier> TOOLS = Set.of(FusionCarrier.PICKAXE, FusionCarrier.AXE, FusionCarrier.SHOVEL, FusionCarrier.HOE);
     private static final Set<String> MINING_PRIMARIES = Set.of(EFFICIENCY, SILK, FORTUNE);
     private static final int MAX_OWNERS = 256, MAX_DROPS = 64, MAX_FLIGHTS = 4096, MAX_FLIGHT_GEARS = 16;
@@ -97,7 +98,8 @@ public final class GrapnelSkills {
     }
     public static boolean rangedFirst(@Nullable FusedPair pair) {
         return pair != null && (POWER.equals(pair.primaryId()) || FLAME.equals(pair.primaryId()) || PUNCH.equals(pair.primaryId())
-            || MULTISHOT.equals(pair.primaryId()) || INFINITY.equals(pair.primaryId()) || PIERCING.equals(pair.primaryId()))
+            || MULTISHOT.equals(pair.primaryId()) || INFINITY.equals(pair.primaryId()) || PIERCING.equals(pair.primaryId())
+            || QUICK.equals(pair.primaryId()))
             && LURE.equals(pair.secondaryId());
     }
     public static boolean matches(@Nullable FusedPair pair) {
@@ -111,7 +113,7 @@ public final class GrapnelSkills {
         if (miningFirst(pair)) return roles.stream().anyMatch(TOOLS::contains);
         if (GrapnelDefense.isPair(pair)) return GrapnelDefense.supportsCarrier(pair, roles);
         if (rangedFirst(pair)) {
-            if (PIERCING.equals(pair.primaryId())) return roles.contains(FusionCarrier.CROSSBOW);
+            if (PIERCING.equals(pair.primaryId()) || QUICK.equals(pair.primaryId())) return roles.contains(FusionCarrier.CROSSBOW);
             return roles.contains(FusionCarrier.BOW) || (!POWER.equals(pair.primaryId()) && roles.contains(FusionCarrier.CROSSBOW));
         }
         return false;
@@ -160,7 +162,8 @@ public final class GrapnelSkills {
         GrapnelVolley.Batch volley = GrapnelVolley.launched(arrow, shooter, weapon);
         if (FLIGHTS.size() >= MAX_FLIGHTS) return;
         List<Gear> gears = rangedGears(weapon).stream()
-            .filter(gear -> index == 0 || MULTISHOT.equals(gear.pair().primaryId())).toList();
+            .filter(gear -> index == 0 || MULTISHOT.equals(gear.pair().primaryId()))
+            .filter(gear -> !QUICK.equals(gear.pair().primaryId()) || GrapnelQuickCharge.proven(owner, weapon, gear.pair())).toList();
         if (!gears.isEmpty()) FLIGHTS.put(arrow, new Flight(owner.getUUID(), owner.level().dimension(), gears,
             arrow.isCritArrow(), volley, owner.level().getGameTime() + 1200L));
     }
@@ -410,7 +413,7 @@ public final class GrapnelSkills {
         return true;
     }
     public static void tickServer(MinecraftServer server) {
-        GrapnelPiercing.tickServer(server);
+        GrapnelPiercing.tickServer(server); GrapnelQuickCharge.tickServer(server);
         FLIGHTS.entrySet().removeIf(entry -> {
             Flight flight = entry.getValue(); ServerPlayer owner = server.getPlayerList().getPlayer(flight.owner());
             return owner == null || !ready(owner) || !entry.getKey().isAlive() || owner.level() != entry.getKey().level()
@@ -428,13 +431,13 @@ public final class GrapnelSkills {
     }
     public static void clearPlayer(UUID id) {
         MARKS.remove(id);
-        GrapnelPiercing.clearPlayer(id);
+        GrapnelPiercing.clearPlayer(id); GrapnelQuickCharge.clearPlayer(id);
         MARKS.entrySet().removeIf(entry -> entry.getValue() instanceof TargetMark target && target.target().equals(id));
         FLIGHTS.entrySet().removeIf(entry -> entry.getValue().owner().equals(id));
         PENDING_PUSHES.entrySet().removeIf(entry -> entry.getValue().flight().owner().equals(id));
     }
     public static void clearServer() {
         MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear(); PROJECTILE_REPLAY.remove();
-        GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); ProtectionProjection.clear();
+        GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); GrapnelQuickCharge.clearServer(); ProtectionProjection.clear();
     }
 }
