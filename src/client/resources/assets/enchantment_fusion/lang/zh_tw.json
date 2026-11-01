@@ -1121,5 +1121,9 @@
   "tooltip.enchantment_fusion.wind_grapnel": "重錘真實命中且同次風爆實際將你向上推起時，在目前位置留標8秒。繼續手持同一重錘，在距標記12格內瞄準距標記8格內的合格敵人，視線暢通時主動回鉤。保留原版風爆及其環境影響。",
   "tooltip.enchantment_fusion.thorns_grapnel": "穿戴的護甲或手持盾牌真實反傷合格攻擊者時，為其留標8秒；保留原版荊棘機率和耐久消耗。繼續穿戴或手持同一裝備，在12格內且視線暢通時主動回鉤。",
   "message.enchantment_fusion.grapnel_wind_marked": "風爆已留標。瞄準合格敵人並啟動回鉤。",
-  "message.enchantment_fusion.grapnel_thorns_marked": "荊棘已標記攻擊者。保持原裝備並啟動回鉤。"
+  "message.enchantment_fusion.grapnel_thorns_marked": "荊棘已標記攻擊者。保持原裝備並啟動回鉤。",
+  "tooltip.enchantment_fusion.swift_grapnel": "護腿的迅捷潛行屬性有效時，按移動輸入真實潛行會在目前位置留標8秒。保持穿戴同一護腿，在距標記12格內瞄準距標記8格內的合格敵人，視線暢通時主動回鉤。保留原版潛行速度。",
+  "tooltip.enchantment_fusion.depth_grapnel": "靴子的深海探索者屬性有效時，按移動輸入在水中真實移動會在目前位置留標8秒。保持穿戴同一靴子，在距標記12格內瞄準距標記8格內的合格敵人，視線暢通時主動回鉤。保留原版水中移動效果。",
+  "tooltip.enchantment_fusion.sweep_grapnel": "劍的橫掃之刃屬性提高該次橫掃的初始傷害計算，且橫掃使額外合格敵人真正損失生命或吸收值時，為該敵人留標8秒。繼續手持同一把劍，在12格內且視線暢通時主動回鉤。普通未增強橫掃不留標。",
+  "message.enchantment_fusion.grapnel_motion_marked": "移動已留標。瞄準合格敵人並啟動回鉤。"
 }

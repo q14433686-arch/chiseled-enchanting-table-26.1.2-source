@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.signatures.AmberSealSkill;
 import enchantment_fusion.mechanics.signatures.GlazedStrikeEffect;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
+import enchantment_fusion.mechanics.signatures.GrapnelSweep;
 import enchantment_fusion.mechanics.signatures.MomentumSealSkills;
 import enchantment_fusion.mechanics.signatures.SoulThreadSkills;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
@@ -248,6 +249,13 @@ public abstract class PlayerAmberAttackMixin {
         MeleeWindSkills.afterPostAttack(level, (Player) (Object) this, weapon, victim, source);
     }
 
+    @WrapMethod(method = "doSweepAttack")
+    private void ef$grapnelSweepFrame(Entity target, float baseDamage, DamageSource source, float charge, Operation<Void> original) {
+        GrapnelSweep.Sweep sweep = GrapnelSweep.begin((Player) (Object) this, target, baseDamage, source, charge);
+        try { original.call(target, baseDamage, source, charge); }
+        finally { GrapnelSweep.end(sweep); }
+    }
+
     @Inject(method = "doSweepAttack", at = @At("HEAD"))
     private void ef$windCoreSweep(Entity target, float baseDamage, DamageSource source, float charge, CallbackInfo ci) {
         WindSweepSkills.afterRealSweep((Player) (Object) this, target, source);
@@ -256,10 +264,16 @@ public abstract class PlayerAmberAttackMixin {
     @WrapOperation(method = "doSweepAttack", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/entity/LivingEntity;hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z"))
     private boolean ef$recordRealSweep(LivingEntity victim, ServerLevel level, DamageSource source, float damage, Operation<Boolean> original) {
+        Player player = (Player) (Object) this;
+        GrapnelSweep.Victim grapple = GrapnelSweep.before(player, victim, source);
         float health = victim.getHealth(), absorption = victim.getAbsorptionAmount();
-        boolean accepted = original.call(victim, level, source, damage);
-        FireSweepSkills.afterSweep((Player) (Object) this, victim, source, health, absorption, accepted);
-        return accepted;
+        boolean accepted = false, completed = false;
+        try {
+            accepted = original.call(victim, level, source, damage);
+            FireSweepSkills.afterSweep(player, victim, source, health, absorption, accepted);
+            completed = true;
+            return accepted;
+        } finally { GrapnelSweep.after(grapple, completed, accepted); }
     }
 
     @WrapOperation(method = {"attack", "stabAttack"}, at = @At(value = "INVOKE",

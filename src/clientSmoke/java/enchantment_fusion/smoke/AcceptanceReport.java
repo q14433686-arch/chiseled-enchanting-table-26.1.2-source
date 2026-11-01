@@ -97,6 +97,10 @@ final class AcceptanceReport {
         plan("40.1-density-lure", "Density ▷ Lure: actual mace hit with simulated fall and recall", "Not reached if setup fails.");
         plan("40.1-wind-lure", "Wind Burst ▷ Lure: real hit and wind, simulated fall and recall", "Not reached if setup fails.");
         plan("40.1-thorns-lure", "Thorns ▷ Lure: real hurt/retaliation with high test-only level and recall", "Not reached if setup fails.");
+        plan("40.1-swift-lure", "Swift Sneak ▷ Lure: real movement with simulated input and equipment refresh", "Not reached if setup fails.");
+        plan("40.1-depth-lure", "Depth Strider ▷ Lure: real movement with simulated input, water and equipment refresh", "Not reached if setup fails.");
+        plan("40.1-sweep-lure", "Sweeping Edge ▷ Lure: real sword sweep with prepared equipment and victims", "Not reached if setup fails.");
+        plan("40.1-attribute-shared-regression", "Shared work, movement and sweep primary attribute projections", "Not reached if setup fails.");
         plan("43.3-smite-channel", "Smite ▷ Channeling: real marks and virtual chain", "Not reached if setup fails.");
         plan("43.4-sharp-wind", "sharpness ▷ Wind Burst: real hit and simulated player movement", "Not reached if setup fails.");
         plan("43.4-wind-sharp", "Wind Burst ▷ sharpness: same real wind effect and simulated updraft follow-up", "Not reached if setup fails.");

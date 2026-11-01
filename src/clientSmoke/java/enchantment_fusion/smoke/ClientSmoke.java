@@ -712,6 +712,10 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("40.1-density-lure", () -> GrapnelImpactProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:density"));
         acceptance.run("40.1-wind-lure", () -> GrapnelWindProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("40.1-thorns-lure", () -> GrapnelThornsProbe.exercise(sp, tablePos.above(180).east(12)));
+        acceptance.run("40.1-swift-lure", () -> GrapnelAttributeProbe.movement(sp, tablePos.above(180).east(12), "minecraft:swift_sneak"));
+        acceptance.run("40.1-depth-lure", () -> GrapnelAttributeProbe.movement(sp, tablePos.above(180).east(12), "minecraft:depth_strider"));
+        acceptance.run("40.1-sweep-lure", () -> GrapnelAttributeProbe.sweep(sp, tablePos.above(180).east(12)));
+        acceptance.run("40.1-attribute-shared-regression", () -> GrapnelAttributeProbe.sharedProjection(sp, tablePos.above(180).east(12)));
         acceptance.run("43.3-smite-channel", () -> MeleeLightningProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));
         acceptance.run("43.4-sharp-wind", () -> MeleeWindProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("43.4-wind-sharp", () -> MeleeWindProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));

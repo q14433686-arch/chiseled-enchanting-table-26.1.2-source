@@ -1121,5 +1121,9 @@
   "tooltip.enchantment_fusion.wind_grapnel": "철퇴가 실제로 명중하고 같은 돌풍이 플레이어를 위로 밀어 올리면 현재 위치를 8초간 표시합니다. 같은 철퇴를 들고 표시에서 12블록 이내에 머물며, 표시에서 8블록 이내의 적을 시야가 열린 상태로 조준해 회수합니다. 원래 돌풍과 환경 영향은 유지됩니다.",
   "tooltip.enchantment_fusion.thorns_grapnel": "착용한 방어구나 든 방패가 적격 공격자에게 실제 가시 피해를 반사하면 그 적을 8초간 표시합니다. 원래 가시 확률과 내구도 소모는 유지됩니다. 같은 장비를 유지하고 12블록 이내에서 시야가 확보될 때 회수합니다.",
   "message.enchantment_fusion.grapnel_wind_marked": "돌풍으로 위치를 표시했습니다. 적격 적을 조준하고 회수하세요.",
-  "message.enchantment_fusion.grapnel_thorns_marked": "가시가 공격자를 표시했습니다. 같은 장비를 유지하고 회수하세요."
+  "message.enchantment_fusion.grapnel_thorns_marked": "가시가 공격자를 표시했습니다. 같은 장비를 유지하고 회수하세요.",
+  "tooltip.enchantment_fusion.swift_grapnel": "이 각반의 신속한 잠행 속성이 유효할 때 입력 방향으로 실제 웅크려 이동하면 위치를 8초간 표시합니다. 같은 각반을 착용하고 표시에서 12블록 이내에서 표시 주변 8블록 이내의 적격 적을 시야가 열린 상태로 조준해 회수합니다. 원래 잠행 속도는 유지됩니다.",
+  "tooltip.enchantment_fusion.depth_grapnel": "이 부츠의 물갈퀴 속성이 유효할 때 입력 방향으로 실제 물속 이동을 하면 위치를 8초간 표시합니다. 같은 부츠를 착용하고 표시에서 12블록 이내에서 표시 주변 8블록 이내의 적격 적을 시야가 열린 상태로 조준해 회수합니다. 원래 물속 이동 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.sweep_grapnel": "검의 휩쓸기 속성이 휩쓸기의 초기 피해 계산을 높이고 별도의 적격 적이 체력이나 흡수량을 잃으면 그 적을 8초간 표시합니다. 같은 검을 들고 12블록 이내에서 시야가 확보될 때 회수합니다. 강화되지 않은 일반 휩쓸기는 표시하지 않습니다.",
+  "message.enchantment_fusion.grapnel_motion_marked": "이동으로 위치를 표시했습니다. 적격 적을 조준하고 회수하세요."
 }

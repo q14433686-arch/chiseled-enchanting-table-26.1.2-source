@@ -5,6 +5,9 @@ import com.google.gson.JsonParser;
 import enchantment_fusion.mechanics.signatures.ConfirmedWindBurst;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelThorns;
+import enchantment_fusion.mechanics.signatures.GrapnelAttribute;
+import enchantment_fusion.mechanics.signatures.GrapnelMotion;
+import enchantment_fusion.mechanics.signatures.GrapnelSweep;
 import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.model.FusedPair;
@@ -32,6 +35,42 @@ final class GrapnelActionSourcesTest {
                 """).getAsJsonObject());
             assertFalse(GrapnelSkills.matches(thorns)); assertTrue(GrapnelSkills.matches(wind));
         } finally { SignatureCatalog.reloadFromJson(null); }
+    }
+    @Test void attributeDrivenCarriersAndPriorityAreDirectionSpecific() {
+        SignatureCatalog.reloadFromJson(null);
+        try {
+            FusedPair swift = FusedPair.clean(GrapnelAttribute.SWIFT, 3, "minecraft:lure", 2);
+            FusedPair depth = FusedPair.clean(GrapnelAttribute.DEPTH, 3, "minecraft:lure", 2);
+            FusedPair sweep = FusedPair.clean(GrapnelAttribute.SWEEP, 3, "minecraft:lure", 2);
+            for (FusedPair pair : new FusedPair[]{swift, depth, sweep}) {
+                assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
+            }
+            assertTrue(GrapnelSkills.supportsCarrier(swift, Set.of(FusionCarrier.LEG_ARMOR)));
+            assertFalse(GrapnelSkills.supportsCarrier(swift, Set.of(FusionCarrier.FOOT_ARMOR)));
+            assertTrue(GrapnelSkills.supportsCarrier(depth, Set.of(FusionCarrier.FOOT_ARMOR)));
+            assertFalse(GrapnelSkills.supportsCarrier(depth, Set.of(FusionCarrier.LEG_ARMOR)));
+            assertTrue(GrapnelSkills.supportsCarrier(sweep, Set.of(FusionCarrier.SWORD)));
+            assertFalse(GrapnelSkills.supportsCarrier(sweep, Set.of(FusionCarrier.AXE)));
+            SignatureCatalog.reloadFromJson(JsonParser.parseString("""
+                {"signatures":{"custom":{"primary":"minecraft:swift_sneak","secondary":"minecraft:lure"},
+                    "spirit_grapnel":{"primary":"*","secondary":"minecraft:lure"}}}
+                """).getAsJsonObject());
+            assertFalse(GrapnelSkills.matches(swift)); assertTrue(GrapnelSkills.matches(depth));
+        } finally { SignatureCatalog.reloadFromJson(null); }
+    }
+    @Test void movementMustFollowInputAndSweepMustActuallyIncreaseInitialDamage() {
+        Vec3 forward = new Vec3(1, 0, 0);
+        assertTrue(GrapnelMotion.matchesInput(new Vec3(0.1, 0, 0.02), forward));
+        assertFalse(GrapnelMotion.matchesInput(Vec3.ZERO, forward));
+        assertFalse(GrapnelMotion.matchesInput(new Vec3(-0.1, 0, 0), forward));
+        assertFalse(GrapnelMotion.matchesInput(new Vec3(0, 0, 0.1), forward));
+        assertFalse(GrapnelMotion.matchesInput(new Vec3(0.1, 0, 0), Vec3.ZERO));
+        assertFalse(GrapnelMotion.matchesInput(new Vec3(Double.NaN, 0, 0), forward));
+        assertTrue(GrapnelSweep.improvesSweep(4, 1, 0.6, 0));
+        assertFalse(GrapnelSweep.improvesSweep(4, 1, 0.6, 0.6));
+        assertFalse(GrapnelSweep.improvesSweep(0, 1, 0.6, 0));
+        assertFalse(GrapnelSweep.improvesSweep(4, 0, 0.6, 0));
+        assertFalse(GrapnelSweep.improvesSweep(4, 1, Double.NaN, 0));
     }
     @Test void reflectedDamageNeedsOneUnambiguousCompletedNetLoss() {
         GrapnelThorns.Evidence confirmed = new GrapnelThorns.Evidence();
