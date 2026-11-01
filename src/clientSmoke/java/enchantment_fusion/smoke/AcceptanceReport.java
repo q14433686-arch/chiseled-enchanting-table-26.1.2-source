@@ -99,6 +99,7 @@ final class AcceptanceReport {
         plan("40.1-thorns-lure", "Thorns ▷ Lure: real hurt/retaliation with high test-only level and recall", "Not reached if setup fails.");
         plan("40.1-swift-lure", "Swift Sneak ▷ Lure: real movement with simulated input and equipment refresh", "Not reached if setup fails.");
         plan("40.1-depth-lure", "Depth Strider ▷ Lure: real movement with simulated input, water and equipment refresh", "Not reached if setup fails.");
+        plan("40.1-soul-lure", "Soul Speed ▷ Lure: prepared soul ground, input, conditional effects and statistical wear", "Not reached if setup fails; wear samples are probabilistic.");
         plan("40.1-sweep-lure", "Sweeping Edge ▷ Lure: real sword sweep with prepared equipment and victims", "Not reached if setup fails.");
         plan("40.1-attribute-shared-regression", "Shared work, movement and sweep primary attribute projections", "Not reached if setup fails.");
         plan("43.3-smite-channel", "Smite ▷ Channeling: real marks and virtual chain", "Not reached if setup fails.");

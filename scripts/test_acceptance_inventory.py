@@ -64,10 +64,10 @@ class AcceptanceInventoryTest(unittest.TestCase):
         self.assertNotIn(("sharpness", "channeling"), DIRECTION_FIXTURES)
         self.assertNotIn(("channeling", "sharpness"), DIRECTION_FIXTURES)
 
-    def test_grapnel_has_twenty_eight_action_specific_fixtures_not_all_40_directions(self):
+    def test_grapnel_has_twenty_nine_action_specific_fixtures_not_all_40_directions(self):
         pairs = {(primary, "lure") for primary in
-                 ("sharpness", "smite", "bane_of_arthropods", "efficiency", "silk_touch", "fortune", "power", "flame", "punch", "multishot", "infinity", "piercing", "protection", "fire_protection", "blast_protection", "projectile_protection", "feather_falling", "quick_charge", "mending", "unbreaking", "knockback", "breach", "density", "wind_burst", "thorns", "swift_sneak", "depth_strider", "sweeping_edge")}
-        self.assertEqual(28, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
+                 ("sharpness", "smite", "bane_of_arthropods", "efficiency", "silk_touch", "fortune", "power", "flame", "punch", "multishot", "infinity", "piercing", "protection", "fire_protection", "blast_protection", "projectile_protection", "feather_falling", "quick_charge", "mending", "unbreaking", "knockback", "breach", "density", "wind_burst", "thorns", "swift_sneak", "depth_strider", "soul_speed", "sweeping_edge")}
+        self.assertEqual(29, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
         self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
         self.assertNotIn(("lunge", "lure"), DIRECTION_FIXTURES)
 
