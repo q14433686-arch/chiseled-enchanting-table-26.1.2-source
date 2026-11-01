@@ -72,8 +72,14 @@ final class PrimaryAttributeProjection {
                 Identifier id = EnchantmentFusion.id("primary_attribute/" + source.pair().primaryId().replace(':', '/')
                     + "/" + source.slot().getName() + "/" + effectIndex);
                 AttributeModifier projected = new AttributeModifier(id, base.amount(), base.operation());
-                // If a datapack repeats a native modifier ID, vanilla's later entry wins rather than stacking both.
-                desired.put(new Key(effect.attribute(), base.id()), new Projection(effect.attribute(), projected, source));
+                Key key = new Key(effect.attribute(), base.id()); Projection previous = desired.get(key);
+                boolean samePrimaryOnItem = previous != null && previous.source().stack() == source.stack()
+                    && previous.source().slot() == source.slot() && previous.source().pair().primaryId().equals(source.pair().primaryId());
+                // The same native primary on one item uses its highest fused level, independent of provider order.
+                // Equal-level effects and unrelated ID collisions keep vanilla's later-entry ordering.
+                if (previous == null || AttributeContributionMath.replaceProjection(samePrimaryOnItem,
+                    previous.source().pair().primaryLevel(), source.pair().primaryLevel()))
+                    desired.put(key, new Projection(effect.attribute(), projected, source));
                 if (desired.size() >= MAX_EFFECTS) break;
             }
         }

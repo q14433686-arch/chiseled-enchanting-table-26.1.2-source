@@ -31,6 +31,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -113,6 +114,24 @@ final class GrapnelAquaProbe {
             MeleeWorkSkills.tickServer(level.getServer());
             require(speed.getModifier(PROJECTED) == null && Math.abs(speed.getValue() - nativeSpeed) < 1.0E-6D, "Native restoration cannot double the attribute");
 
+            // Multiple families on one item share the highest missing primary, in either provider order.
+            for (boolean lureHigh : new boolean[]{false, true}) {
+                GrapnelSkills.clearPlayer(player.getUUID());
+                FusedPair lure = FusedPair.clean(GrapnelAttribute.AQUA, lureHigh ? 5 : 1, GrapnelSkills.LURE, 2);
+                FusedPair work = FusedPair.clean(GrapnelAttribute.AQUA, lureHigh ? 1 : 5, "minecraft:smite", 3);
+                ItemStack shared = f.equip(EquipmentSlot.HEAD, Items.DIAMOND_HELMET, lure);
+                FusionStationOperations.applyFusedPairToGear(shared, work, level.registryAccess());
+                shared.remove(DataComponents.ENCHANTMENTS); detect(player); MeleeWorkSkills.tickServer(level.getServer());
+                var enchantment = FusionStationOperations.lookupEnchantment(level.registryAccess(), GrapnelAttribute.AQUA).orElseThrow();
+                var base = enchantment.value().getEffects(EnchantmentEffectComponents.ATTRIBUTES).getFirst().getModifier(5, EquipmentSlot.HEAD);
+                var projected = speed.getModifier(PROJECTED);
+                require(projected != null && projected.amount() == base.amount() && projected.operation() == base.operation(),
+                    "One shared projection must use the highest primary level, independent of provider order");
+                level.setBlockAndUpdate(target, Blocks.DIAMOND_ORE.defaultBlockState());
+                require(player.gameMode.destroyBlock(target) && markedDrop(player) == null,
+                    "Two same-primary fusions have ambiguous mark attribution");
+            }
+            player.setItemSlot(EquipmentSlot.HEAD, helmet); detect(player); MeleeWorkSkills.tickServer(level.getServer());
             // Existing held-tool drop marks retain priority even when the helmet also qualifies.
             GrapnelSkills.clearPlayer(player.getUUID());
             FusedPair held = FusedPair.clean(GrapnelSkills.EFFICIENCY, 3, GrapnelSkills.LURE, 2);

@@ -19,6 +19,12 @@ final class PrimaryAttributeProjectionTest {
         assertEquals(0.75D, AttributeContributionMath.calculate(0.3D, List.of(primary, total), CLAMP), 1.0E-8D);
         assertEquals(List.of(primary, base, total), all);
     }
+    @Test void sameItemAndPrimaryKeepHighestLevelWithoutChangingOtherIdOrdering() {
+        assertFalse(AttributeContributionMath.replaceProjection(true, 4, 1));
+        assertTrue(AttributeContributionMath.replaceProjection(true, 1, 4));
+        assertTrue(AttributeContributionMath.replaceProjection(true, 4, 4));
+        assertTrue(AttributeContributionMath.replaceProjection(false, 4, 1));
+    }
     @Test void anAlreadySaturatedOrCancelledModifierCannotBeCredited() {
         var primary = mod(0.4D, ADD_VALUE); var other = mod(1.0D, ADD_VALUE);
         assertEquals(AttributeContributionMath.calculate(0, List.of(other), CLAMP),
