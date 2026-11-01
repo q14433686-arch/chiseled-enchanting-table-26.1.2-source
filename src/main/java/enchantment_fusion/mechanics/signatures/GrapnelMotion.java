@@ -107,7 +107,7 @@ public final class GrapnelMotion {
             long now = owner.level().getGameTime(); Throttle throttle = THROTTLES.get(entry.getKey());
             if (throttle != null && throttle.dimension().equals(owner.level().dimension()) && now < throttle.until()) continue;
             var gear = pending.candidate.gear();
-            if (GrapnelSkills.markPosition(owner, gear.slot(), gear.stack(), gear.pair(), owner.position()))
+            if (GrapnelSkills.tryMarkPosition(owner, gear.slot(), gear.stack(), gear.pair(), owner.position()))
                 THROTTLES.put(entry.getKey(), new Throttle(owner.level().dimension(), now + MARK_INTERVAL));
         }
         THROTTLES.entrySet().removeIf(entry -> {

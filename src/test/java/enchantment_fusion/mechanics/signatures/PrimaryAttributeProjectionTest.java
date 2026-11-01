@@ -1,38 +1,30 @@
 package enchantment_fusion.mechanics.signatures;
 
 import static org.junit.jupiter.api.Assertions.*;
-import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.RangedAttribute;
+import static enchantment_fusion.mechanics.signatures.AttributeContributionMath.Operation.*;
+import java.util.List;
+import java.util.function.DoubleUnaryOperator;
 import org.junit.jupiter.api.Test;
 
 final class PrimaryAttributeProjectionTest {
-    private static AttributeModifier mod(String id, double amount, AttributeModifier.Operation operation) {
-        return new AttributeModifier(Identifier.parse("test:" + id), amount, operation);
+    private static final DoubleUnaryOperator CLAMP = value -> Double.isNaN(value) ? 0 : Math.clamp(value, 0.0D, 1.0D);
+    private static AttributeContributionMath.Modifier mod(double amount, AttributeContributionMath.Operation operation) {
+        return new AttributeContributionMath.Modifier(amount, operation);
     }
     @Test void counterfactualUsesVanillaOperationOrderAndClampWithoutMutation() {
-        Holder<Attribute> attribute = Holder.direct(new RangedAttribute("test.speed", 0.3D, 0.0D, 1.0D));
-        var instance = new AttributeInstance(attribute, ignored -> {});
-        var primary = mod("primary", 0.2D, AttributeModifier.Operation.ADD_VALUE);
-        var base = mod("base", 0.5D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        var total = mod("total", 0.5D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
-        instance.addTransientModifier(primary); instance.addTransientModifier(base); instance.addTransientModifier(total);
-        assertEquals(1.0D, instance.getValue(), 1.0E-8D);
-        assertEquals(0.675D, PrimaryAttributeProjection.valueWithout(instance, primary.id()), 1.0E-8D);
-        assertEquals(1.0D, instance.getValue(), 1.0E-8D);
-        assertEquals(primary, instance.getModifier(primary.id()));
-        assertEquals(0.75D, PrimaryAttributeProjection.valueWithout(instance, base.id()), 1.0E-8D);
+        var primary = mod(0.2D, ADD_VALUE); var base = mod(0.5D, ADD_MULTIPLIED_BASE);
+        var total = mod(0.5D, ADD_MULTIPLIED_TOTAL); var all = List.of(primary, base, total);
+        assertEquals(1.0D, AttributeContributionMath.calculate(0.3D, all, CLAMP), 1.0E-8D);
+        assertEquals(0.675D, AttributeContributionMath.calculate(0.3D, List.of(base, total), CLAMP), 1.0E-8D);
+        assertEquals(0.75D, AttributeContributionMath.calculate(0.3D, List.of(primary, total), CLAMP), 1.0E-8D);
+        assertEquals(List.of(primary, base, total), all);
     }
     @Test void anAlreadySaturatedOrCancelledModifierCannotBeCredited() {
-        var instance = new AttributeInstance(Holder.direct(new RangedAttribute("test.cap", 0.0D, 0.0D, 1.0D)), ignored -> {});
-        var primary = mod("primary", 0.4D, AttributeModifier.Operation.ADD_VALUE);
-        instance.addTransientModifier(mod("other", 1.0D, AttributeModifier.Operation.ADD_VALUE));
-        instance.addTransientModifier(primary);
-        assertEquals(instance.getValue(), PrimaryAttributeProjection.valueWithout(instance, primary.id()), 1.0E-8D);
-        instance.addTransientModifier(mod("zero", -1.0D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
-        assertEquals(instance.getValue(), PrimaryAttributeProjection.valueWithout(instance, primary.id()), 1.0E-8D);
+        var primary = mod(0.4D, ADD_VALUE); var other = mod(1.0D, ADD_VALUE);
+        assertEquals(AttributeContributionMath.calculate(0, List.of(other), CLAMP),
+            AttributeContributionMath.calculate(0, List.of(other, primary), CLAMP), 1.0E-8D);
+        var zero = mod(-1.0D, ADD_MULTIPLIED_TOTAL);
+        assertEquals(AttributeContributionMath.calculate(0, List.of(other, zero), CLAMP),
+            AttributeContributionMath.calculate(0, List.of(other, primary, zero), CLAMP), 1.0E-8D);
     }
 }

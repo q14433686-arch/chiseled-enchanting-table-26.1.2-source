@@ -357,7 +357,10 @@ public final class GrapnelSkills {
         markPosition(owner, defensive.slot(), defensive.stack(), defensive.pair(), origin);
     }
     /** Shared position marks bind the actual slot, item identity, pair and unmodified location. */
-    public static boolean markPosition(ServerPlayer owner, EquipmentSlot slot, ItemStack stack, FusedPair pair, Vec3 origin) {
+    public static void markPosition(ServerPlayer owner, EquipmentSlot slot, ItemStack stack, FusedPair pair, Vec3 origin) {
+        tryMarkPosition(owner, slot, stack, pair, origin);
+    }
+    public static boolean tryMarkPosition(ServerPlayer owner, EquipmentSlot slot, ItemStack stack, FusedPair pair, Vec3 origin) {
         if (!Double.isFinite(origin.x) || !Double.isFinite(origin.y) || !Double.isFinite(origin.z)
             || owner.position().distanceToSqr(origin) > 0.0001D) return false;
         BlockPos pos = BlockPos.containing(origin);

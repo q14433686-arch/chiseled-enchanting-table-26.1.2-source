@@ -162,17 +162,17 @@ final class PrimaryAttributeProjection {
     }
     /** Mirrors vanilla's add-value, add-base, multiply-total order, including the attribute clamp. */
     static double valueWithout(AttributeInstance instance, Identifier excluded) {
-        double base = instance.getBaseValue();
-        for (AttributeModifier modifier : instance.getModifiers())
-            if (!modifier.id().equals(excluded) && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) base += modifier.amount();
-        double result = base;
-        for (AttributeModifier modifier : instance.getModifiers())
-            if (!modifier.id().equals(excluded) && modifier.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
-                result += base * modifier.amount();
-        for (AttributeModifier modifier : instance.getModifiers())
-            if (!modifier.id().equals(excluded) && modifier.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
-                result *= 1.0D + modifier.amount();
-        return instance.getAttribute().value().sanitizeValue(result);
+        List<AttributeContributionMath.Modifier> modifiers = new ArrayList<>();
+        for (AttributeModifier modifier : instance.getModifiers()) {
+            if (modifier.id().equals(excluded)) continue;
+            AttributeContributionMath.Operation operation = switch (modifier.operation()) {
+                case ADD_VALUE -> AttributeContributionMath.Operation.ADD_VALUE;
+                case ADD_MULTIPLIED_BASE -> AttributeContributionMath.Operation.ADD_MULTIPLIED_BASE;
+                case ADD_MULTIPLIED_TOTAL -> AttributeContributionMath.Operation.ADD_MULTIPLIED_TOTAL;
+            };
+            modifiers.add(new AttributeContributionMath.Modifier(modifier.amount(), operation));
+        }
+        return AttributeContributionMath.calculate(instance.getBaseValue(), modifiers, instance.getAttribute().value()::sanitizeValue);
     }
     private static void remove(ServerPlayer player, Projection projection) {
         AttributeInstance instance = player.getAttribute(projection.attribute());
