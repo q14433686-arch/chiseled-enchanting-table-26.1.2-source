@@ -39,6 +39,7 @@ import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
+import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.RetainedVolleyHosts;
@@ -257,6 +258,9 @@ public final class FusionTooltipRenderer {
             boolean meleeWorkTemplate = MeleeWorkSkills.matches(pair);
             boolean legacyMeleeWorkCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeWorkTemplate
                 && !MeleeWorkSkills.applies(pair, stack);
+            boolean meleeMendingTemplate = MeleeMendingSkills.matches(pair);
+            boolean legacyMeleeMendingCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeMendingTemplate
+                && !MeleeMendingSkills.applies(pair, stack);
             boolean legacyRetainedVolleyCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
                 && RetainedVolleyHosts.matches(pair, sigOpt.get().id()) && !RetainedVolleyHosts.supportsHost(stack, sigOpt.get().id());
             boolean legacyGlazeAmberCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && sigOpt.isPresent()
@@ -316,6 +320,10 @@ public final class FusionTooltipRenderer {
                 if (shift && meleeWorkTemplate && !legacyMeleeWorkCarrier) {
                     lines.add(Component.translatable(meleeWorkTooltip(pair)).withStyle(ChatFormatting.AQUA));
                 }
+                if (shift && meleeMendingTemplate && !legacyMeleeMendingCarrier) {
+                    lines.add(Component.translatable(MeleeMendingSkills.attackFirst(pair)
+                        ? "tooltip.enchantment_fusion.melee_mending_repair" : "tooltip.enchantment_fusion.melee_mending_blade").withStyle(ChatFormatting.AQUA));
+                }
             } else if (sigOpt.isPresent()) {
                 Component sigTitle = Component.translatable(sigOpt.get().titleKey());
                 lines.add(Component.translatable(
@@ -363,6 +371,9 @@ public final class FusionTooltipRenderer {
                             : "tooltip.enchantment_fusion.melee_guard_counter").withStyle(ChatFormatting.AQUA));
                     } else if (meleeWorkTemplate && !legacyMeleeWorkCarrier) {
                         lines.add(Component.translatable(meleeWorkTooltip(pair)).withStyle(ChatFormatting.AQUA));
+                    } else if (meleeMendingTemplate && !legacyMeleeMendingCarrier) {
+                        lines.add(Component.translatable(MeleeMendingSkills.attackFirst(pair)
+                            ? "tooltip.enchantment_fusion.melee_mending_repair" : "tooltip.enchantment_fusion.melee_mending_blade").withStyle(ChatFormatting.AQUA));
                     } else {
                         lines.add(buildMatrixSentence(pair, hostForm).copy().withStyle(ChatFormatting.AQUA));
                     }
@@ -391,6 +402,15 @@ public final class FusionTooltipRenderer {
             if (legacyMeleeWorkCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_work_carrier")
                     .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyMeleeMendingCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_mending_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (shift && meleeMendingTemplate && MeleeMendingSkills.mendingFirst(pair) && !legacyMeleeMendingCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
+                    Component.keybind("key.enchantment_fusion.activate_skill"),
+                    Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
             }
             if (shift && meleeWorkTemplate && MeleeWorkSkills.isAttackFirst(pair) && !legacyMeleeWorkCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",

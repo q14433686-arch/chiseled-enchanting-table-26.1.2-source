@@ -1059,5 +1059,11 @@
   "tooltip.enchantment_fusion.melee_work_water_boost": "수중에서 유효한 근접 공격 세 번 후 발동하면 10초 내 수중 채굴 한 번이 빨라집니다.",
   "tooltip.enchantment_fusion.melee_work_blade": "이 도구의 정당한 채굴로 칼날 기세를 최대 3회, 10초 동안 모읍니다. 이후 도구로 유효한 공격 시 짧은 칼날을 발사합니다.",
   "tooltip.enchantment_fusion.melee_work_water_blade": "이 투구를 착용한 수중 채굴로 물칼날을 최대 3회, 10초 동안 모읍니다. 이후 유효한 근접 공격 시 발사합니다.",
-  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "기존 장비는 기존 효과를 유지합니다. 새 방향에는 해당 무기, 도구 또는 투구가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "기존 장비는 기존 효과를 유지합니다. 새 방향에는 해당 무기, 도구 또는 투구가 필요합니다.",
+  "skill.enchantment_fusion.melee_mending": "재련의 칼날",
+  "message.enchantment_fusion.melee_mending_need": "단련 흔적이 없거나 칼날이 이미 준비되었습니다.",
+  "message.enchantment_fusion.melee_mending_set": "칼날 준비 완료: 다음 유효한 완충 근접 공격으로 발동합니다.",
+  "tooltip.enchantment_fusion.melee_mending_repair": "완충 적중으로 대상을 표식합니다. 다시 공격하면 원래 피해 일부를 줄이고 실제 손실에 비례해 무기를 대략 최대 8 수리합니다.",
+  "tooltip.enchantment_fusion.melee_mending_blade": "경험치 구슬이 무기를 실제로 수리하면 단련 흔적이 쌓입니다. 활성화 후 유효한 완충 근접 공격으로 방향성 칼날을 발사합니다.",
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "기존 장비는 기존 효과를 유지합니다. 이 방향에는 내구도가 있는 근접 무기가 필요합니다."
 }

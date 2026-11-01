@@ -1059,5 +1059,11 @@
   "tooltip.enchantment_fusion.melee_work_water_boost": "Trois coups valides sous l’eau chargent l’élan. Activez-le pour accélérer un bloc sous-marin autorisé sous 10 secondes.",
   "tooltip.enchantment_fusion.melee_work_blade": "Miner légalement avec cet outil stocke jusqu’à trois tranchants pendant 10 secondes. Un coup valide avec lui libère une courte lame dirigée.",
   "tooltip.enchantment_fusion.melee_work_water_blade": "Miner légalement sous l’eau avec ce casque stocke jusqu’à trois tranchants aquatiques pendant 10 secondes. Un coup valide libère la lame.",
-  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "L’ancien support garde son effet ; cette direction exige l’arme, l’outil ou le casque approprié."
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "L’ancien support garde son effet ; cette direction exige l’arme, l’outil ou le casque approprié.",
+  "skill.enchantment_fusion.melee_mending": "Lame reforgée",
+  "message.enchantment_fusion.melee_mending_need": "Aucune marque de forge, ou une lame est déjà préparée.",
+  "message.enchantment_fusion.melee_mending_set": "Lame prête : le prochain coup de mêlée valide et chargé la libère.",
+  "tooltip.enchantment_fusion.melee_mending_repair": "Un coup chargé marque la cible. La frapper à nouveau détourne une partie des dégâts bruts et répare approximativement l’arme selon les pertes réelles, jusqu’à 8 points.",
+  "tooltip.enchantment_fusion.melee_mending_blade": "Une vraie réparation par orbe d’expérience accumule des marques. Activez-les puis frappez à pleine charge pour lancer une lame dirigée.",
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "L’ancien support garde son effet ; cette direction exige une arme de mêlée durable."
 }

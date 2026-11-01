@@ -3,6 +3,7 @@ package enchantment_fusion.mixin;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.DurabilityEconomy;
+import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.item.ItemStack;
@@ -27,6 +28,9 @@ public abstract class ExperienceOrbDurabilityMixin {
         int before = stack.getDamageValue();
         original.call(stack, newDamage);
         int repaired = Math.max(0, before - stack.getDamageValue());
-        if (repaired > 0) DurabilityEconomy.afterOrbRepair(player, stack, repaired);
+        if (repaired > 0) {
+            DurabilityEconomy.afterOrbRepair(player, stack, repaired);
+            MeleeMendingSkills.afterOrbRepair(player, stack, repaired);
+        }
     }
 }

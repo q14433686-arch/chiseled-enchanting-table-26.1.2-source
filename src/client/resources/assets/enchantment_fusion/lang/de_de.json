@@ -1059,5 +1059,11 @@
   "tooltip.enchantment_fusion.melee_work_water_boost": "Drei gültige Nahkampftreffer unter Wasser laden Schwung. Aktivieren, um binnen 10 Sekunden einen zulässigen Block unter Wasser schneller abzubauen.",
   "tooltip.enchantment_fusion.melee_work_blade": "Zulässiger Abbau mit diesem Werkzeug speichert bis zu drei Klingen für 10 Sekunden. Ein gültiger Nahkampftreffer damit löst eine kurze Klinge aus.",
   "tooltip.enchantment_fusion.melee_work_water_blade": "Zulässiger Unterwasserabbau mit diesem Helm speichert bis zu drei Wasserklingen für 10 Sekunden. Ein gültiger Nahkampftreffer löst sie aus.",
-  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "Alter Träger behält seinen Effekt; die neue Richtung verlangt die passende Nahkampfwaffe, das Werkzeug oder den Helm."
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "Alter Träger behält seinen Effekt; die neue Richtung verlangt die passende Nahkampfwaffe, das Werkzeug oder den Helm.",
+  "skill.enchantment_fusion.melee_mending": "Schmiedeklinge",
+  "message.enchantment_fusion.melee_mending_need": "Keine Schmiedemarken vorhanden oder eine Klinge ist bereits bereit.",
+  "message.enchantment_fusion.melee_mending_set": "Klinge bereit: Der nächste gültige voll aufgeladene Nahkampftreffer setzt sie frei.",
+  "tooltip.enchantment_fusion.melee_mending_repair": "Ein voll aufgeladener Treffer markiert das Ziel. Ein weiterer Treffer wandelt einen Teil des Rohschadens anhand des tatsächlichen Schadens näherungsweise in bis zu 8 Haltbarkeit um.",
+  "tooltip.enchantment_fusion.melee_mending_blade": "Tatsächliche Reparatur durch Erfahrungskugeln sammelt Schmiedemarken. Aktivieren und voll aufgeladen gültig treffen, um eine gerichtete Klinge freizusetzen.",
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "Alter Träger behält den alten Effekt; diese Richtung benötigt eine haltbare Nahkampfwaffe."
 }

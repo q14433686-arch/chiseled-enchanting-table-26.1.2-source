@@ -18,6 +18,7 @@ import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
+import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -122,9 +123,12 @@ public abstract class PlayerAmberAttackMixin {
             try {
                 HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginMelee(player, weapon, target, source, false);
                 try {
-                    succeeded = original.call(target, source, damage);
-                    ConfirmedMelee.after(confirmed, succeeded);
-                    return succeeded;
+                    MeleeMendingSkills.Damage mending = MeleeMendingSkills.beginDamage(confirmed, damage);
+                    try {
+                        succeeded = original.call(target, source, mending.damage());
+                        ConfirmedMelee.after(confirmed, succeeded);
+                        return succeeded;
+                    } finally { MeleeMendingSkills.endDamage(mending); }
                 } finally {
                     try { SegmentThreadSkills.afterDamage(segment, succeeded); }
                     finally {
@@ -170,9 +174,12 @@ public abstract class PlayerAmberAttackMixin {
             try {
                 HeavyCrushSkill.Hit heavyHit = HeavyCrushSkill.beginMelee(player, weapon, target, source, true);
                 try {
-                    succeeded = original.call(target, source, damage);
-                    ConfirmedMelee.after(confirmed, succeeded);
-                    return succeeded;
+                    MeleeMendingSkills.Damage mending = MeleeMendingSkills.beginDamage(confirmed, damage);
+                    try {
+                        succeeded = original.call(target, source, mending.damage());
+                        ConfirmedMelee.after(confirmed, succeeded);
+                        return succeeded;
+                    } finally { MeleeMendingSkills.endDamage(mending); }
                 } finally {
                     try { SegmentThreadSkills.afterDamage(segment, succeeded); }
                     finally {

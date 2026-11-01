@@ -47,6 +47,14 @@ class AcceptanceInventoryTest(unittest.TestCase):
             self.assertEqual(6, len(fixtures))
             self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
 
+    def test_mending_template_has_four_direction_specific_fixtures(self):
+        pairs = {(attack, "mending") for attack in ("smite", "bane_of_arthropods")}
+        pairs |= {(right, left) for left, right in pairs.copy()}
+        self.assertEqual(4, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
+        self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
+        self.assertNotIn(("sharpness", "mending"), DIRECTION_FIXTURES)
+        self.assertNotIn(("mending", "sharpness"), DIRECTION_FIXTURES)
+
     def test_unique_and_shared_failures_remain_distinct(self):
         results = parse_report("| unique | scope | FAIL | failure |\n| shared | scope | FAIL | failure |\n")
         self.assertEqual("FAIL", scoped_status(("unique", True), results)[0])

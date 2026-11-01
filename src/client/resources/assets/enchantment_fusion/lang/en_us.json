@@ -1059,5 +1059,11 @@
   "tooltip.enchantment_fusion.melee_work_water_boost": "Three qualified underwater melee hits build momentum. Activate to hasten one legal underwater block within 10 seconds.",
   "tooltip.enchantment_fusion.melee_work_blade": "Real tool mining stores up to three edges for 10 seconds. A later qualified hit with this tool releases an aimed short blade.",
   "tooltip.enchantment_fusion.melee_work_water_blade": "Real underwater tool mining while wearing this helmet stores up to three water edges for 10 seconds. A later qualified melee hit releases an aimed water blade.",
-  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "Legacy carrier keeps its old effect; this direction now requires the specified weapon, tool or helmet."
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "Legacy carrier keeps its old effect; this direction now requires the specified weapon, tool or helmet.",
+  "skill.enchantment_fusion.melee_mending": "Reforge edge",
+  "message.enchantment_fusion.melee_mending_need": "No forge marks available, or an edge is already prepared.",
+  "message.enchantment_fusion.melee_mending_set": "Edge prepared: your next eligible fully charged melee hit releases it.",
+  "tooltip.enchantment_fusion.melee_mending_repair": "A fully charged hit marks the target. Hit it again to divert part of the raw damage and approximately repair this weapon from actual loss, up to 8 points.",
+  "tooltip.enchantment_fusion.melee_mending_blade": "Real experience-orb repair stores forge marks. Activate, then land an eligible fully charged melee hit to release an aimed blade.",
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "Legacy carrier retains its old effect; this direction requires a durable melee weapon."
 }

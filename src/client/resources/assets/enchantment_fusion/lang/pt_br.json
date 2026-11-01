@@ -1059,5 +1059,11 @@
   "tooltip.enchantment_fusion.melee_work_water_boost": "Três golpes válidos debaixo d’água carregam impulso. Ative para acelerar um bloco subaquático permitido em 10 segundos.",
   "tooltip.enchantment_fusion.melee_work_blade": "Minerar legalmente com esta ferramenta guarda até três gumes por 10 segundos. Um golpe válido com ela libera uma lâmina curta direcionada.",
   "tooltip.enchantment_fusion.melee_work_water_blade": "Minerar legalmente sob a água com este capacete guarda até três gumes de água por 10 segundos. Um golpe válido libera a lâmina.",
-  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "O objeto antigo mantém o efeito; a nova direção exige a arma, ferramenta ou capacete indicado."
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "O objeto antigo mantém o efeito; a nova direção exige a arma, ferramenta ou capacete indicado.",
+  "skill.enchantment_fusion.melee_mending": "Lâmina reforjada",
+  "message.enchantment_fusion.melee_mending_need": "Sem marcas de forja, ou uma lâmina já está preparada.",
+  "message.enchantment_fusion.melee_mending_set": "Lâmina preparada: o próximo golpe corpo a corpo válido e carregado a libera.",
+  "tooltip.enchantment_fusion.melee_mending_repair": "Um golpe carregado marca o alvo. Atacá-lo novamente desvia parte do dano bruto e repara a arma aproximadamente conforme o dano real, até 8 pontos.",
+  "tooltip.enchantment_fusion.melee_mending_blade": "Reparos reais com orbes de experiência acumulam marcas. Ative e acerte um golpe válido carregado para liberar uma lâmina direcionada.",
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "O item antigo mantém o efeito antigo; esta direção exige uma arma corpo a corpo com durabilidade."
 }

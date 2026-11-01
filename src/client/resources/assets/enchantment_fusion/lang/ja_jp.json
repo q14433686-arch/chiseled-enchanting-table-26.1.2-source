@@ -1059,5 +1059,11 @@
   "tooltip.enchantment_fusion.melee_work_water_boost": "水中で有効な近接命中を3回続けて発動し、10秒以内の水中採掘1回を速くする。",
   "tooltip.enchantment_fusion.melee_work_blade": "この道具で正当に採掘すると刃の勢いが最大3段階、10秒間蓄積。次の有効な近接攻撃で短い刃を放つ。",
   "tooltip.enchantment_fusion.melee_work_water_blade": "この兜を装着して水中で正当に採掘すると水刃が最大3段階、10秒間蓄積。次の有効な近接攻撃で放つ。",
-  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "旧装備は旧効果を維持。新方向には対応する近接武器、道具または兜が必要。"
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "旧装備は旧効果を維持。新方向には対応する近接武器、道具または兜が必要。",
+  "skill.enchantment_fusion.melee_mending": "鍛痕の刃",
+  "message.enchantment_fusion.melee_mending_need": "鍛痕がないか、刃はすでに準備済みです。",
+  "message.enchantment_fusion.melee_mending_set": "刃を準備しました。次の有効な最大溜め近接攻撃で放ちます。",
+  "tooltip.enchantment_fusion.melee_mending_repair": "最大溜めの命中で目標に印を付ける。同じ目標への次の攻撃では元のダメージの一部を減らし、実損に応じて武器をおおよそ最大8修復する。",
+  "tooltip.enchantment_fusion.melee_mending_blade": "経験値オーブが実際に武器を修復すると鍛痕がたまる。起動後、有効な最大溜め近接攻撃で狙った方向に刃を放つ。",
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "旧アイテムは旧効果を保持します。この方向には耐久値のある近接武器が必要です。"
 }

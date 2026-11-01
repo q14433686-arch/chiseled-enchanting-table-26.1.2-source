@@ -67,6 +67,11 @@ final class AcceptanceReport {
         plan("44.4-bane-aqua", "Bane ▷ Aqua: real hits and one-block work boost", "Not reached if setup fails.");
         plan("44.4-aqua-bane", "Aqua ▷ Bane: real mining and directed blade", "Not reached if setup fails.");
         plan("44.4-runtime-compat", "44.4 natural input, client mining sync, custom datapacks, multiplayer and claims", "Not covered by the simulated fixture.");
+        plan("44.2-smite-mending", "Smite ▷ Mending: actual marked damage diversion and weapon repair", "Not reached if setup fails.");
+        plan("44.2-mending-smite", "Mending ▷ Smite: actual experience-orb repair and prepared blade", "Not reached if setup fails.");
+        plan("44.2-bane-mending", "Bane ▷ Mending: actual marked damage diversion and weapon repair", "Not reached if setup fails.");
+        plan("44.2-mending-bane", "Mending ▷ Bane: actual experience-orb repair and prepared blade", "Not reached if setup fails.");
+        plan("44.2-runtime-compat", "44.2 natural orb pickup, charged input, mixed equipment, datapacks and multiplayer", "Not covered by the simulated single-player fixture.");
         plan("42.3-sharp-swift", "Sharpness ▷ Swift Sneak: real hits and simulated imprint movement", "Not reached if setup fails.");
         plan("42.3-swift-sharp", "Swift Sneak ▷ Sharpness: worn leggings, simulated crouch and real hit", "Not reached if setup fails.");
         plan("42.3-smite-swift", "Smite ▷ Swift Sneak: real hits, undead filtering and simulated imprint movement", "Not reached if setup fails.");

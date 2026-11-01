@@ -17,6 +17,7 @@ import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
+import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import io.netty.buffer.ByteBuf;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -76,7 +77,8 @@ public final class FusionSkillNetworking {
         MELEE_WEAR_GUARD("skill.enchantment_fusion.melee_wear_guard"),
         MELEE_WEAR_EDGE("skill.enchantment_fusion.melee_wear_edge"),
         MELEE_WORK("skill.enchantment_fusion.melee_work"),
-        MELEE_WATER_WORK("skill.enchantment_fusion.melee_water_work");
+        MELEE_WATER_WORK("skill.enchantment_fusion.melee_water_work"),
+        MELEE_MENDING("skill.enchantment_fusion.melee_mending");
         final String translation;
         Skill(String translation) { this.translation = translation; }
     }
@@ -109,6 +111,7 @@ public final class FusionSkillNetworking {
         if (MeleeWearSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WEAR_EDGE);
         if (MeleeWorkSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WORK);
         if (MeleeWorkSkills.hasEquipped(player, true)) skills.add(Skill.MELEE_WATER_WORK);
+        if (MeleeMendingSkills.hasEquipped(player)) skills.add(Skill.MELEE_MENDING);
         return skills;
     }
 
@@ -172,6 +175,7 @@ public final class FusionSkillNetworking {
             case MELEE_WEAR_EDGE -> MeleeWearSkills.activate(player, false);
             case MELEE_WORK -> MeleeWorkSkills.activate(player, false);
             case MELEE_WATER_WORK -> MeleeWorkSkills.activate(player, true);
+            case MELEE_MENDING -> MeleeMendingSkills.activate(player);
         }
     }
 

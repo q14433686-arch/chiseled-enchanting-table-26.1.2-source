@@ -104,8 +104,8 @@ public final class DurabilityEconomy {
     }
 
     /**
-     * Vanilla repairs all normally eligible items first. With XP left over, a damaged non-native
-     * growth carrier may use the real datapack Mending effect without forging an enchantment on it.
+     * Vanilla repairs normally eligible items first. With XP left over, selected non-native
+     * Mending primaries use the real datapack effect once without writing an enchantment to the item.
      */
     public static int repairNonNative(ServerPlayer player, int amount) {
         if (amount <= 0 || !player.isAlive()) return amount;
@@ -116,10 +116,17 @@ public final class DurabilityEconomy {
         for (EquipmentSlot slot : EQUIPPED) {
             ItemStack stack = player.getItemBySlot(slot);
             FusedPair pair = selected(stack, true);
-            if (pair == null || !seen.add(stack) || !stack.isDamaged() || containsNative(stack, mending)) continue;
+            FusedPair melee = slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND
+                ? MeleeMendingSkills.nonNativeMending(stack) : null;
+            if (melee != null && (pair == null || melee.primaryLevel() > pair.primaryLevel())) pair = melee;
+            if (pair == null || !seen.add(stack) || !stack.isDamaged()) continue;
+            boolean nativeMending = containsNative(stack, mending);
+            if (nativeMending && mending.value().matchingSlot(slot)) continue;
             int vanilla = EnchantmentHelper.modifyDurabilityToRepairFromXp(level, stack, amount);
             MutableFloat repairValue = new MutableFloat(vanilla);
-            mending.value().modifyDurabilityToRepairFromXp(level, pair.primaryLevel(), stack, repairValue);
+            // Item-based XP value iteration already includes a native enchant even if its slot
+            // prevented vanilla from choosing the item; only append a genuinely absent primary.
+            if (!nativeMending) mending.value().modifyDurabilityToRepairFromXp(level, pair.primaryLevel(), stack, repairValue);
             int capacity = Math.max(0, repairValue.intValue());
             int before = stack.getDamageValue();
             int planned = Math.min(before, capacity);
@@ -130,6 +137,7 @@ public final class DurabilityEconomy {
             int spent = (int) Math.min(amount, (long) actual * amount / capacity);
             amount -= spent; // Match vanilla's XP-to-durability remainder calculation.
             afterOrbRepair(player, stack, actual);
+            MeleeMendingSkills.afterOrbRepair(player, stack, actual);
             if (amount <= 0) return 0;
         }
         return amount;

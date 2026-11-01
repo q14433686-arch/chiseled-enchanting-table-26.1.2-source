@@ -1059,5 +1059,11 @@
   "tooltip.enchantment_fusion.melee_work_water_boost": "Tre colpi validi sott’acqua caricano lo slancio. Attivalo per accelerare un blocco subacqueo consentito entro 10 secondi.",
   "tooltip.enchantment_fusion.melee_work_blade": "Scavare legalmente con questo strumento conserva fino a tre lame per 10 secondi. Un colpo valido con esso libera una lama corta direzionata.",
   "tooltip.enchantment_fusion.melee_work_water_blade": "Scavare legalmente sott’acqua con questo elmo conserva fino a tre lame d’acqua per 10 secondi. Un colpo valido libera la lama.",
-  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "Il vecchio oggetto mantiene l’effetto; la nuova direzione richiede l’arma, lo strumento o l’elmo indicato."
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "Il vecchio oggetto mantiene l’effetto; la nuova direzione richiede l’arma, lo strumento o l’elmo indicato.",
+  "skill.enchantment_fusion.melee_mending": "Lama riforgiata",
+  "message.enchantment_fusion.melee_mending_need": "Nessun segno di forgia, oppure una lama è già pronta.",
+  "message.enchantment_fusion.melee_mending_set": "Lama pronta: il prossimo colpo corpo a corpo valido e carico la libera.",
+  "tooltip.enchantment_fusion.melee_mending_repair": "Un colpo carico marca il bersaglio. Colpirlo ancora devia parte del danno grezzo e ripara approssimativamente l’arma in base al danno reale, fino a 8 punti.",
+  "tooltip.enchantment_fusion.melee_mending_blade": "La riparazione effettiva con sfere esperienza accumula segni. Attivali e colpisci a piena carica per liberare una lama direzionata.",
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "Il vecchio supporto conserva l’effetto; questa direzione richiede un’arma corpo a corpo con durabilità."
 }

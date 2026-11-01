@@ -1059,5 +1059,11 @@
   "tooltip.enchantment_fusion.melee_work_water_boost": "水下连续三次合格近战积势，主动释放后10秒内加快一次合法水下采掘。",
   "tooltip.enchantment_fusion.melee_work_blade": "持此工具合法采掘积攒至多三层锋势、持续10秒；再持此工具合格近战释放定向短刃。",
   "tooltip.enchantment_fusion.melee_work_water_blade": "穿此头盔合法水下采掘积攒至多三层水锋、持续10秒；之后合格近战释放定向水刃。",
-  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "旧载体保留旧效果；新方向分别要求对应近战武器、工具或头盔。"
+  "tooltip.enchantment_fusion.legacy_melee_work_carrier": "旧载体保留旧效果；新方向分别要求对应近战武器、工具或头盔。",
+  "skill.enchantment_fusion.melee_mending": "锻痕重开",
+  "message.enchantment_fusion.melee_mending_need": "尚无锻痕，或锋刃已准备。",
+  "message.enchantment_fusion.melee_mending_set": "锻痕已准备；下一次合格满蓄近战释放锋刃。",
+  "tooltip.enchantment_fusion.melee_mending_repair": "满蓄命中留下印记；再击同一目标时，减少部分原始伤害并根据实际损伤近似修复武器，至多8点。",
+  "tooltip.enchantment_fusion.melee_mending_blade": "经验球真正修复此武器后积攒锻痕；主动准备后，下次合格满蓄近战释放定向锋刃。",
+  "tooltip.enchantment_fusion.legacy_melee_mending_carrier": "旧载体保留旧效果；此方向要求有耐久的近战武器。"
 }
