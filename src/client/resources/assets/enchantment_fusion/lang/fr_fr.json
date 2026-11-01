@@ -1201,7 +1201,7 @@
   "message.enchantment_fusion.ranged_silk_unrecoverable": "La dernière flèche ne peut pas encore être récupérée.",
   "message.enchantment_fusion.ranged_silk_blocked": "La flèche est bloquée ou dans une zone interdite.",
   "message.enchantment_fusion.ranged_silk_full": "Inventaire plein ou ramassage normal bloqué.",
-  "tooltip.enchantment_fusion.ranged_silk_mark": "Un vrai tir marque une cible admissible pendant 8 secondes. Une autre vraie flèche de la même arme ajoute seulement à cette cible les dégâts de Puissance, le recul de Frappe ou le feu de Flamme. Une autre cible remplace la marque.",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "Un vrai tir marque une cible admissible pendant 8 secondes. Une autre vraie flèche de la même arme ajoute seulement à cette cible les dégâts de Puissance, le recul de Frappe ou une durée de feu accrue avec Flamme. Une autre cible remplace la marque.",
   "tooltip.enchantment_fusion.ranged_silk_recover": "Ramassez normalement votre dernière vraie flèche plantée à 16 blocs ou moins et à vue. Il faut de la place dans l’inventaire. Les flèches infinies, fantômes, de mods et en vol sont exclues.",
   "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "Les anciens objets incompatibles gardent leur effet. Les nouvelles fusions exigent un arc ou une arbalète."
 }

@@ -1201,7 +1201,7 @@
   "message.enchantment_fusion.ranged_silk_unrecoverable": "최근 화살을 아직 회수할 수 없습니다.",
   "message.enchantment_fusion.ranged_silk_blocked": "화살이 가려졌거나 상호 작용이 허용되지 않은 구역입니다.",
   "message.enchantment_fusion.ranged_silk_full": "인벤토리가 가득 찼거나 일반 획득이 막혔습니다.",
-  "tooltip.enchantment_fusion.ranged_silk_mark": "실제 화살이 적격 대상에게 명중하면 8초 동안 표식합니다. 같은 무기의 다른 실제 화살이 표식 대상에게 명중할 때 힘은 피해, 밀어내기는 밀침, 화염은 점화를 더합니다. 다른 대상에게 명중하면 표식이 바뀝니다.",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "실제 화살이 적격 대상에게 명중하면 8초 동안 표식합니다. 같은 무기의 다른 실제 화살이 표식 대상에게 명중할 때 힘은 피해, 밀어내기는 밀침, 화염은 타는 시간을 늘립니다. 다른 대상에게 명중하면 표식이 바뀝니다.",
   "tooltip.enchantment_fusion.ranged_silk_recover": "시야가 트인 16블록 안의 자신이 마지막으로 쏜 지면의 실제 화살을 일반 획득으로 회수합니다. 인벤토리 공간이 필요하며 무한, 환영, 다른 모드, 비행 중인 화살은 회수하지 않습니다.",
   "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "기존 부적합 장비의 효과는 유지됩니다. 새 융합에는 활이나 석궁이 필요합니다."
 }

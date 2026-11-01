@@ -1201,7 +1201,7 @@
   "message.enchantment_fusion.ranged_silk_unrecoverable": "La última flecha aún no se puede recuperar.",
   "message.enchantment_fusion.ranged_silk_blocked": "La flecha está obstruida o en una zona restringida.",
   "message.enchantment_fusion.ranged_silk_full": "Inventario lleno o recogida normal bloqueada.",
-  "tooltip.enchantment_fusion.ranged_silk_mark": "Un impacto real marca un objetivo válido durante 8 segundos. Otra flecha real de la misma arma añade daño de Poder, empuje de Retroceso o fuego de Llama solo al objetivo marcado. Otro objetivo cambia la marca.",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "Un impacto real marca un objetivo válido durante 8 segundos. Otra flecha real de la misma arma añade daño de Poder, empuje de Retroceso o una combustión de Llama más larga solo al objetivo marcado. Otro objetivo cambia la marca.",
   "tooltip.enchantment_fusion.ranged_silk_recover": "Recoge tu última flecha real clavada a 16 bloques como máximo y con visión libre mediante la recogida normal. Hace falta espacio. No recupera flechas infinitas, fantasma, de otros mods ni en vuelo.",
   "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "El equipo antiguo no apto conserva su efecto. Las nuevas fusiones requieren arco o ballesta."
 }
