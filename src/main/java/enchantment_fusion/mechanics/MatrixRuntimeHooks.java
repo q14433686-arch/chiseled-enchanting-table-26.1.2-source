@@ -38,6 +38,7 @@ import enchantment_fusion.mechanics.signatures.RangedTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import enchantment_fusion.mechanics.signatures.RangedGuardSkills;
 import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
+import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.ConfirmedMining;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
@@ -137,6 +138,7 @@ public final class MatrixRuntimeHooks {
             RangedSneakSkills.clearServer(server);
             RangedGuardSkills.clearServer();
             RangedMendingSkills.clearServer();
+            RangedSilkSkills.clearServer();
             ConfirmedArrow.clearServer();
             MeleeImpulseSkills.clearServer();
             MeleeGuardSkills.clearServer();
@@ -216,6 +218,7 @@ public final class MatrixRuntimeHooks {
             RangedSneakSkills.clearPlayer(handler.getPlayer());
             RangedGuardSkills.clearPlayer(pid);
             RangedMendingSkills.clearPlayer(pid);
+            RangedSilkSkills.clearPlayer(pid);
             ConfirmedArrow.clearPlayer(pid);
             MeleeImpulseSkills.clearPlayer(pid);
             MeleeGuardSkills.clearPlayer(pid);
@@ -447,6 +450,7 @@ public final class MatrixRuntimeHooks {
                 RangedSneakSkills.clearPlayer(deadPlayer);
                 RangedGuardSkills.clearPlayer(deadPlayer.getUUID());
                 RangedMendingSkills.clearPlayer(deadPlayer.getUUID());
+                RangedSilkSkills.clearPlayer(deadPlayer.getUUID());
                 ConfirmedArrow.clearPlayer(deadPlayer.getUUID());
                 MeleeImpulseSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeGuardSkills.clearPlayer(deadPlayer.getUUID());
@@ -493,6 +497,7 @@ public final class MatrixRuntimeHooks {
             RangedSneakSkills.tickServer(server);
             RangedGuardSkills.tickServer(server);
             RangedMendingSkills.tickServer(server);
+            RangedSilkSkills.tickServer(server);
             ConfirmedArrow.tickServer(server);
             MeleeImpulseSkills.tickServer(server);
             MeleeGuardSkills.tickServer(server);

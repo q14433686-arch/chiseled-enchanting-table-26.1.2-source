@@ -43,6 +43,7 @@ import enchantment_fusion.mechanics.signatures.RangedTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import enchantment_fusion.mechanics.signatures.RangedGuardSkills;
 import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
+import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -322,6 +323,9 @@ public final class FusionTooltipRenderer {
             boolean rangedMendingTemplate = RangedMendingSkills.matches(pair);
             boolean legacyRangedMendingCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && rangedMendingTemplate
                 && !RangedMendingSkills.applies(pair, stack);
+            boolean rangedSilkTemplate = RangedSilkSkills.matches(pair);
+            boolean legacyRangedSilkCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && rangedSilkTemplate
+                && !RangedSilkSkills.applies(pair, stack);
             boolean meleeWearTemplate = MeleeWearSkills.matches(pair);
             boolean legacyMeleeWearCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeWearTemplate
                 && !MeleeWearSkills.applies(pair, stack);
@@ -430,6 +434,11 @@ public final class FusionTooltipRenderer {
                     lines.add(Component.translatable(RangedMendingSkills.shootingFirst(pair)
                         ? "tooltip.enchantment_fusion.ranged_mending_route"
                         : "tooltip.enchantment_fusion.ranged_mending_arrow").withStyle(ChatFormatting.AQUA));
+                }
+                if (shift && rangedSilkTemplate && !legacyRangedSilkCarrier) {
+                    lines.add(Component.translatable(RangedSilkSkills.shootingFirst(pair)
+                        ? "tooltip.enchantment_fusion.ranged_silk_mark"
+                        : "tooltip.enchantment_fusion.ranged_silk_recover").withStyle(ChatFormatting.AQUA));
                 }
                 if (shift && meleeWearTemplate && !legacyMeleeWearCarrier) {
                     lines.add(Component.translatable(MeleeWearSkills.isAttackFirst(pair)
@@ -542,6 +551,10 @@ public final class FusionTooltipRenderer {
                         lines.add(Component.translatable(RangedMendingSkills.shootingFirst(pair)
                             ? "tooltip.enchantment_fusion.ranged_mending_route"
                             : "tooltip.enchantment_fusion.ranged_mending_arrow").withStyle(ChatFormatting.AQUA));
+                    } else if (rangedSilkTemplate && !legacyRangedSilkCarrier) {
+                        lines.add(Component.translatable(RangedSilkSkills.shootingFirst(pair)
+                            ? "tooltip.enchantment_fusion.ranged_silk_mark"
+                            : "tooltip.enchantment_fusion.ranged_silk_recover").withStyle(ChatFormatting.AQUA));
                     } else if (meleeWearTemplate && !legacyMeleeWearCarrier) {
                         lines.add(Component.translatable(MeleeWearSkills.isAttackFirst(pair)
                             ? "tooltip.enchantment_fusion.melee_wear_guard"
@@ -615,6 +628,10 @@ public final class FusionTooltipRenderer {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_ranged_mending_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
+            if (legacyRangedSilkCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_ranged_silk_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
             if (legacyMeleeWearCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_wear_carrier")
                     .withStyle(ChatFormatting.GOLD));
@@ -675,6 +692,11 @@ public final class FusionTooltipRenderer {
                     Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
             }
             if (shift && meleeFortuneTemplate && MeleeFortuneSkills.fortuneFirst(pair) && !legacyMeleeFortuneCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
+                    Component.keybind("key.enchantment_fusion.activate_skill"),
+                    Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
+            }
+            if (shift && rangedSilkTemplate && RangedSilkSkills.silkFirst(pair) && !legacyRangedSilkCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
                     Component.keybind("key.enchantment_fusion.activate_skill"),
                     Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));

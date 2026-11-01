@@ -37,6 +37,7 @@ import enchantment_fusion.mechanics.signatures.RangedTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import enchantment_fusion.mechanics.signatures.RangedGuardSkills;
 import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
+import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -111,6 +112,9 @@ public final class DirectionalHostRules {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (RangedMendingSkills.matches(pair) && !RangedMendingSkills.supportsCarrier(host)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
+        if (RangedSilkSkills.matches(pair) && !RangedSilkSkills.supportsCarrier(actual)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (MeleeWearSkills.matches(pair) && !MeleeWearSkills.supportsHost(host)) {

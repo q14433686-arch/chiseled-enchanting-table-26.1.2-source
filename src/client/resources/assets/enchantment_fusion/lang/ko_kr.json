@@ -1195,5 +1195,13 @@
   "message.enchantment_fusion.ranged_mending_full": "표시된 화살이 너무 많아 인장을 준비 상태로 유지합니다.",
   "tooltip.enchantment_fusion.ranged_mending_route": "실제 화살로 적합한 대상을 처치하면 새로 생성되고 합쳐지지 않은 경험치 구슬만 막히지 않은 화살 경로를 따라 돌아옵니다. 직접 주우면 이 활이나 쇠뇌를 먼저 수리하고 남은 경험치를 받습니다. 불확실한 구슬은 그대로 유지됩니다.",
   "tooltip.enchantment_fusion.ranged_mending_arrow": "손에 든 활이나 쇠뇌를 경험치 구슬이 실제 수리하면 임시 인장이 쌓입니다. 활성화하면 다음 실제 화살 한 발에 장전됩니다. 힘은 피해, 밀어내기는 넉백을 늘리고 화염은 적합한 대상에 불을 붙입니다.",
-  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "적합하지 않은 기존 장비는 기존 효과를 유지합니다. 새 융합에는 내구도가 있는 활이나 쇠뇌가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "적합하지 않은 기존 장비는 기존 효과를 유지합니다. 새 융합에는 내구도가 있는 활이나 쇠뇌가 필요합니다.",
+  "skill.enchantment_fusion.ranged_silk": "실제 화살 회수",
+  "message.enchantment_fusion.ranged_silk_missing": "이 무기의 최근 화살을 찾을 수 없습니다.",
+  "message.enchantment_fusion.ranged_silk_unrecoverable": "최근 화살을 아직 회수할 수 없습니다.",
+  "message.enchantment_fusion.ranged_silk_blocked": "화살이 가려졌거나 상호 작용이 허용되지 않은 구역입니다.",
+  "message.enchantment_fusion.ranged_silk_full": "인벤토리가 가득 찼거나 일반 획득이 막혔습니다.",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "실제 화살이 적격 대상에게 명중하면 8초 동안 표식합니다. 같은 무기의 다른 실제 화살이 표식 대상에게 명중할 때 힘은 피해, 밀어내기는 밀침, 화염은 점화를 더합니다. 다른 대상에게 명중하면 표식이 바뀝니다.",
+  "tooltip.enchantment_fusion.ranged_silk_recover": "시야가 트인 16블록 안의 자신이 마지막으로 쏜 지면의 실제 화살을 일반 획득으로 회수합니다. 인벤토리 공간이 필요하며 무한, 환영, 다른 모드, 비행 중인 화살은 회수하지 않습니다.",
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "기존 부적합 장비의 효과는 유지됩니다. 새 융합에는 활이나 석궁이 필요합니다."
 }

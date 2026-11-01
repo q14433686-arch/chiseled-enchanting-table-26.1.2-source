@@ -1195,5 +1195,13 @@
   "message.enchantment_fusion.ranged_mending_full": "Troppe frecce segnate; il sigillo resta pronto.",
   "tooltip.enchantment_fusion.ranged_mending_route": "Un’uccisione valida con una freccia reale guida solo le nuove sfere esperienza non unite lungo la traiettoria libera. Raccogliendole, questo arco o balestra viene riparato per primo; l’esperienza restante va a te. Le sfere incerte restano normali.",
   "tooltip.enchantment_fusion.ranged_mending_arrow": "Le sfere che riparano davvero questo arco o balestra impugnato creano marchi temporanei. Attivali per la prossima freccia reale: Potenza aumenta i danni, Impatto la spinta e Fiamma incendia il bersaglio valido.",
-  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "Il vecchio oggetto inadatto mantiene il comportamento precedente. Le nuove fusioni richiedono un arco o una balestra con durabilità."
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "Il vecchio oggetto inadatto mantiene il comportamento precedente. Le nuove fusioni richiedono un arco o una balestra con durabilità.",
+  "skill.enchantment_fusion.ranged_silk": "Recupera freccia reale",
+  "message.enchantment_fusion.ranged_silk_missing": "Nessuna freccia recente di quest’arma disponibile.",
+  "message.enchantment_fusion.ranged_silk_unrecoverable": "L’ultima freccia non può ancora essere recuperata.",
+  "message.enchantment_fusion.ranged_silk_blocked": "La freccia è bloccata o in un’area vietata.",
+  "message.enchantment_fusion.ranged_silk_full": "Inventario pieno o raccolta normale bloccata.",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "Un colpo reale marchia un bersaglio valido per 8 secondi. Un’altra freccia reale della stessa arma aggiunge solo al bersaglio marchiato danno Potenza, spinta Contraccolpo o fuoco Fiamma. Colpire un altro bersaglio cambia il marchio.",
+  "tooltip.enchantment_fusion.ranged_silk_recover": "Raccogli normalmente l’ultima freccia reale conficcata entro 16 blocchi e in vista. Serve spazio. Sono escluse frecce infinite, fantasma, di altre mod e in volo.",
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "I vecchi oggetti incompatibili conservano l’effetto. Le nuove fusioni richiedono arco o balestra."
 }

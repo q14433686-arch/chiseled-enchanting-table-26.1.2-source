@@ -1195,5 +1195,13 @@
   "message.enchantment_fusion.ranged_mending_full": "Hay demasiadas flechas marcadas; el sello sigue preparado.",
   "tooltip.enchantment_fusion.ranged_mending_route": "Una muerte válida por flecha real guía solo los orbes de experiencia nuevos y no fusionados por la trayectoria despejada. Al recogerlos, se repara primero este arco o ballesta; la experiencia restante es tuya. Los orbes dudosos conservan su comportamiento normal.",
   "tooltip.enchantment_fusion.ranged_mending_arrow": "La reparación real de este arco o ballesta sostenido mediante orbes crea sellos temporales. Activa uno para la siguiente flecha real: Poder aumenta el daño, Empuje el retroceso y Fuego prende a objetivos válidos.",
-  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "El objeto antiguo no apto conserva su comportamiento anterior. Las nuevas fusiones requieren un arco o ballesta con durabilidad."
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "El objeto antiguo no apto conserva su comportamiento anterior. Las nuevas fusiones requieren un arco o ballesta con durabilidad.",
+  "skill.enchantment_fusion.ranged_silk": "Recuperar flecha real",
+  "message.enchantment_fusion.ranged_silk_missing": "No está disponible la última flecha de esta arma.",
+  "message.enchantment_fusion.ranged_silk_unrecoverable": "La última flecha aún no se puede recuperar.",
+  "message.enchantment_fusion.ranged_silk_blocked": "La flecha está obstruida o en una zona restringida.",
+  "message.enchantment_fusion.ranged_silk_full": "Inventario lleno o recogida normal bloqueada.",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "Un impacto real marca un objetivo válido durante 8 segundos. Otra flecha real de la misma arma añade daño de Poder, empuje de Retroceso o fuego de Llama solo al objetivo marcado. Otro objetivo cambia la marca.",
+  "tooltip.enchantment_fusion.ranged_silk_recover": "Recoge tu última flecha real clavada a 16 bloques como máximo y con visión libre mediante la recogida normal. Hace falta espacio. No recupera flechas infinitas, fantasma, de otros mods ni en vuelo.",
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "El equipo antiguo no apto conserva su efecto. Las nuevas fusiones requieren arco o ballesta."
 }

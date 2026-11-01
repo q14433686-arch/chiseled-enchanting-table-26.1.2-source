@@ -1195,5 +1195,13 @@
   "message.enchantment_fusion.ranged_mending_full": "Trop de flèches marquées ; le sceau reste prêt.",
   "tooltip.enchantment_fusion.ranged_mending_route": "Une vraie flèche tuant une cible admissible guide uniquement les nouveaux orbes non fusionnés le long de sa trajectoire dégagée. En les ramassant, cet arc ou cette arbalète est réparé en priorité ; le reste de l’expérience vous revient. Les orbes incertains restent normaux.",
   "tooltip.enchantment_fusion.ranged_mending_arrow": "Les orbes qui réparent réellement cet arc ou cette arbalète tenue créent des marques temporaires. Activez-les pour la prochaine vraie flèche : Puissance augmente les dégâts, Frappe le recul et Flamme enflamme une cible admissible.",
-  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "Cet ancien objet inadapté conserve son comportement précédent. Les nouvelles fusions exigent un arc ou une arbalète à durabilité."
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "Cet ancien objet inadapté conserve son comportement précédent. Les nouvelles fusions exigent un arc ou une arbalète à durabilité.",
+  "skill.enchantment_fusion.ranged_silk": "Récupérer la vraie flèche",
+  "message.enchantment_fusion.ranged_silk_missing": "Aucune flèche récente de cette arme disponible.",
+  "message.enchantment_fusion.ranged_silk_unrecoverable": "La dernière flèche ne peut pas encore être récupérée.",
+  "message.enchantment_fusion.ranged_silk_blocked": "La flèche est bloquée ou dans une zone interdite.",
+  "message.enchantment_fusion.ranged_silk_full": "Inventaire plein ou ramassage normal bloqué.",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "Un vrai tir marque une cible admissible pendant 8 secondes. Une autre vraie flèche de la même arme ajoute seulement à cette cible les dégâts de Puissance, le recul de Frappe ou le feu de Flamme. Une autre cible remplace la marque.",
+  "tooltip.enchantment_fusion.ranged_silk_recover": "Ramassez normalement votre dernière vraie flèche plantée à 16 blocs ou moins et à vue. Il faut de la place dans l’inventaire. Les flèches infinies, fantômes, de mods et en vol sont exclues.",
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "Les anciens objets incompatibles gardent leur effet. Les nouvelles fusions exigent un arc ou une arbalète."
 }

@@ -23,6 +23,7 @@ import enchantment_fusion.mechanics.signatures.RangedTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import enchantment_fusion.mechanics.signatures.RangedGuardSkills;
 import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
+import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
@@ -103,6 +104,7 @@ public final class FusionSkillNetworking {
         RANGED_SNEAK("skill.enchantment_fusion.ranged_sneak"),
         RANGED_GUARD("skill.enchantment_fusion.ranged_guard"),
         RANGED_MENDING("skill.enchantment_fusion.ranged_mending"),
+        RANGED_SILK("skill.enchantment_fusion.ranged_silk"),
         MELEE_WEAR_GUARD("skill.enchantment_fusion.melee_wear_guard"),
         MELEE_WEAR_EDGE("skill.enchantment_fusion.melee_wear_edge"),
         MELEE_WORK("skill.enchantment_fusion.melee_work"),
@@ -150,6 +152,7 @@ public final class FusionSkillNetworking {
         if (RangedSneakSkills.hasEquipped(player)) skills.add(Skill.RANGED_SNEAK);
         if (RangedGuardSkills.hasEquipped(player)) skills.add(Skill.RANGED_GUARD);
         if (RangedMendingSkills.hasEquipped(player)) skills.add(Skill.RANGED_MENDING);
+        if (RangedSilkSkills.hasEquipped(player)) skills.add(Skill.RANGED_SILK);
         if (MeleeWearSkills.hasEquipped(player, true)) skills.add(Skill.MELEE_WEAR_GUARD);
         if (MeleeWearSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WEAR_EDGE);
         if (MeleeWorkSkills.hasEquipped(player, false)) skills.add(Skill.MELEE_WORK);
@@ -228,6 +231,7 @@ public final class FusionSkillNetworking {
             case RANGED_SNEAK -> RangedSneakSkills.activate(player);
             case RANGED_GUARD -> RangedGuardSkills.activate(player);
             case RANGED_MENDING -> RangedMendingSkills.activate(player);
+            case RANGED_SILK -> RangedSilkSkills.activate(player);
             case MELEE_WEAR_GUARD -> MeleeWearSkills.activate(player, true);
             case MELEE_WEAR_EDGE -> MeleeWearSkills.activate(player, false);
             case MELEE_WORK -> MeleeWorkSkills.activate(player, false);

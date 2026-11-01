@@ -1195,5 +1195,13 @@
   "message.enchantment_fusion.ranged_mending_full": "Zu viele markierte Pfeile; das Siegel bleibt bereit.",
   "tooltip.enchantment_fusion.ranged_mending_route": "Ein gültiger Tod durch einen echten Pfeil führt nur neu erzeugte, nicht verschmolzene Erfahrungskugeln auf der freien Pfeilbahn zurück. Beim eigenen Aufheben wird dieser Bogen oder diese Armbrust zuerst repariert; übrige Erfahrung gehört dir. Unklare Kugeln bleiben unverändert.",
   "tooltip.enchantment_fusion.ranged_mending_arrow": "Tatsächliche Reparatur dieser gehaltenen Waffe durch Erfahrungskugeln erzeugt zeitlich begrenzte Siegel. Aktiviere sie für den nächsten echten Pfeil: Stärke erhöht Schaden, Schlag Rückstoß und Flamme entzündet gültige Ziele.",
-  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "Alte ungeeignete Gegenstände behalten ihr bisheriges Verhalten. Neue Fusionen benötigen einen beschädigbaren Bogen oder eine Armbrust."
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "Alte ungeeignete Gegenstände behalten ihr bisheriges Verhalten. Neue Fusionen benötigen einen beschädigbaren Bogen oder eine Armbrust.",
+  "skill.enchantment_fusion.ranged_silk": "Echten Pfeil bergen",
+  "message.enchantment_fusion.ranged_silk_missing": "Kein letzter Pfeil dieser Waffe verfügbar.",
+  "message.enchantment_fusion.ranged_silk_unrecoverable": "Der letzte Pfeil kann noch nicht geborgen werden.",
+  "message.enchantment_fusion.ranged_silk_blocked": "Der Pfeil ist blockiert oder liegt in einem gesperrten Bereich.",
+  "message.enchantment_fusion.ranged_silk_full": "Inventar voll oder normale Aufnahme blockiert.",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "Ein echter Treffer markiert ein erlaubtes Ziel 8 Sekunden. Ein anderer echter Pfeil derselben Waffe fügt nur diesem Ziel Stärke-Schaden, Schlag-Rückstoß oder Flammenbrand hinzu. Ein anderes Ziel ersetzt die Markierung.",
+  "tooltip.enchantment_fusion.ranged_silk_recover": "Berge deinen letzten echten, steckenden Pfeil bis 16 Blöcke bei freier Sicht durch normale Aufnahme. Platz im Inventar nötig. Unendliche, Geister-, Mod- und fliegende Pfeile sind ausgeschlossen.",
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "Alte ungeeignete Ausrüstung behält ihren Effekt. Neue Fusionen benötigen Bogen oder Armbrust."
 }

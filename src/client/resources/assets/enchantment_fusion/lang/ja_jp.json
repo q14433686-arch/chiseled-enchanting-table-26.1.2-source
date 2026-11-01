@@ -1195,5 +1195,13 @@
   "message.enchantment_fusion.ranged_mending_full": "印付きの矢が多すぎるため、修繕印は準備状態を保ちます。",
   "tooltip.enchantment_fusion.ranged_mending_route": "実際の矢で対象を倒すと、確実に新規生成され合体していない経験値オーブだけが、遮られていない矢の軌跡を戻ります。自分で拾うとこの弓かクロスボウを優先修理し、残りの経験値を獲得します。不確かなオーブは通常どおりです。",
   "tooltip.enchantment_fusion.ranged_mending_arrow": "手に持った弓かクロスボウを経験値オーブが実際に修理すると、一時的な印がたまります。発動すると次の実際の矢に一度装填し、射撃ダメージ増加はダメージ、パンチはノックバック、フレイムは対象への着火を強めます。",
-  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "適用外の旧装備は従来の効果を維持します。新しい融合には耐久値のある弓かクロスボウが必要です。"
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "適用外の旧装備は従来の効果を維持します。新しい融合には耐久値のある弓かクロスボウが必要です。",
+  "skill.enchantment_fusion.ranged_silk": "実矢の回収",
+  "message.enchantment_fusion.ranged_silk_missing": "この武器の直近の矢が見つかりません。",
+  "message.enchantment_fusion.ranged_silk_unrecoverable": "直近の矢はまだ回収できません。",
+  "message.enchantment_fusion.ranged_silk_blocked": "矢への経路が遮られているか、操作できない場所です。",
+  "message.enchantment_fusion.ranged_silk_full": "持ち物が満杯か、通常の回収が阻止されました。",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "実矢が適格な対象に命中すると8秒間標記します。同じ武器の別の実矢が標記した対象に命中すると、射撃ダメージ増加はダメージ、パンチはノックバック、フレイムは着火を追加します。別の対象に命中すると標記が移ります。",
+  "tooltip.enchantment_fusion.ranged_silk_recover": "視線の通る16ブロック以内で、自分が最後に放ち地面に刺さった実矢を通常の拾得で回収します。持ち物に空きが必要です。無限、幻影、他MOD、飛行中の矢は回収しません。",
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "古い不適合装備は旧効果を維持します。新たな融合には弓かクロスボウが必要です。"
 }

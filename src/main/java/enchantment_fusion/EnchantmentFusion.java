@@ -23,6 +23,7 @@ import enchantment_fusion.mechanics.signatures.RangedTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedSneakSkills;
 import enchantment_fusion.mechanics.signatures.RangedGuardSkills;
 import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
+import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -77,6 +78,7 @@ public final class EnchantmentFusion implements ModInitializer {
         RangedSneakSkills.init();
         RangedGuardSkills.init();
         RangedMendingSkills.init();
+        RangedSilkSkills.init();
         MeleeImpulseSkills.init();
         MeleeGuardSkills.init();
         MeleeWorkSkills.init();

@@ -16,6 +16,7 @@ import enchantment_fusion.mechanics.signatures.RangedWaterDrag;
 import enchantment_fusion.mechanics.signatures.RangedTideTrail;
 import enchantment_fusion.mechanics.signatures.RangedPrimary;
 import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
+import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.RangedMendingCapture;
 import enchantment_fusion.mechanics.signatures.GrapnelPiercing;
 import net.minecraft.server.level.ServerLevel;
@@ -100,8 +101,10 @@ public abstract class PhantomArrowMixin {
     private float ef$nonNativePunchPrimary(ServerLevel level, ItemStack weapon, Entity target, DamageSource source,
                                            float base, Operation<Float> original) {
         float result = original.call(level, weapon, target, source, base);
-        return RangedMendingSkills.bonusKnockback((AbstractArrow) (Object) this, target, source,
-            RangedPrimary.knockback(level, weapon, target, source, result));
+        AbstractArrow arrow = (AbstractArrow) (Object) this;
+        return RangedSilkSkills.bonusKnockback(arrow, target, source,
+            RangedMendingSkills.bonusKnockback(arrow, target, source,
+                RangedPrimary.knockback(level, weapon, target, source, result)));
     }
 
     @WrapOperation(method = "doKnockback", at = @At(value = "INVOKE",
@@ -128,7 +131,7 @@ public abstract class PhantomArrowMixin {
         try {
             boolean completed = false;
             try {
-                succeeded = original.call(target, source, RangedMendingSkills.bonusDamage(confirmed, amount));
+                succeeded = original.call(target, source, RangedSilkSkills.bonusDamage(confirmed, RangedMendingSkills.bonusDamage(confirmed, amount)));
                 completed = true;
             } finally { RangedMendingCapture.end(mending, completed, succeeded); }
             GrapnelSkills.afterArrowHit(grapnelHit, succeeded);

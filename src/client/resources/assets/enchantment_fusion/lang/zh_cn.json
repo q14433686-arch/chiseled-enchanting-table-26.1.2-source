@@ -1195,5 +1195,13 @@
   "message.enchantment_fusion.ranged_mending_full": "标记箭过多，修补印继续保留。",
   "tooltip.enchantment_fusion.ranged_mending_route": "真实箭击杀合格目标后，只有确定新生成且未合并的经验球会沿畅通的真实箭迹回流；本人拾取时优先修复这把弓弩，剩余经验归本人。不确定或合并的经验球保持原样。",
   "tooltip.enchantment_fusion.ranged_mending_arrow": "经验球实际修复手持弓弩后积累限时修补印；主动准备后加载下一支真实箭：力量增加伤害、冲击增强击退、火矢点燃合格目标。",
-  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "旧的不适用装备保留旧效果；新融合需要可损耗的弓或弩。"
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "旧的不适用装备保留旧效果；新融合需要可损耗的弓或弩。",
+  "skill.enchantment_fusion.ranged_silk": "回收实箭",
+  "message.enchantment_fusion.ranged_silk_missing": "找不到这把弓弩最近发射的箭。",
+  "message.enchantment_fusion.ranged_silk_unrecoverable": "最近的箭暂不能合法回收。",
+  "message.enchantment_fusion.ranged_silk_blocked": "箭被阻挡，或所在区域不允许互动。",
+  "message.enchantment_fusion.ranged_silk_full": "背包已满，或正常拾取被阻止。",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "真实箭命中合格目标后标记8秒；这把弓弩的另一支真实箭命中标记者时，力量增加伤害、冲击增强击退、火矢延长已点燃时间。命中其他目标会更换标记。",
+  "tooltip.enchantment_fusion.ranged_silk_recover": "主动收取16格内、视线畅通的本人最新真实落地箭，走正常拾取并保留原箭物品数据；背包需有空间。无限箭、幻影箭、第三方箭及飞行中的箭不能回收。",
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "旧的不适用装备保留原有效果；新融合要求弓或弩。"
 }

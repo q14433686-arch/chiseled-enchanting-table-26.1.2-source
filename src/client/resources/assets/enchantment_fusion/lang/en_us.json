@@ -1195,5 +1195,13 @@
   "message.enchantment_fusion.ranged_mending_full": "Too many marked arrows; the seal stays ready.",
   "tooltip.enchantment_fusion.ranged_mending_route": "An eligible real-arrow kill guides its newly spawned, unmerged XP along the clear arrow path. If you pick it up, this bow or crossbow repairs first; leftover XP goes to you. Uncertain or merged orbs stay normal.",
   "tooltip.enchantment_fusion.ranged_mending_arrow": "XP orbs that actually repair this held bow or crossbow build temporary marks. Activate to load the next real arrow once: Power adds damage, Punch adds knockback, Flame ignites an eligible target.",
-  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "This old item keeps its legacy behavior. New fusions require a damageable bow or crossbow."
+  "tooltip.enchantment_fusion.legacy_ranged_mending_carrier": "This old item keeps its legacy behavior. New fusions require a damageable bow or crossbow.",
+  "skill.enchantment_fusion.ranged_silk": "Arrow recovery",
+  "message.enchantment_fusion.ranged_silk_missing": "No recent arrow from this launcher is available.",
+  "message.enchantment_fusion.ranged_silk_unrecoverable": "The latest arrow cannot legally be recovered yet.",
+  "message.enchantment_fusion.ranged_silk_blocked": "The arrow is blocked or outside an allowed area.",
+  "message.enchantment_fusion.ranged_silk_full": "Inventory full or normal pickup was blocked.",
+  "tooltip.enchantment_fusion.ranged_silk_mark": "A real hit on an eligible target marks it for 8 seconds. A later real arrow from this launcher adds Power damage, Punch knockback, or a longer Flame burn only against that marked target. Hitting another target changes the mark.",
+  "tooltip.enchantment_fusion.ranged_silk_recover": "Activate to collect your latest real, grounded arrow within 16 blocks and clear line of sight. Uses the original arrow and normal pickup; inventory must have room. Infinite, ghost, custom or flying arrows cannot be recovered.",
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "This old item keeps its legacy behavior. New fusions require a bow or crossbow."
 }
