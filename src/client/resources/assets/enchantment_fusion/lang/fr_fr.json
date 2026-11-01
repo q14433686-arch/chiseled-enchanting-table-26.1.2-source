@@ -1162,5 +1162,10 @@
   "message.enchantment_fusion.ranged_work_blade_set": "Lame prête : tirez une vraie flèche dans les 10 secondes.",
   "tooltip.enchantment_fusion.ranged_work_boost": "Trois flèches réelles consécutives blessant des cibles valides en 10 secondes accumulent l’élan ; un raté l’interrompt. Activez avec cet arc ou cette arbalète puis prenez un outil : un bloc autorisé est miné plus vite dans les 10 secondes. L’effet principal de tir reste.",
   "tooltip.enchantment_fusion.ranged_work_blade": "Miner avec cet outil accumule jusqu’à trois charges pendant 10 secondes. Activez, gardez l’outil dans l’inventaire et tirez une vraie flèche en 10 secondes : une lame virtuelle suit jusqu’à 32 blocs de sa trajectoire réelle. Elle ne copie pas les munitions et évite cibles protégées et murs ; puissance, recul ou feu colore la lame. Efficacité reste.",
-  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Les anciens objets gardent leur effet ; les nouveaux exigent un arc/une arbalète pour le tir principal, ou une pioche, hache, pelle ou houe pour efficacité principale."
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Les anciens objets gardent leur effet ; les nouveaux exigent un arc/une arbalète pour le tir principal, ou une pioche, hache, pelle ou houe pour efficacité principale.",
+  "skill.enchantment_fusion.ranged_breath": "Flèche de souffle",
+  "message.enchantment_fusion.ranged_water_full": "Capacité des flèches aquatiques atteinte ; la préparation est consommée.",
+  "tooltip.enchantment_fusion.ranged_breath_bubble": "Une vraie flèche blessant une cible valide sous l’eau crée une bulle virtuelle temporaire à l’impact. Touchez votre bulle sous l’eau pour récupérer de l’air. L’eau reste intacte et l’effet principal de tir demeure.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "Sous l’eau, activez et payez de l’air pour préparer une vraie flèche d’arc ou d’arbalète pendant 10 secondes. Tant que vous portez ce casque, la flèche ralentit moins dans l’eau. Aucun remboursement à expiration ou au changement d’équipement ; respiration demeure.",
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et casque pour respiration principale."
 }

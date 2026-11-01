@@ -1162,5 +1162,10 @@
   "message.enchantment_fusion.ranged_work_blade_set": "Lama pronta: scocca una freccia vera entro 10 secondi.",
   "tooltip.enchantment_fusion.ranged_work_boost": "Tre frecce vere consecutive che danneggiano bersagli validi entro 10 secondi accumulano slancio; un errore lo interrompe. Attiva con arco o balestra e cambia strumento: un blocco consentito si scava più velocemente entro 10 secondi. Resta l’effetto principale di tiro.",
   "tooltip.enchantment_fusion.ranged_work_blade": "Scavare con questo strumento accumula fino a tre cariche per 10 secondi. Attiva, conserva lo strumento nell’inventario e scocca una freccia vera entro 10 secondi: una lama virtuale segue fino a 32 blocchi della traiettoria reale. Non copia munizioni ed evita bersagli protetti e muri; potenza, contraccolpo o fuoco caratterizza la lama. Efficienza resta.",
-  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Gli oggetti precedenti conservano l’effetto; i nuovi richiedono arco/balestra per tiro principale o piccone, ascia, pala o zappa per efficienza principale."
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Gli oggetti precedenti conservano l’effetto; i nuovi richiedono arco/balestra per tiro principale o piccone, ascia, pala o zappa per efficienza principale.",
+  "skill.enchantment_fusion.ranged_breath": "Freccia del respiro",
+  "message.enchantment_fusion.ranged_water_full": "Capacità delle frecce acquatiche raggiunta; la preparazione è consumata.",
+  "tooltip.enchantment_fusion.ranged_breath_bubble": "Una freccia vera che danneggia un bersaglio valido sott’acqua crea una breve bolla virtuale all’impatto. Tocca la tua bolla sott’acqua per recuperare aria. L’acqua non cambia e l’effetto principale di tiro rimane.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "Sott’acqua attiva e paga aria per preparare una freccia vera di arco o balestra per 10 secondi. Finché indossi questo elmo, la freccia rallenta meno in acqua. Nessun rimborso alla scadenza o al cambio di equipaggiamento; respirazione rimane.",
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale ed elmo per respirazione principale."
 }

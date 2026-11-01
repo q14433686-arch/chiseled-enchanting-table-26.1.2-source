@@ -24,7 +24,8 @@ final class RespirationPrimary {
             boolean pressure = WaterPressureSkills.isBreathFirst(pair) && WaterPressureSkills.applies(pair, stack);
             boolean mining = UnderwaterMiningSkills.isSpendPair(pair) && SignatureCatalog.resolve(pair)
                 .map(entry -> UnderwaterMiningSkills.applies(pair, stack, entry.id())).orElse(false);
-            if (pressure || mining) result.add(new PrimaryAttributeProjection.Source(EquipmentSlot.HEAD, stack, pair));
+            boolean ranged = RangedBreathSkills.breathFirst(pair) && RangedBreathSkills.applies(pair, stack);
+            if (pressure || mining || ranged) result.add(new PrimaryAttributeProjection.Source(EquipmentSlot.HEAD, stack, pair));
             if (result.size() >= 64) break;
         }
         return List.copyOf(result);

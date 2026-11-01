@@ -183,14 +183,24 @@ public final class UnderwaterMiningSkills {
         long now = level.getGameTime();
         long last = LAST_BUBBLE.getOrDefault(player.getUUID(), Long.MIN_VALUE / 2);
         if (now >= last && now - last < BUBBLE_INTERVAL) return;
-        if (BUBBLES.size() >= MAX_BUBBLES_TOTAL) return;
-        long owned = BUBBLES.stream().filter(bubble -> bubble.owner.equals(player.getUUID())).count();
-        if (owned >= MAX_BUBBLES_PER_PLAYER) return;
-        BUBBLES.add(new Bubble(player.getUUID(), level.dimension(), Vec3.atCenterOf(pos),
-            bubbleAir(candidate.pair().secondaryLevel())));
+        if (!spawnBubble(player, Vec3.atCenterOf(pos), bubbleAir(candidate.pair().secondaryLevel()))) return;
         LAST_BUBBLE.put(player.getUUID(), now);
         CompendiumDiscoveryTracker.recordDiscovery(player, candidate.pair().primaryId(), candidate.pair().secondaryId());
         runAberration(level, player, candidate.pair(), TriggerType.ON_BLOCK_HARVEST, Vec3.atCenterOf(pos));
+    }
+
+    /** Shared bounded, owner-only virtual bubble. It never places or replaces a water block. */
+    public static boolean spawnBubble(ServerPlayer player, Vec3 position, int air) {
+        if (player == null || position == null || !player.isAlive() || player.isSpectator() || player.isCreative()
+            || air <= 0 || !Double.isFinite(position.x) || !Double.isFinite(position.y) || !Double.isFinite(position.z)
+            || BUBBLES.size() >= MAX_BUBBLES_TOTAL) return false;
+        ServerLevel level = player.level(); BlockPos cell = BlockPos.containing(position);
+        if (!level.isInWorldBounds(cell) || !level.hasChunkAt(cell)
+            || !level.getBlockState(cell).getCollisionShape(level, cell).isEmpty()) return false;
+        long owned = BUBBLES.stream().filter(bubble -> bubble.owner.equals(player.getUUID())).count();
+        if (owned >= MAX_BUBBLES_PER_PLAYER) return false;
+        BUBBLES.add(new Bubble(player.getUUID(), level.dimension(), position, air));
+        return true;
     }
 
     private static void runAberration(ServerLevel level, ServerPlayer player, FusedPair pair, TriggerType trigger, Vec3 pos) {

@@ -34,6 +34,7 @@ import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.RangedWearSkills;
 import enchantment_fusion.mechanics.signatures.RangedWorkSkills;
+import enchantment_fusion.mechanics.signatures.RangedBreathSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -342,6 +343,7 @@ public final class MatrixEffectExecutor {
             boolean redesignedMeleeWear = MeleeWearSkills.applies(pair, hostStack);
             boolean redesignedRangedWear = RangedWearSkills.applies(pair, hostStack);
             boolean redesignedRangedWork = RangedWorkSkills.applies(pair, hostStack);
+            boolean redesignedRangedBreath = RangedBreathSkills.applies(pair, hostStack);
             boolean redesignedMeleeImpulse = MeleeImpulseSkills.applies(pair, hostStack);
             boolean redesignedMeleeGuard = MeleeGuardSkills.applies(pair, hostStack);
             boolean redesignedMeleeWork = MeleeWorkSkills.applies(pair, hostStack);
@@ -357,7 +359,7 @@ public final class MatrixEffectExecutor {
                 || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal
                 || redesignedFireTradeoff || redesignedSoulThread || redesignedFireThorns || redesignedFireSweep || redesignedWindSweep
                 || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre || redesignedFortuneBank
-                || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedRangedWear || redesignedRangedWork || redesignedMeleeImpulse
+                || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedRangedWear || redesignedRangedWork || redesignedRangedBreath || redesignedMeleeImpulse
                 || redesignedMeleeGuard || redesignedMeleeWork || redesignedMeleeMending || redesignedMeleeFortune
                 || redesignedMeleeFire || redesignedMeleeFrost || redesignedMeleeLightning || redesignedMeleeWind || redesignedGrapnel;
             if (dedicatedAction) {

@@ -12,6 +12,7 @@ import enchantment_fusion.mechanics.signatures.ThermalProjectileSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.RangedWorkBlade;
+import enchantment_fusion.mechanics.signatures.RangedWaterDrag;
 import enchantment_fusion.mechanics.signatures.RangedPrimary;
 import enchantment_fusion.mechanics.signatures.GrapnelPiercing;
 import net.minecraft.server.level.ServerLevel;
@@ -41,6 +42,12 @@ public abstract class PhantomArrowMixin {
         ConfirmedArrow.sample(arrow);
         ThermalProjectileSkills.tickArrow(arrow);
         if (!PhantomVolley.tick(arrow)) ci.cancel();
+    }
+
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/projectile/arrow/AbstractArrow;getWaterInertia()F"))
+    private float ef$waterInertia(AbstractArrow arrow, Operation<Float> original) {
+        return RangedWaterDrag.inertia(arrow, original.call(arrow));
     }
 
     // Vanilla normally excludes players when PvP is disabled. Ghosts must still physically

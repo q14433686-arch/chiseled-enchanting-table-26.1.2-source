@@ -1162,5 +1162,10 @@
   "message.enchantment_fusion.ranged_work_blade_set": "Filo preparado: dispara una flecha real en 10 segundos.",
   "tooltip.enchantment_fusion.ranged_work_boost": "Tres flechas reales consecutivas que dañen objetivos válidos en 10 segundos acumulan impulso; fallar lo interrumpe. Actívalo con este arco o ballesta y cambia de herramienta: un bloque permitido se mina más rápido durante 10 segundos. Se conserva el efecto principal de disparo.",
   "tooltip.enchantment_fusion.ranged_work_blade": "Minar con esta herramienta acumula hasta tres filos durante 10 segundos. Actívalo, conserva la herramienta en el inventario y dispara una flecha real en 10 segundos: un filo virtual sigue hasta 32 bloques de su trayectoria. No copia munición y evita objetivos protegidos y paredes; el secundario aporta poder, empuje o fuego. Se conserva eficiencia.",
-  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Los objetos antiguos conservan su efecto; los nuevos requieren arco/ballesta para disparo principal o pico, hacha, pala o azada para eficiencia principal."
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Los objetos antiguos conservan su efecto; los nuevos requieren arco/ballesta para disparo principal o pico, hacha, pala o azada para eficiencia principal.",
+  "skill.enchantment_fusion.ranged_breath": "Flecha de aliento",
+  "message.enchantment_fusion.ranged_water_full": "Capacidad de flechas acuáticas alcanzada; se consumió la preparación.",
+  "tooltip.enchantment_fusion.ranged_breath_bubble": "Una flecha real que dañe a un objetivo válido bajo el agua crea una burbuja virtual breve en el impacto. Toca tu burbuja bajo el agua para recuperar aire. El agua no se sustituye y se conserva el efecto principal de disparo.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "Activa bajo el agua y paga aire para preparar una flecha real de arco o ballesta durante 10 segundos. Mientras lleves este casco, la flecha pierde menos velocidad en el agua. No se devuelve aire al caducar o cambiar equipo; se conserva respiración.",
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Los objetos antiguos mantienen su efecto. Los nuevos requieren arco o ballesta para disparo principal, y casco para respiración principal."
 }

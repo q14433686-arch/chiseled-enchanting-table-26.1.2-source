@@ -1162,5 +1162,10 @@
   "message.enchantment_fusion.ranged_work_blade_set": "화살날 준비: 10초 안에 실제 화살을 발사하세요.",
   "tooltip.enchantment_fusion.ranged_work_boost": "10초 안에 실제 화살 세 발로 유효한 대상에게 연속 피해를 주면 기세가 쌓이며 빗나가면 끊깁니다. 이 활이나 쇠뇌를 들고 발동한 뒤 도구로 바꾸면 10초 안의 합법적인 채굴 한 번이 빨라집니다. 사격 주 효과는 유지됩니다.",
   "tooltip.enchantment_fusion.ranged_work_blade": "이 도구로 합법적으로 채굴하면 최대 세 겹의 날을 10초 동안 모읍니다. 발동 후 도구를 보관하고 10초 안에 실제 화살을 쏘면 가상 단검이 실제 경로를 최대 32블록 따라갑니다. 탄약을 복제하지 않고 보호 대상과 벽을 피하며 보조 효과인 힘, 밀어내기 또는 화염을 반영합니다. 효율은 유지됩니다.",
-  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활/쇠뇌가, 효율 주 효과에는 곡괭이·도끼·삽·괭이가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활/쇠뇌가, 효율 주 효과에는 곡괭이·도끼·삽·괭이가 필요합니다.",
+  "skill.enchantment_fusion.ranged_breath": "숨결 화살",
+  "message.enchantment_fusion.ranged_water_full": "수중 화살 효과가 가득 차 준비가 소모되었습니다.",
+  "tooltip.enchantment_fusion.ranged_breath_bubble": "물속에서 실제 화살로 유효한 대상에게 피해를 주면 명중 지점에 잠시 가상 기포가 생깁니다. 물속에서 자신의 기포에 닿으면 산소가 회복됩니다. 물을 바꾸지 않으며 사격 주 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "물속에서 산소를 소모해 10초 안의 실제 활·쇠뇌 화살 한 발을 준비합니다. 이 투구를 계속 착용하면 화살의 수중 저항이 줄어듭니다. 만료 또는 장비 교체 시 산소는 반환되지 않으며 호흡 주 효과는 유지됩니다.",
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "기존 아이템은 기존 효과를 유지합니다. 새 사격 주 효과에는 활·쇠뇌, 호흡 주 효과에는 투구가 필요합니다."
 }

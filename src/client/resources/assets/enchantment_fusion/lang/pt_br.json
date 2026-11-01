@@ -1162,5 +1162,10 @@
   "message.enchantment_fusion.ranged_work_blade_set": "Lâmina pronta: dispare uma flecha real em 10 segundos.",
   "tooltip.enchantment_fusion.ranged_work_boost": "Três flechas reais consecutivas causando dano a alvos válidos em 10 segundos acumulam impulso; errar interrompe. Ative com este arco ou besta e troque de ferramenta: um bloco permitido será minerado mais rápido em 10 segundos. O efeito principal de tiro permanece.",
   "tooltip.enchantment_fusion.ranged_work_blade": "Minerar com esta ferramenta acumula até três cargas por 10 segundos. Ative, mantenha a ferramenta no inventário e dispare uma flecha real em 10 segundos: uma lâmina virtual segue até 32 blocos da trajetória real. Não copia munição e evita alvos protegidos e paredes; força, impacto ou chama define o tema. Eficiência permanece.",
-  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Itens antigos mantêm o efeito; novas fusões de tiro principal exigem arco/besta, e as de eficiência principal exigem picareta, machado, pá ou enxada."
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Itens antigos mantêm o efeito; novas fusões de tiro principal exigem arco/besta, e as de eficiência principal exigem picareta, machado, pá ou enxada.",
+  "skill.enchantment_fusion.ranged_breath": "Flecha de fôlego",
+  "message.enchantment_fusion.ranged_water_full": "Limite de flechas aquáticas atingido; a preparação foi consumida.",
+  "tooltip.enchantment_fusion.ranged_breath_bubble": "Uma flecha real que cause dano a um alvo válido debaixo d’água cria uma bolha virtual temporária no impacto. Toque sua própria bolha submerso para recuperar ar. A água não é substituída e o efeito principal de tiro permanece.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "Submerso, ative e gaste ar para preparar uma flecha real de arco ou besta por 10 segundos. Enquanto usar este capacete, a flecha perde menos velocidade na água. O ar não é devolvido ao expirar ou trocar o equipamento; respiração permanece.",
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e capacete para respiração principal."
 }

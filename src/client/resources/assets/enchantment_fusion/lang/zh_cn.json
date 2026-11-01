@@ -1162,5 +1162,10 @@
   "message.enchantment_fusion.ranged_work_blade_set": "采锋已准备：10 秒内射出一支真实箭。",
   "tooltip.enchantment_fusion.ranged_work_boost": "10 秒内连续三支真实箭使合格目标受到净伤害积势，射失中断；手持此弓或弩主动释放，换持工具后 10 秒内加快一次合法采掘。原射击主位保留。",
   "tooltip.enchantment_fusion.ranged_work_blade": "持此工具合法采掘可积攒至多三层锋势，持续 10 秒。主动释放并将工具留在背包，10 秒内用弓或弩射出真实箭：虚拟短刃沿真实箭途最多延伸 32 格，不复制弹药，避开受保护目标和墙体；依副位分别附带力量、冲击或火矢主题。原效率主位保留。",
-  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "旧载体保留旧效果；新射击主位要求弓或弩，新效率主位要求镐、斧、锹或锄。"
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "旧载体保留旧效果；新射击主位要求弓或弩，新效率主位要求镐、斧、锹或锄。",
+  "skill.enchantment_fusion.ranged_breath": "吐纳贯水",
+  "message.enchantment_fusion.ranged_water_full": "水下箭效果已达上限，本次准备已消耗。",
+  "tooltip.enchantment_fusion.ranged_breath_bubble": "水下真实箭使合格目标受到净伤害时，在命中处产生短暂虚拟气泡；水下触碰自己的气泡可补充氧气。不替换水，保留原射击主位。",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "水下主动消耗氧气，准备 10 秒内的一支真实弓弩箭；继续穿戴此头盔时，该箭在水中阻力降低。过期或换装备不退还氧气，保留原水下呼吸主位。",
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "旧装备保留旧效果；新射击主位要求弓或弩，新水下呼吸主位要求头盔。"
 }

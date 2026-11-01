@@ -1162,5 +1162,10 @@
   "message.enchantment_fusion.ranged_work_blade_set": "Quarry edge prepared: fire a real arrow within 10 seconds.",
   "tooltip.enchantment_fusion.ranged_work_boost": "Three consecutive real arrows damaging eligible targets within 10 seconds build momentum; a miss breaks it. Activate while holding this bow or crossbow, then switch to a tool: the next legal block within 10 seconds is mined faster. The shooting primary remains.",
   "tooltip.enchantment_fusion.ranged_work_blade": "Mining with this tool stores up to three edges for 10 seconds. Activate, keep the tool in your inventory and fire a real bow/crossbow arrow within 10 seconds: a virtual short blade follows up to 32 blocks of its actual path. It does not copy ammunition, avoids protected targets and walls, and gains Power, Punch or Flame as its secondary theme. Efficiency remains.",
-  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Legacy carrier keeps its old effect; newly applied shooting-first fusions require a bow/crossbow and mining-first fusions require a pickaxe, axe, shovel or hoe."
+  "tooltip.enchantment_fusion.legacy_ranged_work_carrier": "Legacy carrier keeps its old effect; newly applied shooting-first fusions require a bow/crossbow and mining-first fusions require a pickaxe, axe, shovel or hoe.",
+  "skill.enchantment_fusion.ranged_breath": "Breathbound arrow",
+  "message.enchantment_fusion.ranged_water_full": "Water-arrow capacity reached; the preparation was spent.",
+  "tooltip.enchantment_fusion.ranged_breath_bubble": "A real arrow that damages an eligible target underwater creates a short-lived virtual bubble at the hit. Touch your own bubble underwater to restore air. Water is never replaced; the shooting primary remains.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "While underwater, activate to pay air and prepare one real bow/crossbow arrow for up to 10 seconds. That arrow loses less speed in water while you still wear this helmet. The paid air is not refunded on timeout or equipment change; Respiration remains.",
+  "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Legacy items keep their old effect. New shooting-first fusions require a bow/crossbow; Respiration-first fusions require a helmet."
 }

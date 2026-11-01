@@ -38,6 +38,7 @@ import enchantment_fusion.mechanics.signatures.WaterPressureSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
 import enchantment_fusion.mechanics.signatures.RangedWearSkills;
 import enchantment_fusion.mechanics.signatures.RangedWorkSkills;
+import enchantment_fusion.mechanics.signatures.RangedBreathSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
@@ -302,6 +303,9 @@ public final class FusionTooltipRenderer {
             boolean rangedWorkTemplate = RangedWorkSkills.matches(pair);
             boolean legacyRangedWorkCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && rangedWorkTemplate
                 && !RangedWorkSkills.applies(pair, stack);
+            boolean rangedBreathTemplate = RangedBreathSkills.matches(pair);
+            boolean legacyRangedBreathCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && rangedBreathTemplate
+                && !RangedBreathSkills.applies(pair, stack);
             boolean meleeWearTemplate = MeleeWearSkills.matches(pair);
             boolean legacyMeleeWearCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeWearTemplate
                 && !MeleeWearSkills.applies(pair, stack);
@@ -385,6 +389,11 @@ public final class FusionTooltipRenderer {
                     lines.add(Component.translatable(RangedWorkSkills.shootingFirst(pair)
                         ? "tooltip.enchantment_fusion.ranged_work_boost"
                         : "tooltip.enchantment_fusion.ranged_work_blade").withStyle(ChatFormatting.AQUA));
+                }
+                if (shift && rangedBreathTemplate && !legacyRangedBreathCarrier) {
+                    lines.add(Component.translatable(RangedBreathSkills.shootingFirst(pair)
+                        ? "tooltip.enchantment_fusion.ranged_breath_bubble"
+                        : "tooltip.enchantment_fusion.ranged_breath_drag").withStyle(ChatFormatting.AQUA));
                 }
                 if (shift && meleeWearTemplate && !legacyMeleeWearCarrier) {
                     lines.add(Component.translatable(MeleeWearSkills.isAttackFirst(pair)
@@ -477,6 +486,10 @@ public final class FusionTooltipRenderer {
                         lines.add(Component.translatable(RangedWorkSkills.shootingFirst(pair)
                             ? "tooltip.enchantment_fusion.ranged_work_boost"
                             : "tooltip.enchantment_fusion.ranged_work_blade").withStyle(ChatFormatting.AQUA));
+                    } else if (rangedBreathTemplate && !legacyRangedBreathCarrier) {
+                        lines.add(Component.translatable(RangedBreathSkills.shootingFirst(pair)
+                            ? "tooltip.enchantment_fusion.ranged_breath_bubble"
+                            : "tooltip.enchantment_fusion.ranged_breath_drag").withStyle(ChatFormatting.AQUA));
                     } else if (meleeWearTemplate && !legacyMeleeWearCarrier) {
                         lines.add(Component.translatable(MeleeWearSkills.isAttackFirst(pair)
                             ? "tooltip.enchantment_fusion.melee_wear_guard"
@@ -528,6 +541,10 @@ public final class FusionTooltipRenderer {
             }
             if (legacyRangedWorkCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_ranged_work_carrier")
+                    .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyRangedBreathCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_ranged_breath_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
             if (legacyMeleeWearCarrier) {
