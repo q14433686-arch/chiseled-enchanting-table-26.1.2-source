@@ -1084,5 +1084,8 @@
   "tooltip.enchantment_fusion.defense_grapnel": "这件装备实际减免对应危险，或盾牌真实格挡时，在当前位置留标8秒。继续穿戴原护甲或持原盾，在距标记12格内瞄准距标记8格内的合格敌人，视线畅通时主动牵引。",
   "message.enchantment_fusion.grapnel_defense_marked": "防护已留标。瞄准合格敌人并激活回钩。",
   "tooltip.enchantment_fusion.feather_grapnel": "穿此靴实际减免坠落类伤害时，在当前位置留标8秒。继续穿原靴，在距标记12格内瞄准距标记8格内的合格敌人，视线畅通时主动牵引。",
-  "tooltip.enchantment_fusion.quick_grapnel": "快速装填确实缩短一次真实弩装填时，此次装填的真实箭伤害合格敌人可留标8秒。手持原弩并在12格内视线畅通时主动牵引。"
+  "tooltip.enchantment_fusion.quick_grapnel": "快速装填确实缩短一次真实弩装填时，此次装填的真实箭伤害合格敌人可留标8秒。手持原弩并在12格内视线畅通时主动牵引。",
+  "tooltip.enchantment_fusion.mending_grapnel": "经验球实际修复这件持握或穿戴的装备时，在当前位置留标8秒，经验正常消耗。继续持有或穿戴原物，在距标记12格内瞄准距标记8格内的合格敌人，视线畅通时主动牵引。",
+  "tooltip.enchantment_fusion.unbreaking_grapnel": "耐久主位实际完全免除这件持握或穿戴装备的一次耐久损耗时，在当前位置留标8秒。继续持有或穿戴原物，在距标记12格内瞄准距标记8格内的合格敌人，视线畅通时主动牵引。",
+  "message.enchantment_fusion.grapnel_durability_marked": "耐久动作已留标。瞄准合格敌人并激活回钩。"
 }

@@ -103,7 +103,7 @@ public final class GrapnelSkills {
             && LURE.equals(pair.secondaryId());
     }
     public static boolean matches(@Nullable FusedPair pair) {
-        return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair) || GrapnelDefense.isPair(pair))
+        return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair) || GrapnelDefense.isPair(pair) || GrapnelDurability.isPair(pair))
             && SignatureCatalog.resolve(pair).map(entry -> SIGNATURE.equals(entry.id()) && "*".equals(entry.primaryId())).orElse(false);
     }
     public static boolean supportsCarrier(Set<FusionCarrier> roles) { return MeleeAttackThemes.supportsWeapon(roles); }
@@ -112,14 +112,20 @@ public final class GrapnelSkills {
         if (attackFirst(pair)) return supportsCarrier(roles);
         if (miningFirst(pair)) return roles.stream().anyMatch(TOOLS::contains);
         if (GrapnelDefense.isPair(pair)) return GrapnelDefense.supportsCarrier(pair, roles);
+        if (GrapnelDurability.isPair(pair)) return !roles.isEmpty(); // damageability is checked on the actual host
         if (rangedFirst(pair)) {
             if (PIERCING.equals(pair.primaryId()) || QUICK.equals(pair.primaryId())) return roles.contains(FusionCarrier.CROSSBOW);
             return roles.contains(FusionCarrier.BOW) || (!POWER.equals(pair.primaryId()) && roles.contains(FusionCarrier.CROSSBOW));
         }
         return false;
     }
+    public static boolean supportsHost(@Nullable FusedPair pair, @Nullable ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return false;
+        return GrapnelDurability.isPair(pair) ? DurabilityEconomy.supportsCarrier(stack)
+            : supportsCarrier(pair, FusionCarrier.classify(stack));
+    }
     public static boolean applies(@Nullable FusedPair pair, @Nullable ItemStack stack) {
-        return matches(pair) && stack != null && !stack.isEmpty() && supportsCarrier(pair, FusionCarrier.classify(stack));
+        return matches(pair) && supportsHost(pair, stack);
     }
     private static @Nullable Gear selected(@Nullable ItemStack stack, boolean mining) {
         if (stack == null || stack.isEmpty()) return null;
@@ -169,7 +175,8 @@ public final class GrapnelSkills {
     }
     private static boolean eligibleTarget(ServerPlayer owner, LivingEntity target, FusedPair pair) {
         if (attackFirst(pair)) return MeleeAttackThemes.eligible(owner, target, pair.primaryId());
-        return (rangedFirst(pair) || GrapnelDefense.isPair(pair)) && target.level() == owner.level() && LoyaltyGuard.eligibleTarget(owner, target)
+        return (rangedFirst(pair) || GrapnelDefense.isPair(pair) || GrapnelDurability.isPair(pair))
+            && target.level() == owner.level() && LoyaltyGuard.eligibleTarget(owner, target)
             && owner.level().mayInteract(owner, target.blockPosition()) && (!(target instanceof Player other) || other.canHarmPlayer(owner));
     }
     /** Capture before the actual arrow damage call, rather than trusting collision alone. */
@@ -323,22 +330,31 @@ public final class GrapnelSkills {
     }
     /** Called only for a proven real defensive contribution or real shield block. */
     public static void markDefense(ServerPlayer owner, GrapnelDefense.Gear defensive, Vec3 origin) {
+        markPosition(owner, defensive.slot(), defensive.stack(), defensive.pair(), origin);
+    }
+    /** Shared position marks bind the actual slot, item identity, pair and unmodified location. */
+    public static void markPosition(ServerPlayer owner, EquipmentSlot slot, ItemStack stack, FusedPair pair, Vec3 origin) {
         if (!Double.isFinite(origin.x) || !Double.isFinite(origin.y) || !Double.isFinite(origin.z)
             || owner.position().distanceToSqr(origin) > 0.0001D) return;
         BlockPos pos = BlockPos.containing(origin);
-        if (!ready(owner) || !canMark(owner) || !GrapnelDefense.stillEquipped(owner, defensive)
+        if (!ready(owner) || !canMark(owner) || !stillEquipped(owner, slot, stack, pair)
             || !owner.level().hasChunkAt(pos) || !owner.level().isInWorldBounds(pos) || !owner.level().mayInteract(owner, pos)
             || owner.level().getServer().isUnderSpawnProtection(owner.level(), pos, owner)) return;
-        Gear gear = new Gear(defensive.stack(), defensive.pair());
+        Gear gear = new Gear(stack, pair);
         MARKS.put(owner.getUUID(), new PositionMark(gear, owner.level().dimension(), owner.level().getGameTime() + MARK_TICKS,
-            defensive.slot(), origin));
+            slot, origin));
         owner.level().sendParticles(ParticleTypes.FISHING, owner.getX(), owner.getY(0.5D), owner.getZ(), 8, 0.2D, 0.2D, 0.2D, 0.02D);
-        owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.grapnel_defense_marked"), true);
+        owner.sendSystemMessage(Component.translatable(GrapnelDurability.isPair(pair)
+            ? "message.enchantment_fusion.grapnel_durability_marked" : "message.enchantment_fusion.grapnel_defense_marked"), true);
+    }
+    private static boolean stillEquipped(ServerPlayer owner, EquipmentSlot slot, ItemStack stack, FusedPair pair) {
+        if (GrapnelDefense.isPair(pair)) return GrapnelDefense.stillEquipped(owner, new GrapnelDefense.Gear(slot, stack, pair));
+        return owner.getItemBySlot(slot) == stack && !stack.isEmpty() && applies(pair, stack)
+            && stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().contains(pair);
     }
     private static boolean valid(ServerPlayer owner, Mark mark) {
         if (!ready(owner) || !owner.level().dimension().equals(mark.dimension()) || owner.level().getGameTime() >= mark.until()) return false;
-        if (mark instanceof PositionMark position) return GrapnelDefense.stillEquipped(owner,
-            new GrapnelDefense.Gear(position.slot(), position.gear().stack(), position.gear().pair()));
+        if (mark instanceof PositionMark position) return stillEquipped(owner, position.slot(), position.gear().stack(), position.gear().pair());
         return owns(owner, mark.gear());
     }
     private static boolean unchangedDrop(ServerPlayer owner, Drop drop) {
@@ -357,7 +373,7 @@ public final class GrapnelSkills {
     }
     public static boolean hasEquipped(ServerPlayer player) {
         return selected(player.getMainHandItem(), false) != null || selected(player.getMainHandItem(), true) != null
-            || !rangedGears(player.getMainHandItem()).isEmpty() || GrapnelDefense.hasEquipped(player);
+            || !rangedGears(player.getMainHandItem()).isEmpty() || GrapnelDefense.hasEquipped(player) || GrapnelDurability.hasEquipped(player);
     }
     public static boolean activate(ServerPlayer owner) {
         if (!ready(owner) || owner.containerMenu != owner.inventoryMenu) return false;
@@ -438,6 +454,6 @@ public final class GrapnelSkills {
     }
     public static void clearServer() {
         MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear(); PROJECTILE_REPLAY.remove();
-        GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); GrapnelQuickCharge.clearServer(); ProtectionProjection.clear();
+        GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); GrapnelQuickCharge.clearServer(); GrapnelDurability.clearServer(); ProtectionProjection.clear();
     }
 }

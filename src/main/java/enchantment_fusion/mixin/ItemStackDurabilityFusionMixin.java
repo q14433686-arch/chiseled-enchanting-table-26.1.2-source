@@ -8,10 +8,12 @@ import enchantment_fusion.mechanics.signatures.DurabilityEconomy;
 import enchantment_fusion.mechanics.signatures.DurabilityEconomyMath;
 import enchantment_fusion.mechanics.signatures.DurabilityReserveSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWearSkills;
+import enchantment_fusion.mechanics.signatures.GrapnelDurability;
 import enchantment_fusion.model.FusedPair;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +31,15 @@ public abstract class ItemStackDurabilityFusionMixin {
         int postEconomy = player != null && DurabilityEconomy.actuallyEquipped(player, stack)
             ? DurabilityEconomy.nonNativeUnbreaking(level, stack, vanilla) : vanilla;
         int postReserve = DurabilityReserveSkills.applyNonNative(level, stack, postEconomy, player);
-        return MeleeWearSkills.applyNonNative(level, stack, postReserve, player);
+        int postMelee = MeleeWearSkills.applyNonNative(level, stack, postReserve, player);
+        return GrapnelDurability.applyNonNative(level, stack, postMelee, player);
+    }
+
+    @WrapMethod(method = "hurtWithoutBreaking")
+    private void ef$scopeNaturallyCappedWear(int amount, Player player, Operation<Void> original) {
+        GrapnelDurability.CapFrame frame = GrapnelDurability.beginCappedWear((ItemStack) (Object) this);
+        try { original.call(amount, player); }
+        finally { GrapnelDurability.endCappedWear(frame); }
     }
 
     @WrapMethod(method = "processDurabilityChange")
@@ -37,10 +47,14 @@ public abstract class ItemStackDurabilityFusionMixin {
         ItemStack stack = (ItemStack) (Object) this;
         MeleeWearSkills.WearFrame melee = MeleeWearSkills.beginWear(stack, player);
         DurabilityReserveSkills.WearFrame frame = DurabilityReserveSkills.begin(stack, player);
+        GrapnelDurability.WearFrame grapnel = GrapnelDurability.beginWear(stack, player);
         try {
             int result = original.call(amount, level, player);
-            return MeleeWearSkills.finishWear(melee, amount, DurabilityReserveSkills.finish(frame, amount, result));
+            int resolved = MeleeWearSkills.finishWear(melee, amount, DurabilityReserveSkills.finish(frame, amount, result));
+            GrapnelDurability.finishWear(grapnel, amount, resolved);
+            return resolved;
         } finally {
+            GrapnelDurability.endWear(grapnel);
             DurabilityReserveSkills.abort(frame);
             MeleeWearSkills.endWear(melee);
         }

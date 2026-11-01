@@ -95,7 +95,7 @@ public final class DirectionalHostRules {
         if (MeleeMendingSkills.matches(pair) && !MeleeMendingSkills.supportsCarrier(host)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
-        if (GrapnelSkills.matches(pair) && !GrapnelSkills.supportsCarrier(pair, actual)) {
+        if (GrapnelSkills.matches(pair) && !GrapnelSkills.supportsHost(pair, host)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (AmberSealSkill.isPair(pair) && AmberSealSkill.SIGNATURE.equals(signature)

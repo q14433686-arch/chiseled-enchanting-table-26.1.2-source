@@ -1084,5 +1084,8 @@
   "tooltip.enchantment_fusion.defense_grapnel": "Mitigar de fato o perigo correspondente ou bloquear de fato com o escudo marca sua posição por 8 segundos. Mantenha a mesma armadura ou escudo, fique a até 12 blocos da marca e mire com visão livre em um inimigo válido a até 8 blocos dela.",
   "message.enchantment_fusion.grapnel_defense_marked": "Defesa marcada. Mire em um inimigo válido e ative o recolhimento.",
   "tooltip.enchantment_fusion.feather_grapnel": "Quando estas botas reduzirem de fato dano de queda, marcarão sua posição por 8 segundos. Use as mesmas botas, fique a até 12 blocos da marca e mire com visão livre em um inimigo válido a até 8 blocos dela.",
-  "tooltip.enchantment_fusion.quick_grapnel": "Quando Carga rápida realmente encurta uma recarga da besta, a flecha real dessa carga pode marcar por 8 segundos um inimigo válido ferido. Segure a mesma besta e puxe-o com visão livre a até 12 blocos."
+  "tooltip.enchantment_fusion.quick_grapnel": "Quando Carga rápida realmente encurta uma recarga da besta, a flecha real dessa carga pode marcar por 8 segundos um inimigo válido ferido. Segure a mesma besta e puxe-o com visão livre a até 12 blocos.",
+  "tooltip.enchantment_fusion.mending_grapnel": "Quando um orbe de experiência realmente reparar este item segurado ou equipado, marque sua posição por 8 segundos; a experiência é gasta normalmente. Mantenha o item e mire com visão livre, a até 12 blocos, em um inimigo válido a até 8 blocos da marca.",
+  "tooltip.enchantment_fusion.unbreaking_grapnel": "Quando Inquebrável impedir completamente um desgaste real deste item segurado ou equipado, marque sua posição por 8 segundos. Mantenha o item e mire com visão livre, a até 12 blocos, em um inimigo válido a até 8 blocos da marca.",
+  "message.enchantment_fusion.grapnel_durability_marked": "Ação de durabilidade marcada. Mire em um inimigo válido e ative o recolhimento."
 }

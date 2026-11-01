@@ -34,6 +34,7 @@ public final class DurabilityEconomy {
     private static final EquipmentSlot[] EQUIPPED = {EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND,
         EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private static final ThreadLocal<Boolean> ACTIVE = ThreadLocal.withInitial(() -> Boolean.FALSE);
+    private static final ThreadLocal<Boolean> REPAIRING = new ThreadLocal<>();
 
     private DurabilityEconomy() {}
 
@@ -108,7 +109,12 @@ public final class DurabilityEconomy {
      * Mending primaries use the real datapack effect once without writing an enchantment to the item.
      */
     public static int repairNonNative(ServerPlayer player, int amount) {
-        if (amount <= 0 || !player.isAlive()) return amount;
+        if (amount <= 0 || !player.isAlive() || Boolean.TRUE.equals(REPAIRING.get())) return amount;
+        REPAIRING.set(Boolean.TRUE);
+        try { return repairNonNativeOnce(player, amount); }
+        finally { REPAIRING.remove(); }
+    }
+    private static int repairNonNativeOnce(ServerPlayer player, int amount) {
         ServerLevel level = player.level();
         Holder<Enchantment> mending = enchant(level, MENDING);
         if (mending == null || !mending.value().effects().has(EnchantmentEffectComponents.REPAIR_WITH_XP)) return amount;
@@ -119,26 +125,34 @@ public final class DurabilityEconomy {
             FusedPair melee = slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND
                 ? MeleeMendingSkills.nonNativeMending(stack) : null;
             if (melee != null && (pair == null || melee.primaryLevel() > pair.primaryLevel())) pair = melee;
+            FusedPair grapnel = GrapnelDurability.nonNativeMending(stack);
+            if (grapnel != null && (pair == null || grapnel.primaryLevel() > pair.primaryLevel())) pair = grapnel;
             if (pair == null || !seen.add(stack) || !stack.isDamaged()) continue;
             boolean nativeMending = containsNative(stack, mending);
             if (nativeMending && mending.value().matchingSlot(slot)) continue;
-            int vanilla = EnchantmentHelper.modifyDurabilityToRepairFromXp(level, stack, amount);
-            MutableFloat repairValue = new MutableFloat(vanilla);
-            // Item-based XP value iteration already includes a native enchant even if its slot
-            // prevented vanilla from choosing the item; only append a genuinely absent primary.
-            if (!nativeMending) mending.value().modifyDurabilityToRepairFromXp(level, pair.primaryLevel(), stack, repairValue);
-            int capacity = Math.max(0, repairValue.intValue());
-            int before = stack.getDamageValue();
-            int planned = Math.min(before, capacity);
-            if (capacity <= 0 || planned <= 0) continue;
-            stack.setDamageValue(before - planned);
-            int actual = Math.clamp(before - stack.getDamageValue(), 0, planned);
-            if (actual <= 0) continue;
-            int spent = (int) Math.min(amount, (long) actual * amount / capacity);
-            amount -= spent; // Match vanilla's XP-to-durability remainder calculation.
-            afterOrbRepair(player, stack, actual);
-            MeleeMendingSkills.afterOrbRepair(player, stack, actual);
-            if (amount <= 0) return 0;
+            GrapnelDurability.RepairFrame frame = GrapnelDurability.beginRepair(player);
+            try {
+                GrapnelDurability.RepairFrame calculation = GrapnelDurability.beginRepairCalculation(player, level, stack);
+                int vanilla = EnchantmentHelper.modifyDurabilityToRepairFromXp(level, stack, amount);
+                MutableFloat repairValue = new MutableFloat(vanilla);
+                // Item-based XP value iteration already includes a native enchant even if its slot
+                // prevented vanilla from choosing the item; only append a genuinely absent primary.
+                if (!nativeMending) mending.value().modifyDurabilityToRepairFromXp(level, pair.primaryLevel(), stack, repairValue);
+                int capacity = Math.max(0, repairValue.intValue());
+                GrapnelDurability.finishRepairCalculation(calculation, nativeMending ? amount : vanilla, capacity);
+                int before = stack.getDamageValue();
+                int planned = Math.min(before, capacity);
+                if (capacity <= 0 || planned <= 0) continue;
+                stack.setDamageValue(before - planned);
+                int actual = Math.clamp(before - stack.getDamageValue(), 0, planned);
+                if (actual <= 0) continue;
+                int spent = (int) Math.min(amount, (long) actual * amount / capacity);
+                amount -= spent; // Match vanilla's XP-to-durability remainder calculation.
+                GrapnelDurability.afterOrbRepair(player, stack, before, actual, true);
+                afterOrbRepair(player, stack, actual);
+                MeleeMendingSkills.afterOrbRepair(player, stack, actual);
+                if (amount <= 0) return 0;
+            } finally { GrapnelDurability.endRepair(frame); }
         }
         return amount;
     }

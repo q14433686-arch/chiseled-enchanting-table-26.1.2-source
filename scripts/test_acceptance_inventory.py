@@ -47,10 +47,10 @@ class AcceptanceInventoryTest(unittest.TestCase):
             self.assertEqual(6, len(fixtures))
             self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
 
-    def test_grapnel_has_eighteen_action_specific_fixtures_not_all_40_directions(self):
+    def test_grapnel_has_twenty_action_specific_fixtures_not_all_40_directions(self):
         pairs = {(primary, "lure") for primary in
-                 ("sharpness", "smite", "bane_of_arthropods", "efficiency", "silk_touch", "fortune", "power", "flame", "punch", "multishot", "infinity", "piercing", "protection", "fire_protection", "blast_protection", "projectile_protection", "feather_falling", "quick_charge")}
-        self.assertEqual(18, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
+                 ("sharpness", "smite", "bane_of_arthropods", "efficiency", "silk_touch", "fortune", "power", "flame", "punch", "multishot", "infinity", "piercing", "protection", "fire_protection", "blast_protection", "projectile_protection", "feather_falling", "quick_charge", "mending", "unbreaking")}
+        self.assertEqual(20, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
         self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
         self.assertNotIn(("density", "lure"), DIRECTION_FIXTURES)
 

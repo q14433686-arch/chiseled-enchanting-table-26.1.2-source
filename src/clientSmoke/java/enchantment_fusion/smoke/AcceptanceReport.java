@@ -90,6 +90,8 @@ final class AcceptanceReport {
         plan("40.1-projectile-protection-lure", "Projectile Protection ▷ Lure: real hurt and shield block with simulated arrow source and recall", "Not reached if setup fails.");
         plan("40.1-feather-lure", "Feather Falling ▷ Lure: real hurt with simulated fall source and recall", "Not reached if setup fails.");
         plan("40.1-quick-lure", "Quick Charge ▷ Lure: actual load and arrow hit, simulated timing and recall", "Not reached if setup fails.");
+        plan("40.1-mending-lure", "Mending ▷ Lure: actual orb repair and simulated aimed recall", "Not reached if setup fails.");
+        plan("40.1-unbreaking-lure", "Unbreaking ▷ Lure: actual durability request and simulated aimed recall", "Not reached if setup fails.");
         plan("40.1-runtime-compat", "40.1 natural key input and charge, spear, other players, claims, datapacks and remaining source adapters", "Not covered by the prepared single-player fixtures.");
         plan("42.3-sharp-swift", "Sharpness ▷ Swift Sneak: real hits and simulated imprint movement", "Not reached if setup fails.");
         plan("42.3-swift-sharp", "Swift Sneak ▷ Sharpness: worn leggings, simulated crouch and real hit", "Not reached if setup fails.");
