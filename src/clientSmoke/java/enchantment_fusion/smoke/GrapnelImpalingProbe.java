@@ -5,6 +5,8 @@ import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.model.FusedEnchantmentList;
+import enchantment_fusion.registry.FusionDataComponents;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -53,12 +55,20 @@ final class GrapnelImpalingProbe {
                 target.setHealth(200); f.hit(target, true);
                 require(target.getUUID().equals(marked(player)) && target.getHealth() < 200,
                     "A real hit with an effective Impaling bonus must mark the eligible aquatic enemy");
+                float singleRankLoss = 200 - target.getHealth();
                 player.setItemSlot(EquipmentSlot.OFFHAND, trident); player.setItemSlot(EquipmentSlot.MAINHAND, trident.copy());
                 require(!GrapnelSkills.activate(player), "A different but equal trident cannot spend the melee mark");
                 player.setItemSlot(EquipmentSlot.MAINHAND, trident); player.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
                 target.setDeltaMovement(Vec3.ZERO);
                 require(GrapnelSkills.activate(player) && target.getDeltaMovement().x < 0 && marked(player) == null,
                     "The same held trident must pull once");
+                if (!nativePrimary) {
+                    FusedEnchantmentList pairs = trident.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+                    trident.set(FusionDataComponents.FUSED_PAIRS, pairs.append(FusedPair.clean(GrapnelImpact.IMPALING, 5, GrapnelSkills.LURE, 2)));
+                    target.setHealth(200); f.hit(target, true);
+                    require(marked(player) == null && 200 - target.getHealth() > singleRankLoss + 1,
+                        "Ambiguous old sources do not mark, but the highest missing Impaling primary still applies");
+                }
                 ItemStack copy = new ItemStack(Items.TRIDENT); FusionStationOperations.applyFusedPairToGear(copy, pair, level.registryAccess());
                 if (!nativePrimary) copy.remove(DataComponents.ENCHANTMENTS);
                 ThrownTrident synthetic = new ThrownTrident(level, player, copy);
