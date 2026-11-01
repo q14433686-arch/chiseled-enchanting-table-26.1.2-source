@@ -63,6 +63,14 @@ class AcceptanceInventoryTest(unittest.TestCase):
         self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
         self.assertNotIn(("quick_charge", "unbreaking"), DIRECTION_FIXTURES)
 
+    def test_ranged_work_six_directions_have_separate_candidates(self):
+        pairs = {(theme, "efficiency") for theme in ("power", "punch", "flame")}
+        pairs |= {(right, left) for left, right in pairs.copy()}
+        self.assertEqual(6, len({DIRECTION_FIXTURES[pair][0] for pair in pairs}))
+        self.assertTrue(all(DIRECTION_FIXTURES[pair][1] for pair in pairs))
+        self.assertEqual("20-efficiency-multishot", DIRECTION_FIXTURES[("efficiency", "multishot")][0])
+        self.assertEqual("20-multishot-efficiency", DIRECTION_FIXTURES[("multishot", "efficiency")][0])
+
     def test_lightning_family_keeps_both_sharpness_exceptions_out(self):
         pairs = {(attack, "channeling") for attack in ("smite", "bane_of_arthropods")}
         pairs |= {(right, left) for left, right in pairs.copy()}

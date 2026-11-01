@@ -14,6 +14,11 @@ import org.junit.jupiter.api.Test;
 
 final class RangedWorkMathTest {
     @Test void costsAndScalingAreBounded() {
+        assertEquals(1, RangedWorkMath.nextStreak(0, 0, 0, 1));
+        assertEquals(3, RangedWorkMath.nextStreak(2, 1, 100, 201));
+        assertEquals(1, RangedWorkMath.nextStreak(2, 1, 200, 202));
+        assertEquals(1, RangedWorkMath.nextStreak(2, 100, 100, 99));
+        assertEquals(1, RangedWorkMath.nextStreak(2, Long.MIN_VALUE, 100, Long.MAX_VALUE));
         assertEquals(1, RangedWorkMath.addEdge(-100));
         assertEquals(3, RangedWorkMath.addEdge(Integer.MAX_VALUE));
         assertEquals(1.0D, RangedWorkMath.speed(5, 2));

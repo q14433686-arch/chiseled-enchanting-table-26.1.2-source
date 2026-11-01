@@ -38,6 +38,10 @@ public final class ConfirmedArrow {
         boolean applies(FusedPair pair, ItemStack launcher);
         void hit(Hit hit);
         default void missed(ServerPlayer owner, ItemStack launcher, FusedPair pair) {}
+        /** The overload keeps existing listeners compatible while allowing per-shot ordering. */
+        default void missed(ServerPlayer owner, ItemStack launcher, FusedPair pair, AbstractArrow arrow) {
+            missed(owner, launcher, pair);
+        }
     }
     /** Capture is tentative; publication occurs only when this exact arrow is present in the world. */
     public interface InsertionListener {
@@ -148,15 +152,20 @@ public final class ConfirmedArrow {
     public static void sample(AbstractArrow arrow) {
         Flight flight = FLIGHTS.get(arrow);
         if (flight == null || !(arrow.level() instanceof ServerLevel level) || !(arrow.getOwner() instanceof ServerPlayer owner)
-            || level.getEntity(arrow.getUUID()) != arrow || !valid(owner, flight) || owner.level() != level
-            || PhantomVolley.isGhost(arrow)) { if (flight != null) FLIGHTS.remove(arrow); return; }
+            || !valid(owner, flight) || owner.level() != level || PhantomVolley.isGhost(arrow)) {
+            if (flight != null) FLIGHTS.remove(arrow); return;
+        }
+        Entity visible = level.getEntity(arrow.getUUID());
+        if (visible != arrow) {
+            // ENTITY_LOAD can precede visibility in the UUID index. Keep a bounded pending
+            // shot for its first real tick, but never publish or spend it here. A removed
+            // arrow, conflicting UUID, or already-published flight is not recoverable.
+            if (visible != null || flight.published || arrow.isRemoved()) FLIGHTS.remove(arrow);
+            return;
+        }
         flight.append(arrow.position());
         if (!flight.published) {
             flight.published = true; // Commit before callbacks; an insertion may be observed more than once.
-            if (!flight.invalid) for (Insertion insertion : flight.insertions) {
-                try { insertion.listener().inserted(owner, flight.launcher, arrow, insertion.captured()); }
-                catch (RuntimeException error) { EnchantmentFusion.LOGGER.error("Arrow insertion callback failed", error); }
-            }
             if (LATEST.size() >= MAX_OWNERS && !LATEST.containsKey(owner.getUUID())) return;
             List<Flight> latest = LATEST.computeIfAbsent(owner.getUUID(), ignored -> new ArrayList<>());
             Flight newer = latest.stream().filter(entry -> entry.launcher == flight.launcher && entry.sequence > flight.sequence).findFirst().orElse(null);
@@ -164,6 +173,11 @@ public final class ConfirmedArrow {
                 latest.removeIf(entry -> entry.launcher == flight.launcher);
                 if (latest.size() >= MAX_LAUNCHERS) latest.removeFirst();
                 latest.add(flight);
+                // A delayed older insertion from the same launcher cannot supersede a newer shot.
+                if (!flight.invalid) for (Insertion insertion : flight.insertions) {
+                    try { insertion.listener().inserted(owner, flight.launcher, arrow, insertion.captured()); }
+                    catch (RuntimeException error) { EnchantmentFusion.LOGGER.error("Arrow insertion callback failed", error); }
+                }
             }
         }
     }
@@ -205,7 +219,7 @@ public final class ConfirmedArrow {
             flight.resolved = true;
             for (FusedPair pair : flight.pairs) if (contains(flight, pair)) {
                 for (Listener listener : LISTENERS) if (listens(listener, pair, flight.launcher)) {
-                    try { listener.missed(owner, flight.launcher, pair); }
+                    try { listener.missed(owner, flight.launcher, pair, arrow); }
                     catch (RuntimeException error) { EnchantmentFusion.LOGGER.error("Arrow miss callback failed", error); }
                 }
             }

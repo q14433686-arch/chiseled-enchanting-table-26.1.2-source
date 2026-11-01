@@ -2,7 +2,6 @@ package enchantment_fusion.mechanics.signatures;
 
 import enchantment_fusion.EnchantmentFusion;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
-import enchantment_fusion.mechanics.ExtraBlockHarvest;
 import enchantment_fusion.mechanics.MatrixEffectExecutor;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.FusedEnchantmentList;

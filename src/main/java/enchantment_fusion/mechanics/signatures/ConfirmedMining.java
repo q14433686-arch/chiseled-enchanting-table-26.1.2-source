@@ -40,7 +40,7 @@ public final class ConfirmedMining {
     }
     public static void after(ServerLevel level, ServerPlayer player, BlockPos pos, BlockState state) {
         Scope scope = CURRENT.get();
-        if (scope == null || scope.fired || scope.level != level || scope.player != player || !scope.pos.equals(pos)
+        if (scope == null || scope.previous != null || scope.fired || scope.level != level || scope.player != player || !scope.pos.equals(pos)
             || scope.tool.isEmpty() || player.getMainHandItem() != scope.tool || scope.before.isAir()
             || scope.before.getBlock() != state.getBlock() || level.getBlockState(pos) == state
             || !MiningWorkSupport.legalBreak(level, player, pos, state)) return;

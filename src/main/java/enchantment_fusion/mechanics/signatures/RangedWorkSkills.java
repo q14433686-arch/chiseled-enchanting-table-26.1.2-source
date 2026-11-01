@@ -35,30 +35,48 @@ public final class RangedWorkSkills {
     record Gear(ItemStack stack, FusedPair pair) {}
     private static final class State {
         final Gear gear; final ResourceKey<Level> dimension;
-        int streak, edges; long lastHit, edgeUntil;
+        int streak, edges; long firstHit, lastHit, edgeBorn, edgeUntil, pendingSince;
+        @Nullable AbstractArrow pending;
         State(Gear gear, ResourceKey<Level> dimension) { this.gear = gear; this.dimension = dimension; }
     }
-    private record Boost(Gear gear, ResourceKey<Level> dimension, long until, double multiplier) {}
-    private record Armed(Gear gear, ResourceKey<Level> dimension, long until, int edges) {}
+    private record Boost(Gear gear, ResourceKey<Level> dimension, long born, long until, double multiplier) {}
+    private record Armed(Gear gear, ResourceKey<Level> dimension, long born, long until, int edges) {}
+    private record ShotTicket(@Nullable Armed armed, List<Gear> shootingGear) {}
     private static final Map<UUID, List<State>> STATES = new HashMap<>();
     private static final Map<UUID, Boost> BOOSTS = new HashMap<>();
     private static final Map<UUID, Armed> ARMED = new HashMap<>();
     private static final ConfirmedArrow.Listener HIT_LISTENER = new ConfirmedArrow.Listener() {
         @Override public boolean applies(FusedPair pair, ItemStack launcher) { return RangedWorkSkills.applies(pair, launcher) && shootingFirst(pair); }
         @Override public void hit(ConfirmedArrow.Hit hit) { onHit(hit); }
-        @Override public void missed(ServerPlayer owner, ItemStack launcher, FusedPair pair) {
+        @Override public void missed(ServerPlayer owner, ItemStack launcher, FusedPair pair, AbstractArrow arrow) {
             State state = state(owner, new Gear(launcher, pair), false);
-            if (state != null) state.streak = 0;
+            if (state != null && state.pending == arrow) { state.pending = null; state.streak = 0; }
         }
     };
     private static final ConfirmedArrow.InsertionListener INSERTION_LISTENER = new ConfirmedArrow.InsertionListener() {
         @Override public @Nullable Object capture(ServerPlayer owner, ItemStack launcher) {
+            if (!RangedWearSkills.supportsCarrier(FusionCarrier.classify(launcher))) return null;
             Armed armed = ARMED.get(owner.getUUID());
-            return armed != null && validArmed(owner, armed) && RangedWearSkills.supportsCarrier(FusionCarrier.classify(launcher)) ? armed : null;
+            if (armed != null && !validArmed(owner, armed)) armed = null;
+            List<Gear> shooting = new ArrayList<>();
+            for (FusedPair pair : launcher.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
+                if (shootingFirst(pair) && applies(pair, launcher)) shooting.add(new Gear(launcher, pair));
+                if (shooting.size() >= 64) break;
+            }
+            return armed == null && shooting.isEmpty() ? null : new ShotTicket(armed, List.copyOf(shooting));
         }
         @Override public void inserted(ServerPlayer owner, ItemStack launcher, AbstractArrow arrow, Object captured) {
-            if (!(captured instanceof Armed armed) || ARMED.get(owner.getUUID()) != armed || !validArmed(owner, armed)
-                || arrow.getOwner() != owner || owner.level().getEntity(arrow.getUUID()) != arrow
+            if (!(captured instanceof ShotTicket ticket) || arrow.getOwner() != owner
+                || owner.level().getEntity(arrow.getUUID()) != arrow) return;
+            // A newer real shot before the previous one resolves makes the old streak
+            // ambiguous. Ignore late impacts from that older projectile rather than crediting it.
+            for (Gear gear : ticket.shootingGear()) {
+                State state = state(owner, gear, true); if (state == null) continue;
+                if (state.pending != null) state.streak = 0;
+                state.pending = arrow; state.pendingSince = owner.level().getGameTime();
+            }
+            Armed armed = ticket.armed();
+            if (armed == null || ARMED.get(owner.getUUID()) != armed || !validArmed(owner, armed)
                 || !RangedWorkBlade.canArm(owner)) return;
             ARMED.remove(owner.getUUID()); // A genuine inserted central arrow spends the preparation once.
             RangedWorkBlade.arm(owner, arrow, armed.gear(), armed.edges());
@@ -114,15 +132,16 @@ public final class RangedWorkSkills {
         return false;
     }
     private static void expire(State state, long now) {
-        if (RangedWearMath.expiredStreak(state.lastHit, now)) state.streak = 0;
-        if (now >= state.edgeUntil) state.edges = 0;
+        if (RangedWorkMath.expiredStreak(state.firstHit, now) || RangedWearMath.expiredStreak(state.lastHit, now)) state.streak = 0;
+        if (state.pending != null && RangedWearMath.expiredStreak(state.pendingSince, now)) state.pending = null;
+        if (now < state.edgeBorn || now >= state.edgeUntil) state.edges = 0;
     }
     private static @Nullable State state(ServerPlayer owner, Gear gear, boolean create) {
         List<State> list = STATES.get(owner.getUUID()); long now = owner.level().getGameTime();
         if (list != null) {
             list.removeIf(entry -> {
                 if (!ready(owner) || !entry.dimension.equals(owner.level().dimension()) || !owns(owner, entry.gear)) return true;
-                expire(entry, now); return entry.streak == 0 && entry.edges == 0;
+                expire(entry, now); return entry.streak == 0 && entry.edges == 0 && entry.pending == null;
             });
             for (State entry : list) if (entry.gear.stack() == gear.stack() && entry.gear.pair().equals(gear.pair())) return entry;
             if (list.isEmpty()) STATES.remove(owner.getUUID());
@@ -138,19 +157,23 @@ public final class RangedWorkSkills {
     private static void onHit(ConfirmedArrow.Hit hit) {
         Gear gear = new Gear(hit.launcher(), hit.pair());
         if (!ready(hit.owner()) || !owns(hit.owner(), gear)) return;
-        State state = state(hit.owner(), gear, true); if (state == null) return;
+        State state = state(hit.owner(), gear, false);
+        if (state == null || state.pending != hit.arrow()) return;
+        state.pending = null;
         int before = state.streak; long now = hit.owner().level().getGameTime();
-        state.streak = RangedWearMath.nextStreak(state.streak, state.lastHit, now); state.lastHit = now;
+        state.streak = RangedWorkMath.nextStreak(state.streak, state.firstHit, state.lastHit, now);
+        if (state.streak == 1) state.firstHit = now;
+        state.lastHit = now;
         if (before < RangedWearMath.MIN_HITS && state.streak >= RangedWearMath.MIN_HITS)
             hit.owner().sendSystemMessage(Component.translatable("message.enchantment_fusion.ranged_work_ready"), true);
     }
     private static boolean validBoost(ServerPlayer player, Boost boost) {
         return ready(player) && player.level().dimension().equals(boost.dimension())
-            && player.level().getGameTime() < boost.until() && owns(player, boost.gear());
+            && player.level().getGameTime() >= boost.born() && player.level().getGameTime() < boost.until() && owns(player, boost.gear());
     }
     private static boolean validArmed(ServerPlayer player, Armed armed) {
         return ready(player) && player.level().dimension().equals(armed.dimension())
-            && player.level().getGameTime() < armed.until() && owns(player, armed.gear());
+            && player.level().getGameTime() >= armed.born() && player.level().getGameTime() < armed.until() && owns(player, armed.gear());
     }
     private static void onMined(ServerLevel level, ServerPlayer player, ItemStack tool, BlockPos pos, BlockState block) {
         Boost boost = BOOSTS.get(player.getUUID());
@@ -162,7 +185,8 @@ public final class RangedWorkSkills {
         }
         Gear gear = selected(tool, false); if (gear == null || !owns(player, gear)) return;
         State state = state(player, gear, true); if (state == null) return;
-        state.edges = RangedWorkMath.addEdge(state.edges); state.edgeUntil = level.getGameTime() + RangedWorkMath.EDGE_TICKS;
+        state.edges = RangedWorkMath.addEdge(state.edges); state.edgeBorn = level.getGameTime();
+        state.edgeUntil = state.edgeBorn + RangedWorkMath.EDGE_TICKS;
     }
     public static boolean hasEquipped(ServerPlayer player, boolean forward) { return held(player, forward) != null; }
     public static boolean activate(ServerPlayer player, boolean forward) {
@@ -176,7 +200,7 @@ public final class RangedWorkSkills {
             State state = state(player, gear, false);
             if (state == null || state.streak < RangedWearMath.MIN_HITS) { message(player, "message.enchantment_fusion.ranged_work_need_hits"); return false; }
             if (BOOSTS.size() >= MAX_OWNERS) return false;
-            Boost boost = new Boost(gear, player.level().dimension(), now + RangedWorkMath.PREPARED_TICKS,
+            Boost boost = new Boost(gear, player.level().dimension(), now, now + RangedWorkMath.PREPARED_TICKS,
                 RangedWorkMath.speed(gear.pair().secondaryLevel(), state.streak));
             if (!MiningWorkSupport.refresh(player, SPEED, boost.multiplier(), false)) return false;
             BOOSTS.put(player.getUUID(), boost); state.streak = 0; message(player, "message.enchantment_fusion.ranged_work_set");
@@ -188,7 +212,7 @@ public final class RangedWorkSkills {
             State state = state(player, gear, false);
             if (state == null || state.edges <= 0) { message(player, "message.enchantment_fusion.ranged_work_need_mining"); return false; }
             if (ARMED.size() >= MAX_OWNERS) return false;
-            ARMED.put(player.getUUID(), new Armed(gear, player.level().dimension(), now + RangedWorkMath.PREPARED_TICKS, state.edges));
+            ARMED.put(player.getUUID(), new Armed(gear, player.level().dimension(), now, now + RangedWorkMath.PREPARED_TICKS, state.edges));
             state.edges = 0; message(player, "message.enchantment_fusion.ranged_work_blade_set");
         }
         return true;
@@ -214,7 +238,7 @@ public final class RangedWorkSkills {
             long now = player.level().getGameTime();
             entry.getValue().removeIf(value -> {
                 if (!value.dimension.equals(player.level().dimension()) || !owns(player, value.gear)) return true;
-                expire(value, now); return value.streak == 0 && value.edges == 0;
+                expire(value, now); return value.streak == 0 && value.edges == 0 && value.pending == null;
             });
             if (entry.getValue().isEmpty()) STATES.remove(entry.getKey());
         }
