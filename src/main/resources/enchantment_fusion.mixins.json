@@ -21,6 +21,7 @@
     "CetMaterialQuotesBridgeMixin",
     "CetQuickMoveBridgeMixin",
     "CetXpQuotesBridgeMixin",
+    "EnchantmentAttributeLocationMixin",
     "EnchantmentDurabilityReserveMixin",
     "EnchantmentFrostEffectsMixin",
     "EnchantmentHeavyCrushMixin",

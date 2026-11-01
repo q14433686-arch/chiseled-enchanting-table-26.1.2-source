@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,10 +48,11 @@ public final class GrapnelMotion {
                 Vec3 intent = player.getLastClientMoveIntent();
                 List<Candidate> candidates = new ArrayList<>();
                 for (EquipmentSlot slot : List.of(EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
-                    GrapnelAttribute.Gear gear = GrapnelAttribute.selected(player, slot);
-                    if (gear == null || !environment(player, gear)) continue;
-                    var attribute = GrapnelAttribute.evidence(player, gear);
-                    if (attribute != null) candidates.add(new Candidate(gear, attribute));
+                    for (GrapnelAttribute.Gear gear : GrapnelAttribute.selectedAll(player, slot)) {
+                        if (!environment(player, gear)) continue;
+                        var attribute = GrapnelAttribute.evidence(player, gear);
+                        if (attribute != null) candidates.add(new Candidate(gear, attribute));
+                    }
                 }
                 return new Capture(player.level(), player.level().getGameTime(), intent, List.copyOf(candidates));
             }
@@ -84,6 +86,8 @@ public final class GrapnelMotion {
     private static boolean environment(ServerPlayer player, GrapnelAttribute.Gear gear) {
         if (GrapnelAttribute.SWIFT.equals(gear.pair().primaryId()))
             return player.isShiftKeyDown() && !player.isSwimming() && player.getPose() == Pose.CROUCHING;
+        if (GrapnelAttribute.SOUL.equals(gear.pair().primaryId()))
+            return player.onGround() && player.getBlockStateOn().is(BlockTags.SOUL_SPEED_BLOCKS);
         return GrapnelAttribute.DEPTH.equals(gear.pair().primaryId()) && player.isInWater();
     }
     /** Reject stationary, sideways, backwards, non-finite and incidental unrequested movement. */

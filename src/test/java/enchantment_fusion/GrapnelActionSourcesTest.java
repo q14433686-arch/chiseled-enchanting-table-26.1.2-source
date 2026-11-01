@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelAttribute;
 import enchantment_fusion.mechanics.signatures.GrapnelMotion;
 import enchantment_fusion.mechanics.signatures.GrapnelSweep;
 import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
+import enchantment_fusion.mechanics.signatures.PrimaryLocationProjection;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
@@ -42,13 +43,17 @@ final class GrapnelActionSourcesTest {
             FusedPair swift = FusedPair.clean(GrapnelAttribute.SWIFT, 3, "minecraft:lure", 2);
             FusedPair depth = FusedPair.clean(GrapnelAttribute.DEPTH, 3, "minecraft:lure", 2);
             FusedPair sweep = FusedPair.clean(GrapnelAttribute.SWEEP, 3, "minecraft:lure", 2);
-            for (FusedPair pair : new FusedPair[]{swift, depth, sweep}) {
+            FusedPair soul = FusedPair.clean(GrapnelAttribute.SOUL, 3, "minecraft:lure", 2);
+            for (FusedPair pair : new FusedPair[]{swift, depth, sweep, soul}) {
                 assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
             }
             assertTrue(GrapnelSkills.supportsCarrier(swift, Set.of(FusionCarrier.LEG_ARMOR)));
             assertFalse(GrapnelSkills.supportsCarrier(swift, Set.of(FusionCarrier.FOOT_ARMOR)));
             assertTrue(GrapnelSkills.supportsCarrier(depth, Set.of(FusionCarrier.FOOT_ARMOR)));
             assertFalse(GrapnelSkills.supportsCarrier(depth, Set.of(FusionCarrier.LEG_ARMOR)));
+            assertTrue(GrapnelSkills.supportsCarrier(soul, Set.of(FusionCarrier.FOOT_ARMOR)));
+            assertFalse(GrapnelSkills.supportsCarrier(soul, Set.of(FusionCarrier.LEG_ARMOR)));
+            assertFalse(GrapnelSkills.supportsCarrier(soul, Set.of(FusionCarrier.SWORD)));
             assertTrue(GrapnelSkills.supportsCarrier(sweep, Set.of(FusionCarrier.SWORD)));
             assertFalse(GrapnelSkills.supportsCarrier(sweep, Set.of(FusionCarrier.AXE)));
             SignatureCatalog.reloadFromJson(JsonParser.parseString("""
@@ -103,6 +108,12 @@ final class GrapnelActionSourcesTest {
         GrapnelThorns.Evidence nested = new GrapnelThorns.Evidence();
         nested.damage(true, true, 2); nested.result(true, true, true, true); nested.nested();
         assertFalse(nested.confirmed(true, 10, 0, 8, 0));
+    }
+    @Test void conditionalLocationReplayRequiresMissingNativeAndMatchingSlot() {
+        assertTrue(PrimaryLocationProjection.needsProjection(0, true));
+        assertFalse(PrimaryLocationProjection.needsProjection(1, true));
+        assertFalse(PrimaryLocationProjection.needsProjection(0, false));
+        assertFalse(PrimaryLocationProjection.needsProjection(3, false));
     }
     @Test void primaryReplaysAreSharedAndNeverDuplicateNative() {
         assertTrue(GrapnelThorns.needsReplay(0, true));

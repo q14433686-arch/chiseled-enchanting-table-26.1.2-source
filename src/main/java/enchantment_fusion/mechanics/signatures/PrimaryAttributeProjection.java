@@ -147,7 +147,7 @@ final class PrimaryAttributeProjection {
         if (!Double.isFinite(current) || !Double.isFinite(without) || current <= without + 1.0E-7D) return null;
         return new Evidence(active.id(), current, without, nativeSource);
     }
-    private static int nativeSources(ServerPlayer player, Holder<Attribute> attribute, Identifier id) {
+    static int nativeSources(ServerPlayer player, Holder<Attribute> attribute, Identifier id) {
         int[] count = {0}, examined = {0};
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             ItemStack stack = player.getItemBySlot(slot);

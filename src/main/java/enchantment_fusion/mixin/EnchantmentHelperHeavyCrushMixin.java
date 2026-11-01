@@ -18,6 +18,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelDefense;
 import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
+import enchantment_fusion.mechanics.signatures.PrimaryLocationProjection;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -34,6 +35,57 @@ import org.spongepowered.asm.mixin.Mixin;
 /** Keep the same native-effect ordering for both orientations of Density/Breach. */
 @Mixin(EnchantmentHelper.class)
 public abstract class EnchantmentHelperHeavyCrushMixin {
+    @WrapMethod(method = "runLocationChangedEffects(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)V")
+    private static void ef$conditionalLocation(ServerLevel level, LivingEntity entity, Operation<Void> original) {
+        if (PrimaryLocationProjection.replaying()) {
+            Object suspended = PrimaryLocationProjection.suspend();
+            try { original.call(level, entity); } finally { PrimaryLocationProjection.resume(suspended); }
+            return;
+        }
+        PrimaryLocationProjection.reconcile(entity);
+        original.call(level, entity);
+        PrimaryLocationProjection.locationChanged(level, entity);
+    }
+
+    @WrapMethod(method = "runLocationChangedEffects(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;)V")
+    private static void ef$conditionalLocationItem(ServerLevel level, ItemStack stack, LivingEntity entity,
+                                                   EquipmentSlot slot, Operation<Void> original) {
+        if (PrimaryLocationProjection.replaying()) {
+            Object suspended = PrimaryLocationProjection.suspend();
+            try { original.call(level, stack, entity, slot); } finally { PrimaryLocationProjection.resume(suspended); }
+            return;
+        }
+        PrimaryLocationProjection.reconcile(entity);
+        original.call(level, stack, entity, slot);
+        PrimaryLocationProjection.locationChangedItem(level, stack, entity, slot);
+    }
+
+    @WrapMethod(method = "stopLocationBasedEffects(Lnet/minecraft/world/entity/LivingEntity;)V")
+    private static void ef$stopConditionalLocation(LivingEntity entity, Operation<Void> original) {
+        PrimaryLocationProjection.stopAll(entity);
+        Object suspended = PrimaryLocationProjection.suspend();
+        try { original.call(entity); } finally { PrimaryLocationProjection.resume(suspended); }
+    }
+
+    @WrapMethod(method = "stopLocationBasedEffects(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/EquipmentSlot;)V")
+    private static void ef$stopConditionalLocationItem(ItemStack stack, LivingEntity entity, EquipmentSlot slot, Operation<Void> original) {
+        PrimaryLocationProjection.stopSlot(entity, slot);
+        Object suspended = PrimaryLocationProjection.suspend();
+        try { original.call(stack, entity, slot); } finally { PrimaryLocationProjection.resume(suspended); }
+    }
+
+    @WrapMethod(method = "tickEffects")
+    private static void ef$conditionalTick(ServerLevel level, LivingEntity entity, Operation<Void> original) {
+        if (PrimaryLocationProjection.replaying()) {
+            Object suspended = PrimaryLocationProjection.suspend();
+            try { original.call(level, entity); } finally { PrimaryLocationProjection.resume(suspended); }
+            return;
+        }
+        PrimaryLocationProjection.reconcile(entity);
+        original.call(level, entity);
+        PrimaryLocationProjection.tick(level, entity);
+    }
+
     @WrapMethod(method = "modifyDamage")
     private static float ef$soulThreadDamage(ServerLevel level, ItemStack weapon, Entity victim, DamageSource source,
                                               float value, Operation<Float> original) {
