@@ -41,7 +41,8 @@ public final class RangedWaterDrag {
     }
     private static boolean valid(AbstractArrow arrow, Flight flight) {
         if (!(arrow.level() instanceof ServerLevel level) || !(arrow.getOwner() instanceof ServerPlayer owner)
-            || !owner.getUUID().equals(flight.owner()) || owner.level() != level || !level.dimension().equals(flight.dimension())
+            || !owner.getUUID().equals(flight.owner()) || level.getServer().getPlayerList().getPlayer(flight.owner()) != owner
+            || owner.level() != level || !level.dimension().equals(flight.dimension())
             || !owner.isAlive() || owner.isSpectator() || owner.isCreative() || !arrow.isAlive() || arrow.noPhysics
             || PhantomVolley.isGhost(arrow) || level.getEntity(arrow.getUUID()) != arrow) return false;
         long now = level.getGameTime();

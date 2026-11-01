@@ -31,6 +31,13 @@ final class AcceptanceReport {
         plan("45.1-unbreaking-punch", "unbreaking ▷ punch: real bow/crossbow shot, observed wear and bounded virtual echo", "Not reached if setup fails; natural input, timing, multiplayer and third-party projectile/durability mods remain untested.");
         plan("45.1-flame-unbreaking", "flame ▷ unbreaking: real bow/crossbow shot, observed wear and bounded virtual echo", "Not reached if setup fails; natural input, timing, multiplayer and third-party projectile/durability mods remain untested.");
         plan("45.1-unbreaking-flame", "unbreaking ▷ flame: real bow/crossbow shot, observed wear and bounded virtual echo", "Not reached if setup fails; natural input, timing, multiplayer and third-party projectile/durability mods remain untested.");
+        plan("45.3-power-respiration", "power ▷ respiration: prepared underwater real-arrow hit and owner bubble", "Not reached if setup fails; fluid and flight are prepared.");
+        plan("45.3-respiration-power", "respiration ▷ power: air payment and real-arrow water inertia", "Not reached if setup fails; fluid and flight are prepared.");
+        plan("45.3-punch-respiration", "punch ▷ respiration: prepared underwater real-arrow hit and owner bubble", "Not reached if setup fails; fluid and flight are prepared.");
+        plan("45.3-respiration-punch", "respiration ▷ punch: air payment and real-arrow water inertia", "Not reached if setup fails; fluid and flight are prepared.");
+        plan("45.3-flame-respiration", "flame ▷ respiration: prepared underwater real-arrow hit and owner bubble", "Not reached if setup fails; fluid and flight are prepared.");
+        plan("45.3-respiration-flame", "respiration ▷ flame: air payment and real-arrow water inertia", "Not reached if setup fails; fluid and flight are prepared.");
+        plan("45.3-runtime-compat", "45.3 natural fluid updates and input, arrow velocity sync, datapacks, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
         plan("46.3-power-efficiency", "power ▷ efficiency: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
         plan("46.3-efficiency-power", "efficiency ▷ power: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
         plan("46.3-punch-efficiency", "punch ▷ efficiency: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
