@@ -158,6 +158,11 @@ final class RangedSilkProbe {
         // Infinity: newest free arrow must prevent falling back to the earlier real arrow.
         ItemStack bow = GrapnelProjectileProbe.fused(level, Items.BOW, pair); player.setItemSlot(EquipmentSlot.MAINHAND, bow);
         player.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.ARROW, 8)); Arrow paid = fireBow(player, bow, area); ground(paid, player);
+        Arrow newer = fireBow(player, bow, area);
+        require(!RangedSilkSkills.activate(player) && paid.isAlive(), "A newer ungrounded or pending arrow cannot fall back to the old arrow");
+        ground(newer, player); require(RangedSilkSkills.activate(player) && newer.isRemoved() && paid.isAlive(),
+            "Only the newer actual grounded arrow is recovered");
+        paid = fireBow(player, bow, area); ground(paid, player);
         var holder = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
             .getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse("minecraft:infinity")));
         ItemEnchantments.Mutable enchants = new ItemEnchantments.Mutable(bow.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY));

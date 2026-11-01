@@ -47,6 +47,8 @@ public final class ConfirmedArrow {
     public interface InsertionListener {
         @Nullable Object capture(ServerPlayer owner, ItemStack launcher);
         void inserted(ServerPlayer owner, ItemStack launcher, AbstractArrow arrow, Object captured);
+        /** A real launch that cannot be tracked must not leave stale latest-shot claims. */
+        default void untracked(ServerPlayer owner, ItemStack launcher) {}
     }
     private record Insertion(InsertionListener listener, Object captured) {}
     public record Hit(ServerPlayer owner, ItemStack launcher, FusedPair pair, AbstractArrow arrow,
@@ -159,7 +161,14 @@ public final class ConfirmedArrow {
     public static void launched(Projectile projectile, LivingEntity shooter, int index, @Nullable ItemStack launcher) {
         if (!(projectile instanceof AbstractArrow arrow) || !(shooter instanceof ServerPlayer owner) || index != 0
             || launcher == null || !ready(owner) || arrow.getOwner() != owner || PhantomVolley.isGhost(arrow)
-            || (owner.getMainHandItem() != launcher && owner.getOffhandItem() != launcher) || FLIGHTS.size() >= MAX_FLIGHTS) return;
+            || (owner.getMainHandItem() != launcher && owner.getOffhandItem() != launcher)) return;
+        if (FLIGHTS.size() >= MAX_FLIGHTS) {
+            for (InsertionListener listener : INSERTION_LISTENERS) {
+                try { listener.untracked(owner, launcher); }
+                catch (RuntimeException error) { EnchantmentFusion.LOGGER.error("Untracked arrow callback failed", error); }
+            }
+            return;
+        }
         List<FusedPair> selected = new ArrayList<>();
         for (FusedPair pair : launcher.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
             if (LISTENERS.stream().anyMatch(listener -> listens(listener, pair, launcher))) selected.add(pair);

@@ -36,7 +36,11 @@ public final class RangedSilkSkills {
     private static final int MAX_OWNERS = 256, MAX_GEAR = 8, MAX_PUSHES = 1024;
     private record Gear(ItemStack stack, FusedPair pair) {}
     private record Mark(Gear gear, UUID target, UUID arrow, ResourceKey<Level> dimension, long expires) {}
-    private record Recent(Gear gear, AbstractArrow arrow, ResourceKey<Level> dimension, long born) {}
+    private static final class Recent {
+        final Gear gear; final ResourceKey<Level> dimension; final long born;
+        @Nullable AbstractArrow arrow;
+        Recent(ServerPlayer owner, Gear gear) { this.gear = gear; this.dimension = owner.level().dimension(); this.born = owner.level().getGameTime(); }
+    }
     private record Push(Gear gear, UUID owner, UUID target, ResourceKey<Level> dimension, long born) {}
     private static final Map<UUID, List<Mark>> MARKS = new HashMap<>();
     private static final Map<UUID, List<Recent>> RECENT = new HashMap<>();
@@ -46,19 +50,29 @@ public final class RangedSilkSkills {
         @Override public void hit(ConfirmedArrow.Hit hit) { onHit(hit); }
     };
     private static final ConfirmedArrow.InsertionListener INSERTIONS = new ConfirmedArrow.InsertionListener() {
-        @Override public @Nullable Object capture(ServerPlayer owner, ItemStack launcher) { return selected(launcher, true); }
-        @Override public void inserted(ServerPlayer owner, ItemStack launcher, AbstractArrow arrow, Object raw) {
-            if (!(raw instanceof Gear gear) || gear.stack() != launcher || !owns(owner, gear) || arrow.getOwner() != owner
-                || owner.level().getEntity(arrow.getUUID()) != arrow || PhantomVolley.isGhost(arrow)) return;
+        @Override public @Nullable Object capture(ServerPlayer owner, ItemStack launcher) {
+            Gear gear = selected(launcher, true); if (gear == null || !owns(owner, gear)) return null;
+            // Reserve the newest launch before insertion. A failed/unobservable shot leaves
+            // no recoverable candidate, and a delayed older insertion cannot replace it.
             List<Recent> list = RECENT.get(owner.getUUID());
             if (list == null) {
-                if (RECENT.size() >= MAX_OWNERS) return;
+                if (RECENT.size() >= MAX_OWNERS) return null;
                 list = new ArrayList<>(); RECENT.put(owner.getUUID(), list);
             }
-            // Never fall back to an older arrow when the newest one is intangible or gone.
-            list.removeIf(entry -> entry.gear().stack() == launcher);
+            list.removeIf(entry -> entry.gear.stack() == launcher);
             if (list.size() >= MAX_GEAR) list.removeFirst();
-            list.add(new Recent(gear, arrow, owner.level().dimension(), owner.level().getGameTime()));
+            Recent pending = new Recent(owner, gear); list.add(pending); return pending;
+        }
+        @Override public void untracked(ServerPlayer owner, ItemStack launcher) {
+            List<Recent> list = RECENT.get(owner.getUUID());
+            if (list != null) { list.removeIf(entry -> entry.gear.stack() == launcher); if (list.isEmpty()) RECENT.remove(owner.getUUID()); }
+        }
+        @Override public void inserted(ServerPlayer owner, ItemStack launcher, AbstractArrow arrow, Object raw) {
+            if (!(raw instanceof Recent pending) || pending.gear.stack() != launcher || pending.arrow != null
+                || !owns(owner, pending.gear) || arrow.getOwner() != owner || owner.level().getEntity(arrow.getUUID()) != arrow
+                || PhantomVolley.isGhost(arrow)) return;
+            List<Recent> list = RECENT.get(owner.getUUID());
+            if (list != null && list.contains(pending)) pending.arrow = arrow;
         }
     };
     private RangedSilkSkills() {}
@@ -170,16 +184,16 @@ public final class RangedSilkSkills {
         return Math.max(value, Math.min(16F, value + RangedSilkMath.knockback(push.gear().pair().secondaryLevel())));
     }
     private static boolean valid(ServerPlayer owner, Recent recent) {
-        long now = owner.level().getGameTime(); AbstractArrow arrow = recent.arrow();
-        return now >= recent.born() && now - recent.born() < RangedSilkMath.ARROW_TICKS
-            && recent.dimension().equals(owner.level().dimension()) && owns(owner, recent.gear())
-            && arrow.isAlive() && arrow.level() == owner.level() && owner.level().getEntity(arrow.getUUID()) == arrow
-            && arrow.getOwner() == owner && !PhantomVolley.isGhost(arrow);
+        long now = owner.level().getGameTime(); AbstractArrow arrow = recent.arrow;
+        if (now < recent.born || now - recent.born >= RangedSilkMath.ARROW_TICKS
+            || !recent.dimension.equals(owner.level().dimension()) || !owns(owner, recent.gear)) return false;
+        return arrow == null || (arrow.isAlive() && arrow.level() == owner.level() && owner.level().getEntity(arrow.getUUID()) == arrow
+            && arrow.getOwner() == owner && !PhantomVolley.isGhost(arrow));
     }
     private static @Nullable Recent recent(ServerPlayer owner, Gear gear) {
         List<Recent> list = RECENT.get(owner.getUUID()); if (list == null) return null;
         list.removeIf(entry -> !valid(owner, entry));
-        Recent found = list.stream().filter(entry -> entry.gear().stack() == gear.stack() && entry.gear().pair().equals(gear.pair())).findFirst().orElse(null);
+        Recent found = list.stream().filter(entry -> entry.arrow != null && entry.gear.stack() == gear.stack() && entry.gear.pair().equals(gear.pair())).findFirst().orElse(null);
         if (list.isEmpty()) RECENT.remove(owner.getUUID()); return found;
     }
     public static boolean hasEquipped(ServerPlayer owner) {
@@ -191,7 +205,8 @@ public final class RangedSilkSkills {
         Recent candidate = main == null ? null : recent(owner, main);
         if (candidate == null && off != null) candidate = recent(owner, off);
         if (candidate == null) { owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.ranged_silk_missing"), true); return false; }
-        AbstractArrow arrow = candidate.arrow(); ItemStack original = arrow.getPickupItemStackOrigin();
+        AbstractArrow arrow = candidate.arrow; if (arrow == null) return false;
+        ItemStack original = arrow.getPickupItemStackOrigin();
         // Restrict custom projectile pickup implementations until their own provenance and
         // item conversion can be verified; never change an infinite arrow's pickup policy.
         boolean vanillaArrow = (arrow.getClass() == Arrow.class && arrow.getType() == EntityType.ARROW)
@@ -217,7 +232,7 @@ public final class RangedSilkSkills {
         List<Recent> list = RECENT.get(owner.getUUID());
         if (list != null) { list.remove(candidate); if (list.isEmpty()) RECENT.remove(owner.getUUID()); }
         owner.level().sendParticles(ParticleTypes.ENCHANT, position.x, position.y, position.z, 8, .12D, .12D, .12D, .01D);
-        CompendiumDiscoveryTracker.recordDiscovery(owner, candidate.gear().pair().primaryId(), candidate.gear().pair().secondaryId());
+        CompendiumDiscoveryTracker.recordDiscovery(owner, candidate.gear.pair().primaryId(), candidate.gear.pair().secondaryId());
         return true;
     }
     public static void tickServer(MinecraftServer server) {
