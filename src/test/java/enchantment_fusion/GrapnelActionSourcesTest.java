@@ -35,22 +35,35 @@ final class GrapnelActionSourcesTest {
     }
     @Test void reflectedDamageNeedsOneUnambiguousCompletedNetLoss() {
         GrapnelThorns.Evidence confirmed = new GrapnelThorns.Evidence();
-        confirmed.damage(true, true, 2);
+        confirmed.damage(true, true, 2); confirmed.result(true, true, true, true);
         assertTrue(confirmed.confirmed(true, 10, 2, 10, 0));
         assertFalse(confirmed.confirmed(false, 10, 2, 10, 0));
         assertFalse(confirmed.confirmed(true, 10, 2, 10, 2));
         assertFalse(confirmed.confirmed(true, 10, 2, Float.NaN, 0));
         GrapnelThorns.Evidence wrong = new GrapnelThorns.Evidence();
-        wrong.damage(true, false, 2); assertFalse(wrong.confirmed(true, 10, 0, 8, 0));
+        wrong.damage(true, false, 2); wrong.result(true, true, true, true);
+        assertFalse(wrong.confirmed(true, 10, 0, 8, 0));
         GrapnelThorns.Evidence other = new GrapnelThorns.Evidence();
-        other.damage(false, true, 2); assertFalse(other.confirmed(true, 10, 0, 8, 0));
+        other.damage(false, true, 2); other.result(false, true, true, true);
+        assertFalse(other.confirmed(true, 10, 0, 8, 0));
         GrapnelThorns.Evidence cancelled = new GrapnelThorns.Evidence();
-        cancelled.damage(true, true, 0); assertFalse(cancelled.confirmed(true, 10, 0, 8, 0));
+        cancelled.damage(true, true, 0); cancelled.result(true, true, true, false);
+        assertFalse(cancelled.confirmed(true, 10, 0, 8, 0));
+        GrapnelThorns.Evidence rejectedAfterDamage = new GrapnelThorns.Evidence();
+        rejectedAfterDamage.damage(true, true, 2); rejectedAfterDamage.result(true, true, true, false);
+        assertFalse(rejectedAfterDamage.confirmed(true, 10, 0, 8, 0));
+        GrapnelThorns.Evidence incomplete = new GrapnelThorns.Evidence();
+        incomplete.damage(true, true, 2); incomplete.result(true, true, false, true);
+        assertFalse(incomplete.confirmed(true, 10, 0, 8, 0));
         GrapnelThorns.Evidence repeated = new GrapnelThorns.Evidence();
-        repeated.damage(true, true, 1); repeated.damage(true, true, 1);
+        repeated.damage(true, true, 1); repeated.damage(true, true, 1); repeated.result(true, true, true, true);
         assertFalse(repeated.confirmed(true, 10, 0, 8, 0));
+        GrapnelThorns.Evidence repeatedResult = new GrapnelThorns.Evidence();
+        repeatedResult.damage(true, true, 2); repeatedResult.result(true, true, true, true); repeatedResult.result(true, true, true, true);
+        assertFalse(repeatedResult.confirmed(true, 10, 0, 8, 0));
         GrapnelThorns.Evidence nested = new GrapnelThorns.Evidence();
-        nested.damage(true, true, 2); nested.nested(); assertFalse(nested.confirmed(true, 10, 0, 8, 0));
+        nested.damage(true, true, 2); nested.result(true, true, true, true); nested.nested();
+        assertFalse(nested.confirmed(true, 10, 0, 8, 0));
     }
     @Test void primaryReplaysAreSharedAndNeverDuplicateNative() {
         assertTrue(GrapnelThorns.needsReplay(0, true));

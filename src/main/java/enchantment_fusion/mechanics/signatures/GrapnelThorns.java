@@ -47,14 +47,19 @@ public final class GrapnelThorns {
 
     /** Any nested enchantment invocation or conflicting damage makes attribution conservative. */
     public static final class Evidence {
-        private int hits; private boolean ambiguous;
+        private int hits, results; private boolean ambiguous;
         public void nested() { ambiguous = true; }
         public void damage(boolean sameTarget, boolean expectedSource, float loss) {
             if (!sameTarget || !Float.isFinite(loss) || loss <= 0.0F) return;
             if (expectedSource) hits++; else ambiguous = true;
         }
+        public void result(boolean sameTarget, boolean expectedSource, boolean completed, boolean accepted) {
+            if (!sameTarget) return;
+            results++;
+            if (!expectedSource || !completed || !accepted) ambiguous = true;
+        }
         public boolean confirmed(boolean completed, float healthBefore, float absorptionBefore, float healthAfter, float absorptionAfter) {
-            return completed && !ambiguous && hits == 1
+            return completed && !ambiguous && hits == 1 && results == 1
                 && ConfirmedMeleeMath.actualLoss(healthBefore, absorptionBefore, healthAfter, absorptionAfter) > 0.0F;
         }
     }
@@ -159,6 +164,14 @@ public final class GrapnelThorns {
         if (frame == null) return;
         if (hit.victim() == frame.owner && hit.source() == frame.source) frame.observations++;
         else if (hit.victim() == frame.owner) frame.ambiguous = true;
+    }
+    /** The current data-pack damage_entity effect must also return successfully for this same attacker. */
+    public static void damageResult(Entity target, DamageSource source, boolean completed, boolean accepted) {
+        Scope scope = ACTIVE.get();
+        if (scope == null || scope.pending == null) return;
+        Pending pending = scope.pending;
+        scope.evidence.result(target == pending.attacker(), source.getEntity() == pending.owner()
+            && source.getDirectEntity() == pending.owner(), completed, accepted);
     }
     /** Wrap every post-attack invocation so reentry cannot be credited to its parent. */
     public static @Nullable Scope begin(Enchantment enchantment, ServerLevel level, int enchantmentLevel,

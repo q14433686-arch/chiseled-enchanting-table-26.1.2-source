@@ -13,6 +13,7 @@
     "BowHeavyCrushMixin",
     "CrossbowHeavyCrushMixin",
     "CombatRulesHeavyCrushMixin",
+    "DamageEntityGrapnelMixin",
     "AnvilCrossDomainGuardMixin",
     "CetCleanseMechanicsBridgeMixin",
     "CetCleanseQuotesBridgeMixin",
