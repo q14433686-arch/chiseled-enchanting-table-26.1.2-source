@@ -711,6 +711,12 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("40.1-breach-lure", () -> GrapnelImpactProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:breach"));
         acceptance.run("40.1-density-lure", () -> GrapnelImpactProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:density"));
         acceptance.run("43.3-smite-channel", () -> MeleeLightningProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));
+        acceptance.run("43.4-sharp-wind", () -> MeleeWindProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
+        acceptance.run("43.4-wind-sharp", () -> MeleeWindProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
+        acceptance.run("43.4-smite-wind", () -> MeleeWindProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));
+        acceptance.run("43.4-wind-smite", () -> MeleeWindProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
+        acceptance.run("43.4-bane-wind", () -> MeleeWindProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
+        acceptance.run("43.4-wind-bane", () -> MeleeWindProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));
         acceptance.run("43.3-channel-smite", () -> MeleeLightningProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
         acceptance.run("43.3-bane-channel", () -> MeleeLightningProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
         acceptance.run("43.3-channel-bane", () -> MeleeLightningProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));

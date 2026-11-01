@@ -1114,5 +1114,8 @@
   "message.enchantment_fusion.melee_lightning_marked": "Ein echter Dreizacktreffer hinterließ eine Blitzspur; aktiviere sie vor einem passenden Treffer in der Nähe.",
   "tooltip.enchantment_fusion.melee_lightning_chain": "Ein voller echter Treffer markiert einen passenden Gegner. Ein weiterer Treffer leitet einen Funken zu höchstens drei passenden Gegnern in der Nähe.",
   "tooltip.enchantment_fusion.melee_lightning_trace": "Ein echter Treffer mit dem geworfenen Dreizack hinterlässt eine Spur. Aktiviere sie und triff einen passenden Gegner in der Nähe. Verlässt der Dreizack die Welt, erlischt die Spur.",
-  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; der neue Lichtbogen gilt nicht."
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; der neue Lichtbogen gilt nicht.",
+  "tooltip.enchantment_fusion.melee_wind_blade": "Ein voller echter Treffer erzeugt kurz eine rotierende Klinge. Bewegung lenkt sie durch passende Gegner und stößt sie zurück.",
+  "tooltip.enchantment_fusion.melee_wind_updraft": "Ein echter Windstoß hebt dich an und erzeugt einen Aufwind. Triff darin erneut einen passenden Gegner für eine virtuelle Klingenwelle. Der normale Windstoß kann Blöcke auslösen.",
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Alte unpassende Träger behalten ihre Wirkung; die neue Klinge und der Aufwind gelten nicht."
 }

@@ -1114,5 +1114,8 @@
   "message.enchantment_fusion.melee_lightning_marked": "삼지창 실제 명중으로 흔적이 생겼습니다. 준비 후 근처의 해당 적을 공격하세요.",
   "tooltip.enchantment_fusion.melee_lightning_chain": "완전 충전 실제 명중으로 해당 적을 표시합니다. 같은 대상을 다시 공격하면 가까운 해당 적 최대 셋에게 전류가 튑니다.",
   "tooltip.enchantment_fusion.melee_lightning_trace": "삼지창을 던져 실제 명중하면 흔적이 생깁니다. 준비 후 근처의 해당 적을 공격하세요. 삼지창이 세계를 떠나면 흔적이 사라집니다.",
-  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "호환되지 않는 기존 장비는 원래 효과를 유지하며 새 전류는 적용되지 않습니다."
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "호환되지 않는 기존 장비는 원래 효과를 유지하며 새 전류는 적용되지 않습니다.",
+  "tooltip.enchantment_fusion.melee_wind_blade": "완전 충전 실제 명중으로 잠시 회전 칼날이 생깁니다. 이동으로 칼날을 이끌어 닿은 해당 적을 베고 밀어냅니다.",
+  "tooltip.enchantment_fusion.melee_wind_updraft": "실제 바람 폭발로 솟아오르면 상승 기류가 생깁니다. 그 안에서 해당 적을 다시 명중하면 가상 칼날 파동을 방출합니다. 원래 바람 폭발은 블록을 작동시킬 수 있습니다.",
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "호환되지 않는 기존 장비는 원래 효과를 유지하며 새 칼날과 상승 기류는 적용되지 않습니다."
 }

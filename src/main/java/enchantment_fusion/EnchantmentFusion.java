@@ -24,6 +24,7 @@ import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
+import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.menu.FusionNetworking;
 import enchantment_fusion.menu.FusionSkillNetworking;
@@ -70,6 +71,7 @@ public final class EnchantmentFusion implements ModInitializer {
         MeleeFireSkills.init();
         MeleeFrostSkills.init();
         MeleeLightningSkills.init();
+        MeleeWindSkills.init();
         GrapnelSkills.init();
         FusionBlocks.init();
         FusionItems.init();

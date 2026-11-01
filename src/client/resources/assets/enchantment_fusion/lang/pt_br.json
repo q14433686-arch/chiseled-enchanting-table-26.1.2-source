@@ -1114,5 +1114,8 @@
   "message.enchantment_fusion.melee_lightning_marked": "Um acerto real do tridente deixou um rastro; ative-o antes de acertar um inimigo compatível próximo.",
   "tooltip.enchantment_fusion.melee_lightning_chain": "Um acerto real carregado marca um inimigo compatível. Ao acertá-lo novamente, um arco salta para até três inimigos compatíveis próximos.",
   "tooltip.enchantment_fusion.melee_lightning_trace": "Um acerto real do tridente lançado deixa um rastro. Ative-o e acerte um inimigo compatível próximo. Se o tridente sair do mundo, o rastro desaparece.",
-  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Itens antigos incompatíveis mantêm o efeito original; o novo arco não se aplica."
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Itens antigos incompatíveis mantêm o efeito original; o novo arco não se aplica.",
+  "tooltip.enchantment_fusion.melee_wind_blade": "Um acerto real carregado cria uma lâmina giratória temporária. Mova-se para cortar e afastar inimigos compatíveis tocados.",
+  "tooltip.enchantment_fusion.melee_wind_updraft": "Uma rajada ascendente real lança você e cria uma corrente. Acerte nela um inimigo compatível para liberar uma onda virtual. A rajada normal pode ativar blocos.",
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Itens antigos incompatíveis mantêm o efeito original; a nova lâmina e corrente não se aplicam."
 }

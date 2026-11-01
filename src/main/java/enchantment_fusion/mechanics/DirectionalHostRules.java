@@ -38,6 +38,7 @@ import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
+import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
@@ -109,6 +110,9 @@ public final class DirectionalHostRules {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (MeleeLightningSkills.matches(pair) && !MeleeLightningSkills.supportsCarrier(pair, actual)) {
+            return RejectReason.UNSUPPORTED_DIRECTION_HOST;
+        }
+        if (MeleeWindSkills.matches(pair) && !MeleeWindSkills.supportsCarrier(pair, actual)) {
             return RejectReason.UNSUPPORTED_DIRECTION_HOST;
         }
         if (GrapnelSkills.matches(pair) && !GrapnelSkills.supportsHost(pair, host)) {

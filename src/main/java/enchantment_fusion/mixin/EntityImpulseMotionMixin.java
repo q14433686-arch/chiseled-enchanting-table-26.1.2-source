@@ -3,6 +3,7 @@ package enchantment_fusion.mixin;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
+import enchantment_fusion.mechanics.signatures.ConfirmedPlayerMove;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.phys.Vec3;
@@ -13,13 +14,19 @@ import org.spongepowered.asm.mixin.Mixin;
 public abstract class EntityImpulseMotionMixin {
     @WrapMethod(method = "move")
     private void ef$observeImpulseMovement(MoverType type, Vec3 requested, Operation<Void> original) {
-        MeleeImpulseSkills.Move move = MeleeImpulseSkills.beginMove((Entity) (Object) this, type, requested);
+        Entity entity = (Entity) (Object) this;
+        ConfirmedPlayerMove.Scope playerMove = ConfirmedPlayerMove.begin(entity, type, requested);
         boolean completed = false;
         try {
-            original.call(type, requested);
-            completed = true;
+            MeleeImpulseSkills.Move move = MeleeImpulseSkills.beginMove(entity, type, requested);
+            try {
+                original.call(type, requested);
+                completed = true;
+            } finally {
+                MeleeImpulseSkills.endMove(move, completed);
+            }
         } finally {
-            MeleeImpulseSkills.endMove(move, completed);
+            ConfirmedPlayerMove.end(playerMove, completed);
         }
     }
 }

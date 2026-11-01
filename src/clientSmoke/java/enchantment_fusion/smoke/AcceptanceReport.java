@@ -96,6 +96,12 @@ final class AcceptanceReport {
         plan("40.1-breach-lure", "Breach ▷ Lure: actual armored hit and simulated recall", "Not reached if setup fails.");
         plan("40.1-density-lure", "Density ▷ Lure: actual mace hit with simulated fall and recall", "Not reached if setup fails.");
         plan("43.3-smite-channel", "Smite ▷ Channeling: real marks and virtual chain", "Not reached if setup fails.");
+        plan("43.4-sharp-wind", "sharpness ▷ Wind Burst: real hit and simulated player movement", "Not reached if setup fails.");
+        plan("43.4-wind-sharp", "Wind Burst ▷ sharpness: same real wind effect and simulated updraft follow-up", "Not reached if setup fails.");
+        plan("43.4-smite-wind", "smite ▷ Wind Burst: real hit and simulated player movement", "Not reached if setup fails.");
+        plan("43.4-wind-smite", "Wind Burst ▷ smite: same real wind effect and simulated updraft follow-up", "Not reached if setup fails.");
+        plan("43.4-bane-wind", "bane_of_arthropods ▷ Wind Burst: real hit and simulated player movement", "Not reached if setup fails.");
+        plan("43.4-wind-bane", "Wind Burst ▷ bane_of_arthropods: same real wind effect and simulated updraft follow-up", "Not reached if setup fails.");
         plan("43.3-channel-smite", "Channeling ▷ Smite: real trident and trace settlement", "Not reached if setup fails.");
         plan("43.3-bane-channel", "Bane ▷ Channeling: real marks and virtual chain", "Not reached if setup fails.");
         plan("43.3-channel-bane", "Channeling ▷ Bane: real trident and trace settlement", "Not reached if setup fails.");

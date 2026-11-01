@@ -1114,5 +1114,8 @@
   "message.enchantment_fusion.melee_lightning_marked": "El tridente dejó una marca al impactar de verdad; actívala antes de golpear a un enemigo compatible cercano.",
   "tooltip.enchantment_fusion.melee_lightning_chain": "Un impacto real cargado marca al enemigo compatible. Un segundo impacto en él salta hasta tres enemigos compatibles cercanos.",
   "tooltip.enchantment_fusion.melee_lightning_trace": "Un impacto real con el tridente arrojado deja una marca. Actívala y golpea a un enemigo compatible cercano. Si el tridente sale del mundo, la marca desaparece.",
-  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben el nuevo arco."
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben el nuevo arco.",
+  "tooltip.enchantment_fusion.melee_wind_blade": "Un impacto real cargado crea una hoja giratoria temporal. Muévete para cortar y empujar a los enemigos compatibles que toque.",
+  "tooltip.enchantment_fusion.melee_wind_updraft": "Una ráfaga ascendente real te eleva y crea una corriente. Golpea dentro a un enemigo compatible para liberar una onda virtual. La ráfaga normal puede activar bloques.",
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Los objetos antiguos incompatibles conservan su efecto; la nueva hoja y la corriente no se aplican."
 }

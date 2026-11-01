@@ -1114,5 +1114,8 @@
   "message.enchantment_fusion.melee_lightning_marked": "トライデントの実際の命中で雷痕が残った。発動後に近くの対象種を攻撃。",
   "tooltip.enchantment_fusion.melee_lightning_chain": "最大溜めの実際の命中で対象種に電印を付ける。同じ敵を再び攻撃すると、近くの対象種最大三体へ電弧が跳ぶ。",
   "tooltip.enchantment_fusion.melee_lightning_trace": "投げたトライデントの実際の命中で雷痕を残す。発動後に近くの対象種を攻撃。トライデントが世界を離れると失効。",
-  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "旧式の非対応道具は元の効果を保ち、新しい電弧は適用されない。"
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "旧式の非対応道具は元の効果を保ち、新しい電弧は適用されない。",
+  "tooltip.enchantment_fusion.melee_wind_blade": "最大溜めの実際の命中で短時間の旋回刃が生じる。移動で刃を導き、触れた対象種を切り払い押しのける。",
+  "tooltip.enchantment_fusion.melee_wind_updraft": "実際の風爆で上昇すると上昇気流が生じる。中で対象種を再び攻撃すると仮想の刃波を放つ。元の風爆はブロックを作動させる場合がある。",
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "旧式の非対応道具は元の効果を保ち、新しい旋回刃と上昇気流は適用されない。"
 }

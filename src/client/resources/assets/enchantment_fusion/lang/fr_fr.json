@@ -1114,5 +1114,8 @@
   "message.enchantment_fusion.melee_lightning_marked": "Le trident a laissé une trace après un vrai coup ; activez-la avant de frapper un ennemi adapté proche.",
   "tooltip.enchantment_fusion.melee_lightning_chain": "Un vrai coup chargé marque un ennemi adapté. Un second coup sur lui fait bondir un arc vers trois ennemis adaptés proches au maximum.",
   "tooltip.enchantment_fusion.melee_lightning_trace": "Un vrai coup du trident lancé laisse une trace. Activez-la puis frappez un ennemi adapté proche. Si le trident quitte le monde, la trace disparaît.",
-  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Les anciens supports incompatibles gardent leur effet ; le nouvel arc ne s’applique pas."
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Les anciens supports incompatibles gardent leur effet ; le nouvel arc ne s’applique pas.",
+  "tooltip.enchantment_fusion.melee_wind_blade": "Un vrai coup chargé crée brièvement une lame tournoyante. Déplacez-vous pour trancher et repousser les ennemis adaptés touchés.",
+  "tooltip.enchantment_fusion.melee_wind_updraft": "Une vraie rafale ascendante vous soulève et crée un courant. Frappez-y un ennemi adapté pour libérer une onde virtuelle. La rafale normale peut activer des blocs.",
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Les anciens supports incompatibles gardent leur effet ; la nouvelle lame et le courant ne s’appliquent pas."
 }

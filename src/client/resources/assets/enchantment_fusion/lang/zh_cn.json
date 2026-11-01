@@ -1114,5 +1114,8 @@
   "message.enchantment_fusion.melee_lightning_marked": "三叉戟真实命中留下雷痕；主动准备后攻击附近的对应敌人。",
   "tooltip.enchantment_fusion.melee_lightning_chain": "满蓄真实命中对应敌人留下电印；再次命中同一目标时，电弧跳向附近最多三个对应敌人。",
   "tooltip.enchantment_fusion.melee_lightning_trace": "投掷三叉戟真实命中留下雷痕；主动准备后击中附近对应敌人。该三叉戟离开世界时雷痕失效。",
-  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "旧的不适用载体保留原效果，不应用新的电弧。"
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "旧的不适用载体保留原效果，不应用新的电弧。",
+  "tooltip.enchantment_fusion.melee_wind_blade": "满蓄真实命中生成短暂旋刃；移动牵动它，切割并推开触碰的对应敌人。",
+  "tooltip.enchantment_fusion.melee_wind_updraft": "重锤实际触发原版风爆并升起后形成升流；在其中再次命中对应敌人释放虚拟锋浪。原版风爆可能触发方块。",
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "旧的不适用载体保留原效果，不启用新的旋刃或升流。"
 }

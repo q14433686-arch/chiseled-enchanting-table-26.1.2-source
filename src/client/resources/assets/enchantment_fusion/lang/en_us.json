@@ -1114,5 +1114,8 @@
   "message.enchantment_fusion.melee_lightning_marked": "Trident hit left an arc trace; activate before striking a matching enemy nearby.",
   "tooltip.enchantment_fusion.melee_lightning_chain": "A full real hit marks a matching enemy; hit it again to arc through up to three nearby matching enemies.",
   "tooltip.enchantment_fusion.melee_lightning_trace": "Throw the trident to leave a trace on a real hit; activate, then hit a matching enemy nearby. The trace expires if that trident leaves the world.",
-  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Old incompatible carrier: original behavior retained; the new arc is not applied."
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "Old incompatible carrier: original behavior retained; the new arc is not applied.",
+  "tooltip.enchantment_fusion.melee_wind_blade": "A full real hit creates a temporary spinning blade. Move to guide it through matching enemies, cutting and pushing them.",
+  "tooltip.enchantment_fusion.melee_wind_updraft": "A real Wind Burst launches you and creates an updraft. Hit a matching enemy inside it to release a virtual wave. Vanilla Wind Burst may trigger blocks.",
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "Old incompatible carriers retain their original behavior; the new blade and updraft do not apply."
 }

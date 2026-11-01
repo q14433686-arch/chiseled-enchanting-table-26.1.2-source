@@ -1114,5 +1114,8 @@
   "message.enchantment_fusion.melee_lightning_marked": "Il tridente ha lasciato una traccia con un vero colpo; attivala prima di colpire un nemico adatto vicino.",
   "tooltip.enchantment_fusion.melee_lightning_chain": "Un vero colpo caricato marca un nemico adatto. Colpendolo di nuovo, un arco salta fino a tre nemici adatti vicini.",
   "tooltip.enchantment_fusion.melee_lightning_trace": "Un vero colpo del tridente lanciato lascia una traccia. Attivala e colpisci un nemico adatto vicino. Se il tridente lascia il mondo, la traccia svanisce.",
-  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; il nuovo arco non si applica."
+  "tooltip.enchantment_fusion.legacy_melee_lightning_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; il nuovo arco non si applica.",
+  "tooltip.enchantment_fusion.melee_wind_blade": "Un vero colpo caricato crea per poco una lama rotante. Muoviti per tagliare e respingere i nemici adatti che tocca.",
+  "tooltip.enchantment_fusion.melee_wind_updraft": "Una vera raffica ascendente ti solleva e crea una corrente. Colpisci al suo interno un nemico adatto per liberare un’onda virtuale. La raffica normale può attivare blocchi.",
+  "tooltip.enchantment_fusion.legacy_melee_wind_carrier": "I vecchi supporti incompatibili mantengono il loro effetto; la nuova lama e corrente non si applicano."
 }

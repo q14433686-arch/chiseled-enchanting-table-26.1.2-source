@@ -12,6 +12,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelDefenseCapture;
 import enchantment_fusion.mechanics.signatures.ProtectionProjection;
 import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
+import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -21,6 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentTarget;
+import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.spongepowered.asm.mixin.Mixin;
 
@@ -56,8 +58,10 @@ public abstract class EnchantmentFrostEffectsMixin {
                                      EnchantmentTarget side, Entity victim, DamageSource source, Operation<Void> original) {
         if (!FireThornsSkills.suppressInstantThorns((Enchantment) (Object) this, level, item, side, victim, source)) {
             int fireBefore = victim instanceof LivingEntity living ? living.getRemainingFireTicks() : 0;
+            Vec3 windBefore = item.owner() instanceof LivingEntity living ? living.getDeltaMovement() : null;
             original.call(level, enchantmentLevel, item, side, victim, source);
             MeleeFireSkills.observePrimaryFire((Enchantment) (Object) this, level, enchantmentLevel, item, side, victim, source, fireBefore);
+            MeleeWindSkills.observePrimaryWind((Enchantment) (Object) this, level, enchantmentLevel, item, side, victim, source, windBefore);
         }
     }
 
