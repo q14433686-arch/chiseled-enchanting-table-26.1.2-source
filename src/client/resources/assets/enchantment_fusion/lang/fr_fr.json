@@ -1098,5 +1098,10 @@
   "message.enchantment_fusion.fortune_stance_spent": "Posture du destin consommée.",
   "tooltip.enchantment_fusion.melee_fortune_refresh": "Un vrai coup pleinement chargé sur un ennemi valide du type correspondant peut rétablir la charge. L’effet principal est conservé.",
   "tooltip.enchantment_fusion.melee_fortune_stance": "Activez la posture pour 8 secondes maximum par défaut. Le prochain vrai coup adapté peut produire une frappe forte, trois lames virtuelles ou rétablir la charge ; un coup manqué ou annulé ne relance pas le tirage.",
-  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Les anciens supports incompatibles gardent leur effet d’origine ; la nouvelle posture ne s’applique pas."
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Les anciens supports incompatibles gardent leur effet d’origine ; la nouvelle posture ne s’applique pas.",
+  "skill.enchantment_fusion.melee_fire": "Extraire les braises",
+  "message.enchantment_fusion.melee_fire_extracted": "Feu restant extrait en une lame de chaleur dirigée.",
+  "tooltip.enchantment_fusion.melee_fire_extract": "Un vrai coup pleinement chargé marque un ennemi valide en feu. Activez avec l’arme pour éteindre son feu restant et libérer une lame de chaleur dirigée.",
+  "tooltip.enchantment_fusion.melee_fire_follow": "Enflammez une cible valide avec l’effet principal. Un vrai coup ultérieur sur la cible marquée encore en feu libère une lame de feu virtuelle.",
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Les anciens supports incompatibles gardent leur effet ; la nouvelle lame de feu ne s’applique pas."
 }

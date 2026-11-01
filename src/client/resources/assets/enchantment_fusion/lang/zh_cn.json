@@ -1098,5 +1098,10 @@
   "message.enchantment_fusion.fortune_stance_spent": "命运刀式已消耗。",
   "tooltip.enchantment_fusion.melee_fortune_refresh": "满蓄真实命中符合主位类别的合格敌人，有概率刷新攻击蓄力；保留主位正常效果。",
   "tooltip.enchantment_fusion.melee_fortune_stance": "主动开启默认最多8秒的命运刀式；下一次真实命中对应类别的合格敌人时，有概率触发重击、三道虚拟散刃或刷新攻击蓄力。落空或被取消的攻击不会重掷结果。",
-  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "旧的不适用载体保留原效果，不应用新的近战刀式。"
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "旧的不适用载体保留原效果，不应用新的近战刀式。",
+  "skill.enchantment_fusion.melee_fire": "抽焰成锋",
+  "message.enchantment_fusion.melee_fire_extracted": "已抽取余火，释放定向热刃。",
+  "tooltip.enchantment_fusion.melee_fire_extract": "满蓄真实命中燃烧的合格敌人后留标；持该武器主动发动，熄灭其余火并释放定向热刃。",
+  "tooltip.enchantment_fusion.melee_fire_follow": "用主位效果点燃合格目标并留标；随后再次真实命中仍在燃烧的标记目标，释放虚拟炽刃。",
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "旧的不适用载体保留原效果，不应用新的近战焰锋。"
 }

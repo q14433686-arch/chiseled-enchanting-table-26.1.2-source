@@ -92,6 +92,12 @@ DIRECTION_FIXTURES = {
     ("knockback", "lure"): ("40.1-knockback-lure", True),
     ("breach", "lure"): ("40.1-breach-lure", True),
     ("density", "lure"): ("40.1-density-lure", True),
+    ("sharpness", "fire_aspect"): ("43.1-sharp-fire", True),
+    ("fire_aspect", "sharpness"): ("43.1-fire-sharp", True),
+    ("smite", "fire_aspect"): ("43.1-smite-fire", True),
+    ("fire_aspect", "smite"): ("43.1-fire-smite", True),
+    ("bane_of_arthropods", "fire_aspect"): ("43.1-bane-fire", True),
+    ("fire_aspect", "bane_of_arthropods"): ("43.1-fire-bane", True),
     ("sharpness", "fortune"): ("33.2-sharp-fortune", True),
     ("fortune", "sharpness"): ("33.2-fortune-sharp", True),
     ("smite", "fortune"): ("44.3-smite-fortune", True),
@@ -161,6 +167,10 @@ DIRECTION_FIXTURES = {
 VARIANT_FIXTURES = {"mending_replenish": ("transmute-replenish", False)}
 
 # Read only rows with the exact reporter format, respecting escaped Markdown pipes.
+# These are the designs explicitly discussed with the user, not every catalog proposal.
+# The rest remains in the inventory, but does not gate the first integrated acceptance.
+PRIORITY_CATEGORIES = frozenset(("专属", "副位通配", "已选模板"))
+
 REPORT_ROW = re.compile(
     r"^\| ((?:\\.|[^|])+?) \| (?:\\.|[^|])*? \| (PASS|FAIL|SKIP) \| ((?:\\.|[^|])*?) \|$",
     re.MULTILINE,
@@ -227,13 +237,18 @@ def inventory(report_text: str) -> str:
         "现有探针均为局部范围：有限 PASS 不等于整项 PASS；共享探针失败也不猜测是哪一个方向出错。",
         "逐项完整游戏探针及多人/兼容场景仍须补齐；详情见 [探针报告](acceptance-report.md)。", "",
         f"清单：{len(entries)} 个不同附魔有序方向、{len(variants)} 个跨种变体、{len(bindings)} 个来源—角色绑定。",
+        "第一轮验收优先已讨论的专属、通配、已选模板；其他方向仍保留在清单中，不作为这次进入游戏的前置条件。",
         "变体与绑定是不同粒度，不能将两张表相加后称为不重复玩法总数。数据包新增的第三方内容不在默认清单中。", "",
-        "## 有序融合方向", "", "| 主位 ▷ 副位 | ID | 设计分类 | 状态 | 原因 / 边界 |", "| --- | --- | --- | --- | --- |",
     ]
-    for (primary, secondary), (state, _scope) in entries.items():
-        status, reason = scoped_status(DIRECTION_FIXTURES.get((primary, secondary)), results)
-        lines.append(f"| {esc(names[primary])} ▷ {esc(names[secondary])} | `{primary}` ▷ `{secondary}` | "
-                     f"{esc(category(state))} | {status} | {esc(reason)} |")
+    for priority, heading in ((True, "已讨论：专属、通配和已选模板"), (False, "其他方案：保留，后续复用机制")):
+        lines += [f"## {heading}", "", "| 主位 ▷ 副位 | ID | 设计分类 | 状态 | 原因 / 边界 |", "| --- | --- | --- | --- | --- |"]
+        for (primary, secondary), (state, _scope) in entries.items():
+            if (category(state) in PRIORITY_CATEGORIES) != priority:
+                continue
+            status, reason = scoped_status(DIRECTION_FIXTURES.get((primary, secondary)), results)
+            lines.append(f"| {esc(names[primary])} ▷ {esc(names[secondary])} | `{primary}` ▷ `{secondary}` | "
+                         f"{esc(category(state))} | {status} | {esc(reason)} |")
+        lines.append("")
     lines += ["", "## 单附魔跨种变体", "", "| 变体 | 主来源 | 状态 | 原因 / 边界 |", "| --- | --- | --- | --- |"]
     for variant, data in variants.items():
         status, reason = scoped_status(VARIANT_FIXTURES.get(variant), results)

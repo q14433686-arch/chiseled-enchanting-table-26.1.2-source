@@ -1098,5 +1098,10 @@
   "message.enchantment_fusion.fortune_stance_spent": "Posizione del destino consumata.",
   "tooltip.enchantment_fusion.melee_fortune_refresh": "Un vero colpo completamente caricato contro un nemico valido del tipo corrispondente può ripristinare la carica. L’effetto primario rimane.",
   "tooltip.enchantment_fusion.melee_fortune_stance": "Attiva la posizione normalmente per al massimo 8 secondi. Il prossimo colpo reale adatto può causare un colpo forte, tre lame virtuali o ripristinare la carica; colpi mancati o annullati non ritirano il risultato.",
-  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; la nuova posizione non si applica."
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; la nuova posizione non si applica.",
+  "skill.enchantment_fusion.melee_fire": "Estrai braci",
+  "message.enchantment_fusion.melee_fire_extracted": "Fuoco residuo estratto in una lama di calore diretta.",
+  "tooltip.enchantment_fusion.melee_fire_extract": "Un vero colpo completamente caricato marca un nemico valido in fiamme. Attiva con l’arma per spegnere il fuoco residuo e liberare una lama di calore diretta.",
+  "tooltip.enchantment_fusion.melee_fire_follow": "Incendia un bersaglio valido con l’effetto primario. Un vero colpo successivo sul bersaglio marcato ancora in fiamme libera una lama di fuoco virtuale.",
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "I vecchi supporti incompatibili mantengono l’effetto originale; la nuova lama di fuoco non si applica."
 }

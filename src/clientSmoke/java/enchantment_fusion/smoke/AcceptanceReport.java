@@ -95,6 +95,12 @@ final class AcceptanceReport {
         plan("40.1-knockback-lure", "Knockback ▷ Lure: actual hit and resisted impulse, simulated recall", "Not reached if setup fails.");
         plan("40.1-breach-lure", "Breach ▷ Lure: actual armored hit and simulated recall", "Not reached if setup fails.");
         plan("40.1-density-lure", "Density ▷ Lure: actual mace hit with simulated fall and recall", "Not reached if setup fails.");
+        plan("43.1-sharp-fire", "Sharpness ▷ Fire Aspect: real burning hit and simulated extraction", "Not reached if setup fails.");
+        plan("43.1-fire-sharp", "Fire Aspect ▷ Sharpness: real ignition and directed blade", "Not reached if setup fails.");
+        plan("43.1-smite-fire", "Smite ▷ Fire Aspect: real burning hit and simulated extraction", "Not reached if setup fails.");
+        plan("43.1-fire-smite", "Fire Aspect ▷ Smite: real ignition and directed blade", "Not reached if setup fails.");
+        plan("43.1-bane-fire", "Bane ▷ Fire Aspect: real burning hit and simulated extraction", "Not reached if setup fails.");
+        plan("43.1-fire-bane", "Fire Aspect ▷ Bane: real ignition and directed blade", "Not reached if setup fails.");
         plan("33.2-sharp-fortune", "Sharpness ▷ Fortune: real melee and simulated charge refresh", "Not reached if setup fails.");
         plan("33.2-fortune-sharp", "Fortune ▷ Sharpness: real melee and simulated stance timing", "Not reached if setup fails.");
         plan("44.3-smite-fortune", "Smite ▷ Fortune: real melee and simulated charge refresh", "Not reached if setup fails.");

@@ -11,6 +11,7 @@ import enchantment_fusion.mechanics.signatures.MeleeGuardCapture;
 import enchantment_fusion.mechanics.signatures.GrapnelDefenseCapture;
 import enchantment_fusion.mechanics.signatures.ProtectionProjection;
 import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
+import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -54,7 +55,9 @@ public abstract class EnchantmentFrostEffectsMixin {
     private void ef$deferMeleeThorns(ServerLevel level, int enchantmentLevel, EnchantedItemInUse item,
                                      EnchantmentTarget side, Entity victim, DamageSource source, Operation<Void> original) {
         if (!FireThornsSkills.suppressInstantThorns((Enchantment) (Object) this, level, item, side, victim, source)) {
+            int fireBefore = victim instanceof LivingEntity living ? living.getRemainingFireTicks() : 0;
             original.call(level, enchantmentLevel, item, side, victim, source);
+            MeleeFireSkills.observePrimaryFire((Enchantment) (Object) this, level, enchantmentLevel, item, side, victim, source, fireBefore);
         }
     }
 

@@ -1098,5 +1098,10 @@
   "message.enchantment_fusion.fortune_stance_spent": "운명의 자세를 소모했습니다.",
   "tooltip.enchantment_fusion.melee_fortune_refresh": "대상 종류가 맞는 적에게 완충 실제 명중 시 확률적으로 공격 충전을 회복합니다. 주 효과는 유지됩니다.",
   "tooltip.enchantment_fusion.melee_fortune_stance": "기본 최대 8초 동안 자세를 켭니다. 다음 해당 적의 실제 명중 시 확률적으로 강타, 가상 칼날 셋 또는 공격 충전 회복이 발동합니다. 빗나가거나 취소돼도 결과를 다시 뽑지 않습니다.",
-  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "호환되지 않는 기존 장비는 원래 효과를 유지하며 새 근접 자세는 적용되지 않습니다."
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "호환되지 않는 기존 장비는 원래 효과를 유지하며 새 근접 자세는 적용되지 않습니다.",
+  "skill.enchantment_fusion.melee_fire": "잔불 추출",
+  "message.enchantment_fusion.melee_fire_extracted": "남은 불을 추출해 지정 방향으로 열기를 베었습니다.",
+  "tooltip.enchantment_fusion.melee_fire_extract": "대상 종류가 맞는 불타는 적에게 완충 실제 명중하면 표식이 생깁니다. 무기를 들고 발동해 남은 불을 끄고 지정 방향으로 열기 칼날을 보냅니다.",
+  "tooltip.enchantment_fusion.melee_fire_follow": "주 효과로 해당 적에게 불을 붙여 표식합니다. 이후 여전히 불타는 표식 대상에 실제 명중하면 가상 화염 칼날이 나갑니다.",
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "호환되지 않는 기존 장비는 원래 효과를 유지하며 새 화염 칼날은 적용되지 않습니다."
 }

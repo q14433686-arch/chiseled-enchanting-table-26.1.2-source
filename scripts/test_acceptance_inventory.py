@@ -5,7 +5,7 @@ import re
 import unittest
 
 from acceptance_inventory import (
-    DIRECTION_FIXTURES, VARIANT_FIXTURES, collect_bindings, inventory,
+    DIRECTION_FIXTURES, VARIANT_FIXTURES, PRIORITY_CATEGORIES, collect_bindings, inventory,
     parse_report, scoped_status,
 )
 from verify_fusion_designs import ROOT, parse_coverage, read_doc
@@ -28,6 +28,15 @@ class AcceptanceInventoryTest(unittest.TestCase):
         for variant in data:
             self.assertIn(f"| `{variant}` |", text)
 
+    def test_discussed_items_are_listed_first_without_dropping_other_candidates(self):
+        text = inventory("")
+        priority, rest = text.split("## 其他方案：保留，后续复用机制", 1)
+        self.assertIn("## 已讨论：专属、通配和已选模板", priority)
+        self.assertIn("`sharpness` ▷ `smite`", priority)
+        self.assertIn("`sharpness` ▷ `breach`", rest)
+        self.assertNotIn("`sharpness` ▷ `breach`", priority)
+        self.assertEqual({"专属", "副位通配", "已选模板"}, PRIORITY_CATEGORIES)
+
     def test_narrow_pass_does_not_become_full_pass(self):
         fixture = "39.4-luck-lure"
         results = parse_report(f"| {fixture} | scope | PASS | Prepared only. |\n")
@@ -40,7 +49,7 @@ class AcceptanceInventoryTest(unittest.TestCase):
         self.assertNotIn(" | PASS | ", text)
 
     def test_melee_template_families_have_individually_scoped_fixtures(self):
-        for secondary in ("swift_sneak", "respiration", "unbreaking", "knockback", "protection", "efficiency", "aqua_affinity", "fortune"):
+        for secondary in ("swift_sneak", "respiration", "unbreaking", "knockback", "protection", "efficiency", "aqua_affinity", "fortune", "fire_aspect"):
             pairs = {(attack, secondary) for attack in ("sharpness", "smite", "bane_of_arthropods")}
             pairs |= {(right, left) for left, right in pairs.copy()}
             fixtures = {DIRECTION_FIXTURES[pair][0] for pair in pairs}

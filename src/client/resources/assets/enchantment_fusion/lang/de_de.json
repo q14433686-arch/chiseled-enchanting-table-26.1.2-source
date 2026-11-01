@@ -1098,5 +1098,10 @@
   "message.enchantment_fusion.fortune_stance_spent": "Schicksalshaltung verbraucht.",
   "tooltip.enchantment_fusion.melee_fortune_refresh": "Ein voll aufgeladener echter Treffer gegen einen passenden gültigen Gegner kann die Angriffsladung auffrischen. Der Haupteffekt bleibt erhalten.",
   "tooltip.enchantment_fusion.melee_fortune_stance": "Aktiviere die Haltung standardmäßig für höchstens 8 Sekunden. Der nächste passende echte Treffer kann einen schweren Schlag, drei virtuelle Klingen oder Ladungsauffrischung auslösen; Fehlschläge und abgebrochene Treffer würfeln nicht neu.",
-  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; die neue Nahkampfhaltung gilt dort nicht."
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; die neue Nahkampfhaltung gilt dort nicht.",
+  "skill.enchantment_fusion.melee_fire": "Glut entziehen",
+  "message.enchantment_fusion.melee_fire_extracted": "Restfeuer entzogen und gerichtete Hitzeklinge freigesetzt.",
+  "tooltip.enchantment_fusion.melee_fire_extract": "Ein voll aufgeladener echter Treffer markiert einen passenden brennenden Gegner. Mit der Waffe aktivieren, um das Restfeuer zu löschen und eine gerichtete Hitzeklinge freizusetzen.",
+  "tooltip.enchantment_fusion.melee_fire_follow": "Entzünde einen passenden Gegner mit dem Haupteffekt. Ein späterer echter Treffer auf den noch brennenden markierten Gegner setzt eine virtuelle Flammenklinge frei.",
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Alte unpassende Träger behalten ihre ursprüngliche Wirkung; die neue Feuerklinge gilt dort nicht."
 }

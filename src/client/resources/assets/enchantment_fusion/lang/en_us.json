@@ -1098,5 +1098,10 @@
   "message.enchantment_fusion.fortune_stance_spent": "Fortune stance spent.",
   "tooltip.enchantment_fusion.melee_fortune_refresh": "A fully charged hit on a matching eligible enemy may refresh your attack charge. The primary’s normal effects remain.",
   "tooltip.enchantment_fusion.melee_fortune_stance": "Activate a stance for up to 8 seconds by default. The next matching real hit may be a heavier strike, three virtual cutting rays, or an attack-charge refresh; a miss or cancelled hit does not reroll it.",
-  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Old incompatible carrier: its original behavior is retained; the new melee stance is not applied."
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Old incompatible carrier: its original behavior is retained; the new melee stance is not applied.",
+  "skill.enchantment_fusion.melee_fire": "Ember extraction",
+  "message.enchantment_fusion.melee_fire_extracted": "Flame extracted into a directed heat blade.",
+  "tooltip.enchantment_fusion.melee_fire_extract": "A full real hit marks a burning eligible enemy; activate while holding the weapon to extinguish its remaining fire and release a directed heat blade.",
+  "tooltip.enchantment_fusion.melee_fire_follow": "Ignite an eligible target with the primary effect; a later real hit on that marked burning target releases a virtual flame blade.",
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Old incompatible carrier: original behavior retained; the new melee-fire ability is not applied."
 }

@@ -1098,5 +1098,10 @@
   "message.enchantment_fusion.fortune_stance_spent": "Postura del destino consumida.",
   "tooltip.enchantment_fusion.melee_fortune_refresh": "Un impacto real totalmente cargado contra un enemigo válido del tipo correspondiente puede restablecer la carga. Se conserva el efecto principal.",
   "tooltip.enchantment_fusion.melee_fortune_stance": "Activa la postura por defecto durante hasta 8 segundos. El siguiente impacto real adecuado puede causar un golpe fuerte, tres hojas virtuales o restablecer la carga; fallar o cancelar no vuelve a tirar.",
-  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben la nueva postura."
+  "tooltip.enchantment_fusion.legacy_melee_fortune_carrier": "Los objetos antiguos incompatibles conservan su efecto original; no reciben la nueva postura.",
+  "skill.enchantment_fusion.melee_fire": "Extraer brasas",
+  "message.enchantment_fusion.melee_fire_extracted": "Fuego restante extraído en una hoja de calor dirigida.",
+  "tooltip.enchantment_fusion.melee_fire_extract": "Un impacto real totalmente cargado marca a un enemigo válido en llamas. Activa con el arma para apagar su fuego restante y liberar una hoja de calor dirigida.",
+  "tooltip.enchantment_fusion.melee_fire_follow": "Enciende a un enemigo válido con el efecto principal. Un impacto real posterior en el objetivo marcado que aún arde libera una hoja de fuego virtual.",
+  "tooltip.enchantment_fusion.legacy_melee_fire_carrier": "Los objetos antiguos incompatibles conservan su efecto original; la nueva habilidad no se aplica."
 }

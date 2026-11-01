@@ -21,6 +21,7 @@ import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
+import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -228,6 +229,7 @@ public abstract class PlayerAmberAttackMixin {
         MeleeAttackThemes.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
         MeleeImpulseSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
         FireSweepSkills.nonNativePostAttack(level, (Player) (Object) this, weapon, victim, source);
+        MeleeFireSkills.afterPostAttack(level, (Player) (Object) this, weapon, victim, source);
     }
 
     @Inject(method = "doSweepAttack", at = @At("HEAD"))

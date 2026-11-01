@@ -215,6 +215,11 @@ public final class FireSweepSkills {
                 now + firstDelay + (long) i * step, i == 0 && killedRoot));
         }
     }
+    /** Whether this exact equipped pair already owns the non-native Fire Aspect replay. */
+    public static boolean replaysFirePrimary(ItemStack weapon) {
+        Gear gear = selected(weapon);
+        return gear != null && FIRE.equals(gear.pair().primaryId());
+    }
     /** Preserve real data-pack Fire Aspect once on a supported non-native weapon. */
     public static void nonNativePostAttack(ServerLevel level, Player player, ItemStack weapon, Entity victim, DamageSource source) {
         if (Boolean.TRUE.equals(PRIMARY_REPLAY.get()) || !(player instanceof ServerPlayer owner) || owner.getMainHandItem() != weapon
