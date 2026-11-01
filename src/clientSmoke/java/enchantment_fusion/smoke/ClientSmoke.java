@@ -647,6 +647,12 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("06-fortune-silk", () -> FortuneBankProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("10-sharpness-bane", () -> SegmentThreadProbe.exercise(sp, tablePos.above(180).east(12), false));
         acceptance.run("10-bane-sharpness", () -> SegmentThreadProbe.exercise(sp, tablePos.above(180).east(12), true));
+        acceptance.run("45.1-power-unbreaking", () -> RangedWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", false));
+        acceptance.run("45.1-unbreaking-power", () -> RangedWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:power", true));
+        acceptance.run("45.1-punch-unbreaking", () -> RangedWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", false));
+        acceptance.run("45.1-unbreaking-punch", () -> RangedWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:punch", true));
+        acceptance.run("45.1-flame-unbreaking", () -> RangedWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", false));
+        acceptance.run("45.1-unbreaking-flame", () -> RangedWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:flame", true));
         acceptance.run("42.1-sharp-unbreaking", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("42.1-unbreaking-sharp", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
         acceptance.run("42.1-smite-unbreaking", () -> MeleeWearProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));

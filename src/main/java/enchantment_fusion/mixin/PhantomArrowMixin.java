@@ -69,6 +69,7 @@ public abstract class PhantomArrowMixin {
     private ProjectileDeflection ef$endOldRayAfterRedirect(AbstractArrow arrow, HitResult hit,
                                                            Operation<ProjectileDeflection> original) {
         ProjectileDeflection result = original.call(arrow, hit);
+        if (result != ProjectileDeflection.NONE) ConfirmedArrow.impact(arrow, hit);
         boolean stop = PiercingChainSkills.consumeRedirectStop(arrow);
         // This return only ends AbstractArrow's current collision batch; it does not
         // invoke Projectile.deflect or alter owner/velocity.

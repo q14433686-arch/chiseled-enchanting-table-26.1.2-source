@@ -25,6 +25,13 @@ final class AcceptanceReport {
         plan("06-runtime-compat", "06 actual key input, unusual loot functions and stack splitting, save/restart, multiplayer and protection mods", "Not covered by the prepared single-player fixture.");
         plan("10-sharpness-bane", "Sharpness ▷ Bane: real hit and simulated movement/mark age fixture", "Not reached if setup fails.");
         plan("10-bane-sharpness", "Bane ▷ Sharpness: real hit and simulated circling/protected-victim fixture", "Not reached if setup fails.");
+        plan("45.1-power-unbreaking", "power ▷ unbreaking: real bow/crossbow shot, observed wear and bounded virtual echo", "Not reached if setup fails; natural input, timing, multiplayer and third-party projectile/durability mods remain untested.");
+        plan("45.1-unbreaking-power", "unbreaking ▷ power: real bow/crossbow shot, observed wear and bounded virtual echo", "Not reached if setup fails; natural input, timing, multiplayer and third-party projectile/durability mods remain untested.");
+        plan("45.1-punch-unbreaking", "punch ▷ unbreaking: real bow/crossbow shot, observed wear and bounded virtual echo", "Not reached if setup fails; natural input, timing, multiplayer and third-party projectile/durability mods remain untested.");
+        plan("45.1-unbreaking-punch", "unbreaking ▷ punch: real bow/crossbow shot, observed wear and bounded virtual echo", "Not reached if setup fails; natural input, timing, multiplayer and third-party projectile/durability mods remain untested.");
+        plan("45.1-flame-unbreaking", "flame ▷ unbreaking: real bow/crossbow shot, observed wear and bounded virtual echo", "Not reached if setup fails; natural input, timing, multiplayer and third-party projectile/durability mods remain untested.");
+        plan("45.1-unbreaking-flame", "unbreaking ▷ flame: real bow/crossbow shot, observed wear and bounded virtual echo", "Not reached if setup fails; natural input, timing, multiplayer and third-party projectile/durability mods remain untested.");
+        plan("45.1-runtime-compat", "45.1 natural input, projectile deflection, save/reload, multiplayer and third-party projectile/durability mods", "Not covered by the simulated single-player fixture.");
         plan("42.1-sharp-unbreaking", "Sharpness ▷ Unbreaking: confirmed combo and actual guarded wear", "Not reached if setup fails.");
         plan("42.1-unbreaking-sharp", "Unbreaking ▷ Sharpness: real prevented wear and prepared melee bonus", "Not reached if setup fails.");
         plan("42.1-smite-unbreaking", "Smite ▷ Unbreaking: undead combo and actual guarded wear", "Not reached if setup fails.");
