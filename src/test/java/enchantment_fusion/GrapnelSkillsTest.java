@@ -15,7 +15,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class GrapnelSkillsTest {
-    @Test void defaultWildcardCoversOnlyTheTwentyThreeExplicitActionAdapters() {
+    @Test void defaultWildcardCoversExplicitActionAdaptersButNotUnimplementedSources() {
         var old = SignatureCatalog.parseFromJson(null);
         try {
             SignatureCatalog.publish(SignatureCatalog.parseFromJson(JsonParser.parseString("""
@@ -49,7 +49,8 @@ final class GrapnelSkillsTest {
                 assertFalse(GrapnelSkills.supportsCarrier(pair, Set.of(FusionCarrier.BOW)));
                 assertEquals(!GrapnelImpact.DENSITY.equals(impact), GrapnelSkills.supportsCarrier(pair, Set.of(FusionCarrier.SWORD)));
             }
-            assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:lunge", 1, GrapnelSkills.LURE, 1)));
+            assertTrue(GrapnelSkills.matches(FusedPair.clean("minecraft:lunge", 1, GrapnelSkills.LURE, 1)));
+            assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:frost_walker", 1, GrapnelSkills.LURE, 1)));
         } finally { SignatureCatalog.publish(old); }
     }
     @Test void exactAndDifferentWildcardKeepTheirPriority() {
