@@ -1166,7 +1166,7 @@
   "skill.enchantment_fusion.ranged_breath": "Flèche de souffle",
   "message.enchantment_fusion.ranged_water_full": "Capacité des flèches aquatiques atteinte ; la préparation est consommée.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "Une vraie flèche blessant une cible valide sous l’eau crée une bulle virtuelle temporaire à l’impact. Touchez votre bulle sous l’eau pour récupérer de l’air. L’eau reste intacte et l’effet principal de tir demeure.",
-  "tooltip.enchantment_fusion.ranged_breath_drag": "Sous l’eau, activez et payez de l’air pour préparer une vraie flèche d’arc ou d’arbalète pendant 10 secondes. Tant que vous portez ce casque, la flèche ralentit moins dans l’eau. Aucun remboursement à expiration ou au changement d’équipement ; respiration demeure.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "Sous l’eau, activez et payez de l’air pour préparer une vraie flèche d’arc ou d’arbalète pendant 10 secondes. Tant que vous portez ce casque, la flèche ralentit moins dans l’eau. Aucun remboursement à expiration ou au changement d’équipement ; respiration demeure. Une seule préparation aquatique peut être active à la fois.",
   "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Les anciens objets gardent leur effet. Les nouveaux exigent arc/arbalète pour le tir principal et casque pour respiration principale.",
   "skill.enchantment_fusion.ranged_tide": "Flèche de courant",
   "message.enchantment_fusion.ranged_water_prepared": "Une flèche aquatique est déjà préparée.",

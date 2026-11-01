@@ -1166,7 +1166,7 @@
   "skill.enchantment_fusion.ranged_breath": "Freccia del respiro",
   "message.enchantment_fusion.ranged_water_full": "Capacità delle frecce acquatiche raggiunta; la preparazione è consumata.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "Una freccia vera che danneggia un bersaglio valido sott’acqua crea una breve bolla virtuale all’impatto. Tocca la tua bolla sott’acqua per recuperare aria. L’acqua non cambia e l’effetto principale di tiro rimane.",
-  "tooltip.enchantment_fusion.ranged_breath_drag": "Sott’acqua attiva e paga aria per preparare una freccia vera di arco o balestra per 10 secondi. Finché indossi questo elmo, la freccia rallenta meno in acqua. Nessun rimborso alla scadenza o al cambio di equipaggiamento; respirazione rimane.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "Sott’acqua attiva e paga aria per preparare una freccia vera di arco o balestra per 10 secondi. Finché indossi questo elmo, la freccia rallenta meno in acqua. Nessun rimborso alla scadenza o al cambio di equipaggiamento; respirazione rimane. Può essere attiva una sola preparazione acquatica alla volta.",
   "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Gli oggetti precedenti mantengono l’effetto. I nuovi richiedono arco/balestra per tiro principale ed elmo per respirazione principale.",
   "skill.enchantment_fusion.ranged_tide": "Freccia di corrente",
   "message.enchantment_fusion.ranged_water_prepared": "Una freccia acquatica è già pronta.",

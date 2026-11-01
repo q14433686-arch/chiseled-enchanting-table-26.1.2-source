@@ -1166,7 +1166,7 @@
   "skill.enchantment_fusion.ranged_breath": "Breathbound arrow",
   "message.enchantment_fusion.ranged_water_full": "Water-arrow capacity reached; the preparation was spent.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "A real arrow that damages an eligible target underwater creates a short-lived virtual bubble at the hit. Touch your own bubble underwater to restore air. Water is never replaced; the shooting primary remains.",
-  "tooltip.enchantment_fusion.ranged_breath_drag": "While underwater, activate to pay air and prepare one real bow/crossbow arrow for up to 10 seconds. That arrow loses less speed in water while you still wear this helmet. The paid air is not refunded on timeout or equipment change; Respiration remains.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "While underwater, activate to pay air and prepare one real bow/crossbow arrow for up to 10 seconds. That arrow loses less speed in water while you still wear this helmet. The paid air is not refunded on timeout or equipment change; Respiration remains. Only one water-arrow preparation may be active at a time.",
   "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Legacy items keep their old effect. New shooting-first fusions require a bow/crossbow; Respiration-first fusions require a helmet.",
   "skill.enchantment_fusion.ranged_tide": "Currentbound arrow",
   "message.enchantment_fusion.ranged_water_prepared": "A water-arrow preparation is already active.",

@@ -1166,7 +1166,7 @@
   "skill.enchantment_fusion.ranged_breath": "Flecha de fôlego",
   "message.enchantment_fusion.ranged_water_full": "Limite de flechas aquáticas atingido; a preparação foi consumida.",
   "tooltip.enchantment_fusion.ranged_breath_bubble": "Uma flecha real que cause dano a um alvo válido debaixo d’água cria uma bolha virtual temporária no impacto. Toque sua própria bolha submerso para recuperar ar. A água não é substituída e o efeito principal de tiro permanece.",
-  "tooltip.enchantment_fusion.ranged_breath_drag": "Submerso, ative e gaste ar para preparar uma flecha real de arco ou besta por 10 segundos. Enquanto usar este capacete, a flecha perde menos velocidade na água. O ar não é devolvido ao expirar ou trocar o equipamento; respiração permanece.",
+  "tooltip.enchantment_fusion.ranged_breath_drag": "Submerso, ative e gaste ar para preparar uma flecha real de arco ou besta por 10 segundos. Enquanto usar este capacete, a flecha perde menos velocidade na água. O ar não é devolvido ao expirar ou trocar o equipamento; respiração permanece. Apenas uma preparação aquática pode estar ativa por vez.",
   "tooltip.enchantment_fusion.legacy_ranged_breath_carrier": "Itens antigos mantêm seu efeito. Novos exigem arco/besta para tiro principal e capacete para respiração principal.",
   "skill.enchantment_fusion.ranged_tide": "Flecha de corrente",
   "message.enchantment_fusion.ranged_water_prepared": "Já existe uma flecha aquática preparada.",

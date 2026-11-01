@@ -38,6 +38,13 @@ final class AcceptanceReport {
         plan("45.3-flame-respiration", "flame ▷ respiration: prepared underwater real-arrow hit and owner bubble", "Not reached if setup fails; fluid and flight are prepared.");
         plan("45.3-respiration-flame", "respiration ▷ flame: air payment and real-arrow water inertia", "Not reached if setup fails; fluid and flight are prepared.");
         plan("45.3-runtime-compat", "45.3 natural fluid updates and input, arrow velocity sync, datapacks, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
+        plan("46.2-power-depth", "power ▷ depth_strider: real submerged arrow path, protected hits and current ride", "Not reached if setup fails; water, flight and input are prepared.");
+        plan("46.2-depth-power", "depth_strider ▷ power: observed water movement and prepared real-arrow inertia", "Not reached if setup fails; water, flight and input are prepared.");
+        plan("46.2-punch-depth", "punch ▷ depth_strider: real submerged arrow path, protected hits and current ride", "Not reached if setup fails; water, flight and input are prepared.");
+        plan("46.2-depth-punch", "depth_strider ▷ punch: observed water movement and prepared real-arrow inertia", "Not reached if setup fails; water, flight and input are prepared.");
+        plan("46.2-flame-depth", "flame ▷ depth_strider: real submerged arrow path, protected hits and current ride", "Not reached if setup fails; water, flight and input are prepared.");
+        plan("46.2-depth-flame", "depth_strider ▷ flame: observed water movement and prepared real-arrow inertia", "Not reached if setup fails; water, flight and input are prepared.");
+        plan("46.2-runtime-compat", "46.2 natural fluid/input, movement and projectile synchronization, save/reload, multiplayer and other mods", "Not covered by the prepared single-player fixture.");
         plan("46.3-power-efficiency", "power ▷ efficiency: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
         plan("46.3-efficiency-power", "efficiency ▷ power: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
         plan("46.3-punch-efficiency", "punch ▷ efficiency: real bow/crossbow and legal mining, prepared active input and observed virtual blade", "Not reached if setup fails; input and flight are prepared, not natural gameplay.");
