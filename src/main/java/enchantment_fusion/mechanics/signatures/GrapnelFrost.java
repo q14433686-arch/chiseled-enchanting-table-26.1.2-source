@@ -106,7 +106,11 @@ public final class GrapnelFrost {
                 .map(holder -> holder.value() == enchantment).orElse(false)) return null;
         FusedPair pair = selected(item.itemStack());
         if (pair == null || !equipped(owner, item.itemStack(), pair)) return null;
-        Scope scope = new Scope(previous, owner, item.itemStack(), pair, rank); CURRENT.set(scope); return scope;
+        Scope scope = new Scope(previous, owner, item.itemStack(), pair, rank);
+        // Both sides of a nested/reentrant location invocation are ambiguous; neither
+        // may turn the other's water attempt into a new path or an attributable mark.
+        scope.ambiguous = previous != null;
+        CURRENT.set(scope); return scope;
     }
     /** Called only after the native data-pack predicate actually attempted to replace this water cell. */
     public static void waterWrite(ServerLevel level, BlockPos water, BlockState replacement) {
