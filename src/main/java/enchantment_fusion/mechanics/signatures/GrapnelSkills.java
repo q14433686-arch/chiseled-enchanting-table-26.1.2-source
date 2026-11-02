@@ -185,12 +185,16 @@ public final class GrapnelSkills {
         if (!gears.isEmpty()) FLIGHTS.put(arrow, new Flight(owner.getUUID(), owner.level().dimension(), gears,
             arrow.isCritArrow(), volley, owner.level().getGameTime() + 1200L));
     }
+    /** Non-melee families share the ally/PvP/permission-safe targeting policy. */
+    public static boolean usesSafeTargetPolicy(@Nullable FusedPair pair) {
+        return rangedFirst(pair) || GrapnelDefense.isPair(pair) || GrapnelDurability.isPair(pair) || GrapnelImpact.isPair(pair)
+            || GrapnelWind.isPair(pair) || GrapnelThorns.isPair(pair) || GrapnelAttribute.isPair(pair) || GrapnelLunge.isPair(pair)
+            || GrapnelChanneling.isPair(pair) || GrapnelLooting.isPair(pair) || GrapnelRiptide.isPair(pair)
+            || GrapnelLoyalty.isPair(pair) || GrapnelFrost.isPair(pair);
+    }
     static boolean eligibleTarget(ServerPlayer owner, LivingEntity target, FusedPair pair) {
         if (attackFirst(pair)) return MeleeAttackThemes.eligible(owner, target, pair.primaryId());
-        return (rangedFirst(pair) || GrapnelDefense.isPair(pair) || GrapnelDurability.isPair(pair) || GrapnelImpact.isPair(pair)
-            || GrapnelWind.isPair(pair) || GrapnelThorns.isPair(pair) || GrapnelAttribute.isPair(pair) || GrapnelLunge.isPair(pair) || GrapnelChanneling.isPair(pair) || GrapnelLooting.isPair(pair)
-            || GrapnelRiptide.isPair(pair))
-            && target.level() == owner.level() && LoyaltyGuard.eligibleTarget(owner, target)
+        return usesSafeTargetPolicy(pair) && target.level() == owner.level() && LoyaltyGuard.eligibleTarget(owner, target)
             && owner.level().mayInteract(owner, target.blockPosition()) && (!(target instanceof Player other) || other.canHarmPlayer(owner));
     }
     /** Capture before the actual arrow damage call, rather than trusting collision alone. */

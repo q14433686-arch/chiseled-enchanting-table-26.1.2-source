@@ -7,6 +7,7 @@ import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +54,8 @@ public final class PrimaryLocationProjection {
         final Source source;
         final ServerLevel level;
         final Map<Key, AttributeModifier> modifiers = new HashMap<>();
+        // A blocked live effect may be retried at the next real location event after a conflict ends.
+        final Set<Key> blocked = new HashSet<>();
         @Nullable Set<EnchantmentLocationBasedEffect> activeSet;
         Set<EnchantmentLocationBasedEffect> activeSnapshot = Set.of();
         boolean inLocation;
@@ -196,6 +199,7 @@ public final class PrimaryLocationProjection {
         } finally {
             // Even an interrupted or externally replaced active-set cannot strand an owned modifier.
             for (var entry : List.copyOf(state.modifiers.entrySet())) remove(state, entry.getKey());
+            state.blocked.clear();
             if (previous == null) CURRENT.remove(); else CURRENT.set(previous);
         }
     }
@@ -227,33 +231,38 @@ public final class PrimaryLocationProjection {
                                             Entity entity, boolean becameActive) {
         State state = CURRENT.get();
         if (state == null || !ours(state, item, entity)) return false;
-        if (!becameActive || OWNED.get(state.source.key()) != state) return true;
+        if (OWNED.get(state.source.key()) != state) return true;
         AttributeModifier nativeModifier = effect.getModifier(level, EquipmentSlot.FEET);
         if (!Double.isFinite(nativeModifier.amount())) return true;
         Key key = new Key(effect.attribute(), nativeModifier.id());
+        if (!becameActive && !state.blocked.contains(key)) return true;
         AttributeModifier projected = new AttributeModifier(projectedId(state.source.pair().primaryId(), nativeModifier.id()), nativeModifier.amount(), nativeModifier.operation());
         AttributeInstance instance = state.source.player().getAttribute(effect.attribute());
         if (instance == null) return true;
-        if (GrapnelFrost.FROST.equals(state.source.pair().primaryId())) {
-            // A shared native attribute ID must not be doubled merely because two primaries
-            // were projected under distinct owned IDs. Keep the existing owner untouched.
-            if (instance.getModifier(nativeModifier.id()) != null) return true;
-            for (State other : OWNED.values())
-                if (other != state && other.source.player() == state.source.player() && other.modifiers.containsKey(key)) return true;
+        // Native IDs and already-projected versions of the same vanilla ID are mutually
+        // exclusive. Do not remove a foreign modifier; retry a blocked effect only at a
+        // subsequent location event, while it remains active in vanilla's own active set.
+        boolean collision = instance.getModifier(nativeModifier.id()) != null;
+        for (State other : OWNED.values()) {
+            if (other == state || other.source.player() != state.source.player()) continue;
+            AttributeModifier otherModifier = other.modifiers.get(key);
+            if (otherModifier != null && instance.getModifier(otherModifier.id()) != null) collision = true;
         }
+        if (collision) { state.blocked.add(key); return true; }
         AttributeModifier existing = instance.getModifier(projected.id());
         if (existing == null) {
-            instance.addTransientModifier(projected); state.modifiers.put(key, projected);
+            instance.addTransientModifier(projected); state.modifiers.put(key, projected); state.blocked.remove(key);
         } else if (projected.equals(existing) && projected.equals(state.modifiers.get(key))
             && !instance.getPermanentModifiers().contains(existing)) {
-            // Already owned; duplicate entries must not stack.
-        }
+            state.blocked.remove(key); // already owned; duplicate entries must not stack
+        } else state.blocked.add(key);
         return true;
     }
     public static boolean deactivateAttribute(EnchantmentAttributeEffect effect, int level, EnchantedItemInUse item, Entity entity) {
         State state = CURRENT.get();
         if (state == null || !ours(state, item, entity)) return false;
-        remove(state, new Key(effect.attribute(), effect.getModifier(level, EquipmentSlot.FEET).id()));
+        Key key = new Key(effect.attribute(), effect.getModifier(level, EquipmentSlot.FEET).id());
+        state.blocked.remove(key); remove(state, key);
         return true;
     }
     private static void remove(State state, Key key) {

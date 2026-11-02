@@ -19,6 +19,7 @@ final class GrapnelFrostTest {
             FusedPair pair = FusedPair.clean(GrapnelFrost.FROST, 2, GrapnelSkills.LURE, 1);
             assertTrue(GrapnelFrost.isPair(pair)); assertFalse(GrapnelFrost.isPair(pair.flipped()));
             assertTrue(GrapnelSkills.matches(pair)); assertFalse(GrapnelSkills.matches(pair.flipped()));
+            assertTrue(GrapnelSkills.usesSafeTargetPolicy(pair)); assertFalse(GrapnelSkills.usesSafeTargetPolicy(pair.flipped()));
             assertTrue(GrapnelSkills.supportsCarrier(pair, Set.of(FusionCarrier.FOOT_ARMOR)));
             assertFalse(GrapnelSkills.supportsCarrier(pair, Set.of(FusionCarrier.LEG_ARMOR)));
             assertFalse(GrapnelSkills.supportsCarrier(pair, Set.of(FusionCarrier.SWORD)));

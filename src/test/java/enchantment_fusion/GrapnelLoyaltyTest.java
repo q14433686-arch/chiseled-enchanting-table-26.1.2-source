@@ -25,6 +25,7 @@ final class GrapnelLoyaltyTest {
             FusedPair lure = FusedPair.clean(GrapnelLoyalty.LOYALTY, 3, GrapnelSkills.LURE, 2);
             FusedPair rescue = FusedPair.clean(LoyaltyGuard.PRIMARY, 3, LoyaltyGuard.SECONDARY, 2);
             assertTrue(GrapnelSkills.matches(lure)); assertFalse(GrapnelSkills.matches(lure.flipped()));
+            assertTrue(GrapnelSkills.usesSafeTargetPolicy(lure)); assertFalse(GrapnelSkills.usesSafeTargetPolicy(lure.flipped()));
             assertTrue(GrapnelSkills.supportsCarrier(lure, Set.of(FusionCarrier.TRIDENT)));
             assertFalse(GrapnelSkills.supportsCarrier(lure, Set.of(FusionCarrier.SPEAR)));
             assertFalse(GrapnelSkills.supportsCarrier(lure, Set.of(FusionCarrier.FISHING_ROD)));

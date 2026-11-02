@@ -150,6 +150,7 @@ DIRECTION_FIXTURES = {
     ("lunge", "lure"): ("40.1-lunge-lure", True),
     ("riptide", "lure"): ("40.1-riptide-lure", True),
     ("loyalty", "lure"): ("40.1-loyalty-lure", True),
+    ("frost_walker", "lure"): ("40.1-frost-lure", True),
     ("impaling", "lure"): ("40.1-impaling-lure", True),
     ("channeling", "lure"): ("40.1-channeling-lure", True),
     ("looting", "lure"): ("40.1-looting-lure", True),
