@@ -159,11 +159,19 @@ public final class MeleeImpulseSkills {
     public static void endAttack(Attack frame, boolean completed) {
         if (CURRENT.get() != frame) {
             CURRENT.remove();
+            invalidatePursuit(frame);
             if (frame.previous != null) frame.previous.ambiguous = true;
             return;
         }
         if (frame.previous == null) CURRENT.remove(); else CURRENT.set(frame.previous);
-        if (completed && !frame.ambiguous && frame.pursuit != null) PursuitPlunderSkills.settle(frame);
+        if (!completed || frame.ambiguous) { invalidatePursuit(frame); return; }
+        if (frame.pursuit != null) PursuitPlunderSkills.settle(frame);
+    }
+    private static void invalidatePursuit(Attack frame) {
+        if (!(frame.player instanceof ServerPlayer owner) || !(frame.target instanceof LivingEntity target)
+            || frame.reverse == null || !isPursuit(frame.reverse.pair())) return;
+        removeMarks(mark -> mark.owner.equals(owner.getUUID()) && mark.target.equals(target.getUUID())
+            && mark.gear.stack() == frame.reverse.stack() && mark.gear.pair().equals(frame.reverse.pair()));
     }
     /** Snapshot before the real hurt call, so the second hit's own knockback cannot be stolen. */
     public static void beforeDamage(@Nullable ConfirmedMelee.Observation observation) {
@@ -173,6 +181,15 @@ public final class MeleeImpulseSkills {
         if (frame.beforeSource != null) { frame.ambiguous = true; return; }
         frame.beforeSource = observation.source();
         frame.beforeVelocity = observation.target().getDeltaMovement();
+    }
+    /** A cancelled or unconfirmed hit may still be moved by another handler; do not steal that later. */
+    public static void afterDamage(@Nullable ConfirmedMelee.Observation observation) {
+        Attack frame = CURRENT.get();
+        if (frame == null || observation == null || frame.player != observation.player() || frame.target != observation.target()
+            || frame.beforeSource != observation.source() || frame.confirmed == observation.source() || frame.beforeVelocity == null) return;
+        Vec3 after = observation.target().getDeltaMovement();
+        if (!observation.target().isAlive() || !finite(frame.beforeVelocity) || !finite(after)
+            || frame.beforeVelocity.distanceToSqr(after) > 1.0E-10D) invalidatePursuit(frame);
     }
     private static void addMark(Mark mark) {
         MARKS.add(mark);

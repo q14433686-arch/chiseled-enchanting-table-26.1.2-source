@@ -155,6 +155,7 @@ public abstract class PlayerAmberAttackMixin {
                                         succeeded = original.call(target, source, seal == null ? lightning.damage() : seal.damage());
                                         completed = true;
                                         ConfirmedMelee.after(confirmed, succeeded);
+                                        MeleeImpulseSkills.afterDamage(confirmed);
                                         return succeeded;
                                     } finally { MeleeSilkSealSkills.end(seal, completed, succeeded); }
                                 } finally { MeleeLightningSkills.endDamage(lightning); }
@@ -221,6 +222,7 @@ public abstract class PlayerAmberAttackMixin {
                                         succeeded = original.call(target, source, seal == null ? lightning.damage() : seal.damage());
                                         completed = true;
                                         ConfirmedMelee.after(confirmed, succeeded);
+                                        MeleeImpulseSkills.afterDamage(confirmed);
                                         return succeeded;
                                     } finally { MeleeSilkSealSkills.end(seal, completed, succeeded); }
                                 } finally { MeleeLightningSkills.endDamage(lightning); }

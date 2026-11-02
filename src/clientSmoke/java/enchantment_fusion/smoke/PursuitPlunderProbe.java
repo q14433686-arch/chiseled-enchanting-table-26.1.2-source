@@ -32,8 +32,15 @@ final class PursuitPlunderProbe {
         SharedMeleeFixture.checkStation(player.level(), pair,
             List.of(Items.DIAMOND_SWORD, Items.DIAMOND_AXE, Items.DIAMOND_SPEAR, Items.MACE, Items.TRIDENT),
             List.of(Items.BOW, Items.DIAMOND_PICKAXE, Items.DIAMOND_HELMET));
-        Set<UUID> denied = new HashSet<>();
-        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, damage) -> !denied.contains(entity.getUUID()));
+        Set<UUID> denied = new HashSet<>(), cancelledWithMotion = new HashSet<>(), failOnce = new HashSet<>();
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, damage) -> {
+            if (failOnce.remove(entity.getUUID())) throw new IllegalStateException("intentional pursuit probe failure");
+            if (cancelledWithMotion.remove(entity.getUUID())) {
+                entity.setDeltaMovement(entity.getDeltaMovement().add(0.2D, 0, 0));
+                return false;
+            }
+            return !denied.contains(entity.getUUID());
+        });
         try (SharedMeleeFixture f = new SharedMeleeFixture(player, origin)) {
             MeleeImpulseSkills.clearPlayer(player.getUUID());
             LivingEntity target = f.spawn(false, 2, 0);
@@ -62,6 +69,23 @@ final class PursuitPlunderProbe {
             player.setDeltaMovement(Vec3.ZERO); f.hit(target, true);
             require(player.getDeltaMovement().horizontalDistanceSqr() == 0, "A later hit cannot repeat a consumed dash");
 
+            // A cancelled callback that changes velocity must not turn that new velocity into an old trace.
+            MeleeImpulseSkills.clearPlayer(player.getUUID()); target.setPos(player.getX() + 2, player.getY(), player.getZ());
+            target.setDeltaMovement(Vec3.ZERO); f.hit(target, true); require(marks(player) == 1, "Cancelled-motion test needs a mark");
+            cancelledWithMotion.add(target.getUUID()); f.hit(target, true);
+            require(marks(player) == 0, "Motion from a cancelled damage callback invalidates the old trace");
+
+            // Reentry or an exception may invalidate the trace, but must not leave a thread-local frame behind.
+            target.setDeltaMovement(Vec3.ZERO); f.hit(target, true); require(marks(player) == 1, "Exception test needs a mark");
+            failOnce.add(target.getUUID()); boolean threw = false;
+            try { f.hit(target, true); } catch (IllegalStateException expected) { threw = true; }
+            require(threw && marks(player) == 0, "A failed enclosing action invalidates its trace");
+            target.setDeltaMovement(Vec3.ZERO); f.hit(target, true); require(marks(player) == 1, "The next attack after an exception is not stale");
+            var enclosing = MeleeImpulseSkills.beginAttack(player, sword, target, EquipmentSlot.MAINHAND);
+            try { f.hit(target, true); } finally { MeleeImpulseSkills.endAttack(enclosing, true); }
+            require(marks(player) == 0, "A nested attack cannot reuse or re-arm an ambiguous trace");
+            target.setDeltaMovement(Vec3.ZERO); f.hit(target, true); require(marks(player) == 1, "The next attack after nesting is not stale");
+
             // A previous observed movement is insufficient if the enemy is already stationary before damage.
             MeleeImpulseSkills.clearPlayer(player.getUUID()); target.setPos(player.getX() + 2, player.getY(), player.getZ());
             target.setDeltaMovement(Vec3.ZERO); player.setDeltaMovement(Vec3.ZERO); f.hit(target, true);
@@ -89,7 +113,9 @@ final class PursuitPlunderProbe {
             player.stabAttack(EquipmentSlot.MAINHAND, target, 0, false, true, false);
             require(target.getDeltaMovement().horizontalDistanceSqr() > nativeMotion && marks(player) == 0,
                 "The real non-native Knockback primary works once without fabricating a successful-hit mark");
-        } finally { denied.clear(); MeleeImpulseSkills.clearPlayer(player.getUUID()); }
+        } finally {
+            denied.clear(); cancelledWithMotion.clear(); failOnce.clear(); MeleeImpulseSkills.clearPlayer(player.getUUID());
+        }
     }
 
     @SuppressWarnings("unchecked")
