@@ -51,7 +51,36 @@ final class GrapnelSkillsTest {
             }
             assertTrue(GrapnelSkills.matches(FusedPair.clean("minecraft:lunge", 1, GrapnelSkills.LURE, 1)));
             assertTrue(GrapnelSkills.matches(FusedPair.clean("minecraft:frost_walker", 1, GrapnelSkills.LURE, 1)));
+            // Every supported non-melee/non-mining adapter must be able to select a safe target.
+            for (String id : new String[]{"sharpness", "smite", "bane_of_arthropods", "efficiency", "silk_touch", "fortune",
+                "power", "flame", "punch", "multishot", "infinity", "piercing", "quick_charge", "protection", "fire_protection",
+                "blast_protection", "projectile_protection", "feather_falling", "mending", "unbreaking", "knockback", "breach",
+                "density", "wind_burst", "thorns", "swift_sneak", "depth_strider", "sweeping_edge", "soul_speed", "aqua_affinity",
+                "respiration", "lunge", "channeling", "looting", "impaling", "riptide", "loyalty", "frost_walker",
+                "binding_curse", "vanishing_curse"}) {
+                FusedPair pair = FusedPair.clean("minecraft:" + id, 1, GrapnelSkills.LURE, 1);
+                if (GrapnelSkills.matches(pair) && !GrapnelSkills.attackFirst(pair) && !GrapnelSkills.miningFirst(pair))
+                    assertTrue(GrapnelSkills.usesSafeTargetPolicy(pair), id + " has no usable protected-target policy");
+            }
         } finally { SignatureCatalog.publish(old); }
+    }
+    @Test void everyNonMeleeTargetAdapterUsesTheSharedProtectedTargetPolicy() {
+        String[] primaries = {"power", "flame", "punch", "multishot", "infinity", "piercing", "quick_charge",
+            "protection", "fire_protection", "blast_protection", "projectile_protection", "feather_falling",
+            "mending", "unbreaking", "knockback", "breach", "density", "wind_burst", "thorns", "swift_sneak",
+            "depth_strider", "sweeping_edge", "soul_speed", "aqua_affinity", "respiration", "lunge", "channeling",
+            "looting", "impaling", "riptide", "loyalty", "frost_walker"};
+        for (String primary : primaries) {
+            FusedPair pair = FusedPair.clean("minecraft:" + primary, 2, GrapnelSkills.LURE, 1);
+            assertTrue(GrapnelSkills.usesSafeTargetPolicy(pair), primary + " must use the protected-target policy");
+            assertFalse(GrapnelSkills.usesSafeTargetPolicy(pair.flipped()), primary + " is ordered");
+        }
+        assertFalse(GrapnelSkills.usesSafeTargetPolicy(null));
+        assertFalse(GrapnelSkills.usesSafeTargetPolicy(FusedPair.clean("minecraft:binding_curse", 1, GrapnelSkills.LURE, 1)));
+        assertFalse(GrapnelSkills.usesSafeTargetPolicy(FusedPair.clean("minecraft:vanishing_curse", 1, GrapnelSkills.LURE, 1)));
+        // Mining uses verified real drops; the three melee primaries use their own target-specific policy.
+        assertFalse(GrapnelSkills.usesSafeTargetPolicy(FusedPair.clean(GrapnelSkills.EFFICIENCY, 1, GrapnelSkills.LURE, 1)));
+        assertTrue(GrapnelSkills.attackFirst(FusedPair.clean(MeleeAttackThemes.SMITE, 1, GrapnelSkills.LURE, 1)));
     }
     @Test void exactAndDifferentWildcardKeepTheirPriority() {
         var old = SignatureCatalog.parseFromJson(null);
