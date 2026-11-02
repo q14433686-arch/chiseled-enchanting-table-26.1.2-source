@@ -35,6 +35,11 @@ final class MeleeSilkSealTest {
         try {
             assertFalse(MeleeSilkSealSkills.matches(FusedPair.clean(MeleeSilkSealSkills.SILK, 1, MeleeAttackThemes.SMITE, 4)));
             assertTrue(MeleeSilkSealSkills.matches(FusedPair.clean(MeleeSilkSealSkills.SILK, 1, MeleeAttackThemes.BANE, 4)));
+            SignatureCatalog.reloadFromJson(JsonParser.parseString("""
+                {"signatures":{"pristine_trophy":{"primary":"minecraft:silk_touch","secondary":"minecraft:smite"}}}
+                """).getAsJsonObject());
+            assertFalse(MeleeSilkSealSkills.matches(FusedPair.clean(MeleeSilkSealSkills.SILK, 1, MeleeAttackThemes.SMITE, 4)),
+                "An unrelated datapack entry reusing the old id is not the selected Sharpness exception");
         } finally { SignatureCatalog.reloadFromJson(null); }
     }
     @Test void releaseCombinesOnceAndNeverOverflowsFiniteDamage() {

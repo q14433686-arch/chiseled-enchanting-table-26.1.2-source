@@ -75,13 +75,13 @@ final class MeleeSilkSealProbe {
 
             require(MeleeSilkSealSkills.activate(player), "Rearm for equipment identity"); f.hit(target, true);
             require(target(state(player)) == target, "Identity test needs a real seal");
-            player.setItemSlot(EquipmentSlot.MAINHAND, weapon.copy()); MeleeSilkSealSkills.tickServer(player.getServer());
+            player.setItemSlot(EquipmentSlot.MAINHAND, weapon.copy()); MeleeSilkSealSkills.tickServer(f.level.getServer());
             require(state(player) == null && target.getHealth() == 200, "Equal but different equipment cannot claim the seal");
             require(Math.abs(target.getAttribute(Attributes.MOVEMENT_SPEED).getValue() - speed) < 0.0001D, "Equipment change restores slowdown");
             player.setItemSlot(EquipmentSlot.MAINHAND, weapon);
 
             require(MeleeSilkSealSkills.activate(player), "Rearm for expiry"); f.hit(target, true); Object expiry = state(player);
-            setExpires(expiry, f.level.getGameTime()); MeleeSilkSealSkills.tickServer(player.getServer());
+            setExpires(expiry, f.level.getGameTime()); MeleeSilkSealSkills.tickServer(f.level.getServer());
             require(state(player) == null && target.getHealth() == 200, "Expiry dissipates damage instead of applying it");
             require(Math.abs(target.getAttribute(Attributes.MOVEMENT_SPEED).getValue() - speed) < 0.0001D, "Expiry restores slowdown");
 
