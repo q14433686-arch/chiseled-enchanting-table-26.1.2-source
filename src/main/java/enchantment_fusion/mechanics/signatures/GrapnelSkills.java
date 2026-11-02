@@ -337,7 +337,7 @@ public final class GrapnelSkills {
         return true;
     }
     /** Called only after the same returning entity was discarded following a proven real insertion. */
-    public static boolean markReturned(ServerPlayer owner, ItemStack stack, FusedPair pair, Vec3 origin) {
+    static boolean markReturned(ServerPlayer owner, ItemStack stack, FusedPair pair, Vec3 origin) {
         Gear gear = new Gear(stack, pair);
         if (!ready(owner) || !canMark(owner) || !GrapnelLoyalty.isPair(pair) || !owns(owner, gear)
             || !RealInventoryInsertion.unique(owner.getInventory(), stack)

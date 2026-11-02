@@ -46,6 +46,7 @@ public final class GrapnelLoyalty {
     private static final int MAX_FLIGHTS = 4096;
     private static final long FLIGHT_TICKS = 1200L;
     private static final ThreadLocal<Release> RELEASE = new ThreadLocal<>();
+    private static final ThreadLocal<Query> QUERY = new ThreadLocal<>();
     private static final ThreadLocal<Touch> TOUCH = new ThreadLocal<>();
     private static final Map<ThrownTrident, Flight> FLIGHTS = new WeakHashMap<>();
 
@@ -56,6 +57,19 @@ public final class GrapnelLoyalty {
         Release(@Nullable Release previous, ServerPlayer owner, ItemStack hand, FusedPair pair, EquipmentSlot slot) {
             this.previous = previous; this.owner = owner; this.level = owner.level(); this.hand = hand;
             this.snapshot = hand.copy(); this.pair = pair; this.slot = slot; this.tick = level.getGameTime();
+        }
+    }
+    public static final class Query {
+        final Release release; final ServerLevel level; final ItemStack stack; final Entity trident;
+        final RealReturnObservation observation = new RealReturnObservation(); boolean candidate, ambiguous;
+        Query(Release release, ServerLevel level, ItemStack stack, Entity trident) {
+            this.release = release; this.level = level; this.stack = stack; this.trident = trident;
+        }
+    }
+    public static final class Effect {
+        final Query query; final boolean ours; final int rank; final float before;
+        Effect(Query query, boolean ours, int rank, float before) {
+            this.query = query; this.ours = ours; this.rank = rank; this.before = before;
         }
     }
     private static final class Flight {
@@ -150,10 +164,43 @@ public final class GrapnelLoyalty {
         } finally { if (frame.previous == null) RELEASE.remove(); else RELEASE.set(frame.previous); }
     }
 
+    /** Scope the actual constructor query, including the native iteration and any missing-primary projection. */
+    public static @Nullable Query beginQuery(ServerLevel level, ItemStack stack, Entity trident) {
+        Release release = RELEASE.get(); Query previous = QUERY.get();
+        if (release == null) return null;
+        if (previous != null || release.querySeen) {
+            release.ambiguous = true; if (previous != null) previous.ambiguous = true; return null;
+        }
+        release.querySeen = true;
+        Query query = new Query(release, level, stack, trident); QUERY.set(query); return query;
+    }
+    public static void endQuery(@Nullable Query query, int result, boolean completed) {
+        if (query == null) return;
+        try {
+            Release release = query.release;
+            release.queryProved = QUERY.get() == query && RELEASE.get() == release && completed && query.candidate
+                && !query.ambiguous && query.observation.proved(release.pair.primaryLevel(), result);
+        } finally { if (QUERY.get() == query) QUERY.remove(); }
+    }
+    /** Observe the single real value operation; never reroll random data-pack effects to infer contribution. */
+    public static @Nullable Effect beginEffect(Enchantment enchantment, ServerLevel level, int rank,
+                                                ItemStack stack, Entity trident, float before) {
+        Query query = QUERY.get(); if (query == null) return null;
+        query.observation.enter(query.level == level && query.stack == stack && query.trident == trident);
+        boolean ours = FusionStationOperations.lookupEnchantment(level.registryAccess(), LOYALTY)
+            .map(holder -> holder.value() == enchantment).orElse(false);
+        return new Effect(query, ours, rank, before);
+    }
+    public static void endEffect(@Nullable Effect effect, float after, boolean completed) {
+        if (effect == null) return;
+        Query query = effect.query;
+        query.observation.record(effect.ours, effect.rank, effect.before, after, completed && QUERY.get() == query);
+        query.observation.exit();
+    }
+
     /**
      * Called at the constructor's own return-acceleration query. Do not reroll an existing
      * native Loyalty; when missing, invoke that enchantment's real data-pack effect exactly once.
-     * Only a sole return-effect source can prove which enchantment caused a positive result.
      */
     public static int project(ServerLevel level, ItemStack stack, Entity entity, int nativeResult) {
         FusedPair pair = selected(stack);
@@ -171,11 +218,11 @@ public final class GrapnelLoyalty {
             loyalty.value().modifyTridentReturnToOwnerAcceleration(level, projectedLevel, stack, trident, value);
             if (Float.isFinite(value.floatValue())) result = Math.max(0, value.intValue());
         }
-        Release frame = RELEASE.get();
-        if (frame != null) {
-            if (frame.querySeen) frame.ambiguous = true;
-            frame.querySeen = true; frame.queried = trident;
-            frame.queryProved = frame.owner == trident.getOwner() && frame.level == level && frame.pair.equals(pair)
+        Query query = QUERY.get();
+        if (query != null) {
+            Release frame = query.release; frame.queried = trident;
+            query.candidate = RELEASE.get() == frame && query.level == level && query.stack == stack && query.trident == trident
+                && frame.owner == trident.getOwner() && frame.level == level && frame.pair.equals(pair)
                 && sameExceptWear(frame.snapshot, stack) && unambiguous(stack) && soleReturnEffect(enchantments, loyalty)
                 && result > 0 && (nativeLevel > 0 ? nativeLevel == pair.primaryLevel()
                     : nativeResult == 0 && projectedLevel == pair.primaryLevel());
@@ -187,8 +234,9 @@ public final class GrapnelLoyalty {
         Release frame = RELEASE.get();
         if (frame == null) return;
         if (frame.spawned != null) { frame.ambiguous = true; return; }
-        if (!(projectile instanceof ThrownTrident trident) || user != frame.owner || !frame.queryProved
-            || frame.queried != trident || !frame.hand.isEmpty() || !sameExceptWear(frame.snapshot, consumed)
+        if (!(projectile instanceof ThrownTrident trident) || trident.getClass() != ThrownTrident.class
+            || user != frame.owner || !frame.queryProved || frame.queried != trident
+            || !frame.hand.isEmpty() || !sameExceptWear(frame.snapshot, consumed)
             || !ItemStack.matches(trident.getWeaponItem(), consumed)
             || !GrapnelTridentFlight.valid(frame.owner, trident, trident.getWeaponItem(), frame.pair)) return;
         frame.spawned = trident;
@@ -265,5 +313,5 @@ public final class GrapnelLoyalty {
         });
     }
     public static void clearPlayer(UUID owner) { FLIGHTS.values().removeIf(flight -> flight.owner.equals(owner)); }
-    public static void clearServer() { FLIGHTS.clear(); RELEASE.remove(); TOUCH.remove(); }
+    public static void clearServer() { FLIGHTS.clear(); RELEASE.remove(); QUERY.remove(); TOUCH.remove(); }
 }

@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelLoyalty;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
 import enchantment_fusion.mechanics.signatures.LoyaltyGuard;
 import enchantment_fusion.mechanics.signatures.RealInventoryInsertion;
+import enchantment_fusion.mechanics.signatures.RealReturnObservation;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
@@ -45,6 +46,31 @@ final class GrapnelLoyaltyTest {
         assertFalse(GrapnelLoyalty.directedReturn(new Vec3(Double.NaN, 0, 0), Vec3.ZERO, eye));
         assertFalse(GrapnelLoyalty.directedReturn(distant, Vec3.ZERO, new Vec3(Double.POSITIVE_INFINITY, 0, 0)));
         assertFalse(GrapnelLoyalty.directedReturn(null, Vec3.ZERO, eye));
+    }
+
+    private static RealReturnObservation observed(int rank, float before, float after) {
+        RealReturnObservation value = new RealReturnObservation();
+        value.enter(true); value.record(true, rank, before, after, true); value.exit(); return value;
+    }
+    @Test void actualSingleLoyaltyEffectMustCauseTheCachedAcceleration() {
+        assertTrue(observed(3, 0, 3).proved(3, 3));
+        assertFalse(observed(3, 0, 0).proved(3, 1));
+        assertFalse(observed(2, 0, 3).proved(3, 3));
+        assertFalse(observed(3, 1, 3).proved(3, 3));
+        assertFalse(observed(3, 0, Float.NaN).proved(3, 3));
+        assertFalse(observed(3, 0, 3).proved(3, 2));
+        RealReturnObservation foreign = observed(3, 0, 3);
+        foreign.enter(true); foreign.record(false, 1, 3, 4, true); foreign.exit();
+        assertFalse(foreign.proved(3, 4));
+        RealReturnObservation nested = new RealReturnObservation();
+        nested.enter(true); nested.enter(true); nested.record(true, 3, 0, 3, true); nested.exit(); nested.exit();
+        assertFalse(nested.proved(3, 3));
+        RealReturnObservation duplicate = observed(3, 0, 3);
+        duplicate.enter(true); duplicate.record(true, 3, 3, 6, true); duplicate.exit();
+        assertFalse(duplicate.proved(3, 6));
+        RealReturnObservation wrongContext = new RealReturnObservation();
+        wrongContext.enter(false); wrongContext.record(true, 3, 0, 3, true); wrongContext.exit();
+        assertFalse(wrongContext.proved(3, 3));
     }
 
     private static final class Slot {

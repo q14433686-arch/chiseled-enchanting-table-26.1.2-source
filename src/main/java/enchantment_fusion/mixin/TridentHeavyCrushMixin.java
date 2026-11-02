@@ -25,7 +25,12 @@ public abstract class TridentHeavyCrushMixin {
     @WrapOperation(method = "getLoyaltyFromItem", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;getTridentReturnToOwnerAcceleration(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/Entity;)I"))
     private int ef$loyaltyAcceleration(ServerLevel level, ItemStack stack, Entity trident, Operation<Integer> original) {
-        return GrapnelLoyalty.project(level, stack, trident, original.call(level, stack, trident));
+        GrapnelLoyalty.Query query = GrapnelLoyalty.beginQuery(level, stack, trident);
+        int result = 0; boolean completed = false;
+        try {
+            result = GrapnelLoyalty.project(level, stack, trident, original.call(level, stack, trident));
+            completed = true; return result;
+        } finally { GrapnelLoyalty.endQuery(query, result, completed); }
     }
 
     @WrapMethod(method = "tick")

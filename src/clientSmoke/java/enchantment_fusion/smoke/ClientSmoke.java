@@ -767,6 +767,7 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("40.1-breath-lure", () -> GrapnelBreathProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("40.1-lunge-lure", () -> GrapnelLungeProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("40.1-riptide-lure", () -> GrapnelRiptideProbe.exercise(sp, tablePos.above(180).east(12)));
+        acceptance.run("40.1-loyalty-lure", () -> GrapnelLoyaltyProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("40.1-impaling-lure", () -> GrapnelImpalingProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("40.1-channeling-lure", () -> GrapnelChannelingProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("40.1-looting-lure", () -> GrapnelLootingProbe.exercise(sp, tablePos.above(180).east(12)));

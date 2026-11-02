@@ -15,6 +15,7 @@ import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedWindBurst;
 import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import enchantment_fusion.mechanics.signatures.GrapnelChanneling;
+import enchantment_fusion.mechanics.signatures.GrapnelLoyalty;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -47,6 +48,16 @@ public abstract class EnchantmentFrostEffectsMixin {
             source, before, protection.floatValue());
         GrapnelDefenseCapture.observe((Enchantment) (Object) this, level, enchantmentLevel, item, victim,
             source, before, protection.floatValue());
+    }
+
+    @WrapMethod(method = "modifyTridentReturnToOwnerAcceleration")
+    private void ef$observeLoyaltyReturn(ServerLevel level, int rank, ItemStack stack, Entity trident,
+                                         MutableFloat acceleration, Operation<Void> original) {
+        GrapnelLoyalty.Effect effect = GrapnelLoyalty.beginEffect((Enchantment) (Object) this,
+            level, rank, stack, trident, acceleration.floatValue());
+        boolean completed = false;
+        try { original.call(level, rank, stack, trident, acceleration); completed = true; }
+        finally { GrapnelLoyalty.endEffect(effect, acceleration.floatValue(), completed); }
     }
 
     @WrapMethod(method = "modifyCrossbowChargeTime")
