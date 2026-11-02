@@ -136,7 +136,10 @@ public final class MeleeSilkSealSkills {
         Frame previous = CURRENT.get();
         if (previous != null) {
             // A nested attack is ordinary: it must neither capture nor release the outer claim again.
-            previous.ambiguous = true;
+            // After a successful interception, a different target need not invalidate the seal;
+            // same-target or unidentifiable nesting still has ambiguous attribution.
+            if (previous.captured <= 0.0F || previous.observation == null || observation == null
+                || observation.target() == previous.observation.target()) previous.ambiguous = true;
             Frame nested = new Frame(previous, observation, null, damage, false);
             CURRENT.set(nested);
             return nested;

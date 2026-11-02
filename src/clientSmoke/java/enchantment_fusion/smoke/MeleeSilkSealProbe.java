@@ -29,16 +29,24 @@ final class MeleeSilkSealProbe {
         SharedMeleeFixture.checkMeleeStation(player.level(), pair);
         boolean bane = MeleeAttackThemes.BANE.equals(attack), sharp = MeleeAttackThemes.SHARP.equals(attack);
         Set<UUID> denied = new HashSet<>();
-        float[] permissionAmount = {0.0F}; boolean[] observe = {false}, nest = {false};
-        LivingEntity[] nestedTarget = {null};
+        float[] permissionAmount = {0.0F}; boolean[] observe = {false}, nest = {false}, nestAfter = {false};
+        LivingEntity[] nestedTarget = {null}, nestedTrigger = {null};
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (observe[0] && source.getEntity() == player) permissionAmount[0] = amount;
-            if (nest[0] && source.getEntity() == player && entity != nestedTarget[0]) {
+            if (nest[0] && source.getEntity() == player && entity == nestedTrigger[0]) {
                 nest[0] = false;
                 nestedTarget[0].invulnerableTime = 0;
                 player.attack(nestedTarget[0]);
+                nestedTarget[0].invulnerableTime = 0;
             }
             return !denied.contains(entity.getUUID());
+        });
+        ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, base, damage, blocked) -> {
+            if (nestAfter[0] && entity == nestedTrigger[0] && MeleeSilkSealSkills.isDeferredHit(entity, source)) {
+                nestAfter[0] = false;
+                nestedTarget[0].invulnerableTime = 0;
+                player.attack(nestedTarget[0]);
+            }
         });
         try (SharedMeleeFixture f = new SharedMeleeFixture(player, origin)) {
             MeleeSilkSealSkills.clearPlayer(player.getUUID());
@@ -97,11 +105,22 @@ final class MeleeSilkSealProbe {
                 "A real blocked release spends the seal exactly once and respects shield durability");
             target.stopUsingItem(); target.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
 
-            require(MeleeSilkSealSkills.activate(player), "Rearm for nested attack"); nestedTarget[0] = other; nest[0] = true;
+            require(MeleeSilkSealSkills.activate(player), "Rearm for nested attack");
+            nestedTrigger[0] = target; nestedTarget[0] = other; nest[0] = true;
             f.hit(target, true); nest[0] = false;
             require(state(player) != null && target(state(player)) == null && target.getHealth() < 200,
-                "Nested damage must conservatively remain ordinary and cannot create a seal");
-        } finally { denied.clear(); observe[0] = false; nest[0] = false; MeleeSilkSealSkills.clearPlayer(player.getUUID()); }
+                "Nesting before capture must conservatively remain ordinary and cannot create a seal");
+            target.setHealth(200); nestedTrigger[0] = target; nestAfter[0] = true; f.hit(target, true);
+            require(!nestAfter[0] && state(player) != null && target(state(player)) == target && target.getHealth() == 200,
+                "A later nested attack on a different creature must not silently discard the captured damage");
+            require(MeleeSilkSealSkills.activate(player), "Dissipate the stored hit after the nested case");
+            target.setHealth(200); require(MeleeSilkSealSkills.activate(player), "Rearm for nested release"); f.hit(target, true);
+            require(target(state(player)) == target, "Nested release needs a real seal");
+            nestedTrigger[0] = target; nestedTarget[0] = target; nest[0] = true; f.hit(target, true);
+            float nestedReleaseLoss = 200 - target.getHealth();
+            require(!nest[0] && state(player) == null && nestedReleaseLoss > baseline * 1.5F && nestedReleaseLoss < baseline * 2.8F,
+                "A nested same-target hit cannot add the stored damage twice");
+        } finally { denied.clear(); observe[0] = false; nest[0] = false; nestAfter[0] = false; MeleeSilkSealSkills.clearPlayer(player.getUUID()); }
     }
     private static void startBlocking(LivingEntity target, ItemStack shield) throws Exception {
         target.startUsingItem(InteractionHand.OFF_HAND);
