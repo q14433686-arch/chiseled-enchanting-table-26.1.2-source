@@ -28,12 +28,15 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.LevelBasedValue;
+import net.minecraft.world.item.enchantment.effects.EnchantmentAttributeEffect;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,6 +45,7 @@ import net.minecraft.world.phys.Vec3;
 /** Prepared source water and explicit native location events; not a natural movement or multiplayer test. */
 final class GrapnelFrostProbe {
     private static final Identifier SOUL = EnchantmentFusion.id("primary_location/soul_speed/minecraft/enchantment.soul_speed/feet");
+    private static final Identifier FROST_SAME_ID = EnchantmentFusion.id("primary_location/frost_walker/minecraft/enchantment.soul_speed/feet");
     private GrapnelFrostProbe() {}
 
     static void exercise(ServerPlayer player, BlockPos origin) throws Exception {
@@ -58,7 +62,8 @@ final class GrapnelFrostProbe {
         }
         boolean oldShift = player.isShiftKeyDown();
         AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
-        require(speed.getModifier(SOUL) == null, "Fixture must not replace an existing Soul projection");
+        require(speed.getModifier(SOUL) == null && speed.getModifier(FROST_SAME_ID) == null,
+            "Fixture must not replace an existing projected attribute ID");
         try (SharedMeleeFixture fixture = new SharedMeleeFixture(player, origin)) {
             level.setBlockAndUpdate(ground, Blocks.STONE.defaultBlockState());
             player.setOnGround(true); player.setShiftKeyDown(false); player.setYRot(-90); player.setXRot(0); refreshFluid(player);
@@ -170,6 +175,29 @@ final class GrapnelFrostProbe {
             shared.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(soul));
             PrimaryLocationProjection.reconcile(player);
             require(speed.getModifier(SOUL) != null, "Removing the Frost pair cannot remove Soul Speed's active modifier");
+
+            // Synthetic same-ID effect exercises the ownership/retry algorithm; it is NOT a datapack reload.
+            shared.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(frost).append(soul));
+            location(level, player);
+            Object frostState = projectionState(player, GrapnelFrost.FROST);
+            var effect = new EnchantmentAttributeEffect(Identifier.withDefaultNamespace("enchantment.soul_speed"),
+                Attributes.MOVEMENT_SPEED, LevelBasedValue.constant(0.25F), AttributeModifier.Operation.ADD_VALUE);
+            var use = new EnchantedItemInUse(shared, EquipmentSlot.FEET, player);
+            require(projectAttribute(frostState, effect, frost.primaryLevel(), use, player, true)
+                && speed.getModifier(SOUL) != null && speed.getModifier(FROST_SAME_ID) == null,
+                "The second projection cannot double an already-owned native ID");
+            shared.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(frost));
+            PrimaryLocationProjection.reconcile(player);
+            require(speed.getModifier(SOUL) == null && projectAttribute(frostState, effect, frost.primaryLevel(), use, player, false)
+                && speed.getModifier(FROST_SAME_ID) != null, "A still-active blocked effect retries when its competing source leaves");
+            shared.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(frost).append(soul));
+            location(level, player);
+            require(speed.getModifier(FROST_SAME_ID) != null && speed.getModifier(SOUL) == null,
+                "The conflict guard is symmetric when Soul enters after Frost");
+            shared.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(soul));
+            PrimaryLocationProjection.reconcile(player); location(level, player);
+            require(speed.getModifier(FROST_SAME_ID) == null && speed.getModifier(SOUL) != null,
+                "Removing Frost allows the blocked Soul effect to recover on the next real location event");
             player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY); PrimaryLocationProjection.reconcile(player);
             require(speed.getModifier(SOUL) == null, "Removing the boots cleans the owned Soul Speed projection");
 
@@ -192,6 +220,26 @@ final class GrapnelFrostProbe {
         level.setBlockAndUpdate(top, Blocks.AIR.defaultBlockState()); level.setBlockAndUpdate(water, Blocks.WATER.defaultBlockState());
     }
     private static void location(ServerLevel level, ServerPlayer player) { EnchantmentHelper.runLocationChangedEffects(level, player); }
+    private static Object projectionState(ServerPlayer player, String primary) throws Exception {
+        Field field = PrimaryLocationProjection.class.getDeclaredField("OWNED"); field.setAccessible(true);
+        for (var entry : ((Map<?, ?>) field.get(null)).entrySet()) {
+            Object key = entry.getKey();
+            Method playerId = key.getClass().getDeclaredMethod("player"), primaryId = key.getClass().getDeclaredMethod("primary");
+            playerId.setAccessible(true); primaryId.setAccessible(true);
+            if (player.getUUID().equals(playerId.invoke(key)) && primary.equals(primaryId.invoke(key))) return entry.getValue();
+        }
+        throw new AssertionError("Expected a live projection state for " + primary);
+    }
+    @SuppressWarnings("unchecked")
+    private static boolean projectAttribute(Object state, EnchantmentAttributeEffect effect, int rank,
+                                            EnchantedItemInUse use, ServerPlayer player, boolean becameActive) throws Exception {
+        Field field = PrimaryLocationProjection.class.getDeclaredField("CURRENT"); field.setAccessible(true);
+        ThreadLocal<Object> current = (ThreadLocal<Object>) field.get(null); Object previous = current.get();
+        require(previous == null, "Synthetic collision check must not replace a live replay scope");
+        current.set(state);
+        try { return PrimaryLocationProjection.activateAttribute(effect, rank, use, player, becameActive); }
+        finally { if (previous == null) current.remove(); else current.set(previous); }
+    }
     private static void refreshFluid(Entity entity) throws Exception {
         Method method = Entity.class.getDeclaredMethod("updateFluidInteraction"); method.setAccessible(true); method.invoke(entity);
     }
