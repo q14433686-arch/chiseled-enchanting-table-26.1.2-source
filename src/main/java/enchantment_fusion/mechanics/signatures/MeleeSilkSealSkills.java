@@ -192,7 +192,14 @@ public final class MeleeSilkSealSkills {
     }
     public static void end(@Nullable Frame frame, boolean completed, boolean accepted) {
         if (frame == null) return;
-        if (CURRENT.get() != frame) { CURRENT.remove(); if (frame.previous != null) frame.previous.ambiguous = true; return; }
+        if (CURRENT.get() != frame) {
+            CURRENT.remove();
+            if (frame.previous != null) frame.previous.ambiguous = true;
+            // An unbalanced release may already have affected health or shield durability.
+            // Discard the claim rather than let it be spent a second time.
+            if (frame.releasing && frame.state != null) clear(frame.state);
+            return;
+        }
         if (frame.previous == null) CURRENT.remove(); else CURRENT.set(frame.previous);
         State state = frame.state; ConfirmedMelee.Observation observation = frame.observation;
         if (state == null || observation == null || STATES.get(state.owner.getUUID()) != state) return;
@@ -208,10 +215,10 @@ public final class MeleeSilkSealSkills {
         LivingEntity target = observation.target(); AttributeInstance speed = target.getAttribute(Attributes.MOVEMENT_SPEED);
         if (speed == null || speed.hasModifier(SLOW_ID)) return;
         state.target = target; state.stored = frame.captured; state.expires = state.level.getGameTime() + SEAL_TICKS;
+        if (TARGETS.putIfAbsent(target.getUUID(), state) != null) { state.target = null; clear(state); return; }
         try {
             speed.addTransientModifier(SLOW);
             if (!SLOW.equals(speed.getModifier(SLOW_ID))) { clear(state); return; }
-            TARGETS.put(target.getUUID(), state);
         } catch (RuntimeException error) {
             clear(state);
             EnchantmentFusion.LOGGER.warn("Could not safely apply the melee damage seal to {}", target.getUUID(), error);
@@ -224,8 +231,7 @@ public final class MeleeSilkSealSkills {
     }
     private static void clear(State state) {
         STATES.remove(state.owner.getUUID(), state);
-        if (state.target != null) {
-            TARGETS.remove(state.target.getUUID(), state);
+        if (state.target != null && TARGETS.remove(state.target.getUUID(), state)) {
             AttributeInstance speed = state.target.getAttribute(Attributes.MOVEMENT_SPEED);
             if (speed != null && SLOW.equals(speed.getModifier(SLOW_ID))) speed.removeModifier(SLOW_ID);
         }

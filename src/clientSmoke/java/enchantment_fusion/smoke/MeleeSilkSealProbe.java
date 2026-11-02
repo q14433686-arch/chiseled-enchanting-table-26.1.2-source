@@ -77,12 +77,16 @@ final class MeleeSilkSealProbe {
             require(Math.abs((200 - target.getHealth()) - baseline) < 0.01F, "Later hits cannot repeat the stored damage");
 
             target.setHealth(200); require(MeleeSilkSealSkills.activate(player), "Rearm for explicit cancellation"); f.hit(target, true);
-            require(target(state(player)) == target && MeleeSilkSealSkills.activate(player), "Second activation dissipates an existing seal");
+            Object cancelled = state(player);
+            require(target(cancelled) == target && MeleeSilkSealSkills.activate(player), "Second activation dissipates an existing seal");
             require(state(player) == null && target.getHealth() == 200, "Cancellation cannot damage target");
             require(Math.abs(target.getAttribute(Attributes.MOVEMENT_SPEED).getValue() - speed) < 0.0001D, "Cancellation restores slowdown");
 
             require(MeleeSilkSealSkills.activate(player), "Rearm for equipment identity"); f.hit(target, true);
-            require(target(state(player)) == target, "Identity test needs a real seal");
+            Object replacement = state(player); require(target(replacement) == target, "Identity test needs a real seal");
+            clearStale(cancelled);
+            require(state(player) == replacement && target.getAttribute(Attributes.MOVEMENT_SPEED).getValue() < speed,
+                "Stale cleanup cannot remove another live seal's identical slowdown");
             player.setItemSlot(EquipmentSlot.MAINHAND, weapon.copy()); MeleeSilkSealSkills.tickServer(f.level.getServer());
             require(state(player) == null && target.getHealth() == 200, "Equal but different equipment cannot claim the seal");
             require(Math.abs(target.getAttribute(Attributes.MOVEMENT_SPEED).getValue() - speed) < 0.0001D, "Equipment change restores slowdown");
@@ -135,6 +139,10 @@ final class MeleeSilkSealProbe {
     private static Object target(Object state) throws Exception {
         require(state != null, "Expected a pending or sealed state");
         Field field = state.getClass().getDeclaredField("target"); field.setAccessible(true); return field.get(state);
+    }
+    private static void clearStale(Object state) throws Exception {
+        var clear = MeleeSilkSealSkills.class.getDeclaredMethod("clear", state.getClass()); clear.setAccessible(true);
+        clear.invoke(null, state);
     }
     private static void setExpires(Object state, long tick) throws Exception {
         require(state != null, "Expected a state for expiry");
