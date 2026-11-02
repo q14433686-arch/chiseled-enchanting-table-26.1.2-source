@@ -123,9 +123,13 @@ final class AcceptanceReport {
         plan("44.4-bane-aqua", "Bane ▷ Aqua: real hits and one-block work boost", "Not reached if setup fails.");
         plan("44.4-aqua-bane", "Aqua ▷ Bane: real mining and directed blade", "Not reached if setup fails.");
         plan("44.4-runtime-compat", "44.4 natural input, client mining sync, custom datapacks, multiplayer and claims", "Not covered by the simulated fixture.");
-        plan("33.4-silk-sharp", "Silk Touch ▷ Sharpness: prepared hit, real permission, one release and cleanup", "Not reached if setup fails; natural input, shields, PvP and mod interactions remain separate.");
-        plan("44.1-silk-smite", "Silk Touch ▷ Smite: qualified target, real permission, one release and cleanup", "Not reached if setup fails; natural input, shields, PvP and mod interactions remain separate.");
-        plan("44.1-silk-bane", "Silk Touch ▷ Bane: qualified target, real permission, one release and cleanup", "Not reached if setup fails; natural input, shields, PvP and mod interactions remain separate.");
+        plan("33.4-sharp-silk", "Sharpness ▷ Silk Touch: intercept and redirect a real hostile projectile", "Not implemented; no candidate fixture yet.");
+        plan("44.1-smite-silk", "Smite ▷ Silk Touch: intercept and redirect a real hostile projectile", "Not implemented; no candidate fixture yet.");
+        plan("44.1-bane-silk", "Bane ▷ Silk Touch: intercept and redirect a real hostile projectile", "Not implemented; no candidate fixture yet.");
+        plan("33.4-44.1-runtime-compat", "Melee silk: natural input, PvP, armor, totems, save/unload and third-party hooks", "Not covered by the simulated single-player fixture.");
+        plan("33.4-silk-sharp", "Silk Touch ▷ Sharpness: prepared hit, real permission, one release and cleanup", "Not reached if setup fails; natural input, shield timing, PvP and mod interactions remain separate.");
+        plan("44.1-silk-smite", "Silk Touch ▷ Smite: qualified target, real permission, one release and cleanup", "Not reached if setup fails; natural input, shield timing, PvP and mod interactions remain separate.");
+        plan("44.1-silk-bane", "Silk Touch ▷ Bane: qualified target, real permission, one release and cleanup", "Not reached if setup fails; natural input, shield timing, PvP and mod interactions remain separate.");
         plan("44.2-smite-mending", "Smite ▷ Mending: actual marked damage diversion and weapon repair", "Not reached if setup fails.");
         plan("44.2-mending-smite", "Mending ▷ Smite: actual experience-orb repair and prepared blade", "Not reached if setup fails.");
         plan("44.2-bane-mending", "Bane ▷ Mending: actual marked damage diversion and weapon repair", "Not reached if setup fails.");

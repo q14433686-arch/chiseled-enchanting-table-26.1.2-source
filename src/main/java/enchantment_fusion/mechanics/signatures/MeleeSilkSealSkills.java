@@ -218,9 +218,10 @@ public final class MeleeSilkSealSkills {
         if (TARGETS.putIfAbsent(target.getUUID(), state) != null) { state.target = null; clear(state); return; }
         try {
             speed.addTransientModifier(SLOW);
-            if (!SLOW.equals(speed.getModifier(SLOW_ID))) { clear(state); return; }
+            if (STATES.get(state.owner.getUUID()) != state || TARGETS.get(target.getUUID()) != state
+                || !SLOW.equals(speed.getModifier(SLOW_ID))) { abandonInstall(state, speed); return; }
         } catch (RuntimeException error) {
-            clear(state);
+            abandonInstall(state, speed);
             EnchantmentFusion.LOGGER.warn("Could not safely apply the melee damage seal to {}", target.getUUID(), error);
             return;
         }
@@ -228,6 +229,14 @@ public final class MeleeSilkSealSkills {
             target.getZ(), 12, .3D, .3D, .3D, .01D);
         state.owner.sendSystemMessage(Component.translatable("message.enchantment_fusion.melee_silk_stored"), true);
         CompendiumDiscoveryTracker.recordDiscovery(state.owner, state.pair.primaryId(), state.pair.secondaryId());
+    }
+    private static void abandonInstall(State state, AttributeInstance speed) {
+        LivingEntity target = state.target;
+        clear(state);
+        // A reentrant callback can clear ownership before the attribute write completes.
+        // Remove that orphan only when no later seal has claimed the target.
+        if (target != null && !TARGETS.containsKey(target.getUUID()) && SLOW.equals(speed.getModifier(SLOW_ID)))
+            speed.removeModifier(SLOW_ID);
     }
     private static void clear(State state) {
         STATES.remove(state.owner.getUUID(), state);

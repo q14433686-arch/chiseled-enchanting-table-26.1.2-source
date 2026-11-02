@@ -84,9 +84,9 @@ final class MeleeSilkSealProbe {
 
             require(MeleeSilkSealSkills.activate(player), "Rearm for equipment identity"); f.hit(target, true);
             Object replacement = state(player); require(target(replacement) == target, "Identity test needs a real seal");
-            clearStale(cancelled);
+            clearStale(cancelled); abandonStale(cancelled, target);
             require(state(player) == replacement && target.getAttribute(Attributes.MOVEMENT_SPEED).getValue() < speed,
-                "Stale cleanup cannot remove another live seal's identical slowdown");
+                "Stale cleanup or a failed install cannot remove another live seal's identical slowdown");
             player.setItemSlot(EquipmentSlot.MAINHAND, weapon.copy()); MeleeSilkSealSkills.tickServer(f.level.getServer());
             require(state(player) == null && target.getHealth() == 200, "Equal but different equipment cannot claim the seal");
             require(Math.abs(target.getAttribute(Attributes.MOVEMENT_SPEED).getValue() - speed) < 0.0001D, "Equipment change restores slowdown");
@@ -143,6 +143,11 @@ final class MeleeSilkSealProbe {
     private static void clearStale(Object state) throws Exception {
         var clear = MeleeSilkSealSkills.class.getDeclaredMethod("clear", state.getClass()); clear.setAccessible(true);
         clear.invoke(null, state);
+    }
+    private static void abandonStale(Object state, LivingEntity target) throws Exception {
+        var abandon = MeleeSilkSealSkills.class.getDeclaredMethod("abandonInstall", state.getClass(),
+            net.minecraft.world.entity.ai.attributes.AttributeInstance.class); abandon.setAccessible(true);
+        abandon.invoke(null, state, target.getAttribute(Attributes.MOVEMENT_SPEED));
     }
     private static void setExpires(Object state, long tick) throws Exception {
         require(state != null, "Expected a state for expiry");
