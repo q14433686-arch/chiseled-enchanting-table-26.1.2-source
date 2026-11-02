@@ -1217,5 +1217,7 @@
   "skill.enchantment_fusion.melee_pursuit": "Momentum Pursuit",
   "tooltip.enchantment_fusion.melee_pursuit": "Knockback ▷ Looting: after real knockback, strike the same moving enemy with the same weapon. Steal part of its remaining horizontal momentum to dash in that direction and briefly slow it. Native Knockback remains; no loot is created.",
   "skill.enchantment_fusion.melee_disarm": "Disarming Expulsion",
-  "tooltip.enchantment_fusion.melee_disarm": "Looting ▷ Knockback: a fully charged hit disarms one real piece of equipment from an eligible ordinary vanilla enemy, then pushes it away from the item. Five seconds per enemy; bound equipment, players and bosses are protected. Looting remains; no copy is created."
+  "tooltip.enchantment_fusion.melee_disarm": "Looting ▷ Knockback: a fully charged hit disarms one real piece of equipment from an eligible ordinary vanilla enemy, then pushes it away from the item. Five seconds per enemy; bound equipment, players and bosses are protected. Looting remains; no copy is created.",
+  "skill.enchantment_fusion.looting_fire_seed": "Spoils Spark",
+  "tooltip.enchantment_fusion.looting_fire_seed": "Looting ▷ Fire Aspect: a direct kill of an eligible enemy leaves a fire seed for five seconds. Hold the same weapon and approach to raise a brief virtual ring; visible eligible enemies at its edge take fire damage and burn. Looting remains. No fire blocks are placed."
 }

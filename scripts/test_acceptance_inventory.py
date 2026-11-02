@@ -158,6 +158,10 @@ class AcceptanceInventoryTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_report(report + report)
 
+    def test_spoils_spark_fixture_is_separate_from_the_unimplemented_reverse(self):
+        self.assertEqual(("07-looting-fire", True), DIRECTION_FIXTURES[("looting", "fire_aspect")])
+        self.assertNotIn(("fire_aspect", "looting"), DIRECTION_FIXTURES)
+
     def test_mapped_fixtures_are_planned_and_have_real_catalog_items(self):
         plan = (ROOT / "src/clientSmoke/java/enchantment_fusion/smoke/AcceptanceReport.java").read_text(encoding="utf-8")
         planned = set(re.findall(r'\bplan\("([^"]+)"', plan))

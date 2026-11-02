@@ -1217,5 +1217,7 @@
   "skill.enchantment_fusion.melee_pursuit": "Inseguimento d’inerzia",
   "tooltip.enchantment_fusion.melee_pursuit": "Contraccolpo ▷ Bottino: dopo un vero contraccolpo, colpisci lo stesso nemico ancora in movimento con la stessa arma. Sottrai parte del suo slancio orizzontale per scattare nella sua direzione e rallentalo brevemente. Il contraccolpo normale resta; nessun bottino creato.",
   "skill.enchantment_fusion.melee_disarm": "Espulsione disarmante",
-  "tooltip.enchantment_fusion.melee_disarm": "Bottino ▷ Contraccolpo: un colpo caricato disarma un pezzo reale a un nemico ordinario idoneo del gioco base e lo spinge lontano dall’oggetto. Cinque secondi per nemico; equipaggiamento vincolato, giocatori e boss protetti. Bottino resta; nessuna copia."
+  "tooltip.enchantment_fusion.melee_disarm": "Bottino ▷ Contraccolpo: un colpo caricato disarma un pezzo reale a un nemico ordinario idoneo del gioco base e lo spinge lontano dall’oggetto. Cinque secondi per nemico; equipaggiamento vincolato, giocatori e boss protetti. Bottino resta; nessuna copia.",
+  "skill.enchantment_fusion.looting_fire_seed": "Scintilla del bottino",
+  "tooltip.enchantment_fusion.looting_fire_seed": "Bottino ▷ Aspetto di fuoco: l’uccisione diretta di un nemico idoneo lascia una brace per cinque secondi. Avvicinati con la stessa arma per creare un breve anello virtuale; i nemici idonei visibili sul bordo subiscono danni da fuoco e bruciano. Bottino resta; nessun blocco di fuoco."
 }

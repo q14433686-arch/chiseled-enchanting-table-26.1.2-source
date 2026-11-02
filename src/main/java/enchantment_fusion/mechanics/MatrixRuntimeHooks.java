@@ -42,6 +42,7 @@ import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.ConfirmedMining;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
+import enchantment_fusion.mechanics.signatures.LootingFireSeedSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
@@ -142,6 +143,7 @@ public final class MatrixRuntimeHooks {
             RangedSilkSkills.clearServer();
             ConfirmedArrow.clearServer();
             MeleeImpulseSkills.clearServer();
+            LootingFireSeedSkills.clearServer();
             MeleeGuardSkills.clearServer();
             MeleeWorkSkills.clearServer(server);
             MeleeMendingSkills.clearServer();
@@ -223,6 +225,7 @@ public final class MatrixRuntimeHooks {
             RangedSilkSkills.clearPlayer(pid);
             ConfirmedArrow.clearPlayer(pid);
             MeleeImpulseSkills.clearPlayer(pid);
+            LootingFireSeedSkills.clearPlayer(pid);
             MeleeGuardSkills.clearPlayer(pid);
             MeleeWorkSkills.clearPlayer(handler.getPlayer());
             MeleeMendingSkills.clearPlayer(pid);
@@ -459,6 +462,7 @@ public final class MatrixRuntimeHooks {
                 RangedSilkSkills.clearPlayer(deadPlayer.getUUID());
                 ConfirmedArrow.clearPlayer(deadPlayer.getUUID());
                 MeleeImpulseSkills.clearPlayer(deadPlayer.getUUID());
+                LootingFireSeedSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeGuardSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeWorkSkills.clearPlayer(deadPlayer);
                 MeleeMendingSkills.clearPlayer(deadPlayer.getUUID());
@@ -507,6 +511,7 @@ public final class MatrixRuntimeHooks {
             RangedSilkSkills.tickServer(server);
             ConfirmedArrow.tickServer(server);
             MeleeImpulseSkills.tickServer(server);
+            LootingFireSeedSkills.tickServer(server);
             MeleeGuardSkills.tickServer(server);
             MeleeWorkSkills.tickServer(server);
             MeleeMendingSkills.tickServer(server);

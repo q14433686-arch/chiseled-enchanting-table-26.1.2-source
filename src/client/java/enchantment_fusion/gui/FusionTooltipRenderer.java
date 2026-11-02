@@ -46,6 +46,7 @@ import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
 import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeDisarmSkills;
+import enchantment_fusion.mechanics.signatures.LootingFireSeedSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
@@ -345,6 +346,9 @@ public final class FusionTooltipRenderer {
             boolean meleeImpulseTemplate = MeleeImpulseSkills.matches(pair);
             boolean legacyMeleeImpulseCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeImpulseTemplate
                 && !MeleeImpulseSkills.applies(pair, stack);
+            boolean lootingFireSeed = LootingFireSeedSkills.isPair(pair);
+            boolean legacyLootingFireCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && lootingFireSeed
+                && !LootingFireSeedSkills.applies(pair, stack);
             boolean meleeGuardTemplate = MeleeGuardSkills.matches(pair);
             boolean legacyMeleeGuardCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeGuardTemplate
                 && !MeleeGuardSkills.applies(pair, stack);
@@ -507,7 +511,8 @@ public final class FusionTooltipRenderer {
                     ? "skill.enchantment_fusion.grapnel" : meleeFortuneTemplate && !legacyMeleeFortuneCarrier
                     ? "skill.enchantment_fusion.melee_fortune" : meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier
                     ? "skill.enchantment_fusion.melee_silk_seal" : meleeImpulseTemplate && (MeleeImpulseSkills.isPursuit(pair) || MeleeDisarmSkills.isPair(pair)) && !legacyMeleeImpulseCarrier
-                    ? (MeleeDisarmSkills.isPair(pair) ? "skill.enchantment_fusion.melee_disarm" : "skill.enchantment_fusion.melee_pursuit") : sigOpt.get().titleKey());
+                    ? (MeleeDisarmSkills.isPair(pair) ? "skill.enchantment_fusion.melee_disarm" : "skill.enchantment_fusion.melee_pursuit")
+                    : lootingFireSeed && !legacyLootingFireCarrier ? "skill.enchantment_fusion.looting_fire_seed" : sigOpt.get().titleKey());
                 lines.add(Component.translatable(
                     "tooltip.enchantment_fusion.pair_signature",
                     sigTitle,
@@ -527,7 +532,8 @@ public final class FusionTooltipRenderer {
                         ? (MeleeFortuneSkills.attackFirst(pair) ? "tooltip.enchantment_fusion.melee_fortune_refresh"
                             : "tooltip.enchantment_fusion.melee_fortune_stance") : meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier
                         ? "tooltip.enchantment_fusion.melee_silk_seal" : meleeImpulseTemplate && (MeleeImpulseSkills.isPursuit(pair) || MeleeDisarmSkills.isPair(pair)) && !legacyMeleeImpulseCarrier
-                        ? meleeImpulseTooltip(pair) : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
+                        ? meleeImpulseTooltip(pair) : lootingFireSeed && !legacyLootingFireCarrier
+                        ? "tooltip.enchantment_fusion.looting_fire_seed" : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
                 lines.add(Component.translatable(
@@ -656,6 +662,9 @@ public final class FusionTooltipRenderer {
             if (legacyMeleeWearCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_wear_carrier")
                     .withStyle(ChatFormatting.GOLD));
+            }
+            if (legacyLootingFireCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_impulse_carrier").withStyle(ChatFormatting.GOLD));
             }
             if (legacyMeleeImpulseCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_impulse_carrier")

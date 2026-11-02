@@ -1217,5 +1217,7 @@
   "skill.enchantment_fusion.melee_pursuit": "截势追击",
   "tooltip.enchantment_fusion.melee_pursuit": "击退 ▷ 抢夺：真实击退后，趁同一敌人仍沿推出方向移动，用同一武器再次命中，夺走部分剩余水平动量向前冲刺，使目标短暂缓慢。保留原版击退，不生成战利品。",
   "skill.enchantment_fusion.melee_disarm": "缴械驱逐",
-  "tooltip.enchantment_fusion.melee_disarm": "抢夺 ▷ 击退：满蓄命中合格的原版普通敌人，使其掉落一件真实装备并将它推离物品；每个目标冷却 5 秒。绑定装备、玩家和首领受保护。保留原版抢夺，不复制物品。"
+  "tooltip.enchantment_fusion.melee_disarm": "抢夺 ▷ 击退：满蓄命中合格的原版普通敌人，使其掉落一件真实装备并将它推离物品；每个目标冷却 5 秒。绑定装备、玩家和首领受保护。保留原版抢夺，不复制物品。",
+  "skill.enchantment_fusion.looting_fire_seed": "战利火种",
+  "tooltip.enchantment_fusion.looting_fire_seed": "抢夺 ▷ 火焰附加：直接击杀合格敌人会留下持续五秒的火种。手持同一武器靠近，引燃短暂的虚拟火圈；火圈边缘可见且合格的敌人受到火焰伤害并燃烧。保留原版抢夺，不放置火方块。"
 }

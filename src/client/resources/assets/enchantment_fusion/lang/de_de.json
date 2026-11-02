@@ -1217,5 +1217,7 @@
   "skill.enchantment_fusion.melee_pursuit": "Schwungjagd",
   "tooltip.enchantment_fusion.melee_pursuit": "Rückstoß ▷ Plünderung: Triff denselben Gegner mit derselben Waffe, während er sich nach echtem Rückstoß weiterbewegt. Ein Teil seines verbleibenden horizontalen Schwungs treibt dich voran und verlangsamt ihn kurz. Normaler Rückstoß bleibt; keine Beute entsteht.",
   "skill.enchantment_fusion.melee_disarm": "Entwaffnender Stoß",
-  "tooltip.enchantment_fusion.melee_disarm": "Plünderung ▷ Rückstoß: Ein voll aufgeladener Treffer löst ein echtes Ausrüstungsteil von einem geeigneten gewöhnlichen Vanilla-Gegner und stößt ihn vom Gegenstand weg. Fünf Sekunden je Gegner; gebundene Ausrüstung, Spieler und Bosse sind geschützt. Plünderung bleibt; keine Kopie."
+  "tooltip.enchantment_fusion.melee_disarm": "Plünderung ▷ Rückstoß: Ein voll aufgeladener Treffer löst ein echtes Ausrüstungsteil von einem geeigneten gewöhnlichen Vanilla-Gegner und stößt ihn vom Gegenstand weg. Fünf Sekunden je Gegner; gebundene Ausrüstung, Spieler und Bosse sind geschützt. Plünderung bleibt; keine Kopie.",
+  "skill.enchantment_fusion.looting_fire_seed": "Beutefunke",
+  "tooltip.enchantment_fusion.looting_fire_seed": "Plünderung ▷ Verbrennung: Ein direkter tödlicher Treffer gegen einen zulässigen Gegner hinterlässt fünf Sekunden lang einen Funken. Mit derselben Waffe nähern, um einen kurzen virtuellen Feuerring zu entfachen. Sichtbare zulässige Gegner am Rand erleiden Feuerschaden und brennen. Plünderung bleibt; keine Feuerblöcke."
 }

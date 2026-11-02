@@ -1217,5 +1217,7 @@
   "skill.enchantment_fusion.melee_pursuit": "Persecución de impulso",
   "tooltip.enchantment_fusion.melee_pursuit": "Empuje ▷ Botín: tras un empuje real, golpea con la misma arma al mismo enemigo mientras sigue moviéndose. Roba parte de su impulso horizontal restante para avanzar y ralentízalo brevemente. Conserva el empuje normal; no crea botín.",
   "skill.enchantment_fusion.melee_disarm": "Expulsión desarmante",
-  "tooltip.enchantment_fusion.melee_disarm": "Botín ▷ Empuje: un golpe completamente cargado desarma una pieza real de equipo de un enemigo normal compatible del juego base y lo aleja del objeto. Cinco segundos por enemigo; protege equipo ligado, jugadores y jefes. Conserva Botín; no crea copias."
+  "tooltip.enchantment_fusion.melee_disarm": "Botín ▷ Empuje: un golpe completamente cargado desarma una pieza real de equipo de un enemigo normal compatible del juego base y lo aleja del objeto. Cinco segundos por enemigo; protege equipo ligado, jugadores y jefes. Conserva Botín; no crea copias.",
+  "skill.enchantment_fusion.looting_fire_seed": "Chispa del botín",
+  "tooltip.enchantment_fusion.looting_fire_seed": "Botín ▷ Aspecto ígneo: una baja directa de un enemigo válido deja una brasa durante cinco segundos. Acércate con la misma arma para crear un breve anillo virtual; los enemigos válidos y visibles en el borde reciben daño de fuego y arden. Conserva Botín; no coloca bloques de fuego."
 }

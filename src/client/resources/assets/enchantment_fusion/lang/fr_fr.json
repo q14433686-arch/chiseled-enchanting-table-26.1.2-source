@@ -1217,5 +1217,7 @@
   "skill.enchantment_fusion.melee_pursuit": "Poursuite cinétique",
   "tooltip.enchantment_fusion.melee_pursuit": "Recul ▷ Butin : après un recul réel, frappez le même ennemi en mouvement avec la même arme. Volez une partie de son élan horizontal restant pour foncer dans sa direction et le ralentir brièvement. Le recul normal reste ; aucun butin créé.",
   "skill.enchantment_fusion.melee_disarm": "Expulsion désarmante",
-  "tooltip.enchantment_fusion.melee_disarm": "Butin ▷ Recul : un coup chargé retire une pièce réelle à un ennemi ordinaire admissible du jeu de base, puis l’éloigne de l’objet. Cinq secondes par ennemi ; équipement lié, joueurs et boss protégés. Butin reste actif ; aucune copie."
+  "tooltip.enchantment_fusion.melee_disarm": "Butin ▷ Recul : un coup chargé retire une pièce réelle à un ennemi ordinaire admissible du jeu de base, puis l’éloigne de l’objet. Cinq secondes par ennemi ; équipement lié, joueurs et boss protégés. Butin reste actif ; aucune copie.",
+  "skill.enchantment_fusion.looting_fire_seed": "Étincelle du butin",
+  "tooltip.enchantment_fusion.looting_fire_seed": "Butin ▷ Aura de feu : une élimination directe d’un ennemi admissible laisse une braise cinq secondes. Approchez avec la même arme pour former un bref anneau virtuel ; les ennemis admissibles visibles sur le bord subissent des dégâts de feu et brûlent. Butin reste actif ; aucun bloc de feu."
 }

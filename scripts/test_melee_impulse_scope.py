@@ -23,6 +23,19 @@ class MeleeImpulseScopeTest(unittest.TestCase):
                 self.assertLess(success, body.index('MeleeImpulseSkills.endAttack(impulse, impulseCompleted)'))
                 self.assertLess(body.index('MeleeImpulseSkills.beginAttack('), body.index('MeleeWearSkills.beginAttack('))
 
+    def test_shared_completion_callbacks_require_a_successful_unambiguous_attack(self):
+        source = (ROOT / 'src/main/java/enchantment_fusion/mechanics/signatures/MeleeImpulseSkills.java').read_text(encoding='utf-8')
+        body = source[source.index('public static void endAttack(Attack frame, boolean completed)'):
+                      source.index('private static void invalidatePursuit(')]
+        self.assertLess(body.index('CURRENT.get() != frame'), body.index('CURRENT.remove()'))
+        self.assertLess(body.index('!completed || frame.ambiguous'), body.index('frame.completions'))
+        self.assertLess(body.index('CURRENT.set(frame.previous)'), body.index('frame.completions'))
+        seed = (ROOT / 'src/main/java/enchantment_fusion/mechanics/signatures/LootingFireSeedSkills.java').read_text(encoding='utf-8')
+        for forbidden in ('setBlock(', 'removeBlock(', 'destroyBlock(', 'ItemEntity', 'getEntitiesOfClass(ItemEntity'):
+            self.assertNotIn(forbidden, seed)
+        self.assertIn('frame.completions.add(', seed)
+        self.assertIn('victim.hurtServer(', seed)
+
 
 if __name__ == '__main__':
     unittest.main()

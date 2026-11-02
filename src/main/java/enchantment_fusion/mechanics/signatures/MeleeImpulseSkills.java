@@ -83,12 +83,8 @@ public final class MeleeImpulseSkills {
         ConfirmedMelee.register(MeleeImpulseSkills::onHit);
         MeleeAttackThemes.registerPrimaryTemplate("melee_impulse", (pair, stack) -> isAttackFirst(pair) && applies(pair, stack));
     }
-    public static boolean isAttackFirst(@Nullable FusedPair pair) {
-        return pair != null && MeleeAttackThemes.isAttack(pair.primaryId()) && KNOCKBACK.equals(pair.secondaryId());
-    }
-    public static boolean isKnockbackFirst(@Nullable FusedPair pair) {
-        return pair != null && KNOCKBACK.equals(pair.primaryId()) && MeleeAttackThemes.isAttack(pair.secondaryId());
-    }
+    public static boolean isAttackFirst(@Nullable FusedPair pair) { return pair != null && MeleeAttackThemes.isAttack(pair.primaryId()) && KNOCKBACK.equals(pair.secondaryId()); }
+    public static boolean isKnockbackFirst(@Nullable FusedPair pair) { return pair != null && KNOCKBACK.equals(pair.primaryId()) && MeleeAttackThemes.isAttack(pair.secondaryId()); }
     public static boolean pursuitPair(@Nullable FusedPair pair) { return pair != null && KNOCKBACK.equals(pair.primaryId()) && LOOTING.equals(pair.secondaryId()); }
     public static boolean pursuitSignature(@Nullable SignatureEntry entry) {
         return entry != null && PURSUIT.equals(entry.id()) && KNOCKBACK.equals(entry.primaryId())
@@ -138,6 +134,7 @@ public final class MeleeImpulseSkills {
         @Nullable Vec3 beforeVelocity;
         @Nullable Pursuit pursuit;
         @Nullable MeleeDisarmSkills.Claim disarm;
+        final List<Runnable> completions = new ArrayList<>();
         boolean ambiguous;
         Attack(@Nullable Attack previous, Player player, ItemStack weapon, Entity target, EquipmentSlot slot) {
             this.previous = previous; this.player = player; this.weapon = weapon; this.target = target;
@@ -145,6 +142,7 @@ public final class MeleeImpulseSkills {
             this.reverse = slot == EquipmentSlot.MAINHAND ? selected(weapon, false) : null;
         }
     }
+    static @Nullable Attack currentAttack() { return CURRENT.get(); }
     public static Attack beginAttack(Player player, ItemStack weapon, Entity target, EquipmentSlot slot) {
         Attack previous = CURRENT.get();
         if (previous != null) previous.ambiguous = true;
@@ -165,6 +163,7 @@ public final class MeleeImpulseSkills {
         if (!completed || frame.ambiguous) { invalidatePursuit(frame); return; }
         if (frame.pursuit != null) PursuitPlunderSkills.settle(frame);
         if (frame.disarm != null) MeleeDisarmSkills.settle(frame.disarm);
+        for (Runnable completion : List.copyOf(frame.completions)) completion.run();
     }
     private static void invalidatePursuit(Attack frame) {
         if (!(frame.player instanceof ServerPlayer owner) || !(frame.target instanceof LivingEntity target)

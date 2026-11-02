@@ -11,6 +11,7 @@ import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeDisarmSkills;
+import enchantment_fusion.mechanics.signatures.LootingFireSeedSkills;
 import enchantment_fusion.registry.FusionItems;
 import java.util.ArrayList;
 import java.util.List;
@@ -499,10 +500,11 @@ public final class FusionGrimoireScreen extends Screen {
                     boolean silkSeal = MeleeSilkSealSkills.selectedSignature(sig);
                     boolean pursuit = MeleeImpulseSkills.pursuitSignature(sig);
                     boolean disarm = MeleeDisarmSkills.selectedSignature(sig);
+                    boolean fireSeed = LootingFireSeedSkills.selectedSignature(sig);
                     String fullTitle = Component.translatable(silkSeal ? "skill.enchantment_fusion.melee_silk_seal"
-                        : pursuit ? "skill.enchantment_fusion.melee_pursuit" : disarm ? "skill.enchantment_fusion.melee_disarm" : sig.titleKey()).getString();
+                        : pursuit ? "skill.enchantment_fusion.melee_pursuit" : disarm ? "skill.enchantment_fusion.melee_disarm" : fireSeed ? "skill.enchantment_fusion.looting_fire_seed" : sig.titleKey()).getString();
                     String fullDesc = Component.translatable(silkSeal ? "tooltip.enchantment_fusion.melee_silk_seal"
-                        : pursuit ? "tooltip.enchantment_fusion.melee_pursuit" : disarm ? "tooltip.enchantment_fusion.melee_disarm" : sig.descKey()).getString();
+                        : pursuit ? "tooltip.enchantment_fusion.melee_pursuit" : disarm ? "tooltip.enchantment_fusion.melee_disarm" : fireSeed ? "tooltip.enchantment_fusion.looting_fire_seed" : sig.descKey()).getString();
 
                     if (st >= CompendiumDiscoveryTracker.STATE_MASTERED) {
                         out.add(new EntryItem(
