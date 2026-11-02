@@ -95,6 +95,12 @@ final class MeleeDisarmProbe {
             crossItem.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:binding_curse", 1));
             crossBound.setItemSlot(EquipmentSlot.MAINHAND, crossItem); f.hit(crossBound, true);
             require(crossBound.getMainHandItem() == crossItem, "Cross-domain Binding prevents removal");
+            Mob preserved = ordinary(f, 2.7D); ItemStack supplied = new ItemStack(Items.IRON_SWORD);
+            preserved.setItemSlot(EquipmentSlot.MAINHAND, supplied); preserved.setGuaranteedDrop(EquipmentSlot.MAINHAND);
+            f.hit(preserved, true); require(preserved.getMainHandItem() == supplied, "Preserved, potentially player-supplied gear cannot be taken");
+            Mob named = ordinary(f, 2.8D); ItemStack namedItem = new ItemStack(Items.IRON_SWORD);
+            named.setItemSlot(EquipmentSlot.MAINHAND, namedItem); named.setCustomName(Component.literal("fixture named mob"));
+            f.hit(named, true); require(named.getMainHandItem() == namedItem, "Named or persistent mobs are protected");
             Villager villager = f.spawn(new Villager(EntityType.VILLAGER, level), 2.7D, 2);
             ItemStack protectedItem = new ItemStack(Items.IRON_SWORD); villager.setItemSlot(EquipmentSlot.MAINHAND, protectedItem);
             f.hit(villager, true); require(villager.getMainHandItem() == protectedItem, "Villagers cannot be disarmed");

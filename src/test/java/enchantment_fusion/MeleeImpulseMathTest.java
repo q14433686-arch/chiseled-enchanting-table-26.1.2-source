@@ -87,6 +87,15 @@ final class MeleeImpulseMathTest {
             assertFalse(MeleeImpulseSkills.matches(pair));
         } finally { SignatureCatalog.reloadFromJson(null); }
     }
+    @Test void disarmDoesNotTakePreservedOrInvalidEquipmentChances() {
+        assertTrue(MeleeDisarmSkills.ordinaryDropChance(0.085F));
+        assertFalse(MeleeDisarmSkills.ordinaryDropChance(0.0F));
+        assertFalse(MeleeDisarmSkills.ordinaryDropChance(-0.1F));
+        assertFalse(MeleeDisarmSkills.ordinaryDropChance(1.0F));
+        assertFalse(MeleeDisarmSkills.ordinaryDropChance(2.0F));
+        assertFalse(MeleeDisarmSkills.ordinaryDropChance(Float.NaN));
+        assertFalse(MeleeDisarmSkills.ordinaryDropChance(Float.POSITIVE_INFINITY));
+    }
     @Test void pursuitRequiresFiniteRealRemainingMomentumAndCapsItsImpulse() {
         assertEquals(0.0F, MeleeImpulseMath.pursuitStrength(Double.NaN, 2, 3));
         assertEquals(0.0F, MeleeImpulseMath.pursuitStrength(Double.POSITIVE_INFINITY, 2, 3));

@@ -79,8 +79,13 @@ public final class MeleeDisarmSkills {
         return id != null && "minecraft".equals(id.getNamespace()) && !BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(target.getType()).is(IMMUNE)
             && target.getType() != EntityType.ENDER_DRAGON && target.getType() != EntityType.WITHER
             && target.getType() != EntityType.WARDEN && target.getType() != EntityType.ELDER_GUARDIAN
-            && target.getMaxHealth() <= 100.0F && target.isAlive() && owner.level().getEntity(target.getUUID()) == target
+            && !target.isPersistenceRequired() && !target.hasCustomName() && target.getMaxHealth() <= 100.0F
+            && target.isAlive() && owner.level().getEntity(target.getUUID()) == target
             && owner.distanceToSqr(target) <= 36.0D && MeleeAttackThemes.eligible(owner, target, MeleeAttackThemes.SHARP);
+    }
+    public static boolean ordinaryDropChance(float chance) { return Float.isFinite(chance) && chance > 0.0F && chance < 1.0F; }
+    private static boolean naturallyDroppable(Mob target, EquipmentSlot slot) {
+        return ordinaryDropChance(target.getDropChances().byEquipment(slot));
     }
     static @Nullable Claim prepare(MeleeImpulseSkills.Attack frame, ConfirmedMelee.Hit hit) {
         ServerPlayer owner = hit.player();
@@ -90,7 +95,9 @@ public final class MeleeDisarmSkills {
         if (pair == null) return null;
         for (EquipmentSlot slot : SLOTS) {
             ItemStack actual = target.getItemBySlot(slot);
-            if (removable(actual)) return new Claim(owner, target, hit.weapon(), pair, slot, actual, actual.copy());
+            // Picked-up/player-supplied gear is normally preserved on death; do not claim it as natural loot.
+            if (naturallyDroppable(target, slot) && removable(actual))
+                return new Claim(owner, target, hit.weapon(), pair, slot, actual, actual.copy());
         }
         return null;
     }
@@ -99,7 +106,7 @@ public final class MeleeDisarmSkills {
             && claim.weapon().getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().contains(claim.pair())
             && applies(claim.pair(), claim.weapon()) && eligible(claim.owner(), claim.target())
             && claim.target().getItemBySlot(claim.slot()) == claim.actual() && ItemStack.matches(claim.actual(), claim.snapshot())
-            && removable(claim.actual());
+            && naturallyDroppable(claim.target(), claim.slot()) && removable(claim.actual());
     }
     private static boolean presentIdentity(ServerLevel level, ItemEntity drop, Claim claim) {
         return drop.isAlive() && level.getEntity(drop.getUUID()) == drop && drop.getItem() == claim.actual();
