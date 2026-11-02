@@ -1219,5 +1219,7 @@
   "skill.enchantment_fusion.melee_disarm": "Expulsión desarmante",
   "tooltip.enchantment_fusion.melee_disarm": "Botín ▷ Empuje: un golpe completamente cargado desarma una pieza real de equipo de un enemigo normal compatible del juego base y lo aleja del objeto. Cinco segundos por enemigo; protege equipo ligado, jugadores y jefes. Conserva Botín; no crea copias.",
   "skill.enchantment_fusion.looting_fire_seed": "Chispa del botín",
-  "tooltip.enchantment_fusion.looting_fire_seed": "Botín ▷ Aspecto ígneo: una baja directa de un enemigo válido deja una brasa durante cinco segundos. Acércate con la misma arma para crear un breve anillo virtual; los enemigos válidos y visibles en el borde reciben daño de fuego y arden. Conserva Botín; no coloca bloques de fuego."
+  "tooltip.enchantment_fusion.looting_fire_seed": "Botín ▷ Aspecto ígneo: una baja directa de un enemigo válido deja una brasa durante cinco segundos. Acércate con la misma arma para crear un breve anillo virtual; los enemigos válidos y visibles en el borde reciben daño de fuego y arden. Conserva Botín; no coloca bloques de fuego.",
+  "skill.enchantment_fusion.ember_harvest": "Cosecha de brasas",
+  "tooltip.enchantment_fusion.ember_harvest": "Aspecto ígneo ▷ Botín: tras arder un enemigo válido durante un segundo, golpéalo agachado y con carga completa para apagarlo y marcarlo seis segundos. Derrótalo con la misma arma para obtener hasta tres objetos comunes adicionales de su botín confirmado. Aspecto ígneo permanece en otros golpes."
 }

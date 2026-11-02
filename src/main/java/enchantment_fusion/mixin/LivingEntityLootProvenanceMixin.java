@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.EntityLootProvenance;
 import enchantment_fusion.mechanics.signatures.GrapnelLooting;
+import enchantment_fusion.mechanics.signatures.EmberHarvestCapture;
 import enchantment_fusion.mechanics.signatures.RangedMendingCapture;
 import java.util.function.Consumer;
 import net.minecraft.resources.ResourceKey;
@@ -25,18 +26,29 @@ public abstract class LivingEntityLootProvenanceMixin {
     @WrapMethod(method = "hurtServer")
     private boolean ef$observeLootDamage(ServerLevel level, DamageSource source, float damage, Operation<Boolean> original) {
         GrapnelLooting.Frame frame = GrapnelLooting.beginDamage((LivingEntity) (Object) this, level, source);
-        boolean accepted = false;
-        try { accepted = original.call(level, source, damage); return accepted; }
-        finally { GrapnelLooting.endDamage(frame, accepted); }
+        EmberHarvestCapture.Frame harvest = null; boolean accepted = false;
+        try {
+            harvest = EmberHarvestCapture.beginDamage((LivingEntity) (Object) this, level, source);
+            accepted = original.call(level, source, damage); return accepted;
+        } finally {
+            try { EmberHarvestCapture.endDamage(harvest, accepted); }
+            finally { GrapnelLooting.endDamage(frame, accepted); }
+        }
     }
     @WrapMethod(method = "dropAllDeathLoot")
     private void ef$observeDeathLoot(ServerLevel level, DamageSource source, Operation<Void> original) {
         GrapnelLooting.Frame frame = GrapnelLooting.beginDeath((LivingEntity) (Object) this, level, source);
-        boolean mending = RangedMendingCapture.beginDeath((LivingEntity) (Object) this, level, source);
-        try { original.call(level, source); }
-        finally {
-            try { RangedMendingCapture.endDeath(mending); }
-            finally { GrapnelLooting.endDeath(frame); }
+        boolean mending = false; EmberHarvestCapture.Frame harvest = null;
+        try {
+            mending = RangedMendingCapture.beginDeath((LivingEntity) (Object) this, level, source);
+            harvest = EmberHarvestCapture.beginDeath((LivingEntity) (Object) this, level, source);
+            original.call(level, source);
+        } finally {
+            try { EmberHarvestCapture.endDeath(harvest); }
+            finally {
+                try { RangedMendingCapture.endDeath(mending); }
+                finally { GrapnelLooting.endDeath(frame); }
+            }
         }
     }
     @WrapOperation(method = "dropExperience", at = @At(value = "INVOKE",
@@ -53,11 +65,22 @@ public abstract class LivingEntityLootProvenanceMixin {
                                       Operation<Void> original, ServerLevel level, DamageSource source, boolean killedByPlayer,
                                       ResourceKey<LootTable> key, Consumer<ItemStack> suppliedConsumer) {
         EntityLootProvenance.Scope scope = GrapnelLooting.beginLoot((LivingEntity) (Object) this, level, source);
+        boolean harvest = false;
+        if (scope == null) {
+            scope = EmberHarvestCapture.beginLoot((LivingEntity) (Object) this, level, source);
+            harvest = scope != null;
+        }
         if (scope == null) { original.call(table, params, seed, consumer); return; }
-        boolean completed = false;
+        EntityLootProvenance.Scope captured = scope; boolean ordinaryHarvest = harvest, completed = false;
         try {
-            original.call(table, params, seed, (Consumer<ItemStack>) stack -> EntityLootProvenance.consume(scope, stack, consumer));
+            original.call(table, params, seed, (Consumer<ItemStack>) stack -> {
+                if (ordinaryHarvest && EmberHarvestCapture.ordinary(stack)) EntityLootProvenance.recordFinalOutput(captured, stack);
+                EntityLootProvenance.consume(captured, stack, consumer);
+            });
             completed = true;
-        } finally { GrapnelLooting.endLoot(scope, completed); }
+        } finally {
+            if (ordinaryHarvest) EmberHarvestCapture.endLoot(captured, completed);
+            else GrapnelLooting.endLoot(captured, completed);
+        }
     }
 }

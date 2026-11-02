@@ -97,6 +97,14 @@ public final class EntityLootProvenance {
         if (previous == null && scope.outputs.size() >= MAX_OUTPUTS) { scope.overflow = true; return; }
         scope.outputs.put(output, new Candidate(output.copy()));
     }
+    /** Record a caller-filtered final ordinary output immediately before the actual consumer. */
+    public static void recordFinalOutput(Scope scope, ItemStack output) {
+        if (!current(scope) || output == null || output.isEmpty()) return;
+        Candidate previous = scope.outputs.get(output);
+        if (previous != null) { previous.ambiguous = true; return; }
+        if (scope.outputs.size() >= MAX_OUTPUTS) { scope.overflow = true; return; }
+        scope.outputs.put(output, new Candidate(output.copy()));
+    }
     /** Wrap the original consumer; call it once with exactly the original object. */
     public static void consume(Scope scope, ItemStack stack, Consumer<ItemStack> original) {
         if (!current(scope) || stack == null) { original.accept(stack); return; }

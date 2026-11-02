@@ -1219,5 +1219,7 @@
   "skill.enchantment_fusion.melee_disarm": "무장 해제 추방",
   "tooltip.enchantment_fusion.melee_disarm": "약탈 ▷ 밀치기: 충분히 충전한 공격으로 조건에 맞는 일반 바닐라 적의 실제 장비 하나를 떨어뜨리고 적을 물건에서 멀리 밀어냅니다. 대상마다 5초 재사용 대기시간이 있으며 귀속 장비, 플레이어와 우두머리는 보호됩니다. 약탈은 유지되고 복제하지 않습니다.",
   "skill.enchantment_fusion.looting_fire_seed": "전리품 불씨",
-  "tooltip.enchantment_fusion.looting_fire_seed": "약탈 ▷ 발화: 유효한 적을 직접 처치하면 불씨가 5초 동안 남습니다. 같은 무기를 들고 다가가면 잠시 가상의 불고리가 생기며 가장자리의 보이는 유효한 적이 화염 피해를 입고 불탑니다. 약탈은 유지되며 불 블록을 놓지 않습니다."
+  "tooltip.enchantment_fusion.looting_fire_seed": "약탈 ▷ 발화: 유효한 적을 직접 처치하면 불씨가 5초 동안 남습니다. 같은 무기를 들고 다가가면 잠시 가상의 불고리가 생기며 가장자리의 보이는 유효한 적이 화염 피해를 입고 불탑니다. 약탈은 유지되며 불 블록을 놓지 않습니다.",
+  "skill.enchantment_fusion.ember_harvest": "불꽃 표식 수확",
+  "tooltip.enchantment_fusion.ember_harvest": "발화 ▷ 약탈: 유효한 적이 1초 동안 불탄 뒤 웅크리고 충분히 충전한 공격을 맞히면 불을 끄고 6초 동안 표식을 남깁니다. 같은 무기로 처치하면 확인된 일반 전리품에서 특수 데이터가 없는 아이템을 최대 3개 추가로 얻습니다. 다른 공격에는 발화가 유지됩니다."
 }

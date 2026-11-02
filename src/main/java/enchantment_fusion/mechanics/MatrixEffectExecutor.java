@@ -42,6 +42,7 @@ import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
 import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.LootingFireSeedSkills;
+import enchantment_fusion.mechanics.signatures.EmberHarvestSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
@@ -358,6 +359,7 @@ public final class MatrixEffectExecutor {
             boolean redesignedRangedSilk = RangedSilkSkills.applies(pair, hostStack);
             boolean redesignedMeleeImpulse = MeleeImpulseSkills.applies(pair, hostStack);
             boolean redesignedLootingFire = LootingFireSeedSkills.applies(pair, hostStack);
+            boolean redesignedEmberHarvest = EmberHarvestSkills.applies(pair, hostStack);
             boolean redesignedMeleeGuard = MeleeGuardSkills.applies(pair, hostStack);
             boolean redesignedMeleeWork = MeleeWorkSkills.applies(pair, hostStack);
             boolean redesignedMeleeMending = MeleeMendingSkills.applies(pair, hostStack);
@@ -374,7 +376,7 @@ public final class MatrixEffectExecutor {
                 || redesignedFireTradeoff || redesignedSoulThread || redesignedFireThorns || redesignedFireSweep || redesignedWindSweep
                 || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre || redesignedFortuneBank
                 || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedRangedWear || redesignedRangedWork || redesignedRangedBreath || redesignedRangedTide || redesignedRangedSneak || redesignedRangedGuard || redesignedRangedMending || redesignedRangedSilk || redesignedMeleeImpulse || redesignedLootingFire
-                || redesignedMeleeGuard || redesignedMeleeWork || redesignedMeleeMending || redesignedMeleeFortune || redesignedMeleeSilkSeal
+                || redesignedEmberHarvest || redesignedMeleeGuard || redesignedMeleeWork || redesignedMeleeMending || redesignedMeleeFortune || redesignedMeleeSilkSeal
                 || redesignedMeleeFire || redesignedMeleeFrost || redesignedMeleeLightning || redesignedMeleeWind || redesignedGrapnel;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent

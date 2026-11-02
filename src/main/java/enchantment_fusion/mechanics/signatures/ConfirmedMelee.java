@@ -23,9 +23,21 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class ConfirmedMelee {
     public record Hit(ServerPlayer player, LivingEntity target, ItemStack weapon, EquipmentSlot slot,
-                      DamageSource source, boolean full, float actualLoss, boolean eligibleBefore) {}
+                      DamageSource source, boolean full, float actualLoss, boolean eligibleBefore,
+                      int fireBefore, boolean sneakingBefore) {
+        public Hit(ServerPlayer player, LivingEntity target, ItemStack weapon, EquipmentSlot slot, DamageSource source,
+                   boolean full, float actualLoss, boolean eligibleBefore) {
+            this(player, target, weapon, slot, source, full, actualLoss, eligibleBefore, 0, false);
+        }
+    }
     public record Observation(ServerPlayer player, LivingEntity target, ItemStack weapon, EquipmentSlot slot,
-                              DamageSource source, boolean full, float health, float absorption, boolean eligibleBefore) {}
+                              DamageSource source, boolean full, float health, float absorption, boolean eligibleBefore,
+                              int fireBefore, boolean sneakingBefore) {
+        public Observation(ServerPlayer player, LivingEntity target, ItemStack weapon, EquipmentSlot slot, DamageSource source,
+                           boolean full, float health, float absorption, boolean eligibleBefore) {
+            this(player, target, weapon, slot, source, full, health, absorption, eligibleBefore, 0, false);
+        }
+    }
     private static final List<Consumer<Hit>> LISTENERS = new CopyOnWriteArrayList<>();
     private static final ThreadLocal<Boolean> DISPATCHING = ThreadLocal.withInitial(() -> false);
     private ConfirmedMelee() {}
@@ -46,7 +58,8 @@ public final class ConfirmedMelee {
             || Boolean.TRUE.equals(DISPATCHING.get())) return null;
         boolean eligible = LoyaltyGuard.eligibleTarget(owner, victim) && owner.level().mayInteract(owner, victim.blockPosition())
             && (!(victim instanceof Player other) || other.canHarmPlayer(owner));
-        return new Observation(owner, victim, weapon, slot, source, full, victim.getHealth(), victim.getAbsorptionAmount(), eligible);
+        return new Observation(owner, victim, weapon, slot, source, full, victim.getHealth(), victim.getAbsorptionAmount(), eligible,
+            victim.getRemainingFireTicks(), owner.isShiftKeyDown());
     }
 
     public static void after(@Nullable Observation observation, boolean accepted) {
@@ -56,7 +69,7 @@ public final class ConfirmedMelee {
             observation.target().getHealth(), observation.target().getAbsorptionAmount());
         if (loss <= 0) return;
         Hit hit = new Hit(observation.player(), observation.target(), observation.weapon(), observation.slot(),
-            observation.source(), observation.full(), loss, observation.eligibleBefore());
+            observation.source(), observation.full(), loss, observation.eligibleBefore(), observation.fireBefore(), observation.sneakingBefore());
         boolean previous = Boolean.TRUE.equals(DISPATCHING.get());
         DISPATCHING.set(true);
         try {

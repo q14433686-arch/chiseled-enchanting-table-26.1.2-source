@@ -1219,5 +1219,7 @@
   "skill.enchantment_fusion.melee_disarm": "繳械驅逐",
   "tooltip.enchantment_fusion.melee_disarm": "搶奪 ▷ 擊退：滿蓄命中合格的原版普通敵人，使其掉落一件真實裝備並將它推離物品；每個目標冷卻 5 秒。綁定裝備、玩家和首領受保護。保留原版搶奪，不複製物品。",
   "skill.enchantment_fusion.looting_fire_seed": "戰利火種",
-  "tooltip.enchantment_fusion.looting_fire_seed": "搶奪 ▷ 火焰附加：直接擊殺合格敵人會留下持續五秒的火種。手持同一武器靠近，引燃短暫的虛擬火圈；火圈邊緣可見且合格的敵人受到火焰傷害並燃燒。保留原版搶奪，不放置火方塊。"
+  "tooltip.enchantment_fusion.looting_fire_seed": "搶奪 ▷ 火焰附加：直接擊殺合格敵人會留下持續五秒的火種。手持同一武器靠近，引燃短暫的虛擬火圈；火圈邊緣可見且合格的敵人受到火焰傷害並燃燒。保留原版搶奪，不放置火方塊。",
+  "skill.enchantment_fusion.ember_harvest": "焚印收割",
+  "tooltip.enchantment_fusion.ember_harvest": "火焰附加 ▷ 搶奪：合格敵人持續燃燒一秒後，潛行滿蓄命中可抽走火焰、熄滅並留下六秒焚印。用同一武器擊殺它，可從該敵人經確認的普通掉落中額外獲得最多三件無特殊資料的物品。其他命中保留火焰附加。"
 }

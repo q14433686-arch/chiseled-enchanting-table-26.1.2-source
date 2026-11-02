@@ -102,7 +102,7 @@ final class AcceptanceReport {
         plan("42.4-bane-protection", "Bane ▷ Protection: arthropod guard activation and actual projectile impact", "Not reached if setup fails.");
         plan("42.4-protection-bane", "Protection ▷ Bane: per-item mitigation and arthropod counter hit", "Not reached if setup fails.");
         plan("42.4-runtime-compat", "42.4 natural swing packets, diverse projectiles, overlapping defense effects, multiplayer and protection mods", "Not covered by the prepared single-player fixture.");
-        plan("07-fire-looting", "Fire Aspect ▷ Looting: extract remaining fire and reward the same enemy's real loot", "Not implemented; no candidate fixture yet.");
+        plan("07-fire-looting", "Fire Aspect ▷ Looting: prepared burn age, real extraction and same-enemy ordinary loot", "Not reached if setup fails; natural burn timing, multiplayer and third-party callbacks remain untested.");
         plan("07-looting-fire", "Looting ▷ Fire Aspect: real direct kills, normal loot and virtual ring with prepared approach", "Not reached if setup fails; natural input, aging, multiplayer and third-party hooks remain untested.");
         plan("07-runtime-compat", "07 natural input, drop attribution, PvP, claims, multiplayer and third-party callbacks", "Not covered by the prepared single-player fixture.");
         plan("08-knockback-looting", "Knockback ▷ Looting: real damage and knockback, prepared movement, same-weapon pursuit and bounded transfer", "Not reached if setup fails; natural movement and multiplayer are not covered.");

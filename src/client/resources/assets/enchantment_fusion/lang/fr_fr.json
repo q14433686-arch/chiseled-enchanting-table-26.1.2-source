@@ -1219,5 +1219,7 @@
   "skill.enchantment_fusion.melee_disarm": "Expulsion désarmante",
   "tooltip.enchantment_fusion.melee_disarm": "Butin ▷ Recul : un coup chargé retire une pièce réelle à un ennemi ordinaire admissible du jeu de base, puis l’éloigne de l’objet. Cinq secondes par ennemi ; équipement lié, joueurs et boss protégés. Butin reste actif ; aucune copie.",
   "skill.enchantment_fusion.looting_fire_seed": "Étincelle du butin",
-  "tooltip.enchantment_fusion.looting_fire_seed": "Butin ▷ Aura de feu : une élimination directe d’un ennemi admissible laisse une braise cinq secondes. Approchez avec la même arme pour former un bref anneau virtuel ; les ennemis admissibles visibles sur le bord subissent des dégâts de feu et brûlent. Butin reste actif ; aucun bloc de feu."
+  "tooltip.enchantment_fusion.looting_fire_seed": "Butin ▷ Aura de feu : une élimination directe d’un ennemi admissible laisse une braise cinq secondes. Approchez avec la même arme pour former un bref anneau virtuel ; les ennemis admissibles visibles sur le bord subissent des dégâts de feu et brûlent. Butin reste actif ; aucun bloc de feu.",
+  "skill.enchantment_fusion.ember_harvest": "Moisson de braises",
+  "tooltip.enchantment_fusion.ember_harvest": "Aura de feu ▷ Butin : après une seconde de combustion d’un ennemi admissible, frappez accroupi et à pleine charge pour l’éteindre et le marquer six secondes. Avec la même arme, éliminez-le pour obtenir jusqu’à trois objets ordinaires supplémentaires de son butin confirmé. Aura de feu reste active sur les autres coups."
 }

@@ -43,6 +43,9 @@ import enchantment_fusion.mechanics.signatures.ConfirmedArrow;
 import enchantment_fusion.mechanics.signatures.ConfirmedMining;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.LootingFireSeedSkills;
+import enchantment_fusion.mechanics.signatures.BurningTargetHistory;
+import enchantment_fusion.mechanics.signatures.EmberHarvestSkills;
+import enchantment_fusion.mechanics.signatures.EmberHarvestCapture;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
@@ -144,6 +147,8 @@ public final class MatrixRuntimeHooks {
             ConfirmedArrow.clearServer();
             MeleeImpulseSkills.clearServer();
             LootingFireSeedSkills.clearServer();
+            BurningTargetHistory.clear();
+            EmberHarvestSkills.clearServer();
             MeleeGuardSkills.clearServer();
             MeleeWorkSkills.clearServer(server);
             MeleeMendingSkills.clearServer();
@@ -226,6 +231,7 @@ public final class MatrixRuntimeHooks {
             ConfirmedArrow.clearPlayer(pid);
             MeleeImpulseSkills.clearPlayer(pid);
             LootingFireSeedSkills.clearPlayer(pid);
+            EmberHarvestSkills.clearPlayer(pid);
             MeleeGuardSkills.clearPlayer(pid);
             MeleeWorkSkills.clearPlayer(handler.getPlayer());
             MeleeMendingSkills.clearPlayer(pid);
@@ -425,6 +431,7 @@ public final class MatrixRuntimeHooks {
         // Entity Kill hooks
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             GrapnelLooting.afterDeath(entity, damageSource);
+            EmberHarvestCapture.afterDeath(entity, damageSource);
             AmberSealSkill.afterDeath(entity, damageSource);
             SoulThreadSkills.afterDeath(entity, damageSource);
             if (damageSource.getEntity() instanceof ServerPlayer attacker && entity.level() instanceof ServerLevel level) {
@@ -463,6 +470,7 @@ public final class MatrixRuntimeHooks {
                 ConfirmedArrow.clearPlayer(deadPlayer.getUUID());
                 MeleeImpulseSkills.clearPlayer(deadPlayer.getUUID());
                 LootingFireSeedSkills.clearPlayer(deadPlayer.getUUID());
+                EmberHarvestSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeGuardSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeWorkSkills.clearPlayer(deadPlayer);
                 MeleeMendingSkills.clearPlayer(deadPlayer.getUUID());
@@ -512,6 +520,8 @@ public final class MatrixRuntimeHooks {
             ConfirmedArrow.tickServer(server);
             MeleeImpulseSkills.tickServer(server);
             LootingFireSeedSkills.tickServer(server);
+            BurningTargetHistory.tickServer(server);
+            EmberHarvestSkills.tickServer(server);
             MeleeGuardSkills.tickServer(server);
             MeleeWorkSkills.tickServer(server);
             MeleeMendingSkills.tickServer(server);

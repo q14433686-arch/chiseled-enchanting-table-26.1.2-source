@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.GrapnelBreath;
+import enchantment_fusion.mechanics.signatures.BurningTargetHistory;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +18,10 @@ public abstract class LivingEntityBreathCaptureMixin {
         GrapnelBreath.Tick tick = GrapnelBreath.beginTick((LivingEntity) (Object) this);
         boolean completed = false;
         try { original.call(); completed = true; }
-        finally { GrapnelBreath.endTick(tick, completed); }
+        finally {
+            try { GrapnelBreath.endTick(tick, completed); }
+            finally { if (completed) BurningTargetHistory.observe((LivingEntity) (Object) this); }
+        }
     }
     @WrapMethod(method = "decreaseAirSupply")
     private int ef$scopeAirCalculation(int air, Operation<Integer> original) {

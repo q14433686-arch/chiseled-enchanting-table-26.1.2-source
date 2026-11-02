@@ -1219,5 +1219,7 @@
   "skill.enchantment_fusion.melee_disarm": "武装解除の追放",
   "tooltip.enchantment_fusion.melee_disarm": "ドロップ増加 ▷ ノックバック：十分に溜めた攻撃で、対象となる通常のバニラの敵から実物の装備を一つ落とさせ、敵を装備から遠ざける。対象ごとに5秒の待機時間。束縛された装備、プレイヤー、ボスは保護される。ドロップ増加は残り、複製しない。",
   "skill.enchantment_fusion.looting_fire_seed": "戦利の火種",
-  "tooltip.enchantment_fusion.looting_fire_seed": "ドロップ増加 ▷ 火属性：有効な敵を直接倒すと火種が5秒間残る。同じ武器を持って近づくと短時間の仮想火輪が生じ、縁にいる視認できる有効な敵が炎ダメージを受けて燃える。ドロップ増加は残り、火ブロックは置かない。"
+  "tooltip.enchantment_fusion.looting_fire_seed": "ドロップ増加 ▷ 火属性：有効な敵を直接倒すと火種が5秒間残る。同じ武器を持って近づくと短時間の仮想火輪が生じ、縁にいる視認できる有効な敵が炎ダメージを受けて燃える。ドロップ増加は残り、火ブロックは置かない。",
+  "skill.enchantment_fusion.ember_harvest": "焔印の収穫",
+  "tooltip.enchantment_fusion.ember_harvest": "火属性 ▷ ドロップ増加：有効な敵が1秒燃え続けた後、スニークして十分に溜めた攻撃を当てると火を消して6秒間印を付ける。同じ武器で倒すと、その敵の確認済み通常ドロップから特殊データのない品を最大3個追加で得る。他の攻撃では火属性が残る。"
 }

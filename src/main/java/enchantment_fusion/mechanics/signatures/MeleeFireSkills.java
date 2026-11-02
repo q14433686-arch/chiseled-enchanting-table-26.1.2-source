@@ -148,7 +148,11 @@ public final class MeleeFireSkills {
         if (!(player instanceof ServerPlayer owner) || !(victim instanceof LivingEntity target) || owner.level() != level
             || owner.getMainHandItem() != weapon || source.getEntity() != owner || source.getDirectEntity() != owner) return;
         Gear gear = select(weapon, true);
-        if (gear != null && owns(owner, gear) && !Boolean.TRUE.equals(REPLAYING.get())) {
+        if (gear == null) {
+            FusedPair harvest = EmberHarvestSkills.selected(weapon);
+            if (harvest != null) gear = new Gear(weapon, harvest);
+        }
+        if (gear != null && (owns(owner, gear) || EmberHarvestSkills.applies(gear.pair(), weapon)) && !Boolean.TRUE.equals(REPLAYING.get())) {
             Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), FIRE).orElse(null);
             boolean nativePresent = primary != null && weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary) > 0;
             if (primary != null && !nativePresent && !FireSweepSkills.replaysFirePrimary(weapon) && !glazedAlreadyOwnsFire(weapon)) {
