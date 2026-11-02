@@ -4,7 +4,10 @@ import enchantment_fusion.item.FusedEnchantedBookItem;
 import enchantment_fusion.mechanics.FusionRuleEngine.RejectReason;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.signatures.BlastDefenseSkills;
+import enchantment_fusion.mechanics.signatures.ProtectionProjection;
+import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
+import enchantment_fusion.registry.FusionDataComponents;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -28,6 +31,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.GameType;
 
 /** Prepared integration probes only: no real client input, natural explosions or modded protection. */
@@ -69,6 +73,14 @@ final class BlastDefenseProbe {
                 "Blast-primary armor must retain some blast push resistance without duplicating a larger native value");
             require(Math.abs(BlastDefenseSkills.explosionResistance(player, 0.8D) - 0.8D) < 0.0001D,
                 "An already larger native resistance must not be added again");
+            FusedPair stronger = FusedPair.clean("minecraft:blast_protection", 3, "minecraft:protection", 2);
+            for (boolean reversed : new boolean[]{false, true}) {
+                chest.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(reversed ? stronger : COUNTER)
+                    .append(reversed ? COUNTER : stronger));
+                require(BlastDefenseSkills.findInSlot(player, EquipmentSlot.CHEST, true).pair().equals(stronger),
+                    "A duplicated legacy counter selects the stronger pair independently of storage order");
+            }
+            chest.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY.append(COUNTER));
 
             BlastDefenseSkills.onDisconnect(player.getUUID());
             player.setHealth(player.getMaxHealth()); player.setAbsorptionAmount(0.0F);
@@ -119,6 +131,62 @@ final class BlastDefenseProbe {
             require(player.hurtServer(level, ordinary, 8.0F), "Ordinary fixture damage must be accepted");
             require(Math.abs(before - player.getHealth() - normalExpected) < 0.01F,
                 "Ordinary damage must retain only native Protection, not the explosion-only addition");
+
+            // Two real protection families on one item: the single actual evaluation uses the highest level,
+            // regardless of pair order or whether vanilla already has a lower/higher native level.
+            FusedPair other = FusedPair.clean("minecraft:protection", 4, "minecraft:lure", 1);
+            var protection = FusionStationOperations.lookupEnchantment(level.registryAccess(), "minecraft:protection").orElseThrow();
+            for (boolean reversed : new boolean[]{false, true}) for (int nativeLevel : new int[]{0, 1, 5}) {
+                FusedEnchantmentList pairs = FusedEnchantmentList.EMPTY.append(reversed ? other : GUARD).append(reversed ? GUARD : other);
+                ItemStack multi = new ItemStack(Items.IRON_CHESTPLATE); multi.set(FusionDataComponents.FUSED_PAIRS, pairs);
+                ItemEnchantments.Mutable nativeEnchants = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+                if (nativeLevel > 0) nativeEnchants.set(protection, nativeLevel);
+                multi.set(DataComponents.ENCHANTMENTS, nativeEnchants.toImmutable());
+                player.setItemSlot(EquipmentSlot.CHEST, multi); saved.installArmor(multi, helmet);
+                int actualLevel = Math.max(4, nativeLevel);
+                float protectionValue = actualLevel + 4.0F + actualLevel * 0.5F;
+                float damage = CombatRules.getDamageAfterAbsorb(player, 8.0F, explosion, player.getArmorValue(), toughness);
+                float expectedMulti = CombatRules.getDamageAfterMagicAbsorb(damage, protectionValue);
+                player.setHealth(player.getMaxHealth()); player.invulnerableTime = 0; before = player.getHealth();
+                require(player.hurtServer(level, explosion, 8.0F), "Multi-source explosion must be accepted");
+                require(Math.abs(before - player.getHealth() - expectedMulti) < 0.01F,
+                    "Highest Protection must be used once, without losing or doubling blast conversion");
+                float normalDamage = CombatRules.getDamageAfterAbsorb(player, 8.0F, ordinary, player.getArmorValue(), toughness);
+                float expectedNormal = CombatRules.getDamageAfterMagicAbsorb(normalDamage, actualLevel);
+                player.setHealth(player.getMaxHealth()); player.invulnerableTime = 0; before = player.getHealth();
+                require(player.hurtServer(level, ordinary, 8.0F), "Multi-source ordinary damage must be accepted");
+                require(Math.abs(before - player.getHealth() - expectedNormal) < 0.01F,
+                    "Ordinary damage uses the highest primary once and never gains the blast secondary");
+
+                ProtectionProjection.Frame projection = ProtectionProjection.begin(player, explosion);
+                try {
+                    require(ProtectionProjection.effectiveLevel(protection.value(), Math.max(1, nativeLevel), multi, player, explosion) == actualLevel,
+                        "The real effect must receive the maximum level before it runs");
+                    multi.set(FusionDataComponents.FUSED_PAIRS, pairs.removeAt(1));
+                    require(ProtectionProjection.effectiveLevel(protection.value(), 1, multi, player, explosion) == 1,
+                        "Changed fusion data cannot inherit an earlier pass's level request");
+                } finally { multi.set(FusionDataComponents.FUSED_PAIRS, pairs); ProtectionProjection.end(projection); }
+            }
+
+            FusedPair strongGuard = FusedPair.clean("minecraft:protection", 2, "minecraft:blast_protection", 4);
+            FusedPair blastGrapnel = FusedPair.clean("minecraft:blast_protection", 1, "minecraft:lure", 1);
+            var blast = FusionStationOperations.lookupEnchantment(level.registryAccess(), "minecraft:blast_protection").orElseThrow();
+            for (boolean reversed : new boolean[]{false, true}) for (int nativeLevel : new int[]{0, 1, 5}) {
+                FusedEnchantmentList pairs = FusedEnchantmentList.EMPTY.append(reversed ? blastGrapnel : strongGuard)
+                    .append(reversed ? strongGuard : blastGrapnel);
+                ItemStack multi = new ItemStack(Items.IRON_CHESTPLATE); multi.set(FusionDataComponents.FUSED_PAIRS, pairs);
+                ItemEnchantments.Mutable nativeEnchants = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+                if (nativeLevel > 0) nativeEnchants.set(blast, nativeLevel);
+                multi.set(DataComponents.ENCHANTMENTS, nativeEnchants.toImmutable());
+                player.setItemSlot(EquipmentSlot.CHEST, multi); saved.installArmor(multi, helmet);
+                float protectionValue = 3.0F + 2.0F * Math.max(4, nativeLevel); // Protection II + conversion + blast
+                float damage = CombatRules.getDamageAfterAbsorb(player, 8.0F, explosion, player.getArmorValue(), toughness);
+                float expectedMulti = CombatRules.getDamageAfterMagicAbsorb(damage, protectionValue);
+                player.setHealth(player.getMaxHealth()); player.invulnerableTime = 0; before = player.getHealth();
+                require(player.hurtServer(level, explosion, 8.0F), "Cross-family blast damage must be accepted");
+                require(Math.abs(before - player.getHealth() - expectedMulti) < 0.01F,
+                    "The guard's higher blast secondary and grapnel primary must evaluate once at the maximum level");
+            }
         } finally { saved.restore(); }
     }
 

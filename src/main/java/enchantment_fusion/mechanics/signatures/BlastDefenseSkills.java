@@ -109,13 +109,15 @@ public final class BlastDefenseSkills {
     public static @Nullable Gear findInSlot(ServerPlayer player, EquipmentSlot slot, boolean counter) {
         ItemStack item = player.getItemBySlot(slot);
         if (item.isEmpty() || !supportsSlot(item, slot)) return null;
+        Gear best = null;
         for (FusedPair pair : item.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
             if ((counter ? isCounter(pair) : isGuard(pair))
-                && SignatureCatalog.resolve(pair).map(entry -> applies(pair, item, entry.id())).orElse(false)) {
-                return new Gear(slot, item, pair);
-            }
+                && SignatureCatalog.resolve(pair).map(entry -> applies(pair, item, entry.id())).orElse(false)
+                && (best == null || pair.primaryLevel() + pair.secondaryLevel() > best.pair().primaryLevel() + best.pair().secondaryLevel()
+                    || pair.primaryLevel() + pair.secondaryLevel() == best.pair().primaryLevel() + best.pair().secondaryLevel()
+                        && pair.primaryLevel() > best.pair().primaryLevel())) best = new Gear(slot, item, pair);
         }
-        return null;
+        return best;
     }
     private static boolean stillWorn(ServerPlayer player, Gear gear) {
         return player.getItemBySlot(gear.slot()) == gear.stack() && !gear.stack().isEmpty()

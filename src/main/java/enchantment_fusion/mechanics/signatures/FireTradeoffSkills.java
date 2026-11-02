@@ -137,23 +137,36 @@ public final class FireTradeoffSkills {
         }
         return false;
     }
+    /** Collect the one maximum requested level before any protection effect is evaluated. */
+    static Map<String, Integer> protectionLevels(ItemStack stack, EquipmentSlot slot, DamageSource source) {
+        Map<String, Integer> levels = new LinkedHashMap<>();
+        if (stack == null || stack.isEmpty()) return levels;
+        FusedEnchantmentList fused = stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
+        if (fused.isEmpty() || !slotMatches(stack, slot)) return levels;
+        for (FusedPair pair : fused.pairs()) {
+            String signature = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
+            boolean blastPair = BlastDefenseSkills.applies(pair, stack, signature);
+            boolean primaryDefense = applies(pair, stack, signature)
+                || (FIRE.equals(pair.primaryId()) && FireThornsSkills.applies(pair, stack, signature))
+                || (MeleeGuardSkills.isProtectionFirst(pair) && MeleeGuardSkills.applies(pair, stack))
+                || (RangedGuardSkills.protectionFirst(pair) && RangedGuardSkills.applies(pair, stack))
+                || GrapnelDefense.applies(pair, stack) || blastPair;
+            if (primaryDefense) levels.merge(pair.primaryId(), pair.primaryLevel(), Math::max);
+            // The reactive-plate secondary is protection only during the actual explosion pass.
+            if (blastPair && BlastDefenseSkills.isGuard(pair) && source.is(DamageTypeTags.IS_EXPLOSION)
+                && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+                levels.merge(BlastDefenseSkills.BLAST, pair.secondaryLevel(), Math::max);
+            }
+        }
+        return levels;
+    }
+
     /** Preserve native primary data-pack protection on actual armor/shields without replaying a native slot effect. */
     public static float primaryProtection(ServerLevel level, ServerPlayer player, DamageSource source, float vanilla) {
         float total = vanilla;
         for (EquipmentSlot slot : SLOTS) {
             ItemStack stack = player.getItemBySlot(slot);
-            if (!slotMatches(stack, slot)) continue;
-            Map<String, Integer> replayLevels = new LinkedHashMap<>();
-            for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
-                String signature = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
-                boolean primaryDefense = applies(pair, stack, signature)
-                    || (FIRE.equals(pair.primaryId()) && FireThornsSkills.applies(pair, stack, signature))
-                    || (MeleeGuardSkills.isProtectionFirst(pair) && MeleeGuardSkills.applies(pair, stack))
-                    || (RangedGuardSkills.protectionFirst(pair) && RangedGuardSkills.applies(pair, stack))
-                    || GrapnelDefense.applies(pair, stack);
-                if (primaryDefense) replayLevels.merge(pair.primaryId(), pair.primaryLevel(), Math::max);
-            }
-            for (var entry : replayLevels.entrySet()) {
+            for (var entry : protectionLevels(stack, slot, source).entrySet()) {
                 Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), entry.getKey()).orElse(null);
                 if (primary == null) continue;
                 int nativeLevel = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary);

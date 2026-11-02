@@ -38,16 +38,18 @@ public abstract class EnchantmentFrostEffectsMixin {
     private void ef$observeContribution(ServerLevel level, int enchantmentLevel, ItemStack item,
                                         Entity victim, DamageSource source, MutableFloat protection,
                                         Operation<Void> original) {
+        Enchantment enchantment = (Enchantment) (Object) this;
+        int effective = ProtectionProjection.effectiveLevel(enchantment, enchantmentLevel, item, victim, source);
         float before = protection.floatValue();
-        original.call(level, enchantmentLevel, item, victim, source, protection);
-        ProtectionProjection.observe((Enchantment) (Object) this, enchantmentLevel, item, victim, source);
-        FrostLandingCapture.observeEnchantment((Enchantment) (Object) this, level, item, victim,
+        original.call(level, effective, item, victim, source, protection);
+        ProtectionProjection.observe(enchantment, effective, item, victim, source);
+        FrostLandingCapture.observeEnchantment(enchantment, level, item, victim,
             source, before, protection.floatValue());
-        BlastDefenseSkills.observeProtection((Enchantment) (Object) this, level, item, victim,
+        BlastDefenseSkills.observeProtection(enchantment, level, item, victim,
             source, before, protection.floatValue());
-        MeleeGuardCapture.observe((Enchantment) (Object) this, level, enchantmentLevel, item, victim,
+        MeleeGuardCapture.observe(enchantment, level, effective, item, victim,
             source, before, protection.floatValue());
-        GrapnelDefenseCapture.observe((Enchantment) (Object) this, level, enchantmentLevel, item, victim,
+        GrapnelDefenseCapture.observe(enchantment, level, effective, item, victim,
             source, before, protection.floatValue());
     }
 
