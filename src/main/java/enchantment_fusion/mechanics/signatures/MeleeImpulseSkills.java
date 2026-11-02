@@ -3,6 +3,7 @@ package enchantment_fusion.mechanics.signatures;
 import enchantment_fusion.mechanics.CompendiumDiscoveryTracker;
 import enchantment_fusion.mechanics.FusionStationOperations;
 import enchantment_fusion.mechanics.MatrixEffectExecutor;
+import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.mechanics.transmute.TransmuteRuntimeSupport;
 import enchantment_fusion.model.FusedEnchantmentList;
 import enchantment_fusion.model.FusedPair;
@@ -42,13 +43,14 @@ import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
 
-/** The six 42.5 melee/knockback templates, grounded in actual resisted knockback and movement. */
+/** Shared real knockback and collision-clipped movement for 42.5 and the selected 08 pursuit. */
 public final class MeleeImpulseSkills {
     public static final String KNOCKBACK = "minecraft:knockback";
+    public static final String LOOTING = "minecraft:looting", PURSUIT = "concussive_plunder";
     private static final int MAX_MARKS = 256, MAX_PER_OWNER = 4, MAX_CONTACTS = 32;
     private static final long LIFETIME = 60;
-    private record Gear(ItemStack stack, FusedPair pair) {}
-    private static final class Mark {
+    static record Gear(ItemStack stack, FusedPair pair) {}
+    static final class Mark {
         final UUID owner, target;
         final ResourceKey<Level> dimension;
         final Gear gear;
@@ -64,6 +66,8 @@ public final class MeleeImpulseSkills {
             this.lastTarget = target.position(); this.lastOwner = owner.position();
         }
     }
+    /** A claim is settled only after the complete real attack returns successfully. */
+    static record Pursuit(Mark mark, LivingEntity target, Vec3 movement, double available) {}
     private record Contact(LivingEntity entity, double time) {}
     /** Null bounds mean the candidate only appeared after the observed movement. */
     private record Candidate(LivingEntity entity, @Nullable AABB bounds) {}
@@ -85,8 +89,19 @@ public final class MeleeImpulseSkills {
     public static boolean isKnockbackFirst(@Nullable FusedPair pair) {
         return pair != null && KNOCKBACK.equals(pair.primaryId()) && MeleeAttackThemes.isAttack(pair.secondaryId());
     }
+    public static boolean pursuitPair(@Nullable FusedPair pair) {
+        return pair != null && KNOCKBACK.equals(pair.primaryId()) && LOOTING.equals(pair.secondaryId());
+    }
+    public static boolean pursuitSignature(@Nullable SignatureEntry entry) {
+        return entry != null && PURSUIT.equals(entry.id()) && KNOCKBACK.equals(entry.primaryId())
+            && LOOTING.equals(entry.secondaryId());
+    }
+    /** Data-pack replacements keep their own signature; only the chosen old signature is redesigned. */
+    public static boolean isPursuit(@Nullable FusedPair pair) {
+        return pursuitPair(pair) && SignatureCatalog.resolve(pair).map(MeleeImpulseSkills::pursuitSignature).orElse(false);
+    }
     public static boolean matches(@Nullable FusedPair pair) {
-        return (isAttackFirst(pair) || isKnockbackFirst(pair)) && SignatureCatalog.resolve(pair).isEmpty();
+        return isPursuit(pair) || (isAttackFirst(pair) || isKnockbackFirst(pair)) && SignatureCatalog.resolve(pair).isEmpty();
     }
     public static boolean supportsCarrier(Set<FusionCarrier> roles) { return MeleeAttackThemes.supportsWeapon(roles); }
     public static boolean applies(@Nullable FusedPair pair, @Nullable ItemStack stack) {
@@ -95,11 +110,11 @@ public final class MeleeImpulseSkills {
     private static @Nullable Gear selected(@Nullable ItemStack stack, boolean forward) {
         if (stack == null || stack.isEmpty()) return null;
         for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs())
-            if ((forward ? isAttackFirst(pair) : isKnockbackFirst(pair)) && applies(pair, stack)) return new Gear(stack, pair);
+            if ((forward ? isAttackFirst(pair) : isKnockbackFirst(pair) || isPursuit(pair)) && applies(pair, stack)) return new Gear(stack, pair);
         return null;
     }
-    private static boolean ready(ServerPlayer owner) { return owner.isAlive() && !owner.isSpectator(); }
-    private static boolean owns(ServerPlayer owner, Gear gear) {
+    static boolean ready(ServerPlayer owner) { return owner.isAlive() && !owner.isSpectator(); }
+    static boolean owns(ServerPlayer owner, Gear gear) {
         if (gear.stack().isEmpty() || !gear.stack().getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY)
             .pairs().contains(gear.pair()) || !applies(gear.pair(), gear.stack())) return false;
         for (int i = 0; i < owner.getInventory().getContainerSize(); i++) if (owner.getInventory().getItem(i) == gear.stack()) return true;
@@ -112,14 +127,20 @@ public final class MeleeImpulseSkills {
             && !GlazedStrikeEffect.isApplyingBonus() && !AmberSealSkill.isApplyingBurst() && !LoyaltyGuard.isExecuting()
             && !Boolean.TRUE.equals(TransmuteRuntimeSupport.IN_CUSTOM_COMBAT.get());
     }
-    private static String attackId(Gear gear) { return isAttackFirst(gear.pair()) ? gear.pair().primaryId() : gear.pair().secondaryId(); }
+    private static String attackId(Gear gear) {
+        return isPursuit(gear.pair()) ? MeleeAttackThemes.SHARP
+            : isAttackFirst(gear.pair()) ? gear.pair().primaryId() : gear.pair().secondaryId();
+    }
     public static final class Attack {
         final @Nullable Attack previous;
         final Player player;
         final ItemStack weapon;
         final Entity target;
         final @Nullable Gear forward, reverse;
-        @Nullable DamageSource confirmed, replayed;
+        @Nullable DamageSource confirmed, replayed, beforeSource;
+        @Nullable Vec3 beforeVelocity;
+        @Nullable Pursuit pursuit;
+        boolean ambiguous;
         Attack(@Nullable Attack previous, Player player, ItemStack weapon, Entity target, EquipmentSlot slot) {
             this.previous = previous; this.player = player; this.weapon = weapon; this.target = target;
             this.forward = slot == EquipmentSlot.MAINHAND ? selected(weapon, true) : null;
@@ -127,11 +148,31 @@ public final class MeleeImpulseSkills {
         }
     }
     public static Attack beginAttack(Player player, ItemStack weapon, Entity target, EquipmentSlot slot) {
-        Attack frame = new Attack(CURRENT.get(), player, weapon, target, slot); CURRENT.set(frame); return frame;
+        Attack previous = CURRENT.get();
+        if (previous != null) previous.ambiguous = true;
+        Attack frame = new Attack(previous, player, weapon, target, slot);
+        frame.ambiguous = previous != null;
+        CURRENT.set(frame); return frame;
     }
-    public static void endAttack(Attack frame) {
-        if (CURRENT.get() != frame) return;
+    /** Legacy callers do not prove the enclosing action completed, so they cannot settle pursuit. */
+    public static void endAttack(Attack frame) { endAttack(frame, false); }
+    public static void endAttack(Attack frame, boolean completed) {
+        if (CURRENT.get() != frame) {
+            CURRENT.remove();
+            if (frame.previous != null) frame.previous.ambiguous = true;
+            return;
+        }
         if (frame.previous == null) CURRENT.remove(); else CURRENT.set(frame.previous);
+        if (completed && !frame.ambiguous && frame.pursuit != null) PursuitPlunderSkills.settle(frame);
+    }
+    /** Snapshot before the real hurt call, so the second hit's own knockback cannot be stolen. */
+    public static void beforeDamage(@Nullable ConfirmedMelee.Observation observation) {
+        Attack frame = CURRENT.get();
+        if (observation == null || frame == null || frame.player != observation.player() || frame.target != observation.target()
+            || frame.weapon != observation.weapon() || frame.reverse == null || !isPursuit(frame.reverse.pair())) return;
+        if (frame.beforeSource != null) { frame.ambiguous = true; return; }
+        frame.beforeSource = observation.source();
+        frame.beforeVelocity = observation.target().getDeltaMovement();
     }
     private static void addMark(Mark mark) {
         MARKS.add(mark);
@@ -140,7 +181,7 @@ public final class MeleeImpulseSkills {
     private static void decrement(UUID id) {
         TRACKED.computeIfPresent(id, (key, count) -> count <= 1 ? null : count - 1);
     }
-    private static void removeMark(Mark mark) {
+    static void removeMark(Mark mark) {
         if (MARKS.remove(mark)) { decrement(mark.owner); decrement(mark.target); }
     }
     private static void removeMarks(Predicate<Mark> predicate) {
@@ -157,6 +198,10 @@ public final class MeleeImpulseSkills {
             && MeleeAttackThemes.matchesTarget(attackId(frame.reverse), hit.target());
         if (!forward && !reverse) return;
         frame.confirmed = hit.source();
+        if (reverse && isPursuit(frame.reverse.pair())) {
+            PursuitPlunderSkills.prepare(frame, owner, hit.target(), frame.reverse);
+            return;
+        }
         if (!forward) return;
         long now = owner.level().getGameTime();
         Mark mark = find(owner, hit.target(), frame.forward);
@@ -206,12 +251,13 @@ public final class MeleeImpulseSkills {
             || owner.getMainHandItem() != frame.weapon || !Float.isFinite(vanilla)
             || source.getEntity() != owner || source.getDirectEntity() != owner) return vanilla;
         Gear gear = frame.reverse != null ? frame.reverse : frame.forward;
-        if (gear == null || !owns(owner, gear) || (!isKnockbackFirst(gear.pair()) && frame.confirmed != source)
+        if (gear == null || !owns(owner, gear) || (!isKnockbackFirst(gear.pair()) && !isPursuit(gear.pair()) && frame.confirmed != source)
             || WindSweepSkills.alreadyReplayed(player, frame.weapon, target, source)) return vanilla;
         ServerLevel level = owner.level();
         Holder<Enchantment> knockback = FusionStationOperations.lookupEnchantment(level.registryAccess(), KNOCKBACK).orElse(null);
         if (knockback == null || frame.weapon.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(knockback) > 0) return vanilla;
-        int effectLevel = isKnockbackFirst(gear.pair()) ? gear.pair().primaryLevel() : gear.pair().secondaryLevel();
+        int effectLevel = isKnockbackFirst(gear.pair()) || isPursuit(gear.pair())
+            ? gear.pair().primaryLevel() : gear.pair().secondaryLevel();
         MutableFloat value = new MutableFloat(vanilla * 2.0F); PRIMARY_REPLAY.set(true);
         try { knockback.value().modifyKnockback(level, effectLevel, frame.weapon, target, source, value); }
         finally { PRIMARY_REPLAY.remove(); }
@@ -233,7 +279,8 @@ public final class MeleeImpulseSkills {
         if (!Double.isFinite(delta.x) || !Double.isFinite(delta.z) || delta.horizontalDistanceSqr() < 0.0001D) return;
         Vec3 direction = new Vec3(delta.x, 0, delta.z).normalize();
         for (Gear gear : new Gear[]{frame.forward, frame.reverse}) {
-            if (gear == null || !owns(owner, gear) || !MeleeAttackThemes.eligible(owner, target, attackId(gear))) continue;
+            if (gear == null || !owns(owner, gear) || !MeleeAttackThemes.eligible(owner, target, attackId(gear))
+                || (isPursuit(gear.pair()) && (frame.ambiguous || frame.pursuit != null))) continue;
             removeMarks(mark -> mark.owner.equals(owner.getUUID()) && mark.target.equals(target.getUUID())
                 && mark.gear.stack() == gear.stack() && mark.gear.pair().equals(gear.pair()));
             List<Mark> owned = MARKS.stream().filter(mark -> mark.owner.equals(owner.getUUID())).toList();
@@ -243,7 +290,7 @@ public final class MeleeImpulseSkills {
             owner.level().sendParticles(ParticleTypes.CRIT, target.getX(), target.getY(0.5D), target.getZ(), 5, 0.15D, 0.2D, 0.15D, 0.01D);
         }
     }
-    private static @Nullable Mark find(ServerPlayer owner, LivingEntity target, Gear gear) {
+    static @Nullable Mark find(ServerPlayer owner, LivingEntity target, Gear gear) {
         for (Mark mark : MARKS) if (mark.owner.equals(owner.getUUID()) && mark.target.equals(target.getUUID())
             && mark.dimension.equals(owner.level().dimension()) && mark.gear.stack() == gear.stack()
             && mark.gear.pair().equals(gear.pair()) && owns(owner, gear)) return mark;
@@ -252,7 +299,7 @@ public final class MeleeImpulseSkills {
     private static MeleeImpulseMath.Box box(AABB b) {
         return new MeleeImpulseMath.Box(b.minX, b.minY, b.minZ, b.maxX, b.maxY, b.maxZ);
     }
-    private static boolean finite(Vec3 value) { return Double.isFinite(value.x) && Double.isFinite(value.y) && Double.isFinite(value.z); }
+    static boolean finite(Vec3 value) { return Double.isFinite(value.x) && Double.isFinite(value.y) && Double.isFinite(value.z); }
     /** A bounded snapshot around a real Entity.move, not a position/teleport event. */
     public static final class Move {
         final @Nullable Move previous;
@@ -330,9 +377,10 @@ public final class MeleeImpulseSkills {
             pending.add(step);
         }
     }
-    private static boolean close(Vec3 first, Vec3 second) {
+    static boolean close(Vec3 first, Vec3 second) {
         return finite(first) && finite(second) && first.distanceToSqr(second) <= 1.0E-6D;
     }
+    static boolean hasPendingSteps(Mark mark) { return !mark.ownerSteps.isEmpty() || !mark.targetSteps.isEmpty(); }
     /** Reject teleport, correction or interrupted movement before using any captured step. */
     private static boolean validSteps(Vec3 initial, Vec3 actual, List<Step> steps) {
         Vec3 expected = initial;

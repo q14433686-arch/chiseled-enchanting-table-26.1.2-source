@@ -52,6 +52,7 @@ public abstract class PlayerAmberAttackMixin {
             MeleeWorkSkills.Attack work = MeleeWorkSkills.beginAttack(player, player.getWeaponItem(), target, EquipmentSlot.MAINHAND);
             try {
                 MeleeImpulseSkills.Attack impulse = MeleeImpulseSkills.beginAttack(player, player.getWeaponItem(), target, EquipmentSlot.MAINHAND);
+                boolean impulseCompleted = false;
                 try {
                     GrapnelImpact.Attack impact = GrapnelImpact.beginAttack(player, player.getWeaponItem(), target, EquipmentSlot.MAINHAND);
                     try {
@@ -73,7 +74,7 @@ public abstract class PlayerAmberAttackMixin {
                                                 HeavyCrushSkill.Swing heavySwing = HeavyCrushSkill.beginSwing(player, target);
                                                 try {
                                                     MomentumSealSkills.Attack momentum = MomentumSealSkills.beginAttack(player, weapon, target);
-                                                    try { original.call(target); } finally { MomentumSealSkills.endAttack(momentum); }
+                                                    try { original.call(target); impulseCompleted = true; } finally { MomentumSealSkills.endAttack(momentum); }
                                                 } finally { HeavyCrushSkill.endSwing(heavySwing); }
                                             } finally { WindSweepSkills.endAttack(wind); }
                                         } finally { SegmentThreadSkills.endAttack(segment); }
@@ -82,7 +83,7 @@ public abstract class PlayerAmberAttackMixin {
                             } finally { SoulThreadSkills.endSwing(soulSwing); }
                         } finally { GlazedStrikeEffect.endSwing(swing); }
                     } finally { GrapnelImpact.endAttack(impact); }
-                } finally { MeleeImpulseSkills.endAttack(impulse); }
+                } finally { MeleeImpulseSkills.endAttack(impulse, impulseCompleted); }
             } finally { MeleeWorkSkills.endAttack(work); }
         } finally { MeleeWearSkills.endAttack(wear); }
     }
@@ -97,6 +98,7 @@ public abstract class PlayerAmberAttackMixin {
             MeleeWorkSkills.Attack work = MeleeWorkSkills.beginAttack(player, weapon, target, slot);
             try {
                 MeleeImpulseSkills.Attack impulse = MeleeImpulseSkills.beginAttack(player, weapon, target, slot);
+                boolean impulseCompleted = false;
                 try {
                     GrapnelImpact.Attack impact = GrapnelImpact.beginAttack(player, weapon, target, slot);
                     try {
@@ -107,13 +109,13 @@ public abstract class PlayerAmberAttackMixin {
                                 WindSweepSkills.Attack wind = WindSweepSkills.beginAttack(player, weapon, target);
                                 try {
                                     MomentumSealSkills.Attack frame = MomentumSealSkills.beginAttack(player, weapon, target);
-                                    try { return original.call(slot, target, damage, dealsDamage, dealsKnockback, dismounts); }
+                                    try { boolean result = original.call(slot, target, damage, dealsDamage, dealsKnockback, dismounts); impulseCompleted = true; return result; }
                                     finally { MomentumSealSkills.endAttack(frame); }
                                 } finally { WindSweepSkills.endAttack(wind); }
                             } finally { SegmentThreadSkills.endAttack(segment); }
                         } finally { SoulBladeSkills.endAttack(soulBlade); }
                     } finally { GrapnelImpact.endAttack(impact); }
-                } finally { MeleeImpulseSkills.endAttack(impulse); }
+                } finally { MeleeImpulseSkills.endAttack(impulse, impulseCompleted); }
             } finally { MeleeWorkSkills.endAttack(work); }
         } finally { MeleeWearSkills.endAttack(wear); }
     }
@@ -149,6 +151,7 @@ public abstract class PlayerAmberAttackMixin {
                                     MeleeSilkSealSkills.Frame seal = MeleeSilkSealSkills.begin(confirmed, lightning.damage());
                                     boolean completed = false;
                                     try {
+                                        MeleeImpulseSkills.beforeDamage(confirmed);
                                         succeeded = original.call(target, source, seal == null ? lightning.damage() : seal.damage());
                                         completed = true;
                                         ConfirmedMelee.after(confirmed, succeeded);
@@ -214,6 +217,7 @@ public abstract class PlayerAmberAttackMixin {
                                     MeleeSilkSealSkills.Frame seal = MeleeSilkSealSkills.begin(confirmed, lightning.damage());
                                     boolean completed = false;
                                     try {
+                                        MeleeImpulseSkills.beforeDamage(confirmed);
                                         succeeded = original.call(target, source, seal == null ? lightning.damage() : seal.damage());
                                         completed = true;
                                         ConfirmedMelee.after(confirmed, succeeded);

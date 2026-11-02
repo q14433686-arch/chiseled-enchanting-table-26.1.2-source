@@ -50,6 +50,35 @@ final class MeleeImpulseMathTest {
         assertTrue(MeleeImpulseSkills.supportsCarrier(Set.of(FusionCarrier.TRIDENT)));
         assertFalse(MeleeImpulseSkills.supportsCarrier(Set.of(FusionCarrier.PICKAXE)));
     }
+    @Test void pursuitOnlyClaimsItsSelectedOrderedSignature() {
+        SignatureCatalog.reloadFromJson(null);
+        FusedPair pair = FusedPair.clean(MeleeImpulseSkills.KNOCKBACK, 2, MeleeImpulseSkills.LOOTING, 3);
+        try {
+            assertTrue(MeleeImpulseSkills.isPursuit(pair));
+            assertTrue(MeleeImpulseSkills.matches(pair));
+            assertFalse(MeleeImpulseSkills.matches(pair.flipped()));
+            assertTrue(MeleeImpulseSkills.pursuitSignature(SignatureCatalog.resolve(pair).orElseThrow()));
+            SignatureCatalog.reloadFromJson(JsonParser.parseString("""
+                {"signatures":{"custom":{"primary":"minecraft:knockback","secondary":"minecraft:looting"}}}
+                """).getAsJsonObject());
+            assertFalse(MeleeImpulseSkills.isPursuit(pair));
+            assertFalse(MeleeImpulseSkills.matches(pair));
+            SignatureCatalog.reloadFromJson(JsonParser.parseString("""
+                {"signatures":{"concussive_plunder":{"primary":"minecraft:knockback","secondary":"minecraft:smite"}}}
+                """).getAsJsonObject());
+            assertFalse(MeleeImpulseSkills.pursuitSignature(SignatureCatalog.resolve(
+                FusedPair.clean(MeleeImpulseSkills.KNOCKBACK, 1, MeleeAttackThemes.SMITE, 1)).orElseThrow()));
+        } finally { SignatureCatalog.reloadFromJson(null); }
+    }
+    @Test void pursuitRequiresFiniteRealRemainingMomentumAndCapsItsImpulse() {
+        assertEquals(0.0F, MeleeImpulseMath.pursuitStrength(Double.NaN, 2, 3));
+        assertEquals(0.0F, MeleeImpulseMath.pursuitStrength(Double.POSITIVE_INFINITY, 2, 3));
+        assertEquals(0.0F, MeleeImpulseMath.pursuitStrength(-0.5D, 2, 3));
+        assertEquals(0.0F, MeleeImpulseMath.pursuitStrength(0.024D, 2, 3));
+        assertEquals(0.0F, MeleeImpulseMath.pursuitStrength(2.01D, 2, 3));
+        assertTrue(MeleeImpulseMath.pursuitStrength(0.3D, 3, 3) > MeleeImpulseMath.pursuitStrength(0.3D, 1, 1));
+        assertEquals(1.25F, MeleeImpulseMath.pursuitStrength(2.0D, 255, 255));
+    }
     @Test void exactAndWildcardSignaturesRemainAuthoritative() {
         var previous = SignatureCatalog.parseFromJson(null);
         try {

@@ -1213,5 +1213,7 @@
   "message.enchantment_fusion.melee_silk_ready": "Готово: полностью заряженный удар запечатает урон.",
   "message.enchantment_fusion.melee_silk_stored": "Урон запечатан: ударьте снова или активируйте для рассеивания.",
   "message.enchantment_fusion.melee_silk_dissipated": "Запечатанный урон рассеялся.",
-  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Старый неподходящий предмет сохраняет прежний эффект; новой печати нужно оружие ближнего боя."
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Старый неподходящий предмет сохраняет прежний эффект; новой печати нужно оружие ближнего боя.",
+  "skill.enchantment_fusion.melee_pursuit": "Перехват импульса",
+  "tooltip.enchantment_fusion.melee_pursuit": "Отдача ▷ Добыча: после настоящей отдачи ударьте тем же оружием того же движущегося врага. Перехватите часть его оставшегося горизонтального импульса, чтобы рвануть в том же направлении и ненадолго замедлить цель. Обычная отдача сохраняется; добыча не создаётся."
 }

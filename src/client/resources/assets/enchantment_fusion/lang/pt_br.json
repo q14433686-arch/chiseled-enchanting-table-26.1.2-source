@@ -1213,5 +1213,7 @@
   "message.enchantment_fusion.melee_silk_ready": "Preparado: um golpe carregado sela o dano.",
   "message.enchantment_fusion.melee_silk_stored": "Dano selado: acerte de novo ou ative para dissipar.",
   "message.enchantment_fusion.melee_silk_dissipated": "O dano selado se dissipou.",
-  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "O item antigo incompatível mantém seu efeito; o novo selo exige arma corpo a corpo."
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "O item antigo incompatível mantém seu efeito; o novo selo exige arma corpo a corpo.",
+  "skill.enchantment_fusion.melee_pursuit": "Perseguição de impulso",
+  "tooltip.enchantment_fusion.melee_pursuit": "Repulsão ▷ Saque: após uma repulsão real, acerte o mesmo inimigo em movimento com a mesma arma. Roube parte do impulso horizontal restante para avançar nessa direção e desacelere-o brevemente. A repulsão normal permanece; nenhum saque é criado."
 }

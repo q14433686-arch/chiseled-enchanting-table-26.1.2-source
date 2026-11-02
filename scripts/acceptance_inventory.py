@@ -95,6 +95,7 @@ DIRECTION_FIXTURES = {
     ("protection", "smite"): ("42.4-protection-smite", True),
     ("bane_of_arthropods", "protection"): ("42.4-bane-protection", True),
     ("protection", "bane_of_arthropods"): ("42.4-protection-bane", True),
+    ("knockback", "looting"): ("08-knockback-looting", True),
     ("sharpness", "knockback"): ("42.5-sharp-knockback", True),
     ("knockback", "sharpness"): ("42.5-knockback-sharp", True),
     ("smite", "knockback"): ("42.5-smite-knockback", True),

@@ -1213,5 +1213,7 @@
   "message.enchantment_fusion.melee_silk_ready": "Preparato: un colpo caricato sigilla il danno.",
   "message.enchantment_fusion.melee_silk_stored": "Danno sigillato: colpisci ancora o attiva per dissiparlo.",
   "message.enchantment_fusion.melee_silk_dissipated": "Il danno sigillato si è dissipato.",
-  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Il vecchio supporto incompatibile conserva il suo effetto; il nuovo sigillo richiede un’arma da mischia."
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Il vecchio supporto incompatibile conserva il suo effetto; il nuovo sigillo richiede un’arma da mischia.",
+  "skill.enchantment_fusion.melee_pursuit": "Inseguimento d’inerzia",
+  "tooltip.enchantment_fusion.melee_pursuit": "Contraccolpo ▷ Bottino: dopo un vero contraccolpo, colpisci lo stesso nemico ancora in movimento con la stessa arma. Sottrai parte del suo slancio orizzontale per scattare nella sua direzione e rallentalo brevemente. Il contraccolpo normale resta; nessun bottino creato."
 }

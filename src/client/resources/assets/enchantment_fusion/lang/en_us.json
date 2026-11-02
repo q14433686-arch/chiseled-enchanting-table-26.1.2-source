@@ -1213,5 +1213,7 @@
   "message.enchantment_fusion.melee_silk_ready": "Prepared: fully charge a hit to seal its damage.",
   "message.enchantment_fusion.melee_silk_stored": "Damage sealed. Hit again to release or activate to dissipate.",
   "message.enchantment_fusion.melee_silk_dissipated": "The sealed damage dissipated.",
-  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Legacy incompatible carrier: its original effect remains; the new seal requires a melee weapon."
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Legacy incompatible carrier: its original effect remains; the new seal requires a melee weapon.",
+  "skill.enchantment_fusion.melee_pursuit": "Momentum Pursuit",
+  "tooltip.enchantment_fusion.melee_pursuit": "Knockback ▷ Looting: after real knockback, strike the same moving enemy with the same weapon. Steal part of its remaining horizontal momentum to dash in that direction and briefly slow it. Native Knockback remains; no loot is created."
 }

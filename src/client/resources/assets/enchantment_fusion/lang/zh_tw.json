@@ -1213,5 +1213,7 @@
   "message.enchantment_fusion.melee_silk_ready": "已準備：滿蓄命中以封存傷害。",
   "message.enchantment_fusion.melee_silk_stored": "傷害已封存：再次命中釋放，再按技能鍵消散。",
   "message.enchantment_fusion.melee_silk_dissipated": "封存的傷害已消散。",
-  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "舊的不適用載體保留原有效果；新封傷需要近戰武器。"
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "舊的不適用載體保留原有效果；新封傷需要近戰武器。",
+  "skill.enchantment_fusion.melee_pursuit": "截勢追擊",
+  "tooltip.enchantment_fusion.melee_pursuit": "擊退 ▷ 搶奪：真實擊退後，趁同一敵人仍沿推出方向移動，用同一武器再次命中，奪走部分剩餘水平動量向前衝刺，使目標短暫緩慢。保留原版擊退，不生成戰利品。"
 }

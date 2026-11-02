@@ -138,6 +138,12 @@ public final class FusionTooltipRenderer {
         return "tooltip.enchantment_fusion.melee_grapnel";
     }
 
+    private static String meleeImpulseTooltip(FusedPair pair) {
+        return MeleeImpulseSkills.isPursuit(pair) ? "tooltip.enchantment_fusion.melee_pursuit"
+            : MeleeImpulseSkills.isAttackFirst(pair) ? "tooltip.enchantment_fusion.melee_impulse_chase"
+            : "tooltip.enchantment_fusion.melee_impulse_transfer";
+    }
+
     private static String meleeWorkTooltip(FusedPair pair) {
         boolean attackFirst = MeleeWorkSkills.isAttackFirst(pair);
         boolean water = MeleeWorkSkills.AQUA.equals(attackFirst ? pair.secondaryId() : pair.primaryId());
@@ -454,9 +460,7 @@ public final class FusionTooltipRenderer {
                         : "tooltip.enchantment_fusion.melee_wear_edge").withStyle(ChatFormatting.AQUA));
                 }
                 if (shift && meleeImpulseTemplate && !legacyMeleeImpulseCarrier) {
-                    lines.add(Component.translatable(MeleeImpulseSkills.isAttackFirst(pair)
-                        ? "tooltip.enchantment_fusion.melee_impulse_chase"
-                        : "tooltip.enchantment_fusion.melee_impulse_transfer").withStyle(ChatFormatting.AQUA));
+                    lines.add(Component.translatable(meleeImpulseTooltip(pair)).withStyle(ChatFormatting.AQUA));
                 }
                 if (shift && meleeGuardTemplate && !legacyMeleeGuardCarrier) {
                     lines.add(Component.translatable(MeleeGuardSkills.isAttackFirst(pair)
@@ -500,7 +504,8 @@ public final class FusionTooltipRenderer {
                 Component sigTitle = Component.translatable(grapnelTemplate && !legacyGrapnelCarrier
                     ? "skill.enchantment_fusion.grapnel" : meleeFortuneTemplate && !legacyMeleeFortuneCarrier
                     ? "skill.enchantment_fusion.melee_fortune" : meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier
-                    ? "skill.enchantment_fusion.melee_silk_seal" : sigOpt.get().titleKey());
+                    ? "skill.enchantment_fusion.melee_silk_seal" : meleeImpulseTemplate && MeleeImpulseSkills.isPursuit(pair) && !legacyMeleeImpulseCarrier
+                    ? "skill.enchantment_fusion.melee_pursuit" : sigOpt.get().titleKey());
                 lines.add(Component.translatable(
                     "tooltip.enchantment_fusion.pair_signature",
                     sigTitle,
@@ -519,7 +524,8 @@ public final class FusionTooltipRenderer {
                         ? grapnelTooltip(pair) : meleeFortuneTemplate && !legacyMeleeFortuneCarrier
                         ? (MeleeFortuneSkills.attackFirst(pair) ? "tooltip.enchantment_fusion.melee_fortune_refresh"
                             : "tooltip.enchantment_fusion.melee_fortune_stance") : meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier
-                        ? "tooltip.enchantment_fusion.melee_silk_seal" : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
+                        ? "tooltip.enchantment_fusion.melee_silk_seal" : meleeImpulseTemplate && MeleeImpulseSkills.isPursuit(pair) && !legacyMeleeImpulseCarrier
+                        ? meleeImpulseTooltip(pair) : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
                 lines.add(Component.translatable(
@@ -573,9 +579,7 @@ public final class FusionTooltipRenderer {
                             ? "tooltip.enchantment_fusion.melee_wear_guard"
                             : "tooltip.enchantment_fusion.melee_wear_edge").withStyle(ChatFormatting.AQUA));
                     } else if (meleeImpulseTemplate && !legacyMeleeImpulseCarrier) {
-                        lines.add(Component.translatable(MeleeImpulseSkills.isAttackFirst(pair)
-                            ? "tooltip.enchantment_fusion.melee_impulse_chase"
-                            : "tooltip.enchantment_fusion.melee_impulse_transfer").withStyle(ChatFormatting.AQUA));
+                        lines.add(Component.translatable(meleeImpulseTooltip(pair)).withStyle(ChatFormatting.AQUA));
                     } else if (meleeGuardTemplate && !legacyMeleeGuardCarrier) {
                         lines.add(Component.translatable(MeleeGuardSkills.isAttackFirst(pair)
                             ? "tooltip.enchantment_fusion.melee_guard_blade"

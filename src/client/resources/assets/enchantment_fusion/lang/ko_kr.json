@@ -1213,5 +1213,7 @@
   "message.enchantment_fusion.melee_silk_ready": "준비 완료: 완충 공격으로 피해를 봉인하세요.",
   "message.enchantment_fusion.melee_silk_stored": "피해 봉인: 다시 공격해 해방하거나 스킬로 소멸시키세요.",
   "message.enchantment_fusion.melee_silk_dissipated": "봉인된 피해가 소멸했습니다.",
-  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "호환되지 않는 기존 아이템은 기존 효과를 유지하며 새 봉인에는 근접 무기가 필요합니다."
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "호환되지 않는 기존 아이템은 기존 효과를 유지하며 새 봉인에는 근접 무기가 필요합니다.",
+  "skill.enchantment_fusion.melee_pursuit": "관성 추격",
+  "tooltip.enchantment_fusion.melee_pursuit": "밀치기 ▷ 약탈: 실제로 밀친 적이 같은 방향으로 움직이는 동안 같은 무기로 다시 적중하면 남은 수평 관성 일부를 빼앗아 그 방향으로 돌진하고 적을 잠시 둔화합니다. 원래 밀치기는 유지되며 전리품은 생성하지 않습니다."
 }

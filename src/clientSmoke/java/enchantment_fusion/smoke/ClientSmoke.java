@@ -713,6 +713,7 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("42.4-protection-smite", () -> MeleeGuardProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
         acceptance.run("42.4-bane-protection", () -> MeleeGuardProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));
         acceptance.run("42.4-protection-bane", () -> MeleeGuardProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true));
+        acceptance.run("08-knockback-looting", () -> PursuitPlunderProbe.exercise(sp, tablePos.above(180).east(12)));
         acceptance.run("42.5-sharp-knockback", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", false));
         acceptance.run("42.5-knockback-sharp", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness", true));
         acceptance.run("42.5-smite-knockback", () -> MeleeImpulseProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));

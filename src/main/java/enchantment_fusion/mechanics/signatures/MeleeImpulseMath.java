@@ -41,6 +41,12 @@ public final class MeleeImpulseMath {
         if (!Double.isFinite(horizontalDistance) || horizontalDistance < 0.025D) return 0.0F;
         return (float) Math.min(1.25D, horizontalDistance * (1.2D + 0.1D * Math.clamp(knockbackLevel, 1, 10)));
     }
+    /** Bounded dash from positively observed remaining horizontal momentum, not from a stale mark. */
+    public static float pursuitStrength(double available, int knockbackLevel, int lootingLevel) {
+        if (!Double.isFinite(available) || available < 0.025D || available > 2.0D) return 0.0F;
+        return (float) Math.min(1.25D, 0.20D + available * (1.2D + 0.1D * Math.clamp(knockbackLevel, 1, 10))
+            + 0.03D * Math.clamp(lootingLevel, 1, 10));
+    }
     public static float bladeDamage(int attackLevel, int knockbackLevel) {
         return 1.25F + 0.35F * Math.clamp(attackLevel, 1, 10) + 0.30F * Math.clamp(knockbackLevel, 1, 10);
     }

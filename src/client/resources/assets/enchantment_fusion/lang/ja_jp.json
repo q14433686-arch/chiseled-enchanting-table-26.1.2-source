@@ -1213,5 +1213,7 @@
   "message.enchantment_fusion.melee_silk_ready": "準備完了：最大チャージの攻撃でダメージを封印。",
   "message.enchantment_fusion.melee_silk_stored": "封印完了：再攻撃で解放、スキルで消去。",
   "message.enchantment_fusion.melee_silk_dissipated": "封印したダメージが消えた。",
-  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "非対応の旧アイテムは元の効果を保持。新しい封印には近接武器が必要。"
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "非対応の旧アイテムは元の効果を保持。新しい封印には近接武器が必要。",
+  "skill.enchantment_fusion.melee_pursuit": "勢い奪いの追撃",
+  "tooltip.enchantment_fusion.melee_pursuit": "ノックバック ▷ ドロップ増加：実際に押し出した敵が同じ方向に動いている間に同じ武器で再び命中すると、残る水平の勢いを一部奪ってその方向へ突進し、敵を短時間減速する。通常のノックバックは残り、戦利品は生成しない。"
 }

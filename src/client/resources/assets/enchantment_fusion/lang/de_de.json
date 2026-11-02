@@ -1213,5 +1213,7 @@
   "message.enchantment_fusion.melee_silk_ready": "Bereit: Ein voll aufgeladener Treffer versiegelt Schaden.",
   "message.enchantment_fusion.melee_silk_stored": "Schaden versiegelt: Erneut treffen oder zum Verwerfen aktivieren.",
   "message.enchantment_fusion.melee_silk_dissipated": "Der versiegelte Schaden ist verflogen.",
-  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Alte ungeeignete Träger behalten ihre Wirkung; die neue Versiegelung benötigt eine Nahkampfwaffe."
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Alte ungeeignete Träger behalten ihre Wirkung; die neue Versiegelung benötigt eine Nahkampfwaffe.",
+  "skill.enchantment_fusion.melee_pursuit": "Schwungjagd",
+  "tooltip.enchantment_fusion.melee_pursuit": "Rückstoß ▷ Plünderung: Triff denselben Gegner mit derselben Waffe, während er sich nach echtem Rückstoß weiterbewegt. Ein Teil seines verbleibenden horizontalen Schwungs treibt dich voran und verlangsamt ihn kurz. Normaler Rückstoß bleibt; keine Beute entsteht."
 }
