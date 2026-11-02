@@ -1207,5 +1207,11 @@
   "tooltip.enchantment_fusion.loyalty_grapnel": "Quando um tridente realmente lançado volta por Lealdade e entra no inventário, o local de retorno fica marcado por 8 segundos. Segure o mesmo tridente e ative mirando um inimigo válido a até 8 blocos da marca; a marca deve estar a até 12 blocos e as linhas de visão livres. Inventário cheio, coleta manual ou origem incerta não criam marca. O efeito normal de Lealdade é mantido.",
   "message.enchantment_fusion.grapnel_loyalty_marked": "Retorno de Lealdade marcado. Segure o tridente devolvido e mire em um inimigo válido.",
   "tooltip.enchantment_fusion.frost_grapnel": "No chão e sem montaria, uma tentativa real de Passos Gelados de congelar água-fonte coloca gelo fino temporário no ar acima. Apenas uma colocação nova marca sua posição por 8 segundos. Use as mesmas botas e ative mirando um inimigo válido a até 8 blocos da marca; fique a até 12 blocos e mantenha a visão livre. Agachar ou estar na água impede o caminho. A água original permanece, o gelo quebrado não cria água e os demais efeitos de Passos Gelados são mantidos.",
-  "message.enchantment_fusion.grapnel_frost_marked": "Caminho de gelo marcado. Use as botas originais e mire em um inimigo válido."
+  "message.enchantment_fusion.grapnel_frost_marked": "Caminho de gelo marcado. Use as botas originais e mire em um inimigo válido.",
+  "skill.enchantment_fusion.melee_silk_seal": "Selo delicado de dano",
+  "tooltip.enchantment_fusion.melee_silk_seal": "Ative para preparar por 8 segundos. Um golpe carregado em alvo válido guarda o dano e o desacelera por 6 segundos. Acerte novamente com a mesma arma para liberar, ou ative de novo para dissipar. Trocar de arma, morrer, descarregar a entidade, mudar de dimensão ou expirar dissipa o selo. Escudo, armadura e proteção funcionam na liberação.",
+  "message.enchantment_fusion.melee_silk_ready": "Preparado: um golpe carregado sela o dano.",
+  "message.enchantment_fusion.melee_silk_stored": "Dano selado: acerte de novo ou ative para dissipar.",
+  "message.enchantment_fusion.melee_silk_dissipated": "O dano selado se dissipou.",
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "O item antigo incompatível mantém seu efeito; o novo selo exige arma corpo a corpo."
 }

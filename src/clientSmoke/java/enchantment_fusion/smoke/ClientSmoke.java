@@ -731,6 +731,9 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("44.4-aqua-smite", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true, true));
         acceptance.run("44.4-bane-aqua", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true, false));
         acceptance.run("44.4-aqua-bane", () -> MeleeWorkProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", true, true));
+        acceptance.run("33.4-silk-sharp", () -> MeleeSilkSealProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:sharpness"));
+        acceptance.run("44.1-silk-smite", () -> MeleeSilkSealProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite"));
+        acceptance.run("44.1-silk-bane", () -> MeleeSilkSealProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods"));
         acceptance.run("44.2-smite-mending", () -> MeleeMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", false));
         acceptance.run("44.2-mending-smite", () -> MeleeMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:smite", true));
         acceptance.run("44.2-bane-mending", () -> MeleeMendingProbe.exercise(sp, tablePos.above(180).east(12), "minecraft:bane_of_arthropods", false));

@@ -123,6 +123,9 @@ final class AcceptanceReport {
         plan("44.4-bane-aqua", "Bane ▷ Aqua: real hits and one-block work boost", "Not reached if setup fails.");
         plan("44.4-aqua-bane", "Aqua ▷ Bane: real mining and directed blade", "Not reached if setup fails.");
         plan("44.4-runtime-compat", "44.4 natural input, client mining sync, custom datapacks, multiplayer and claims", "Not covered by the simulated fixture.");
+        plan("33.4-silk-sharp", "Silk Touch ▷ Sharpness: prepared hit, real permission, one release and cleanup", "Not reached if setup fails; natural input, shields, PvP and mod interactions remain separate.");
+        plan("44.1-silk-smite", "Silk Touch ▷ Smite: qualified target, real permission, one release and cleanup", "Not reached if setup fails; natural input, shields, PvP and mod interactions remain separate.");
+        plan("44.1-silk-bane", "Silk Touch ▷ Bane: qualified target, real permission, one release and cleanup", "Not reached if setup fails; natural input, shields, PvP and mod interactions remain separate.");
         plan("44.2-smite-mending", "Smite ▷ Mending: actual marked damage diversion and weapon repair", "Not reached if setup fails.");
         plan("44.2-mending-smite", "Mending ▷ Smite: actual experience-orb repair and prepared blade", "Not reached if setup fails.");
         plan("44.2-bane-mending", "Bane ▷ Mending: actual marked damage diversion and weapon repair", "Not reached if setup fails.");

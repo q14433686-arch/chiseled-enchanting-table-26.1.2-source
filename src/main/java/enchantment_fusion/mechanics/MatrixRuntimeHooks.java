@@ -46,6 +46,7 @@ import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
@@ -145,6 +146,7 @@ public final class MatrixRuntimeHooks {
             MeleeWorkSkills.clearServer(server);
             MeleeMendingSkills.clearServer();
             MeleeFortuneSkills.clearServer();
+            MeleeSilkSealSkills.clearServer();
             MeleeFireSkills.clearServer();
             MeleeFrostSkills.clearServer();
             MeleeLightningSkills.clearServer();
@@ -225,6 +227,7 @@ public final class MatrixRuntimeHooks {
             MeleeWorkSkills.clearPlayer(handler.getPlayer());
             MeleeMendingSkills.clearPlayer(pid);
             MeleeFortuneSkills.clearPlayer(pid);
+            MeleeSilkSealSkills.clearPlayer(pid);
             MeleeFireSkills.clearPlayer(pid);
             MeleeFrostSkills.clearPlayer(pid);
             MeleeLightningSkills.clearPlayer(pid);
@@ -381,6 +384,9 @@ public final class MatrixRuntimeHooks {
 
         // Post-Damage Counter
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
+            // The outer accepted hit still reaches Fabric, but this mod must not credit a
+            // deferred zero-loss settlement as health damage or trigger its own effects twice.
+            if (MeleeSilkSealSkills.isDeferredHit(entity, source)) return;
             AmberSealSkill.afterDamage(entity, source, damageTaken, blocked);
             SoulThreadSkills.afterDamage(entity, source, damageTaken, blocked);
             if (entity instanceof ServerPlayer player) FrostLandingCapture.confirm(player, source, blocked);
@@ -457,6 +463,7 @@ public final class MatrixRuntimeHooks {
                 MeleeWorkSkills.clearPlayer(deadPlayer);
                 MeleeMendingSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeFortuneSkills.clearPlayer(deadPlayer.getUUID());
+                MeleeSilkSealSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeFireSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeFrostSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeLightningSkills.clearPlayer(deadPlayer.getUUID());
@@ -504,6 +511,7 @@ public final class MatrixRuntimeHooks {
             MeleeWorkSkills.tickServer(server);
             MeleeMendingSkills.tickServer(server);
             MeleeFortuneSkills.tickServer(server);
+            MeleeSilkSealSkills.tickServer(server);
             MeleeFireSkills.tickServer(server);
             MeleeFrostSkills.tickServer(server);
             MeleeLightningSkills.tickServer(server);

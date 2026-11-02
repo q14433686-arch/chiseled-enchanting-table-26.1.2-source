@@ -9,6 +9,7 @@ import enchantment_fusion.mechanics.signatures.FireTradeoffSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardCapture;
 import enchantment_fusion.mechanics.signatures.GrapnelDefenseCapture;
 import enchantment_fusion.mechanics.signatures.ProtectionProjection;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -25,6 +26,7 @@ public abstract class LivingEntityBlastDefenseMixin {
     private float ef$observeShieldBlock(LivingEntity victim, ServerLevel level, DamageSource source, float damage, Operation<Float> original) {
         ItemStack item = victim instanceof ServerPlayer ? victim.getItemBlockingWith() : null;
         float blocked = original.call(victim, level, source, damage);
+        MeleeSilkSealSkills.blocking(victim, source, blocked);
         if (victim instanceof ServerPlayer player) {
             MeleeGuardCapture.shieldBlocked(player, source, item, damage, blocked);
             GrapnelDefenseCapture.shieldBlocked(player, source, item, damage, blocked);

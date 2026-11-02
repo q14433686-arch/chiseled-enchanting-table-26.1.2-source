@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.CrossDomainTransmutations.TransmuteVariant;
 import enchantment_fusion.mechanics.FusionStationOperations.EnchantCandidate;
 import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -112,11 +113,12 @@ public final class FusionContextDrawer {
                 : FusionTooltipRenderer.formatEnchantmentBaseName(registries, sig.primaryId()).getString();
             String sName = FusionTooltipRenderer.formatEnchantmentBaseName(registries, sig.secondaryId()).getString();
             String formula = pName + " \u25B7 " + sName;
+            boolean silkSeal = MeleeSilkSealSkills.selectedSignature(sig);
             String title = state >= CompendiumDiscoveryTracker.STATE_MASTERED
-                ? "\u2605 " + Component.translatable(sig.titleKey()).getString()
+                ? "\u2605 " + Component.translatable(silkSeal ? "skill.enchantment_fusion.melee_silk_seal" : sig.titleKey()).getString()
                 : "\u25C7 " + formula;
             Component hDesc = state >= CompendiumDiscoveryTracker.STATE_MASTERED
-                ? Component.translatable(sig.descKey())
+                ? Component.translatable(silkSeal ? "tooltip.enchantment_fusion.melee_silk_seal" : sig.descKey())
                 : Component.translatable("gui.enchantment_fusion.grimoire.heard_sig_clue", pName, sName);
             this.matched.add(new ContextRecipe(
                 true, sig.id(), sig.primaryId(), sig.secondaryId(), state,

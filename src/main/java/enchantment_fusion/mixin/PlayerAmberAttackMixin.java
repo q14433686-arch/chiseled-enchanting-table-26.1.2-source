@@ -22,6 +22,7 @@ import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
@@ -145,9 +146,14 @@ public abstract class PlayerAmberAttackMixin {
                             try {
                                 MeleeLightningSkills.Damage lightning = MeleeLightningSkills.beginDamage(confirmed, frost.damage());
                                 try {
-                                    succeeded = original.call(target, source, lightning.damage());
-                                    ConfirmedMelee.after(confirmed, succeeded);
-                                    return succeeded;
+                                    MeleeSilkSealSkills.Frame seal = MeleeSilkSealSkills.begin(confirmed, lightning.damage());
+                                    boolean completed = false;
+                                    try {
+                                        succeeded = original.call(target, source, seal == null ? lightning.damage() : seal.damage());
+                                        completed = true;
+                                        ConfirmedMelee.after(confirmed, succeeded);
+                                        return succeeded;
+                                    } finally { MeleeSilkSealSkills.end(seal, completed, succeeded); }
                                 } finally { MeleeLightningSkills.endDamage(lightning); }
                             } finally { MeleeFrostSkills.endDamage(frost); }
                         } finally { MeleeFortuneSkills.endDamage(fortune); }
@@ -205,9 +211,14 @@ public abstract class PlayerAmberAttackMixin {
                             try {
                                 MeleeLightningSkills.Damage lightning = MeleeLightningSkills.beginDamage(confirmed, frost.damage());
                                 try {
-                                    succeeded = original.call(target, source, lightning.damage());
-                                    ConfirmedMelee.after(confirmed, succeeded);
-                                    return succeeded;
+                                    MeleeSilkSealSkills.Frame seal = MeleeSilkSealSkills.begin(confirmed, lightning.damage());
+                                    boolean completed = false;
+                                    try {
+                                        succeeded = original.call(target, source, seal == null ? lightning.damage() : seal.damage());
+                                        completed = true;
+                                        ConfirmedMelee.after(confirmed, succeeded);
+                                        return succeeded;
+                                    } finally { MeleeSilkSealSkills.end(seal, completed, succeeded); }
                                 } finally { MeleeLightningSkills.endDamage(lightning); }
                             } finally { MeleeFrostSkills.endDamage(frost); }
                         } finally { MeleeFortuneSkills.endDamage(fortune); }

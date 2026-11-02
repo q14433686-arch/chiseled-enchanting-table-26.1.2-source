@@ -49,6 +49,7 @@ import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
@@ -348,6 +349,9 @@ public final class FusionTooltipRenderer {
             boolean meleeFortuneTemplate = MeleeFortuneSkills.matches(pair);
             boolean legacyMeleeFortuneCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeFortuneTemplate
                 && !MeleeFortuneSkills.applies(pair, stack);
+            boolean meleeSilkSealTemplate = MeleeSilkSealSkills.matches(pair);
+            boolean legacyMeleeSilkSealCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeSilkSealTemplate
+                && !MeleeSilkSealSkills.applies(pair, stack);
             boolean meleeFireTemplate = MeleeFireSkills.matches(pair);
             boolean legacyMeleeFireCarrier = !stack.is(FusionItems.FUSED_ENCHANTED_BOOK) && meleeFireTemplate
                 && !MeleeFireSkills.applies(pair, stack);
@@ -470,6 +474,9 @@ public final class FusionTooltipRenderer {
                     lines.add(Component.translatable(MeleeFortuneSkills.attackFirst(pair)
                         ? "tooltip.enchantment_fusion.melee_fortune_refresh" : "tooltip.enchantment_fusion.melee_fortune_stance").withStyle(ChatFormatting.AQUA));
                 }
+                if (shift && meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier) {
+                    lines.add(Component.translatable("tooltip.enchantment_fusion.melee_silk_seal").withStyle(ChatFormatting.AQUA));
+                }
                 if (shift && meleeFireTemplate && !legacyMeleeFireCarrier) {
                     lines.add(Component.translatable(MeleeFireSkills.attackFirst(pair)
                         ? "tooltip.enchantment_fusion.melee_fire_extract" : "tooltip.enchantment_fusion.melee_fire_follow").withStyle(ChatFormatting.AQUA));
@@ -492,7 +499,8 @@ public final class FusionTooltipRenderer {
             } else if (sigOpt.isPresent()) {
                 Component sigTitle = Component.translatable(grapnelTemplate && !legacyGrapnelCarrier
                     ? "skill.enchantment_fusion.grapnel" : meleeFortuneTemplate && !legacyMeleeFortuneCarrier
-                    ? "skill.enchantment_fusion.melee_fortune" : sigOpt.get().titleKey());
+                    ? "skill.enchantment_fusion.melee_fortune" : meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier
+                    ? "skill.enchantment_fusion.melee_silk_seal" : sigOpt.get().titleKey());
                 lines.add(Component.translatable(
                     "tooltip.enchantment_fusion.pair_signature",
                     sigTitle,
@@ -510,7 +518,8 @@ public final class FusionTooltipRenderer {
                     lines.add(Component.translatable(grapnelTemplate && !legacyGrapnelCarrier
                         ? grapnelTooltip(pair) : meleeFortuneTemplate && !legacyMeleeFortuneCarrier
                         ? (MeleeFortuneSkills.attackFirst(pair) ? "tooltip.enchantment_fusion.melee_fortune_refresh"
-                            : "tooltip.enchantment_fusion.melee_fortune_stance") : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
+                            : "tooltip.enchantment_fusion.melee_fortune_stance") : meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier
+                        ? "tooltip.enchantment_fusion.melee_silk_seal" : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {
                 lines.add(Component.translatable(
@@ -579,6 +588,8 @@ public final class FusionTooltipRenderer {
                     } else if (meleeFortuneTemplate && !legacyMeleeFortuneCarrier) {
                         lines.add(Component.translatable(MeleeFortuneSkills.attackFirst(pair)
                             ? "tooltip.enchantment_fusion.melee_fortune_refresh" : "tooltip.enchantment_fusion.melee_fortune_stance").withStyle(ChatFormatting.AQUA));
+                    } else if (meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier) {
+                        lines.add(Component.translatable("tooltip.enchantment_fusion.melee_silk_seal").withStyle(ChatFormatting.AQUA));
                     } else if (meleeFireTemplate && !legacyMeleeFireCarrier) {
                         lines.add(Component.translatable(MeleeFireSkills.attackFirst(pair)
                             ? "tooltip.enchantment_fusion.melee_fire_extract" : "tooltip.enchantment_fusion.melee_fire_follow").withStyle(ChatFormatting.AQUA));
@@ -656,6 +667,9 @@ public final class FusionTooltipRenderer {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_mending_carrier")
                     .withStyle(ChatFormatting.GOLD));
             }
+            if (legacyMeleeSilkSealCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_silk_carrier").withStyle(ChatFormatting.GOLD));
+            }
             if (legacyMeleeLightningCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.legacy_melee_lightning_carrier").withStyle(ChatFormatting.GOLD));
             }
@@ -691,6 +705,11 @@ public final class FusionTooltipRenderer {
                     Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
             }
             if (shift && meleeFireTemplate && MeleeFireSkills.attackFirst(pair) && !legacyMeleeFireCarrier) {
+                lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
+                    Component.keybind("key.enchantment_fusion.activate_skill"),
+                    Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
+            }
+            if (shift && meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier) {
                 lines.add(Component.translatable("tooltip.enchantment_fusion.active_skill_keys",
                     Component.keybind("key.enchantment_fusion.activate_skill"),
                     Component.keybind("key.enchantment_fusion.cycle_skill")).withStyle(ChatFormatting.GRAY));
@@ -947,6 +966,9 @@ public final class FusionTooltipRenderer {
         if (pair.isAberrant()) {
             return Component.translatable(AberrantRegistry.descKey(pair.aberrationId()));
         }
+        if (hostForm == HostForm.MELEE && MeleeSilkSealSkills.matches(pair)) {
+            return Component.translatable("tooltip.enchantment_fusion.melee_silk_seal");
+        }
         Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
         if (sigOpt.isPresent()) {
             return Component.translatable(sigOpt.get().descKey());
@@ -958,12 +980,9 @@ public final class FusionTooltipRenderer {
         Component p = formatEnchantmentWithLevel(registries, pair.primaryId(), pair.primaryLevel());
         Component s = formatEnchantmentWithLevel(registries, pair.secondaryId(), pair.secondaryLevel());
         Optional<SignatureEntry> sigOpt = SignaturePairs.resolve(pair);
-        if (sigOpt.isPresent()) {
-            return Component.translatable(
-                "tooltip.enchantment_fusion.pair_signature",
-                Component.translatable(sigOpt.get().titleKey()),
-                p, s
-            );
+        if (MeleeSilkSealSkills.matches(pair) || sigOpt.isPresent()) {
+            String title = MeleeSilkSealSkills.matches(pair) ? "skill.enchantment_fusion.melee_silk_seal" : sigOpt.orElseThrow().titleKey();
+            return Component.translatable("tooltip.enchantment_fusion.pair_signature", Component.translatable(title), p, s);
         }
         return Component.translatable("tooltip.enchantment_fusion.pair_header", p, s);
     }

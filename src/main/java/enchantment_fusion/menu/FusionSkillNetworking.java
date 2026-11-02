@@ -27,6 +27,7 @@ import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
@@ -111,6 +112,7 @@ public final class FusionSkillNetworking {
         MELEE_WATER_WORK("skill.enchantment_fusion.melee_water_work"),
         MELEE_MENDING("skill.enchantment_fusion.melee_mending"),
         MELEE_FORTUNE("skill.enchantment_fusion.melee_fortune"),
+        MELEE_SILK_SEAL("skill.enchantment_fusion.melee_silk_seal"),
         MELEE_FIRE("skill.enchantment_fusion.melee_fire"),
         MELEE_FROST("skill.enchantment_fusion.melee_frost"),
         MELEE_LIGHTNING("skill.enchantment_fusion.melee_lightning"),
@@ -159,6 +161,7 @@ public final class FusionSkillNetworking {
         if (MeleeWorkSkills.hasEquipped(player, true)) skills.add(Skill.MELEE_WATER_WORK);
         if (MeleeMendingSkills.hasEquipped(player)) skills.add(Skill.MELEE_MENDING);
         if (MeleeFortuneSkills.hasEquipped(player)) skills.add(Skill.MELEE_FORTUNE);
+        if (MeleeSilkSealSkills.hasEquipped(player)) skills.add(Skill.MELEE_SILK_SEAL);
         if (MeleeFireSkills.hasEquipped(player)) skills.add(Skill.MELEE_FIRE);
         if (MeleeFrostSkills.hasEquipped(player)) skills.add(Skill.MELEE_FROST);
         if (MeleeLightningSkills.hasEquipped(player)) skills.add(Skill.MELEE_LIGHTNING);
@@ -238,6 +241,7 @@ public final class FusionSkillNetworking {
             case MELEE_WATER_WORK -> MeleeWorkSkills.activate(player, true);
             case MELEE_MENDING -> MeleeMendingSkills.activate(player);
             case MELEE_FORTUNE -> MeleeFortuneSkills.activate(player);
+            case MELEE_SILK_SEAL -> MeleeSilkSealSkills.activate(player);
             case MELEE_FIRE -> MeleeFireSkills.activate(player);
             case MELEE_FROST -> MeleeFrostSkills.activate(player);
             case MELEE_LIGHTNING -> MeleeLightningSkills.activate(player);

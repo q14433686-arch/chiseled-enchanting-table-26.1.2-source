@@ -8,6 +8,7 @@ import enchantment_fusion.mechanics.CrossDomainTransmutations;
 import enchantment_fusion.mechanics.CrossDomainTransmutations.TransmuteVariant;
 import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import enchantment_fusion.registry.FusionItems;
 import java.util.ArrayList;
 import java.util.List;
@@ -493,8 +494,9 @@ public final class FusionGrimoireScreen extends Screen {
                         : FusionTooltipRenderer.formatEnchantmentBaseName(registries, sig.primaryId()).getString();
                     String sName = FusionTooltipRenderer.formatEnchantmentBaseName(registries, sig.secondaryId()).getString();
                     String formula = pName + " \u25B7 " + sName;
-                    String fullTitle = Component.translatable(sig.titleKey()).getString();
-                    String fullDesc = Component.translatable(sig.descKey()).getString();
+                    boolean silkSeal = MeleeSilkSealSkills.selectedSignature(sig);
+                    String fullTitle = Component.translatable(silkSeal ? "skill.enchantment_fusion.melee_silk_seal" : sig.titleKey()).getString();
+                    String fullDesc = Component.translatable(silkSeal ? "tooltip.enchantment_fusion.melee_silk_seal" : sig.descKey()).getString();
 
                     if (st >= CompendiumDiscoveryTracker.STATE_MASTERED) {
                         out.add(new EntryItem(

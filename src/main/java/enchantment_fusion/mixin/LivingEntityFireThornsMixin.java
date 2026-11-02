@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.FireThornsSkills;
 import enchantment_fusion.mechanics.signatures.ConfirmedLivingDamage;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -16,6 +17,13 @@ import org.spongepowered.asm.mixin.injection.At;
 /** Observe real living damage and non-player spear attacks without mistaking a new mark for a second hit. */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityFireThornsMixin {
+    @WrapOperation(method = "hurtServer", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/entity/LivingEntity;actuallyHurt(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)V"))
+    private void ef$deferApprovedMelee(LivingEntity victim, ServerLevel level, DamageSource source, float amount,
+                                       Operation<Void> original) {
+        original.call(victim, level, source, MeleeSilkSealSkills.beforeActuallyHurt(victim, level, source, amount));
+    }
+
     @WrapMethod(method = "actuallyHurt")
     private void ef$observeLivingDamage(ServerLevel level, DamageSource source, float damage, Operation<Void> original) {
         LivingEntity victim = (LivingEntity) (Object) this;

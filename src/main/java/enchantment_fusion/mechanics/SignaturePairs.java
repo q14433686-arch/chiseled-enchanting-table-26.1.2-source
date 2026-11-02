@@ -6,6 +6,7 @@ import enchantment_fusion.mechanics.signatures.ElementalSpearMaceSignatures;
 import enchantment_fusion.mechanics.signatures.FlameKineticEffects;
 import enchantment_fusion.mechanics.signatures.MeleeBladeSignatures;
 import enchantment_fusion.mechanics.signatures.MeleeTacticsSignatures;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import enchantment_fusion.mechanics.signatures.MiningFishingSignatures;
 import enchantment_fusion.mechanics.signatures.FishingTideSkills;
 import enchantment_fusion.mechanics.signatures.RangedSignatures;
@@ -207,9 +208,9 @@ public final class SignaturePairs {
         FusedEnchantmentList list = weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY);
         for (FusedPair pair : list.pairs()) {
             resolve(pair).ifPresent(sig -> {
-                // The redesigned weapon seal releases on a confirmed hit, including a lethal
-                // hit. Do not also run its old on-kill damage/honey; legacy carriers keep it.
-                if (!AmberSealSkill.applies(pair, weapon, sig.id())) {
+                // Redesigned weapon seals own their hits, including a lethal release. Do not
+                // also run their old kill rewards; incompatible legacy carriers keep those.
+                if (!AmberSealSkill.applies(pair, weapon, sig.id()) && !MeleeSilkSealSkills.applies(pair, weapon)) {
                     MeleeTacticsSignatures.onEntityKilled(level, killer, victim, sig.id());
                 }
             });

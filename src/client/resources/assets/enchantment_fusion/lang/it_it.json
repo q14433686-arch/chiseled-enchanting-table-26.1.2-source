@@ -1207,5 +1207,11 @@
   "tooltip.enchantment_fusion.loyalty_grapnel": "Quando un tridente realmente lanciato ritorna grazie a Lealtà ed entra nell’inventario, il punto di ritorno è segnato per 8 secondi. Impugna lo stesso tridente e attiva mirando a un nemico valido entro 8 blocchi dal segno; il segno deve trovarsi entro 12 blocchi e la visuale deve essere libera. Inventario pieno, raccolta manuale o provenienza incerta non creano un segno. L’effetto normale di Lealtà resta attivo.",
   "message.enchantment_fusion.grapnel_loyalty_marked": "Ritorno di Lealtà segnato. Impugna il tridente restituito e mira a un nemico valido.",
   "tooltip.enchantment_fusion.frost_grapnel": "A terra e senza cavalcatura, un tentativo reale dell’incantesimo del gelo di congelare acqua sorgente colloca invece ghiaccio sottile temporaneo nell’aria sopra di essa. Solo una nuova posa segna la posizione per 8 secondi. Indossa gli stessi stivali e attiva mirando a un nemico valido entro 8 blocchi dal segno; resta entro 12 blocchi e con visuale libera. Accovacciarsi o stare in acqua impedisce il percorso. L’acqua originale rimane, il ghiaccio rotto non ne crea e gli altri effetti sono conservati.",
-  "message.enchantment_fusion.grapnel_frost_marked": "Percorso di brina segnato. Indossa gli stivali originali e mira a un nemico valido."
+  "message.enchantment_fusion.grapnel_frost_marked": "Percorso di brina segnato. Indossa gli stivali originali e mira a un nemico valido.",
+  "skill.enchantment_fusion.melee_silk_seal": "Sigillo delicato del danno",
+  "tooltip.enchantment_fusion.melee_silk_seal": "Attiva per preparare per 8 secondi. Un colpo caricato su un bersaglio valido conserva il danno e lo rallenta per 6 secondi. Colpisci ancora con la stessa arma per liberarlo, oppure riattiva per dissiparlo. Cambio arma, morte, scaricamento, cambio dimensione o scadenza lo dissipano. Scudo, armatura e protezione si applicano al rilascio.",
+  "message.enchantment_fusion.melee_silk_ready": "Preparato: un colpo caricato sigilla il danno.",
+  "message.enchantment_fusion.melee_silk_stored": "Danno sigillato: colpisci ancora o attiva per dissiparlo.",
+  "message.enchantment_fusion.melee_silk_dissipated": "Il danno sigillato si è dissipato.",
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Il vecchio supporto incompatibile conserva il suo effetto; il nuovo sigillo richiede un’arma da mischia."
 }

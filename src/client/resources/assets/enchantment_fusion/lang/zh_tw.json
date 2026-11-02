@@ -1207,5 +1207,11 @@
   "tooltip.enchantment_fusion.loyalty_grapnel": "真正投出的三叉戟由忠誠返航並成功回到背包後，在返還位置留標8秒。手持同一把返還的三叉戟，瞄準標記8格內的合格敵人並主動回鉤；標記距你最多12格，且視線須暢通。背包滿、手動拾取或來源不明不會留標；保留忠誠原版效果。",
   "message.enchantment_fusion.grapnel_loyalty_marked": "忠誠返航已留標。手持返還的三叉戟並瞄準合格敵人。",
   "tooltip.enchantment_fusion.frost_grapnel": "穿戴此靴落地且未乘騎時，冰霜行者實際嘗試凍結源水，會在源水上方空位生成短暫薄冰；成功新放置才在目前位置留標8秒。穿同一雙靴，在標記12格內瞄準標記8格內的合格敵人並主動回鉤，視線須暢通。潛行或身在水中不鋪冰；原水不變，薄冰碎裂不生成水，保留冰霜行者其他原有效果。",
-  "message.enchantment_fusion.grapnel_frost_marked": "霜行鋪冰已留標。穿原靴並瞄準合格敵人。"
+  "message.enchantment_fusion.grapnel_frost_marked": "霜行鋪冰已留標。穿原靴並瞄準合格敵人。",
+  "skill.enchantment_fusion.melee_silk_seal": "精準封傷",
+  "tooltip.enchantment_fusion.melee_silk_seal": "按技能鍵準備 8 秒；滿蓄命中合法目標後封存本次傷害並減速目標 6 秒。同一武器再次命中釋放，或再按技能鍵消散。更換武器、死亡、卸載、跨維度或到期會消散；釋放時盾牌、護甲與保護正常生效。",
+  "message.enchantment_fusion.melee_silk_ready": "已準備：滿蓄命中以封存傷害。",
+  "message.enchantment_fusion.melee_silk_stored": "傷害已封存：再次命中釋放，再按技能鍵消散。",
+  "message.enchantment_fusion.melee_silk_dissipated": "封存的傷害已消散。",
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "舊的不適用載體保留原有效果；新封傷需要近戰武器。"
 }

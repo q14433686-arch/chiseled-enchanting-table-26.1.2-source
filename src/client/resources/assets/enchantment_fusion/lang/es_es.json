@@ -1207,5 +1207,11 @@
   "tooltip.enchantment_fusion.loyalty_grapnel": "Cuando un tridente lanzado de verdad regresa por Lealtad y entra en tu inventario, marca el lugar de regreso durante 8 segundos. Sostén ese mismo tridente y activa mientras apuntas a un enemigo válido a 8 bloques de la marca como máximo; la marca debe estar a 12 bloques o menos y la visión despejada. Inventario lleno, recogida manual u origen incierto no crean marca. Se conserva el efecto normal de Lealtad.",
   "message.enchantment_fusion.grapnel_loyalty_marked": "Regreso de Lealtad marcado. Sostén el tridente devuelto y apunta a un enemigo válido.",
   "tooltip.enchantment_fusion.frost_grapnel": "En el suelo y sin montura, un intento real de Paso helado de congelar agua fuente coloca hielo fino temporal en el aire encima. Solo una colocación nueva marca tu posición durante 8 segundos. Lleva las mismas botas y activa apuntando a un enemigo válido a 8 bloques o menos de la marca; mantente a 12 bloques o menos y con visión despejada. Agacharse o estar en el agua impide el camino. El agua original no cambia, el hielo roto no crea agua y se conservan los demás efectos de Paso helado.",
-  "message.enchantment_fusion.grapnel_frost_marked": "Camino helado marcado. Lleva las botas originales y apunta a un enemigo válido."
+  "message.enchantment_fusion.grapnel_frost_marked": "Camino helado marcado. Lleva las botas originales y apunta a un enemigo válido.",
+  "skill.enchantment_fusion.melee_silk_seal": "Sello delicado de daño",
+  "tooltip.enchantment_fusion.melee_silk_seal": "Activa para preparar durante 8 segundos. Un golpe cargado contra un objetivo válido guarda el daño y lo ralentiza 6 segundos. Golpea otra vez con la misma arma para liberarlo o activa de nuevo para disiparlo. Cambiar de arma, morir, descargar la entidad, cambiar de dimensión o agotar el tiempo lo disipa. El escudo, la armadura y la protección se aplican al liberar.",
+  "message.enchantment_fusion.melee_silk_ready": "Preparado: un golpe cargado sella el daño.",
+  "message.enchantment_fusion.melee_silk_stored": "Daño sellado: golpea de nuevo o activa para disiparlo.",
+  "message.enchantment_fusion.melee_silk_dissipated": "El daño sellado se ha disipado.",
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "El objeto antiguo incompatible conserva su efecto; el nuevo sello requiere un arma cuerpo a cuerpo."
 }

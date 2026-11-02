@@ -1207,5 +1207,11 @@
   "tooltip.enchantment_fusion.loyalty_grapnel": "実際に投げたトライデントが忠誠心で戻り、インベントリに入ると、帰還地点を8秒間記録する。同じトライデントを持ち、記録地点から8ブロック以内の対象を狙って発動する。記録地点は自身から12ブロック以内で、視線が通る必要がある。満杯、手動回収、出所不明では記録しない。忠誠心の通常効果は維持。",
   "message.enchantment_fusion.grapnel_loyalty_marked": "忠誠心の帰還地点を記録。戻ったトライデントを持ち、対象を狙おう。",
   "tooltip.enchantment_fusion.frost_grapnel": "地上で騎乗していないとき、氷渡りが水源を実際に凍らせようとすると、水の上の空間に一時的な薄氷を置く。新たに置けた場合だけ現在地を8秒間記録する。同じブーツを履き、記録地点の8ブロック以内にいる対象を狙って発動する。地点は自身から12ブロック以内で視線が必要。スニーク中や水中では氷を置かない。水源は残り、薄氷は壊れても水にならず、その他の氷渡り効果も維持。",
-  "message.enchantment_fusion.grapnel_frost_marked": "氷の道を記録。元のブーツを履き、対象を狙おう。"
+  "message.enchantment_fusion.grapnel_frost_marked": "氷の道を記録。元のブーツを履き、対象を狙おう。",
+  "skill.enchantment_fusion.melee_silk_seal": "精密ダメージ封印",
+  "tooltip.enchantment_fusion.melee_silk_seal": "スキルを使うと8秒間準備。最大チャージで有効な対象を攻撃するとダメージを封印し、6秒間減速する。同じ武器でもう一度攻撃して解放、またはスキルで消去。武器変更、死亡、アンロード、ディメンション移動、期限切れでも消える。解放時は盾、防具、耐性が有効。",
+  "message.enchantment_fusion.melee_silk_ready": "準備完了：最大チャージの攻撃でダメージを封印。",
+  "message.enchantment_fusion.melee_silk_stored": "封印完了：再攻撃で解放、スキルで消去。",
+  "message.enchantment_fusion.melee_silk_dissipated": "封印したダメージが消えた。",
+  "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "非対応の旧アイテムは元の効果を保持。新しい封印には近接武器が必要。"
 }

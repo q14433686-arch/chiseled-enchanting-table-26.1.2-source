@@ -29,6 +29,7 @@ import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFortuneSkills;
+import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFireSkills;
 import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
@@ -84,6 +85,7 @@ public final class EnchantmentFusion implements ModInitializer {
         MeleeWorkSkills.init();
         MeleeMendingSkills.init();
         MeleeFortuneSkills.init();
+        MeleeSilkSealSkills.init();
         MeleeFireSkills.init();
         MeleeFrostSkills.init();
         MeleeLightningSkills.init();
