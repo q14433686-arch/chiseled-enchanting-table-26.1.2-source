@@ -70,7 +70,8 @@ public final class MeleeDisarmSkills {
     private static boolean removable(ItemStack stack) {
         if (stack.isEmpty() || stack.getCount() != 1 || FusionCarrier.classify(stack).stream().noneMatch(EQUIPMENT::contains)
             || EnchantmentHelper.has(stack, EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE)) return false;
-        if (stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().stream().anyMatch(p -> p.involves(BINDING))) return false;
+        if (stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().stream().anyMatch(p -> p.involves(BINDING))
+            || stack.getOrDefault(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.<String, Integer>of()).getOrDefault(BINDING, 0) > 0) return false;
         return stack.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()).stream().noneMatch(e -> BINDING.equals(e.id()));
     }
     private static boolean eligible(ServerPlayer owner, Mob target) {

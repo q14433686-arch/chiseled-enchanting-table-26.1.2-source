@@ -9,6 +9,7 @@ import enchantment_fusion.registry.FusionDataComponents;
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -90,6 +91,10 @@ final class MeleeDisarmProbe {
                 FusedPair.clean("minecraft:sharpness", 1, "minecraft:binding_curse", 1)));
             fusedBound.setItemSlot(EquipmentSlot.MAINHAND, fusedItem); f.hit(fusedBound, true);
             require(fusedBound.getMainHandItem() == fusedItem, "Unprojected fused Binding also prevents removal");
+            Mob crossBound = ordinary(f, 2.65D); ItemStack crossItem = new ItemStack(Items.IRON_AXE);
+            crossItem.set(FusionDataComponents.TRANSMUTED_ENCHANTS, Map.of("minecraft:binding_curse", 1));
+            crossBound.setItemSlot(EquipmentSlot.MAINHAND, crossItem); f.hit(crossBound, true);
+            require(crossBound.getMainHandItem() == crossItem, "Cross-domain Binding prevents removal");
             Villager villager = f.spawn(new Villager(EntityType.VILLAGER, level), 2.7D, 2);
             ItemStack protectedItem = new ItemStack(Items.IRON_SWORD); villager.setItemSlot(EquipmentSlot.MAINHAND, protectedItem);
             f.hit(villager, true); require(villager.getMainHandItem() == protectedItem, "Villagers cannot be disarmed");
