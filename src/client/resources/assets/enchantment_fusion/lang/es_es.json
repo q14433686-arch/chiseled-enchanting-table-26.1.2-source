@@ -1221,5 +1221,8 @@
   "skill.enchantment_fusion.looting_fire_seed": "Chispa del botín",
   "tooltip.enchantment_fusion.looting_fire_seed": "Botín ▷ Aspecto ígneo: una baja directa de un enemigo válido deja una brasa durante cinco segundos. Acércate con la misma arma para crear un breve anillo virtual; los enemigos válidos y visibles en el borde reciben daño de fuego y arden. Conserva Botín; no coloca bloques de fuego.",
   "skill.enchantment_fusion.ember_harvest": "Cosecha de brasas",
-  "tooltip.enchantment_fusion.ember_harvest": "Aspecto ígneo ▷ Botín: tras arder un enemigo válido durante un segundo, golpéalo agachado y con carga completa para apagarlo y marcarlo seis segundos. Derrótalo con la misma arma para obtener hasta tres objetos comunes adicionales de su botín confirmado. Aspecto ígneo permanece en otros golpes."
+  "tooltip.enchantment_fusion.ember_harvest": "Aspecto ígneo ▷ Botín: tras arder un enemigo válido durante un segundo, golpéalo agachado y con carga completa para apagarlo y marcarlo seis segundos. Derrótalo con la misma arma para obtener hasta tres objetos comunes adicionales de su botín confirmado. Aspecto ígneo permanece en otros golpes.",
+  "skill.enchantment_fusion.thunder_rail": "Raíl de trueno de dos anclas",
+  "tooltip.enchantment_fusion.thunder_rail": "Propulsión acuática ▷ Conductividad: completa una embestida real para dejar dos anclas breves. Usa Propulsión acuática otra vez con el mismo tridente para descargar un raíl despejado contra enemigos válidos, sin alterar bloques. Requiere agua o lluvia y desgaste normal.",
+  "message.enchantment_fusion.thunder_rail_marked": "Dos anclas colocadas; vuelve a usar Propulsión acuática."
 }

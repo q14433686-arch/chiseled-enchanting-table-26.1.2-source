@@ -53,6 +53,7 @@ import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.ThunderRailSkills;
 import enchantment_fusion.mechanics.signatures.SealedOreSkills;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
 import enchantment_fusion.mechanics.signatures.UnderwaterMiningSkills;
@@ -370,6 +371,7 @@ public final class MatrixEffectExecutor {
             boolean redesignedMeleeLightning = MeleeLightningSkills.applies(pair, hostStack);
             boolean redesignedMeleeWind = MeleeWindSkills.applies(pair, hostStack);
             boolean redesignedGrapnel = GrapnelSkills.applies(pair, hostStack);
+            boolean redesignedThunderRail = ThunderRailSkills.applies(pair, hostStack);
             boolean dedicatedAction = redesignedPhantom || redesignedPrecision || redesignedDurability
                 || redesignedBlastDefense || redesignedHeavyCrush || redesignedSoulStep || redesignedFishing || redesignedCadence
                 || redesignedReserve || redesignedEcho || redesignedMomentum || redesignedPiercingChain || redesignedThermal
@@ -377,7 +379,7 @@ public final class MatrixEffectExecutor {
                 || redesignedSoulBlade || redesignedSegmentThread || redesignedSealedOre || redesignedFortuneBank
                 || redesignedStealthBlade || redesignedWaterPressure || redesignedMeleeWear || redesignedRangedWear || redesignedRangedWork || redesignedRangedBreath || redesignedRangedTide || redesignedRangedSneak || redesignedRangedGuard || redesignedRangedMending || redesignedRangedSilk || redesignedMeleeImpulse || redesignedLootingFire
                 || redesignedEmberHarvest || redesignedMeleeGuard || redesignedMeleeWork || redesignedMeleeMending || redesignedMeleeFortune || redesignedMeleeSilkSeal
-                || redesignedMeleeFire || redesignedMeleeFrost || redesignedMeleeLightning || redesignedMeleeWind || redesignedGrapnel;
+                || redesignedMeleeFire || redesignedMeleeFrost || redesignedMeleeLightning || redesignedMeleeWind || redesignedGrapnel || redesignedThunderRail;
             if (dedicatedAction) {
                 // Dedicated hooks own the clean signature, but a pre-existing independent
                 // aberration still uses its normal trigger, real target and shared cooldown.

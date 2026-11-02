@@ -99,6 +99,12 @@ public final class GrapnelRiptide {
             if (isPair(pair) && GrapnelSkills.applies(pair, stack) && (best == null || pair.primaryLevel() > best.primaryLevel())) best = pair;
         return best;
     }
+    /** Shared primary projection: the same real Riptide release can back another dedicated direction. */
+    private static @Nullable FusedPair selectedRelease(@Nullable ItemStack stack) {
+        FusedPair grapnel = selected(stack), rail = ThunderRailSkills.selected(stack);
+        if (grapnel == null) return rail;
+        return rail == null || grapnel.primaryLevel() >= rail.primaryLevel() ? grapnel : rail;
+    }
     private static boolean ready(ServerPlayer owner) {
         return owner.isAlive() && !owner.isCreative() && !owner.isSpectator() && !owner.isPassenger()
             && !owner.getAbilities().flying && !owner.isFallFlying();
@@ -110,13 +116,13 @@ public final class GrapnelRiptide {
                 .noneMatch(retained -> RIPTIDE.equals(retained.id()));
     }
     private static boolean equipped(ServerPlayer owner, ItemStack stack, FusedPair pair, EquipmentSlot slot) {
-        return owner.getItemBySlot(slot) == stack && pair.equals(selected(stack)) && unambiguous(stack);
+        return owner.getItemBySlot(slot) == stack && pair.equals(selectedRelease(stack)) && unambiguous(stack);
     }
     public static boolean hasEquipped(ServerPlayer owner) { return selected(owner.getMainHandItem()) != null || selected(owner.getOffhandItem()) != null; }
 
     /** Preserve absent primary at vanilla's own strength query; never repeat an existing native enchantment. */
     public static float project(ItemStack stack, LivingEntity user, float strength) {
-        FusedPair pair = selected(stack); if (pair == null || !Float.isFinite(strength)) return strength;
+        FusedPair pair = selectedRelease(stack); if (pair == null || !Float.isFinite(strength)) return strength;
         Holder<Enchantment> enchantment = FusionStationOperations.lookupEnchantment(user.registryAccess(), RIPTIDE).orElse(null);
         if (enchantment == null || stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(enchantment) > 0) return strength;
         int level = pair.primaryLevel();
@@ -131,7 +137,7 @@ public final class GrapnelRiptide {
     /** Sound is a separate data-pack effect; merge with other native sound sources by highest rank. */
     public static Optional<Holder<SoundEvent>> projectSound(ItemStack stack, Level world,
         DataComponentType<List<Holder<SoundEvent>>> component, Optional<Holder<SoundEvent>> nativeSound) {
-        FusedPair pair = selected(stack); if (pair == null) return nativeSound;
+        FusedPair pair = selectedRelease(stack); if (pair == null) return nativeSound;
         Holder<Enchantment> enchantment = FusionStationOperations.lookupEnchantment(world.registryAccess(), RIPTIDE).orElse(null);
         if (enchantment == null || stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(enchantment) > 0) return nativeSound;
         int level = pair.primaryLevel();
@@ -152,7 +158,7 @@ public final class GrapnelRiptide {
             || owner.getUseItemRemainingTicks() != remaining || stack.getUseDuration(user) - remaining < 10
             || !owner.isInWaterOrRain() || stack.nextDamageWillBreak()) return null;
         EquipmentSlot slot = owner.getUsedItemHand() == InteractionHand.MAIN_HAND ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND;
-        FusedPair pair = selected(stack);
+        FusedPair pair = selectedRelease(stack);
         if (owner.getItemBySlot(slot) != stack || pair == null || !unambiguous(stack)) return null;
         Release release = new Release(previous, owner, stack, pair, slot); CURRENT.set(release); return release;
     }
@@ -199,9 +205,12 @@ public final class GrapnelRiptide {
         if (!completed || !result || release.ambiguous || !release.effectSeen || !release.querySeen || !release.queryCompleted
             || release.queryDepth != 0 || !release.pushed || release.impulse == null || !ready(owner) || owner.level() != release.level
             || release.tick != release.level.getGameTime() || !equipped(owner, release.stack, release.pair, release.slot)
-            || !owner.isAutoSpinAttack() || owner.getWeaponItem() != release.stack
-            || (!PENDING.containsKey(owner.getUUID()) && PENDING.size() >= MAX_PENDING)) return;
-        PENDING.put(owner.getUUID(), new Pending(release));
+            || !owner.isAutoSpinAttack() || owner.getWeaponItem() != release.stack) return;
+        if (ThunderRailSkills.matches(release.pair)) {
+            ThunderRailSkills.released(owner, release.stack, release.pair, release.slot, release.impulse);
+        } else if (PENDING.containsKey(owner.getUUID()) || PENDING.size() < MAX_PENDING) {
+            PENDING.put(owner.getUUID(), new Pending(release));
+        }
     }
     public static boolean matchesDirection(@Nullable Vec3 movement, @Nullable Vec3 impulse) {
         if (movement == null || impulse == null || !Double.isFinite(movement.x) || !Double.isFinite(movement.y) || !Double.isFinite(movement.z)

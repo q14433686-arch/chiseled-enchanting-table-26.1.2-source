@@ -1221,5 +1221,8 @@
   "skill.enchantment_fusion.looting_fire_seed": "战利火种",
   "tooltip.enchantment_fusion.looting_fire_seed": "抢夺 ▷ 火焰附加：直接击杀合格敌人会留下持续五秒的火种。手持同一武器靠近，引燃短暂的虚拟火圈；火圈边缘可见且合格的敌人受到火焰伤害并燃烧。保留原版抢夺，不放置火方块。",
   "skill.enchantment_fusion.ember_harvest": "焚印收割",
-  "tooltip.enchantment_fusion.ember_harvest": "火焰附加 ▷ 抢夺：合格敌人持续燃烧一秒后，潜行满蓄命中可抽走火焰、熄灭并留下六秒焚印。用同一武器击杀它，可从该敌人经确认的普通掉落中额外获得最多三件无特殊数据的物品。其他命中保留火焰附加。"
+  "tooltip.enchantment_fusion.ember_harvest": "火焰附加 ▷ 抢夺：合格敌人持续燃烧一秒后，潜行满蓄命中可抽走火焰、熄灭并留下六秒焚印。用同一武器击杀它，可从该敌人经确认的普通掉落中额外获得最多三件无特殊数据的物品。其他命中保留火焰附加。",
+  "skill.enchantment_fusion.thunder_rail": "双锚雷轨",
+  "tooltip.enchantment_fusion.thunder_rail": "激流 ▷ 引雷：完成一次真实激流突进，在起点和终点留下短暂电锚；持同一三叉戟再次使用激流，让无遮挡的两锚连成雷轨，电击合格敌人，不改方块。需要水或雨，并正常消耗耐久。",
+  "message.enchantment_fusion.thunder_rail_marked": "双锚已就位，再次使用激流释放雷轨。"
 }

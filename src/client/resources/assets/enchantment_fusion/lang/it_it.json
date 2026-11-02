@@ -1221,5 +1221,8 @@
   "skill.enchantment_fusion.looting_fire_seed": "Scintilla del bottino",
   "tooltip.enchantment_fusion.looting_fire_seed": "Bottino ▷ Aspetto di fuoco: l’uccisione diretta di un nemico idoneo lascia una brace per cinque secondi. Avvicinati con la stessa arma per creare un breve anello virtuale; i nemici idonei visibili sul bordo subiscono danni da fuoco e bruciano. Bottino resta; nessun blocco di fuoco.",
   "skill.enchantment_fusion.ember_harvest": "Raccolto di braci",
-  "tooltip.enchantment_fusion.ember_harvest": "Aspetto di fuoco ▷ Bottino: dopo che un nemico idoneo brucia per un secondo, colpiscilo accovacciato con carica completa per spegnerlo e marcarlo per sei secondi. Sconfiggilo con la stessa arma per ottenere fino a tre oggetti ordinari extra dal suo bottino confermato. Aspetto di fuoco resta sugli altri colpi."
+  "tooltip.enchantment_fusion.ember_harvest": "Aspetto di fuoco ▷ Bottino: dopo che un nemico idoneo brucia per un secondo, colpiscilo accovacciato con carica completa per spegnerlo e marcarlo per sei secondi. Sconfiggilo con la stessa arma per ottenere fino a tre oggetti ordinari extra dal suo bottino confermato. Aspetto di fuoco resta sugli altri colpi.",
+  "skill.enchantment_fusion.thunder_rail": "Rotaia di tuono a due ancore",
+  "tooltip.enchantment_fusion.thunder_rail": "Risacca ▷ Canalizzazione: una vera carica lascia due ancore temporanee. Usa ancora Risacca con lo stesso tridente per scaricare una rotaia libera contro i nemici idonei, senza alterare i blocchi. Richiede acqua o pioggia e normale usura.",
+  "message.enchantment_fusion.thunder_rail_marked": "Due ancore posate; usa di nuovo Risacca."
 }

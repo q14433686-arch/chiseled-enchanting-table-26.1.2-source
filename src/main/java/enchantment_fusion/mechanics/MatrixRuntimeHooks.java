@@ -56,6 +56,7 @@ import enchantment_fusion.mechanics.signatures.MeleeFrostSkills;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWindSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelSkills;
+import enchantment_fusion.mechanics.signatures.ThunderRailSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelLooting;
 import enchantment_fusion.mechanics.signatures.PrimaryLocationProjection;
 import enchantment_fusion.mechanics.signatures.FortuneBankSkills;
@@ -159,6 +160,7 @@ public final class MatrixRuntimeHooks {
             MeleeLightningSkills.clearServer();
             MeleeWindSkills.clearServer();
             GrapnelSkills.clearServer();
+            ThunderRailSkills.clearServer();
             PrimaryLocationProjection.clearServer(server);
             FortuneBankSkills.clear();
         });
@@ -242,6 +244,7 @@ public final class MatrixRuntimeHooks {
             MeleeLightningSkills.clearPlayer(pid);
             MeleeWindSkills.clearPlayer(pid);
             GrapnelSkills.clearPlayer(pid);
+            ThunderRailSkills.clearPlayer(pid);
             PrimaryLocationProjection.clearPlayer(handler.getPlayer());
             FortuneBankSkills.onDisconnect(pid);
             SignaturePairs.onPlayerDisconnect(pid);
@@ -481,6 +484,7 @@ public final class MatrixRuntimeHooks {
                 MeleeLightningSkills.clearPlayer(deadPlayer.getUUID());
                 MeleeWindSkills.clearPlayer(deadPlayer.getUUID());
                 GrapnelSkills.clearPlayer(deadPlayer.getUUID());
+                ThunderRailSkills.clearPlayer(deadPlayer.getUUID());
                 PrimaryLocationProjection.clearPlayer(deadPlayer);
                 FortuneBankSkills.onDisconnect(deadPlayer.getUUID());
                 ACTIVE_RIPTIDE_SPINS.remove(deadPlayer.getUUID());
@@ -533,6 +537,7 @@ public final class MatrixRuntimeHooks {
             MeleeWindSkills.tickServer(server);
             PrimaryLocationProjection.tickServer(server);
             GrapnelSkills.tickServer(server);
+            ThunderRailSkills.tickServer(server);
             FortuneBankSkills.tickServer(server);
             GlazedStrikeEffect.tickServer(server);
             AmberSealSkill.tickServer(server);

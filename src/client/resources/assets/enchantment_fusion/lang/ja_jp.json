@@ -1221,5 +1221,8 @@
   "skill.enchantment_fusion.looting_fire_seed": "戦利の火種",
   "tooltip.enchantment_fusion.looting_fire_seed": "ドロップ増加 ▷ 火属性：有効な敵を直接倒すと火種が5秒間残る。同じ武器を持って近づくと短時間の仮想火輪が生じ、縁にいる視認できる有効な敵が炎ダメージを受けて燃える。ドロップ増加は残り、火ブロックは置かない。",
   "skill.enchantment_fusion.ember_harvest": "焔印の収穫",
-  "tooltip.enchantment_fusion.ember_harvest": "火属性 ▷ ドロップ増加：有効な敵が1秒燃え続けた後、スニークして十分に溜めた攻撃を当てると火を消して6秒間印を付ける。同じ武器で倒すと、その敵の確認済み通常ドロップから特殊データのない品を最大3個追加で得る。他の攻撃では火属性が残る。"
+  "tooltip.enchantment_fusion.ember_harvest": "火属性 ▷ ドロップ増加：有効な敵が1秒燃え続けた後、スニークして十分に溜めた攻撃を当てると火を消して6秒間印を付ける。同じ武器で倒すと、その敵の確認済み通常ドロップから特殊データのない品を最大3個追加で得る。他の攻撃では火属性が残る。",
+  "skill.enchantment_fusion.thunder_rail": "双錨の雷軌",
+  "tooltip.enchantment_fusion.thunder_rail": "激流 ▷ チャネリング：実際の激流突進を完了すると両端に短時間の錨を残す。同じトライデントで再び激流を使うと、遮られていない錨間に雷軌を放ち、有効な敵を感電させる。ブロックは変化せず、水か雨と通常の耐久消費が必要。",
+  "message.enchantment_fusion.thunder_rail_marked": "双錨を設置。もう一度激流を使うと雷軌を放つ。"
 }

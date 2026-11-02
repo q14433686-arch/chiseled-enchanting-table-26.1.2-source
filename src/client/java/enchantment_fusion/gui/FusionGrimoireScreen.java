@@ -13,6 +13,7 @@ import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeDisarmSkills;
 import enchantment_fusion.mechanics.signatures.LootingFireSeedSkills;
 import enchantment_fusion.mechanics.signatures.EmberHarvestSkills;
+import enchantment_fusion.mechanics.signatures.ThunderRailSkills;
 import enchantment_fusion.registry.FusionItems;
 import java.util.ArrayList;
 import java.util.List;
@@ -503,10 +504,11 @@ public final class FusionGrimoireScreen extends Screen {
                     boolean disarm = MeleeDisarmSkills.selectedSignature(sig);
                     boolean fireSeed = LootingFireSeedSkills.selectedSignature(sig);
                     boolean emberHarvest = EmberHarvestSkills.selectedSignature(sig);
+                    boolean thunderRail = ThunderRailSkills.selectedSignature(sig);
                     String fullTitle = Component.translatable(silkSeal ? "skill.enchantment_fusion.melee_silk_seal"
-                        : pursuit ? "skill.enchantment_fusion.melee_pursuit" : disarm ? "skill.enchantment_fusion.melee_disarm" : fireSeed ? "skill.enchantment_fusion.looting_fire_seed" : emberHarvest ? "skill.enchantment_fusion.ember_harvest" : sig.titleKey()).getString();
+                        : pursuit ? "skill.enchantment_fusion.melee_pursuit" : disarm ? "skill.enchantment_fusion.melee_disarm" : fireSeed ? "skill.enchantment_fusion.looting_fire_seed" : emberHarvest ? "skill.enchantment_fusion.ember_harvest" : thunderRail ? "skill.enchantment_fusion.thunder_rail" : sig.titleKey()).getString();
                     String fullDesc = Component.translatable(silkSeal ? "tooltip.enchantment_fusion.melee_silk_seal"
-                        : pursuit ? "tooltip.enchantment_fusion.melee_pursuit" : disarm ? "tooltip.enchantment_fusion.melee_disarm" : fireSeed ? "tooltip.enchantment_fusion.looting_fire_seed" : emberHarvest ? "tooltip.enchantment_fusion.ember_harvest" : sig.descKey()).getString();
+                        : pursuit ? "tooltip.enchantment_fusion.melee_pursuit" : disarm ? "tooltip.enchantment_fusion.melee_disarm" : fireSeed ? "tooltip.enchantment_fusion.looting_fire_seed" : emberHarvest ? "tooltip.enchantment_fusion.ember_harvest" : thunderRail ? "tooltip.enchantment_fusion.thunder_rail" : sig.descKey()).getString();
 
                     if (st >= CompendiumDiscoveryTracker.STATE_MASTERED) {
                         out.add(new EntryItem(

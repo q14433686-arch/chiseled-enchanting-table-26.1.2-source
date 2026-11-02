@@ -830,6 +830,7 @@ public final class ClientSmoke implements ClientModInitializer {
         acceptance.run("16-protection-blast", () -> BlastDefenseProbe.exerciseGuard(sp));
         acceptance.run("12-quick-piercing", () -> PiercingChainProbe.exercise(sp, tablePos.above(180).east(12), false));
         acceptance.run("12-piercing-quick", () -> PiercingChainProbe.exercise(sp, tablePos.above(180).east(12), true));
+        acceptance.run("13-riptide-channeling", () -> ThunderRailProbe.exercise(sp, tablePos.above(195).east(12)));
         acceptance.run("14-flame-punch", () -> ThermalProjectileProbe.exercise(sp, tablePos.above(195).east(12), false));
         acceptance.run("14-punch-flame", () -> ThermalProjectileProbe.exercise(sp, tablePos.above(195).east(12), true));
         acceptance.run("17-protection-fire", () -> FireTradeoffProbe.exercise(sp, tablePos.above(210).east(12), false));

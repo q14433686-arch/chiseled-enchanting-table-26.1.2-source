@@ -230,6 +230,9 @@ final class AcceptanceReport {
         plan("11-piercing-multishot", "Piercing ▷ Multishot: prepared server fixture", "Not reached if setup fails.");
         plan("12-quick-piercing", "Quick Charge ▷ Piercing: real repeated arrow and old collision batch fixture", "Not reached if setup fails.");
         plan("12-piercing-quick", "Piercing ▷ Quick Charge: actual penetrating arrow and reload credit fixture", "Not reached if setup fails.");
+        plan("13-channeling-riptide", "Channeling ▷ Riptide: actual hit anchor and directed rush", "Not implemented; no candidate fixture yet.");
+        plan("13-riptide-channeling", "Riptide ▷ Channeling: real held releases with prepared water, charge and collision-clipped movement", "Not reached if setup fails; spin ending is simulated and natural client movement, multiplayer and third-party hooks remain untested.");
+        plan("13-runtime-compat", "13 natural movement and input, weather, projectile recovery, PvP, claims, multiplayer and third-party effects", "Not covered by the prepared single-player fixture.");
         plan("14-flame-punch", "Flame ▷ Punch: real heat arrow, moving hostile projectile and wall fixture", "Not reached if setup fails.");
         plan("14-punch-flame", "Punch ▷ Flame: actual push, simulated landing and protected vortex fixture", "Not reached if setup fails.");
         plan("17-protection-fire", "Protection ▷ Fire Protection: real fire damage and safe wear fixture", "Not reached if setup fails.");

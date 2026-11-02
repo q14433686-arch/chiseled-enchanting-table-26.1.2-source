@@ -1221,5 +1221,8 @@
   "skill.enchantment_fusion.looting_fire_seed": "전리품 불씨",
   "tooltip.enchantment_fusion.looting_fire_seed": "약탈 ▷ 발화: 유효한 적을 직접 처치하면 불씨가 5초 동안 남습니다. 같은 무기를 들고 다가가면 잠시 가상의 불고리가 생기며 가장자리의 보이는 유효한 적이 화염 피해를 입고 불탑니다. 약탈은 유지되며 불 블록을 놓지 않습니다.",
   "skill.enchantment_fusion.ember_harvest": "불꽃 표식 수확",
-  "tooltip.enchantment_fusion.ember_harvest": "발화 ▷ 약탈: 유효한 적이 1초 동안 불탄 뒤 웅크리고 충분히 충전한 공격을 맞히면 불을 끄고 6초 동안 표식을 남깁니다. 같은 무기로 처치하면 확인된 일반 전리품에서 특수 데이터가 없는 아이템을 최대 3개 추가로 얻습니다. 다른 공격에는 발화가 유지됩니다."
+  "tooltip.enchantment_fusion.ember_harvest": "발화 ▷ 약탈: 유효한 적이 1초 동안 불탄 뒤 웅크리고 충분히 충전한 공격을 맞히면 불을 끄고 6초 동안 표식을 남깁니다. 같은 무기로 처치하면 확인된 일반 전리품에서 특수 데이터가 없는 아이템을 최대 3개 추가로 얻습니다. 다른 공격에는 발화가 유지됩니다.",
+  "skill.enchantment_fusion.thunder_rail": "쌍닻 천둥 궤도",
+  "tooltip.enchantment_fusion.thunder_rail": "급류 ▷ 집전: 실제 급류 돌진을 마치면 양 끝에 잠시 닻을 남깁니다. 같은 삼지창으로 급류를 다시 사용하면 막히지 않은 두 닻 사이에 전격을 방출해 유효한 적을 공격하며 블록은 바꾸지 않습니다. 물이나 비와 일반 내구도 소모가 필요합니다.",
+  "message.enchantment_fusion.thunder_rail_marked": "두 닻 설치 완료. 급류를 다시 사용하세요."
 }

@@ -158,6 +158,10 @@ class AcceptanceInventoryTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_report(report + report)
 
+    def test_thunder_rail_fixture_does_not_claim_unimplemented_reverse(self):
+        self.assertEqual(("13-riptide-channeling", True), DIRECTION_FIXTURES[("riptide", "channeling")])
+        self.assertNotIn(("channeling", "riptide"), DIRECTION_FIXTURES)
+
     def test_ember_harvest_and_spoils_spark_have_separate_fixtures(self):
         self.assertEqual(("07-fire-looting", True), DIRECTION_FIXTURES[("fire_aspect", "looting")])
         self.assertEqual(("07-looting-fire", True), DIRECTION_FIXTURES[("looting", "fire_aspect")])

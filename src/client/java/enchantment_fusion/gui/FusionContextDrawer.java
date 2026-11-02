@@ -13,6 +13,7 @@ import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
 import enchantment_fusion.mechanics.signatures.MeleeDisarmSkills;
 import enchantment_fusion.mechanics.signatures.LootingFireSeedSkills;
 import enchantment_fusion.mechanics.signatures.EmberHarvestSkills;
+import enchantment_fusion.mechanics.signatures.ThunderRailSkills;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -122,13 +123,14 @@ public final class FusionContextDrawer {
             boolean disarm = MeleeDisarmSkills.selectedSignature(sig);
             boolean fireSeed = LootingFireSeedSkills.selectedSignature(sig);
             boolean emberHarvest = EmberHarvestSkills.selectedSignature(sig);
+            boolean thunderRail = ThunderRailSkills.selectedSignature(sig);
             String title = state >= CompendiumDiscoveryTracker.STATE_MASTERED
                 ? "\u2605 " + Component.translatable(silkSeal ? "skill.enchantment_fusion.melee_silk_seal"
-                    : pursuit ? "skill.enchantment_fusion.melee_pursuit" : disarm ? "skill.enchantment_fusion.melee_disarm" : fireSeed ? "skill.enchantment_fusion.looting_fire_seed" : emberHarvest ? "skill.enchantment_fusion.ember_harvest" : sig.titleKey()).getString()
+                    : pursuit ? "skill.enchantment_fusion.melee_pursuit" : disarm ? "skill.enchantment_fusion.melee_disarm" : fireSeed ? "skill.enchantment_fusion.looting_fire_seed" : emberHarvest ? "skill.enchantment_fusion.ember_harvest" : thunderRail ? "skill.enchantment_fusion.thunder_rail" : sig.titleKey()).getString()
                 : "\u25C7 " + formula;
             Component hDesc = state >= CompendiumDiscoveryTracker.STATE_MASTERED
                 ? Component.translatable(silkSeal ? "tooltip.enchantment_fusion.melee_silk_seal"
-                    : pursuit ? "tooltip.enchantment_fusion.melee_pursuit" : disarm ? "tooltip.enchantment_fusion.melee_disarm" : fireSeed ? "tooltip.enchantment_fusion.looting_fire_seed" : emberHarvest ? "tooltip.enchantment_fusion.ember_harvest" : sig.descKey())
+                    : pursuit ? "tooltip.enchantment_fusion.melee_pursuit" : disarm ? "tooltip.enchantment_fusion.melee_disarm" : fireSeed ? "tooltip.enchantment_fusion.looting_fire_seed" : emberHarvest ? "tooltip.enchantment_fusion.ember_harvest" : thunderRail ? "tooltip.enchantment_fusion.thunder_rail" : sig.descKey())
                 : Component.translatable("gui.enchantment_fusion.grimoire.heard_sig_clue", pName, sName);
             this.matched.add(new ContextRecipe(
                 true, sig.id(), sig.primaryId(), sig.secondaryId(), state,
