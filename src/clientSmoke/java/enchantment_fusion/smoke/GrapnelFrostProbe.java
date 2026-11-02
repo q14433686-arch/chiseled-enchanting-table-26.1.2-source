@@ -32,6 +32,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.EnchantedItemInUse;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
@@ -121,6 +122,27 @@ final class GrapnelFrostProbe {
                 level.setBlockAndUpdate(water, Blocks.FROSTED_ICE.defaultBlockState()); location(level, player);
                 require(level.getBlockState(water).is(Blocks.FROSTED_ICE) && !marked(player),
                     "Old vanilla ice cannot be credited as a new source-water write");
+            }
+
+            // Simulated nested scopes must invalidate both the inner and outer attribution.
+            for (boolean outerPlacedFirst : new boolean[]{false, true}) {
+                PrimaryLocationProjection.clearPlayer(player); GrapnelSkills.clearPlayer(player.getUUID()); dry(level, water, top);
+                ItemStack boots = fixture.equip(EquipmentSlot.FEET, Items.DIAMOND_BOOTS, frost); detect(player);
+                GrapnelSkills.clearPlayer(player.getUUID()); source(level, water, top);
+                var enchantment = FusionStationOperations.lookupEnchantment(level.registryAccess(), GrapnelFrost.FROST).orElseThrow().value();
+                var use = new EnchantedItemInUse(boots, EquipmentSlot.FEET, player);
+                GrapnelFrost.Scope outer = GrapnelFrost.begin(enchantment, level, frost.primaryLevel(), use, player);
+                require(outer != null, "The outer Frost scope must bind the actual equipped boots");
+                GrapnelFrost.Scope inner = null; boolean completed = false;
+                try {
+                    if (outerPlacedFirst) GrapnelFrost.waterWrite(level, water, Blocks.FROSTED_ICE.defaultBlockState());
+                    inner = GrapnelFrost.begin(enchantment, level, frost.primaryLevel(), use, player);
+                    require(inner != null, "The nested Frost scope must also be observable");
+                    GrapnelFrost.waterWrite(level, water, Blocks.FROSTED_ICE.defaultBlockState()); completed = true;
+                } finally { GrapnelFrost.end(inner, completed); GrapnelFrost.end(outer, completed); }
+                require(!marked(player) && level.getBlockState(water).is(Blocks.WATER)
+                    && (outerPlacedFirst ? level.getBlockState(top).is(FusionBlocks.TEMPORARY_FROST_PATH) : level.getBlockState(top).isAir()),
+                    "Neither nested scope may claim a mark or create a nested path");
             }
 
             // Ambiguous same-primary sources preserve the path but cannot claim a specific mark.
