@@ -1203,5 +1203,7 @@
   "message.enchantment_fusion.ranged_silk_full": "Inventory full or normal pickup was blocked.",
   "tooltip.enchantment_fusion.ranged_silk_mark": "A real hit on an eligible target marks it for 8 seconds. A later real arrow from this launcher adds Power damage, Punch knockback, or a longer Flame burn only against that marked target. Hitting another target changes the mark.",
   "tooltip.enchantment_fusion.ranged_silk_recover": "Activate to collect your latest real, grounded arrow within 16 blocks and clear line of sight. Uses the original arrow and normal pickup; inventory must have room. Infinite, ghost, custom or flying arrows cannot be recovered.",
-  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "This old item keeps its legacy behavior. New fusions require a bow or crossbow."
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "This old item keeps its legacy behavior. New fusions require a bow or crossbow.",
+  "tooltip.enchantment_fusion.loyalty_grapnel": "When a real thrown trident returns through Loyalty and enters your inventory, its return position is marked for 8 seconds. Hold that same returned trident and activate while aiming at an eligible enemy within 8 blocks of the mark; the mark must be within 12 blocks and the sightlines clear. A full inventory, manual pickup or uncertain provenance cannot mark. The normal Loyalty effect is retained.",
+  "message.enchantment_fusion.grapnel_loyalty_marked": "Loyalty return marked. Hold the returned trident and aim at an eligible enemy."
 }

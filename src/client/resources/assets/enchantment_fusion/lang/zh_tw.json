@@ -1203,5 +1203,7 @@
   "message.enchantment_fusion.ranged_silk_full": "背包已滿，或正常拾取遭到阻止。",
   "tooltip.enchantment_fusion.ranged_silk_mark": "真實箭命中合格目標後標記8秒；這把弓弩的另一支真實箭命中標記者時，力量增加傷害、衝擊增強擊退、火矢延長已點燃時間。命中其他目標會更換標記。",
   "tooltip.enchantment_fusion.ranged_silk_recover": "主動收取16格內、視線暢通的本人最新真實落地箭，使用正常拾取並保留原箭物品資料；背包需有空間。無限箭、幻影箭、第三方箭及飛行中的箭不能回收。",
-  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "舊的不適用裝備保留原有效果；新融合要求弓或弩。"
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "舊的不適用裝備保留原有效果；新融合要求弓或弩。",
+  "tooltip.enchantment_fusion.loyalty_grapnel": "真正投出的三叉戟由忠誠返航並成功回到背包後，在返還位置留標8秒。手持同一把返還的三叉戟，瞄準標記8格內的合格敵人並主動回鉤；標記距你最多12格，且視線須暢通。背包滿、手動拾取或來源不明不會留標；保留忠誠原版效果。",
+  "message.enchantment_fusion.grapnel_loyalty_marked": "忠誠返航已留標。手持返還的三叉戟並瞄準合格敵人。"
 }

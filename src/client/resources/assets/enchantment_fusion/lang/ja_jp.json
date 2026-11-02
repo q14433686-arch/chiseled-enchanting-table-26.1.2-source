@@ -1203,5 +1203,7 @@
   "message.enchantment_fusion.ranged_silk_full": "持ち物が満杯か、通常の回収が阻止されました。",
   "tooltip.enchantment_fusion.ranged_silk_mark": "実矢が適格な対象に命中すると8秒間標記します。同じ武器の別の実矢が標記した対象に命中すると、射撃ダメージ増加はダメージ、パンチはノックバック、フレイムは燃焼時間を延長します。別の対象に命中すると標記が移ります。",
   "tooltip.enchantment_fusion.ranged_silk_recover": "視線の通る16ブロック以内で、自分が最後に放ち地面に刺さった実矢を通常の拾得で回収します。持ち物に空きが必要です。無限、幻影、他MOD、飛行中の矢は回収しません。",
-  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "古い不適合装備は旧効果を維持します。新たな融合には弓かクロスボウが必要です。"
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "古い不適合装備は旧効果を維持します。新たな融合には弓かクロスボウが必要です。",
+  "tooltip.enchantment_fusion.loyalty_grapnel": "実際に投げたトライデントが忠誠心で戻り、インベントリに入ると、帰還地点を8秒間記録する。同じトライデントを持ち、記録地点から8ブロック以内の対象を狙って発動する。記録地点は自身から12ブロック以内で、視線が通る必要がある。満杯、手動回収、出所不明では記録しない。忠誠心の通常効果は維持。",
+  "message.enchantment_fusion.grapnel_loyalty_marked": "忠誠心の帰還地点を記録。戻ったトライデントを持ち、対象を狙おう。"
 }

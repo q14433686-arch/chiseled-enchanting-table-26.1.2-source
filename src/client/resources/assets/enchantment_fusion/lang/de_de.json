@@ -1203,5 +1203,7 @@
   "message.enchantment_fusion.ranged_silk_full": "Inventar voll oder normale Aufnahme blockiert.",
   "tooltip.enchantment_fusion.ranged_silk_mark": "Ein echter Treffer markiert ein erlaubtes Ziel 8 Sekunden. Ein anderer echter Pfeil derselben Waffe fügt nur diesem Ziel Stärke-Schaden, Schlag-Rückstoß oder längeren Flammenbrand hinzu. Ein anderes Ziel ersetzt die Markierung.",
   "tooltip.enchantment_fusion.ranged_silk_recover": "Berge deinen letzten echten, steckenden Pfeil bis 16 Blöcke bei freier Sicht durch normale Aufnahme. Platz im Inventar nötig. Unendliche, Geister-, Mod- und fliegende Pfeile sind ausgeschlossen.",
-  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "Alte ungeeignete Ausrüstung behält ihren Effekt. Neue Fusionen benötigen Bogen oder Armbrust."
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "Alte ungeeignete Ausrüstung behält ihren Effekt. Neue Fusionen benötigen Bogen oder Armbrust.",
+  "tooltip.enchantment_fusion.loyalty_grapnel": "Kehrt ein wirklich geworfener Dreizack durch Treue zurück und gelangt ins Inventar, wird die Rückkehrposition 8 Sekunden markiert. Halte denselben Dreizack und aktiviere beim Zielen auf einen zulässigen Gegner höchstens 8 Blöcke von der Markierung entfernt; die Markierung muss höchstens 12 Blöcke entfernt und die Sicht frei sein. Volles Inventar, manuelles Aufheben oder unklare Herkunft erzeugen keine Markierung. Der normale Treueeffekt bleibt erhalten.",
+  "message.enchantment_fusion.grapnel_loyalty_marked": "Treue-Rückkehr markiert. Halte den zurückgekehrten Dreizack und ziele auf einen zulässigen Gegner."
 }

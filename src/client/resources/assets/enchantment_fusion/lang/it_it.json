@@ -1203,5 +1203,7 @@
   "message.enchantment_fusion.ranged_silk_full": "Inventario pieno o raccolta normale bloccata.",
   "tooltip.enchantment_fusion.ranged_silk_mark": "Un colpo reale marchia un bersaglio valido per 8 secondi. Un’altra freccia reale della stessa arma aggiunge solo al bersaglio marchiato danno Potenza, spinta Contraccolpo o una durata di Fiamma maggiore. Colpire un altro bersaglio cambia il marchio.",
   "tooltip.enchantment_fusion.ranged_silk_recover": "Raccogli normalmente l’ultima freccia reale conficcata entro 16 blocchi e in vista. Serve spazio. Sono escluse frecce infinite, fantasma, di altre mod e in volo.",
-  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "I vecchi oggetti incompatibili conservano l’effetto. Le nuove fusioni richiedono arco o balestra."
+  "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "I vecchi oggetti incompatibili conservano l’effetto. Le nuove fusioni richiedono arco o balestra.",
+  "tooltip.enchantment_fusion.loyalty_grapnel": "Quando un tridente realmente lanciato ritorna grazie a Lealtà ed entra nell’inventario, il punto di ritorno è segnato per 8 secondi. Impugna lo stesso tridente e attiva mirando a un nemico valido entro 8 blocchi dal segno; il segno deve trovarsi entro 12 blocchi e la visuale deve essere libera. Inventario pieno, raccolta manuale o provenienza incerta non creano un segno. L’effetto normale di Lealtà resta attivo.",
+  "message.enchantment_fusion.grapnel_loyalty_marked": "Ritorno di Lealtà segnato. Impugna il tridente restituito e mira a un nemico valido."
 }

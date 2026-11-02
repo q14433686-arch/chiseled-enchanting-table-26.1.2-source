@@ -6,10 +6,12 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
 import enchantment_fusion.mechanics.signatures.GrapnelChanneling;
+import enchantment_fusion.mechanics.signatures.GrapnelLoyalty;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
@@ -20,6 +22,36 @@ import org.spongepowered.asm.mixin.injection.At;
 /** Thrown tridents override the arrow collision method, so observe their own direct hit. */
 @Mixin(ThrownTrident.class)
 public abstract class TridentHeavyCrushMixin {
+    @WrapOperation(method = "getLoyaltyFromItem", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;getTridentReturnToOwnerAcceleration(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/entity/Entity;)I"))
+    private int ef$loyaltyAcceleration(ServerLevel level, ItemStack stack, Entity trident, Operation<Integer> original) {
+        return GrapnelLoyalty.project(level, stack, trident, original.call(level, stack, trident));
+    }
+
+    @WrapMethod(method = "tick")
+    private void ef$observeLoyaltyReturn(Operation<Void> original) {
+        GrapnelLoyalty.ReturnTick tick = GrapnelLoyalty.beginTick((ThrownTrident) (Object) this);
+        boolean completed = false;
+        try { original.call(); completed = true; }
+        finally { GrapnelLoyalty.endTick(tick, completed); }
+    }
+
+    @WrapMethod(method = "playerTouch")
+    private void ef$observeLoyaltyTouch(Player player, Operation<Void> original) {
+        GrapnelLoyalty.Touch touch = GrapnelLoyalty.beginTouch((ThrownTrident) (Object) this, player);
+        boolean completed = false;
+        try { original.call(player); completed = true; }
+        finally { GrapnelLoyalty.endTouch(touch, completed); }
+    }
+
+    @WrapMethod(method = "tryPickup")
+    private boolean ef$observeLoyaltyPickup(Player player, Operation<Boolean> original) {
+        GrapnelLoyalty.Pickup pickup = GrapnelLoyalty.beginPickup((ThrownTrident) (Object) this, player);
+        boolean result = false, completed = false;
+        try { result = original.call(player); completed = true; return result; }
+        finally { GrapnelLoyalty.endPickup(pickup, result, completed); }
+    }
+
     @WrapMethod(method = "onHitEntity")
     private void ef$scopeTridentHit(EntityHitResult hit, Operation<Void> original) {
         ThrownTrident projectile = (ThrownTrident) (Object) this;

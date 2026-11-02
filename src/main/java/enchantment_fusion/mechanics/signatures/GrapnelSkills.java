@@ -56,13 +56,15 @@ public final class GrapnelSkills {
     private record Gear(ItemStack stack, FusedPair pair, @Nullable ThrownTrident projectile) {
         Gear(ItemStack stack, FusedPair pair) { this(stack, pair, null); }
     }
-    private sealed interface Mark permits TargetMark, DropsMark, PositionMark {
+    private sealed interface Mark permits TargetMark, DropsMark, PositionMark, ReturnedPositionMark {
         Gear gear(); ResourceKey<Level> dimension(); long until();
     }
     private record TargetMark(Gear gear, ResourceKey<Level> dimension, long until, @Nullable EquipmentSlot slot, UUID target) implements Mark {}
     private record Drop(ItemEntity entity, ItemStack stack, ItemStack snapshot) {}
     private record DropsMark(Gear gear, ResourceKey<Level> dimension, long until, @Nullable EquipmentSlot slot, BlockPos origin, List<Drop> drops) implements Mark {}
     private record PositionMark(Gear gear, ResourceKey<Level> dimension, long until, @Nullable EquipmentSlot slot, Vec3 origin) implements Mark {}
+    /** The return receipt is bound to the inserted object, even if its slot differs from the throwing hand. */
+    private record ReturnedPositionMark(Gear gear, ResourceKey<Level> dimension, long until, Vec3 origin) implements Mark {}
     private static final Map<UUID, Mark> MARKS = new HashMap<>();
     private record Flight(UUID owner, ResourceKey<Level> dimension, List<Gear> gears, boolean fullDraw,
                           @Nullable GrapnelVolley.Batch volley, long expires) {}
@@ -103,7 +105,7 @@ public final class GrapnelSkills {
         return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair) || GrapnelDefense.isPair(pair)
             || GrapnelDurability.isPair(pair) || GrapnelImpact.isPair(pair) || GrapnelWind.isPair(pair) || GrapnelThorns.isPair(pair)
             || GrapnelAttribute.isPair(pair) || GrapnelLunge.isPair(pair) || GrapnelChanneling.isPair(pair) || GrapnelLooting.isPair(pair)
-            || GrapnelRiptide.isPair(pair))
+            || GrapnelRiptide.isPair(pair) || GrapnelLoyalty.isPair(pair))
             && SignatureCatalog.resolve(pair).map(entry -> SIGNATURE.equals(entry.id()) && "*".equals(entry.primaryId())).orElse(false);
     }
     public static boolean supportsCarrier(Set<FusionCarrier> roles) { return MeleeAttackThemes.supportsWeapon(roles); }
@@ -118,6 +120,7 @@ public final class GrapnelSkills {
         if (GrapnelLooting.isPair(pair)) return GrapnelLooting.supportsCarrier(roles);
         if (GrapnelChanneling.isPair(pair)) return GrapnelChanneling.supportsCarrier(roles);
         if (GrapnelRiptide.isPair(pair)) return GrapnelRiptide.supportsCarrier(roles);
+        if (GrapnelLoyalty.isPair(pair)) return GrapnelLoyalty.supportsCarrier(roles);
         if (GrapnelWind.isPair(pair)) return GrapnelWind.supportsCarrier(roles);
         if (GrapnelThorns.isPair(pair)) return GrapnelThorns.supportsCarrier(roles);
         if (GrapnelAttribute.isPair(pair)) return GrapnelAttribute.supportsCarrier(pair, roles);
@@ -333,6 +336,16 @@ public final class GrapnelSkills {
         GrapnelPositionTargets.announce(owner, pair, origin, projectile != null);
         return true;
     }
+    /** Called only after the same returning entity was discarded following a proven real insertion. */
+    public static boolean markReturned(ServerPlayer owner, ItemStack stack, FusedPair pair, Vec3 origin) {
+        Gear gear = new Gear(stack, pair);
+        if (!ready(owner) || !canMark(owner) || !GrapnelLoyalty.isPair(pair) || !owns(owner, gear)
+            || !RealInventoryInsertion.unique(owner.getInventory(), stack)
+            || !GrapnelPositionTargets.allowedOrigin(owner, origin, true)) return false;
+        MARKS.put(owner.getUUID(), new ReturnedPositionMark(gear, owner.level().dimension(), owner.level().getGameTime() + MARK_TICKS, origin));
+        GrapnelPositionTargets.announce(owner, pair, origin, false);
+        return true;
+    }
     private static boolean stillEquipped(ServerPlayer owner, EquipmentSlot slot, ItemStack stack, FusedPair pair) {
         if (GrapnelDefense.isPair(pair)) return GrapnelDefense.stillEquipped(owner, new GrapnelDefense.Gear(slot, stack, pair));
         if (GrapnelThorns.isPair(pair)) return GrapnelThorns.stillEquipped(owner, slot, stack, pair);
@@ -341,6 +354,8 @@ public final class GrapnelSkills {
     }
     private static boolean valid(ServerPlayer owner, Mark mark) {
         if (!ready(owner) || !owner.level().dimension().equals(mark.dimension()) || owner.level().getGameTime() >= mark.until()) return false;
+        if (mark instanceof ReturnedPositionMark returned)
+            return owns(owner, returned.gear()) && RealInventoryInsertion.unique(owner.getInventory(), returned.gear().stack());
         if (mark instanceof PositionMark position && position.slot() != null)
             return stillEquipped(owner, position.slot(), position.gear().stack(), position.gear().pair());
         if (mark instanceof DropsMark drops && drops.slot() != null)
@@ -358,7 +373,13 @@ public final class GrapnelSkills {
             || GrapnelDefense.hasEquipped(player) || GrapnelDurability.hasEquipped(player)
             || GrapnelWind.hasEquipped(player) || GrapnelThorns.hasEquipped(player) || GrapnelAttribute.hasEquipped(player)
             || GrapnelLunge.selected(player.getMainHandItem()) != null || GrapnelChanneling.selected(player.getMainHandItem()) != null
-            || GrapnelLooting.selected(player.getMainHandItem()) != null || GrapnelRiptide.hasEquipped(player) || hasProjectileMark(player);
+            || GrapnelLooting.selected(player.getMainHandItem()) != null || GrapnelRiptide.hasEquipped(player)
+            || hasReturnedMark(player) || hasProjectileMark(player);
+    }
+    private static boolean hasReturnedMark(ServerPlayer player) {
+        Mark mark = MARKS.get(player.getUUID());
+        return mark instanceof ReturnedPositionMark && valid(player, mark)
+            && (player.getMainHandItem() == mark.gear().stack() || player.getOffhandItem() == mark.gear().stack());
     }
     private static boolean hasProjectileMark(ServerPlayer player) {
         Mark mark = MARKS.get(player.getUUID()); return mark != null && mark.gear().projectile() != null && valid(player, mark);
@@ -372,6 +393,11 @@ public final class GrapnelSkills {
         if (mark instanceof PositionMark position) {
             LivingEntity target = GrapnelPositionTargets.aimed(owner, position.origin());
             return target != null && eligibleTarget(owner, target, position.gear().pair()) && pull(owner, position, target);
+        }
+        if (mark instanceof ReturnedPositionMark returned) {
+            if (owner.getMainHandItem() != returned.gear().stack() && owner.getOffhandItem() != returned.gear().stack()) return false;
+            LivingEntity target = GrapnelPositionTargets.aimed(owner, returned.origin());
+            return target != null && eligibleTarget(owner, target, returned.gear().pair()) && pull(owner, returned, target);
         }
         if (mark instanceof TargetMark target && (target.slot() != null || target.gear().projectile() != null)) return recallTarget(owner, target);
         if (mark instanceof DropsMark drops && drops.slot() != null) return recallDrops(owner, drops);
@@ -410,7 +436,7 @@ public final class GrapnelSkills {
     public static void tickServer(MinecraftServer server) {
         GrapnelPiercing.tickServer(server); GrapnelQuickCharge.tickServer(server);
         GrapnelWind.tickServer(server); GrapnelThorns.tickServer(server); GrapnelMotion.tickServer(server); GrapnelSweep.tickServer(server); GrapnelBreath.tickServer(server);
-        GrapnelTridentFlight.tickServer(server); GrapnelRiptide.tickServer(server);
+        GrapnelTridentFlight.tickServer(server); GrapnelRiptide.tickServer(server); GrapnelLoyalty.tickServer(server);
         FLIGHTS.entrySet().removeIf(entry -> {
             Flight flight = entry.getValue(); ServerPlayer owner = server.getPlayerList().getPlayer(flight.owner());
             return owner == null || !ready(owner) || !entry.getKey().isAlive() || owner.level() != entry.getKey().level()
@@ -430,7 +456,7 @@ public final class GrapnelSkills {
         MARKS.remove(id);
         GrapnelPiercing.clearPlayer(id); GrapnelQuickCharge.clearPlayer(id);
         GrapnelWind.clearPlayer(id); GrapnelThorns.clearPlayer(id); GrapnelMotion.clearPlayer(id); GrapnelSweep.clearPlayer(id); GrapnelBreath.clearPlayer(id);
-        GrapnelTridentFlight.clearPlayer(id); GrapnelRiptide.clearPlayer(id);
+        GrapnelTridentFlight.clearPlayer(id); GrapnelRiptide.clearPlayer(id); GrapnelLoyalty.clearPlayer(id);
         MARKS.entrySet().removeIf(entry -> entry.getValue() instanceof TargetMark target && target.target().equals(id));
         FLIGHTS.entrySet().removeIf(entry -> entry.getValue().owner().equals(id));
         PENDING_PUSHES.entrySet().removeIf(entry -> entry.getValue().flight().owner().equals(id));
@@ -439,6 +465,6 @@ public final class GrapnelSkills {
         MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear();
         GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); GrapnelQuickCharge.clearServer(); GrapnelDurability.clearServer();
         GrapnelImpact.clearServer(); GrapnelWind.clearServer(); GrapnelThorns.clearServer(); GrapnelMotion.clearServer();
-        GrapnelSweep.clearServer(); GrapnelBreath.clearServer(); GrapnelLunge.clearServer(); GrapnelChanneling.clearServer(); GrapnelLooting.clearServer(); GrapnelTridentFlight.clearServer(); GrapnelRiptide.clearServer(); ProtectionProjection.clear();
+        GrapnelSweep.clearServer(); GrapnelBreath.clearServer(); GrapnelLunge.clearServer(); GrapnelChanneling.clearServer(); GrapnelLooting.clearServer(); GrapnelTridentFlight.clearServer(); GrapnelRiptide.clearServer(); GrapnelLoyalty.clearServer(); ProtectionProjection.clear();
     }
 }

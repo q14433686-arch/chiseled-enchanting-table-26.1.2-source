@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.signatures.HeavyCrushSkill;
 import enchantment_fusion.mechanics.signatures.MeleeLightningSkills;
 import enchantment_fusion.mechanics.signatures.GrapnelTridentFlight;
 import enchantment_fusion.mechanics.signatures.GrapnelRiptide;
+import enchantment_fusion.mechanics.signatures.GrapnelLoyalty;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.Holder;
@@ -39,9 +40,13 @@ public abstract class TridentChargeHeavyCrushMixin {
     @WrapMethod(method = "releaseUsing")
     private boolean ef$observeRiptideRelease(ItemStack stack, Level level, LivingEntity user, int remaining, Operation<Boolean> original) {
         GrapnelRiptide.Release release = GrapnelRiptide.begin(stack, level, user, remaining);
+        GrapnelLoyalty.Release loyalty = GrapnelLoyalty.beginRelease(stack, level, user, remaining);
         boolean result = false, completed = false;
         try { result = original.call(stack, level, user, remaining); completed = true; return result; }
-        finally { GrapnelRiptide.end(release, result, completed); }
+        finally {
+            try { GrapnelLoyalty.endRelease(loyalty, result, completed); }
+            finally { GrapnelRiptide.end(release, result, completed); }
+        }
     }
 
     @WrapOperation(method = {"use", "releaseUsing"}, at = @At(value = "INVOKE",
@@ -77,6 +82,7 @@ public abstract class TridentChargeHeavyCrushMixin {
         Projectile projectile = original.call(factory, level, consumed, owner, angle, power, uncertainty);
         MeleeLightningSkills.launched(projectile, owner, consumed);
         GrapnelTridentFlight.launched(projectile, owner, consumed);
+        GrapnelLoyalty.spawned(projectile, owner, consumed);
         return projectile;
     }
 }

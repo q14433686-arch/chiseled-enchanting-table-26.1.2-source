@@ -30,8 +30,8 @@ public final class GrapnelTridentFlight {
         ItemStack stack = trident.getWeaponItem();
         if (stack == null || stack.isEmpty() || consumed == null || !ItemStack.matches(stack, consumed)) return;
         List<FusedPair> pairs = stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().stream()
-            .filter(pair -> (GrapnelImpact.IMPALING.equals(pair.primaryId()) || GrapnelChanneling.isPair(pair))
-                && GrapnelSkills.applies(pair, stack)).toList();
+            .filter(pair -> (GrapnelImpact.IMPALING.equals(pair.primaryId()) || GrapnelChanneling.isPair(pair)
+                || GrapnelLoyalty.isPair(pair)) && GrapnelSkills.applies(pair, stack)).toList();
         if (!pairs.isEmpty()) FLIGHTS.put(trident, new Flight(owner.getUUID(), owner.level().dimension(), stack, pairs,
             owner.level().getGameTime() + 1200L));
     }
