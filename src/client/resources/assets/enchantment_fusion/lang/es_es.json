@@ -1215,5 +1215,7 @@
   "message.enchantment_fusion.melee_silk_dissipated": "El daño sellado se ha disipado.",
   "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "El objeto antiguo incompatible conserva su efecto; el nuevo sello requiere un arma cuerpo a cuerpo.",
   "skill.enchantment_fusion.melee_pursuit": "Persecución de impulso",
-  "tooltip.enchantment_fusion.melee_pursuit": "Empuje ▷ Botín: tras un empuje real, golpea con la misma arma al mismo enemigo mientras sigue moviéndose. Roba parte de su impulso horizontal restante para avanzar y ralentízalo brevemente. Conserva el empuje normal; no crea botín."
+  "tooltip.enchantment_fusion.melee_pursuit": "Empuje ▷ Botín: tras un empuje real, golpea con la misma arma al mismo enemigo mientras sigue moviéndose. Roba parte de su impulso horizontal restante para avanzar y ralentízalo brevemente. Conserva el empuje normal; no crea botín.",
+  "skill.enchantment_fusion.melee_disarm": "Expulsión desarmante",
+  "tooltip.enchantment_fusion.melee_disarm": "Botín ▷ Empuje: un golpe completamente cargado desarma una pieza real de equipo de un enemigo normal compatible del juego base y lo aleja del objeto. Cinco segundos por enemigo; protege equipo ligado, jugadores y jefes. Conserva Botín; no crea copias."
 }

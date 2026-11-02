@@ -1215,5 +1215,7 @@
   "message.enchantment_fusion.melee_silk_dissipated": "封存的伤害已消散。",
   "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "旧的不适用载体保留原有效果；新封伤需要近战武器。",
   "skill.enchantment_fusion.melee_pursuit": "截势追击",
-  "tooltip.enchantment_fusion.melee_pursuit": "击退 ▷ 抢夺：真实击退后，趁同一敌人仍沿推出方向移动，用同一武器再次命中，夺走部分剩余水平动量向前冲刺，使目标短暂缓慢。保留原版击退，不生成战利品。"
+  "tooltip.enchantment_fusion.melee_pursuit": "击退 ▷ 抢夺：真实击退后，趁同一敌人仍沿推出方向移动，用同一武器再次命中，夺走部分剩余水平动量向前冲刺，使目标短暂缓慢。保留原版击退，不生成战利品。",
+  "skill.enchantment_fusion.melee_disarm": "缴械驱逐",
+  "tooltip.enchantment_fusion.melee_disarm": "抢夺 ▷ 击退：满蓄命中合格的原版普通敌人，使其掉落一件真实装备并将它推离物品；每个目标冷却 5 秒。绑定装备、玩家和首领受保护。保留原版抢夺，不复制物品。"
 }

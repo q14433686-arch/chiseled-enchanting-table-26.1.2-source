@@ -117,6 +117,9 @@ public final class GrapnelLooting {
         FusedPair best = null;
         for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs())
             if (isPair(pair) && GrapnelSkills.applies(pair, stack) && (best == null || pair.primaryLevel() > best.primaryLevel())) best = pair;
+        if (best != null) return best; // preserve the existing Grapnel selection on legacy multi-fusion gear
+        for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs())
+            if (MeleeDisarmSkills.applies(pair, stack) && (best == null || pair.primaryLevel() > best.primaryLevel())) best = pair;
         return best;
     }
     public static int highestLevel(List<FusedPair> pairs, List<RetainedEnchant> retained) {
@@ -144,11 +147,14 @@ public final class GrapnelLooting {
         return frame.owner != null && frame.level != null && frame.weapon != null && frame.pair != null && frame.primary != null
             && frame.owner.level() == frame.level && frame.owner.getMainHandItem() == frame.weapon && !frame.weapon.isEmpty()
             && frame.weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs().contains(frame.pair)
-            && GrapnelSkills.applies(frame.pair, frame.weapon) && frame.primary.value().matchingSlot(EquipmentSlot.MAINHAND);
+            && (GrapnelSkills.applies(frame.pair, frame.weapon) || MeleeDisarmSkills.applies(frame.pair, frame.weapon))
+            && frame.primary.value().matchingSlot(EquipmentSlot.MAINHAND);
     }
     private static int wanted(Frame frame) {
-        return highestLevel(frame.weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs(),
-            frame.weapon.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()));
+        var pairs = frame.weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs();
+        int best = highestLevel(pairs, frame.weapon.getOrDefault(FusionDataComponents.RETAINED_ENCHANTS, List.<RetainedEnchant>of()));
+        for (FusedPair pair : pairs) if (MeleeDisarmSkills.applies(pair, frame.weapon)) best = Math.max(best, pair.primaryLevel());
+        return best;
     }
     static boolean solePrimary(Frame frame) {
         if (!held(frame) || !unambiguous(frame.weapon.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs(),
@@ -165,7 +171,7 @@ public final class GrapnelLooting {
         Action action = ACTION.get();
         boolean direct = source.getDirectEntity() == owner && action != null && !action.ambiguous
             && action.victim == victim && action.source == source;
-        return owner.isAlive() && !owner.isCreative() && !owner.isSpectator() && victim instanceof Mob && victim.isAlive()
+        return isPair(pair) && owner.isAlive() && !owner.isCreative() && !owner.isSpectator() && victim instanceof Mob && victim.isAlive()
             && level.getEntity(victim.getUUID()) == victim && direct && GrapnelSkills.eligibleTarget(owner, victim, pair)
             && !level.getServer().isUnderSpawnProtection(level, victim.blockPosition(), owner)
             && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) && !source.is(DamageTypeTags.BYPASSES_EFFECTS)

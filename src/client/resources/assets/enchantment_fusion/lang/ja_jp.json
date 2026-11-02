@@ -1215,5 +1215,7 @@
   "message.enchantment_fusion.melee_silk_dissipated": "封印したダメージが消えた。",
   "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "非対応の旧アイテムは元の効果を保持。新しい封印には近接武器が必要。",
   "skill.enchantment_fusion.melee_pursuit": "勢い奪いの追撃",
-  "tooltip.enchantment_fusion.melee_pursuit": "ノックバック ▷ ドロップ増加：実際に押し出した敵が同じ方向に動いている間に同じ武器で再び命中すると、残る水平の勢いを一部奪ってその方向へ突進し、敵を短時間減速する。通常のノックバックは残り、戦利品は生成しない。"
+  "tooltip.enchantment_fusion.melee_pursuit": "ノックバック ▷ ドロップ増加：実際に押し出した敵が同じ方向に動いている間に同じ武器で再び命中すると、残る水平の勢いを一部奪ってその方向へ突進し、敵を短時間減速する。通常のノックバックは残り、戦利品は生成しない。",
+  "skill.enchantment_fusion.melee_disarm": "武装解除の追放",
+  "tooltip.enchantment_fusion.melee_disarm": "ドロップ増加 ▷ ノックバック：十分に溜めた攻撃で、対象となる通常のバニラの敵から実物の装備を一つ落とさせ、敵を装備から遠ざける。対象ごとに5秒の待機時間。束縛された装備、プレイヤー、ボスは保護される。ドロップ増加は残り、複製しない。"
 }

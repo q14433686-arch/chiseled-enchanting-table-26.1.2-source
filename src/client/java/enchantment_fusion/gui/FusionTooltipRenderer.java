@@ -45,6 +45,7 @@ import enchantment_fusion.mechanics.signatures.RangedGuardSkills;
 import enchantment_fusion.mechanics.signatures.RangedMendingSkills;
 import enchantment_fusion.mechanics.signatures.RangedSilkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
+import enchantment_fusion.mechanics.signatures.MeleeDisarmSkills;
 import enchantment_fusion.mechanics.signatures.MeleeGuardSkills;
 import enchantment_fusion.mechanics.signatures.MeleeWorkSkills;
 import enchantment_fusion.mechanics.signatures.MeleeMendingSkills;
@@ -139,7 +140,8 @@ public final class FusionTooltipRenderer {
     }
 
     private static String meleeImpulseTooltip(FusedPair pair) {
-        return MeleeImpulseSkills.isPursuit(pair) ? "tooltip.enchantment_fusion.melee_pursuit"
+        return MeleeDisarmSkills.isPair(pair) ? "tooltip.enchantment_fusion.melee_disarm"
+            : MeleeImpulseSkills.isPursuit(pair) ? "tooltip.enchantment_fusion.melee_pursuit"
             : MeleeImpulseSkills.isAttackFirst(pair) ? "tooltip.enchantment_fusion.melee_impulse_chase"
             : "tooltip.enchantment_fusion.melee_impulse_transfer";
     }
@@ -504,8 +506,8 @@ public final class FusionTooltipRenderer {
                 Component sigTitle = Component.translatable(grapnelTemplate && !legacyGrapnelCarrier
                     ? "skill.enchantment_fusion.grapnel" : meleeFortuneTemplate && !legacyMeleeFortuneCarrier
                     ? "skill.enchantment_fusion.melee_fortune" : meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier
-                    ? "skill.enchantment_fusion.melee_silk_seal" : meleeImpulseTemplate && MeleeImpulseSkills.isPursuit(pair) && !legacyMeleeImpulseCarrier
-                    ? "skill.enchantment_fusion.melee_pursuit" : sigOpt.get().titleKey());
+                    ? "skill.enchantment_fusion.melee_silk_seal" : meleeImpulseTemplate && (MeleeImpulseSkills.isPursuit(pair) || MeleeDisarmSkills.isPair(pair)) && !legacyMeleeImpulseCarrier
+                    ? (MeleeDisarmSkills.isPair(pair) ? "skill.enchantment_fusion.melee_disarm" : "skill.enchantment_fusion.melee_pursuit") : sigOpt.get().titleKey());
                 lines.add(Component.translatable(
                     "tooltip.enchantment_fusion.pair_signature",
                     sigTitle,
@@ -524,7 +526,7 @@ public final class FusionTooltipRenderer {
                         ? grapnelTooltip(pair) : meleeFortuneTemplate && !legacyMeleeFortuneCarrier
                         ? (MeleeFortuneSkills.attackFirst(pair) ? "tooltip.enchantment_fusion.melee_fortune_refresh"
                             : "tooltip.enchantment_fusion.melee_fortune_stance") : meleeSilkSealTemplate && !legacyMeleeSilkSealCarrier
-                        ? "tooltip.enchantment_fusion.melee_silk_seal" : meleeImpulseTemplate && MeleeImpulseSkills.isPursuit(pair) && !legacyMeleeImpulseCarrier
+                        ? "tooltip.enchantment_fusion.melee_silk_seal" : meleeImpulseTemplate && (MeleeImpulseSkills.isPursuit(pair) || MeleeDisarmSkills.isPair(pair)) && !legacyMeleeImpulseCarrier
                         ? meleeImpulseTooltip(pair) : sigOpt.get().descKey()).withStyle(ChatFormatting.AQUA));
                 }
             } else {

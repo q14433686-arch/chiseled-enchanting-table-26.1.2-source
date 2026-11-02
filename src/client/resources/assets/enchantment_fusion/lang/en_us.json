@@ -1215,5 +1215,7 @@
   "message.enchantment_fusion.melee_silk_dissipated": "The sealed damage dissipated.",
   "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Legacy incompatible carrier: its original effect remains; the new seal requires a melee weapon.",
   "skill.enchantment_fusion.melee_pursuit": "Momentum Pursuit",
-  "tooltip.enchantment_fusion.melee_pursuit": "Knockback ▷ Looting: after real knockback, strike the same moving enemy with the same weapon. Steal part of its remaining horizontal momentum to dash in that direction and briefly slow it. Native Knockback remains; no loot is created."
+  "tooltip.enchantment_fusion.melee_pursuit": "Knockback ▷ Looting: after real knockback, strike the same moving enemy with the same weapon. Steal part of its remaining horizontal momentum to dash in that direction and briefly slow it. Native Knockback remains; no loot is created.",
+  "skill.enchantment_fusion.melee_disarm": "Disarming Expulsion",
+  "tooltip.enchantment_fusion.melee_disarm": "Looting ▷ Knockback: a fully charged hit disarms one real piece of equipment from an eligible ordinary vanilla enemy, then pushes it away from the item. Five seconds per enemy; bound equipment, players and bosses are protected. Looting remains; no copy is created."
 }

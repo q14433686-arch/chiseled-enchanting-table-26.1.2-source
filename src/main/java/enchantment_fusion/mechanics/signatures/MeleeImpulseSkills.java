@@ -89,19 +89,16 @@ public final class MeleeImpulseSkills {
     public static boolean isKnockbackFirst(@Nullable FusedPair pair) {
         return pair != null && KNOCKBACK.equals(pair.primaryId()) && MeleeAttackThemes.isAttack(pair.secondaryId());
     }
-    public static boolean pursuitPair(@Nullable FusedPair pair) {
-        return pair != null && KNOCKBACK.equals(pair.primaryId()) && LOOTING.equals(pair.secondaryId());
-    }
+    public static boolean pursuitPair(@Nullable FusedPair pair) { return pair != null && KNOCKBACK.equals(pair.primaryId()) && LOOTING.equals(pair.secondaryId()); }
     public static boolean pursuitSignature(@Nullable SignatureEntry entry) {
         return entry != null && PURSUIT.equals(entry.id()) && KNOCKBACK.equals(entry.primaryId())
             && LOOTING.equals(entry.secondaryId());
     }
     /** Data-pack replacements keep their own signature; only the chosen old signature is redesigned. */
-    public static boolean isPursuit(@Nullable FusedPair pair) {
-        return pursuitPair(pair) && SignatureCatalog.resolve(pair).map(MeleeImpulseSkills::pursuitSignature).orElse(false);
-    }
+    public static boolean isPursuit(@Nullable FusedPair pair) { return pursuitPair(pair) && SignatureCatalog.resolve(pair).map(MeleeImpulseSkills::pursuitSignature).orElse(false); }
     public static boolean matches(@Nullable FusedPair pair) {
-        return isPursuit(pair) || (isAttackFirst(pair) || isKnockbackFirst(pair)) && SignatureCatalog.resolve(pair).isEmpty();
+        return isPursuit(pair) || MeleeDisarmSkills.isPair(pair)
+            || (isAttackFirst(pair) || isKnockbackFirst(pair)) && SignatureCatalog.resolve(pair).isEmpty();
     }
     public static boolean supportsCarrier(Set<FusionCarrier> roles) { return MeleeAttackThemes.supportsWeapon(roles); }
     public static boolean applies(@Nullable FusedPair pair, @Nullable ItemStack stack) {
@@ -140,6 +137,7 @@ public final class MeleeImpulseSkills {
         @Nullable DamageSource confirmed, replayed, beforeSource;
         @Nullable Vec3 beforeVelocity;
         @Nullable Pursuit pursuit;
+        @Nullable MeleeDisarmSkills.Claim disarm;
         boolean ambiguous;
         Attack(@Nullable Attack previous, Player player, ItemStack weapon, Entity target, EquipmentSlot slot) {
             this.previous = previous; this.player = player; this.weapon = weapon; this.target = target;
@@ -166,6 +164,7 @@ public final class MeleeImpulseSkills {
         if (frame.previous == null) CURRENT.remove(); else CURRENT.set(frame.previous);
         if (!completed || frame.ambiguous) { invalidatePursuit(frame); return; }
         if (frame.pursuit != null) PursuitPlunderSkills.settle(frame);
+        if (frame.disarm != null) MeleeDisarmSkills.settle(frame.disarm);
     }
     private static void invalidatePursuit(Attack frame) {
         if (!(frame.player instanceof ServerPlayer owner) || !(frame.target instanceof LivingEntity target)
@@ -209,6 +208,8 @@ public final class MeleeImpulseSkills {
         if (frame == null || frame.player != owner || frame.weapon != hit.weapon() || frame.target != hit.target()
             || hit.slot() != EquipmentSlot.MAINHAND || owner.getMainHandItem() != frame.weapon || !hit.eligibleBefore()
             || !ready(owner) || !direct(owner, hit.source())) return;
+        if (frame.disarm != null) { frame.ambiguous = true; return; }
+        frame.disarm = MeleeDisarmSkills.prepare(frame, hit);
         boolean forward = frame.forward != null && owns(owner, frame.forward)
             && MeleeAttackThemes.matchesTarget(attackId(frame.forward), hit.target());
         boolean reverse = frame.reverse != null && owns(owner, frame.reverse)
@@ -409,6 +410,7 @@ public final class MeleeImpulseSkills {
     }
     /** Settle captured movement only after the server tick; a protected first contact blocks transfer. */
     public static void tickServer(MinecraftServer server) {
+        MeleeDisarmSkills.tickServer(server);
         for (Mark mark : List.copyOf(MARKS)) {
             ServerPlayer owner = server.getPlayerList().getPlayer(mark.owner);
             ServerLevel level = server.getLevel(mark.dimension);
@@ -493,5 +495,5 @@ public final class MeleeImpulseSkills {
         if (target instanceof ServerPlayer player) player.connection.send(new ClientboundSetEntityMotionPacket(player));
     }
     public static void clearPlayer(UUID id) { if (id != null) removeMarks(mark -> mark.owner.equals(id) || mark.target.equals(id)); }
-    public static void clearServer() { MARKS.clear(); TRACKED.clear(); CURRENT.remove(); MOVING.remove(); PRIMARY_REPLAY.remove(); }
+    public static void clearServer() { MARKS.clear(); TRACKED.clear(); CURRENT.remove(); MOVING.remove(); PRIMARY_REPLAY.remove(); MeleeDisarmSkills.clearServer(); }
 }

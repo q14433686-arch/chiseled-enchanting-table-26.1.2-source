@@ -103,7 +103,7 @@ final class AcceptanceReport {
         plan("42.4-protection-bane", "Protection ▷ Bane: per-item mitigation and arthropod counter hit", "Not reached if setup fails.");
         plan("42.4-runtime-compat", "42.4 natural swing packets, diverse projectiles, overlapping defense effects, multiplayer and protection mods", "Not covered by the prepared single-player fixture.");
         plan("08-knockback-looting", "Knockback ▷ Looting: real damage and knockback, prepared movement, same-weapon pursuit and bounded transfer", "Not reached if setup fails; natural movement and multiplayer are not covered.");
-        plan("08-looting-knockback", "Looting ▷ Knockback: real equipment disarm and eviction", "Not implemented: safe equipment transfer, ownership and protected targets need completion.");
+        plan("08-looting-knockback", "Looting ▷ Knockback: real equipment disarm, protected targets and Looting-primary projection", "Not reached if setup fails; natural input, external transfer hooks and multiplayer are not covered.");
         plan("08-runtime-compat", "08 natural movement and input, actual non-native weapon use, PvP, multiplayer and protection mods", "Not covered by the prepared single-player fixture.");
         plan("42.5-sharp-knockback", "Sharpness ▷ Knockback: actual knockback with simulated pursuit and follow-up", "Not reached if setup fails.");
         plan("42.5-knockback-sharp", "Knockback ▷ Sharpness: actual knockback and simulated swept contact", "Not reached if setup fails.");

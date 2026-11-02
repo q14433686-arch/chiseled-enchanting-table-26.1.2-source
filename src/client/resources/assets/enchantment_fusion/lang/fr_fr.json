@@ -1215,5 +1215,7 @@
   "message.enchantment_fusion.melee_silk_dissipated": "Les dégâts scellés se sont dissipés.",
   "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "Le support ancien incompatible conserve son effet ; le nouveau sceau exige une arme de mêlée.",
   "skill.enchantment_fusion.melee_pursuit": "Poursuite cinétique",
-  "tooltip.enchantment_fusion.melee_pursuit": "Recul ▷ Butin : après un recul réel, frappez le même ennemi en mouvement avec la même arme. Volez une partie de son élan horizontal restant pour foncer dans sa direction et le ralentir brièvement. Le recul normal reste ; aucun butin créé."
+  "tooltip.enchantment_fusion.melee_pursuit": "Recul ▷ Butin : après un recul réel, frappez le même ennemi en mouvement avec la même arme. Volez une partie de son élan horizontal restant pour foncer dans sa direction et le ralentir brièvement. Le recul normal reste ; aucun butin créé.",
+  "skill.enchantment_fusion.melee_disarm": "Expulsion désarmante",
+  "tooltip.enchantment_fusion.melee_disarm": "Butin ▷ Recul : un coup chargé retire une pièce réelle à un ennemi ordinaire admissible du jeu de base, puis l’éloigne de l’objet. Cinq secondes par ennemi ; équipement lié, joueurs et boss protégés. Butin reste actif ; aucune copie."
 }

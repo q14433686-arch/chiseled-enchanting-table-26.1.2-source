@@ -1215,5 +1215,7 @@
   "message.enchantment_fusion.melee_silk_dissipated": "O dano selado se dissipou.",
   "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "O item antigo incompatível mantém seu efeito; o novo selo exige arma corpo a corpo.",
   "skill.enchantment_fusion.melee_pursuit": "Perseguição de impulso",
-  "tooltip.enchantment_fusion.melee_pursuit": "Repulsão ▷ Saque: após uma repulsão real, acerte o mesmo inimigo em movimento com a mesma arma. Roube parte do impulso horizontal restante para avançar nessa direção e desacelere-o brevemente. A repulsão normal permanece; nenhum saque é criado."
+  "tooltip.enchantment_fusion.melee_pursuit": "Repulsão ▷ Saque: após uma repulsão real, acerte o mesmo inimigo em movimento com a mesma arma. Roube parte do impulso horizontal restante para avançar nessa direção e desacelere-o brevemente. A repulsão normal permanece; nenhum saque é criado.",
+  "skill.enchantment_fusion.melee_disarm": "Expulsão desarmante",
+  "tooltip.enchantment_fusion.melee_disarm": "Saque ▷ Repulsão: um golpe totalmente carregado desarma uma peça real de um inimigo comum elegível do jogo base e o afasta do item. Cinco segundos por inimigo; equipamentos vinculados, jogadores e chefes são protegidos. Saque permanece; nada é copiado."
 }

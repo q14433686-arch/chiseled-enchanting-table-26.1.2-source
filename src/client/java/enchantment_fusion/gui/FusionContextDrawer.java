@@ -10,6 +10,7 @@ import enchantment_fusion.mechanics.SignaturePairs;
 import enchantment_fusion.mechanics.SignaturePairs.SignatureEntry;
 import enchantment_fusion.mechanics.signatures.MeleeSilkSealSkills;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
+import enchantment_fusion.mechanics.signatures.MeleeDisarmSkills;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -116,13 +117,14 @@ public final class FusionContextDrawer {
             String formula = pName + " \u25B7 " + sName;
             boolean silkSeal = MeleeSilkSealSkills.selectedSignature(sig);
             boolean pursuit = MeleeImpulseSkills.pursuitSignature(sig);
+            boolean disarm = MeleeDisarmSkills.selectedSignature(sig);
             String title = state >= CompendiumDiscoveryTracker.STATE_MASTERED
                 ? "\u2605 " + Component.translatable(silkSeal ? "skill.enchantment_fusion.melee_silk_seal"
-                    : pursuit ? "skill.enchantment_fusion.melee_pursuit" : sig.titleKey()).getString()
+                    : pursuit ? "skill.enchantment_fusion.melee_pursuit" : disarm ? "skill.enchantment_fusion.melee_disarm" : sig.titleKey()).getString()
                 : "\u25C7 " + formula;
             Component hDesc = state >= CompendiumDiscoveryTracker.STATE_MASTERED
                 ? Component.translatable(silkSeal ? "tooltip.enchantment_fusion.melee_silk_seal"
-                    : pursuit ? "tooltip.enchantment_fusion.melee_pursuit" : sig.descKey())
+                    : pursuit ? "tooltip.enchantment_fusion.melee_pursuit" : disarm ? "tooltip.enchantment_fusion.melee_disarm" : sig.descKey())
                 : Component.translatable("gui.enchantment_fusion.grimoire.heard_sig_clue", pName, sName);
             this.matched.add(new ContextRecipe(
                 true, sig.id(), sig.primaryId(), sig.secondaryId(), state,

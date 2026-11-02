@@ -1215,5 +1215,7 @@
   "message.enchantment_fusion.melee_silk_dissipated": "봉인된 피해가 소멸했습니다.",
   "tooltip.enchantment_fusion.legacy_melee_silk_carrier": "호환되지 않는 기존 아이템은 기존 효과를 유지하며 새 봉인에는 근접 무기가 필요합니다.",
   "skill.enchantment_fusion.melee_pursuit": "관성 추격",
-  "tooltip.enchantment_fusion.melee_pursuit": "밀치기 ▷ 약탈: 실제로 밀친 적이 같은 방향으로 움직이는 동안 같은 무기로 다시 적중하면 남은 수평 관성 일부를 빼앗아 그 방향으로 돌진하고 적을 잠시 둔화합니다. 원래 밀치기는 유지되며 전리품은 생성하지 않습니다."
+  "tooltip.enchantment_fusion.melee_pursuit": "밀치기 ▷ 약탈: 실제로 밀친 적이 같은 방향으로 움직이는 동안 같은 무기로 다시 적중하면 남은 수평 관성 일부를 빼앗아 그 방향으로 돌진하고 적을 잠시 둔화합니다. 원래 밀치기는 유지되며 전리품은 생성하지 않습니다.",
+  "skill.enchantment_fusion.melee_disarm": "무장 해제 추방",
+  "tooltip.enchantment_fusion.melee_disarm": "약탈 ▷ 밀치기: 충분히 충전한 공격으로 조건에 맞는 일반 바닐라 적의 실제 장비 하나를 떨어뜨리고 적을 물건에서 멀리 밀어냅니다. 대상마다 5초 재사용 대기시간이 있으며 귀속 장비, 플레이어와 우두머리는 보호됩니다. 약탈은 유지되고 복제하지 않습니다."
 }

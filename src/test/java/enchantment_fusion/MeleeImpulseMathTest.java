@@ -7,6 +7,7 @@ import enchantment_fusion.mechanics.signatures.MeleeAttackThemes;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseMath;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseMath.Box;
 import enchantment_fusion.mechanics.signatures.MeleeImpulseSkills;
+import enchantment_fusion.mechanics.signatures.MeleeDisarmSkills;
 import enchantment_fusion.mechanics.signatures.SignatureCatalog;
 import enchantment_fusion.model.FusedPair;
 import enchantment_fusion.model.FusionCarrier;
@@ -56,7 +57,8 @@ final class MeleeImpulseMathTest {
         try {
             assertTrue(MeleeImpulseSkills.isPursuit(pair));
             assertTrue(MeleeImpulseSkills.matches(pair));
-            assertFalse(MeleeImpulseSkills.matches(pair.flipped()));
+            assertFalse(MeleeImpulseSkills.isPursuit(pair.flipped()));
+            assertTrue(MeleeDisarmSkills.isPair(pair.flipped()));
             assertTrue(MeleeImpulseSkills.pursuitSignature(SignatureCatalog.resolve(pair).orElseThrow()));
             SignatureCatalog.reloadFromJson(JsonParser.parseString("""
                 {"signatures":{"custom":{"primary":"minecraft:knockback","secondary":"minecraft:looting"}}}
@@ -68,6 +70,21 @@ final class MeleeImpulseMathTest {
                 """).getAsJsonObject());
             assertFalse(MeleeImpulseSkills.pursuitSignature(SignatureCatalog.resolve(
                 FusedPair.clean(MeleeImpulseSkills.KNOCKBACK, 1, MeleeAttackThemes.SMITE, 1)).orElseThrow()));
+        } finally { SignatureCatalog.reloadFromJson(null); }
+    }
+    @Test void disarmUsesOnlyTheSelectedReverseAndPreservesDataPackReplacements() {
+        SignatureCatalog.reloadFromJson(null);
+        FusedPair pair = FusedPair.clean(MeleeDisarmSkills.LOOTING, 3, MeleeDisarmSkills.KNOCKBACK, 2);
+        try {
+            assertTrue(MeleeDisarmSkills.isPair(pair));
+            assertTrue(MeleeImpulseSkills.matches(pair));
+            assertFalse(MeleeDisarmSkills.isPair(pair.flipped()));
+            assertTrue(MeleeDisarmSkills.selectedSignature(SignatureCatalog.resolve(pair).orElseThrow()));
+            SignatureCatalog.reloadFromJson(JsonParser.parseString("""
+                {"signatures":{"custom":{"primary":"minecraft:looting","secondary":"minecraft:knockback"}}}
+                """).getAsJsonObject());
+            assertFalse(MeleeDisarmSkills.isPair(pair));
+            assertFalse(MeleeImpulseSkills.matches(pair));
         } finally { SignatureCatalog.reloadFromJson(null); }
     }
     @Test void pursuitRequiresFiniteRealRemainingMomentumAndCapsItsImpulse() {
