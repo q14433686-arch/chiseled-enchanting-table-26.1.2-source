@@ -105,7 +105,7 @@ public final class GrapnelSkills {
         return (attackFirst(pair) || miningFirst(pair) || rangedFirst(pair) || GrapnelDefense.isPair(pair)
             || GrapnelDurability.isPair(pair) || GrapnelImpact.isPair(pair) || GrapnelWind.isPair(pair) || GrapnelThorns.isPair(pair)
             || GrapnelAttribute.isPair(pair) || GrapnelLunge.isPair(pair) || GrapnelChanneling.isPair(pair) || GrapnelLooting.isPair(pair)
-            || GrapnelRiptide.isPair(pair) || GrapnelLoyalty.isPair(pair))
+            || GrapnelRiptide.isPair(pair) || GrapnelLoyalty.isPair(pair) || GrapnelFrost.isPair(pair))
             && SignatureCatalog.resolve(pair).map(entry -> SIGNATURE.equals(entry.id()) && "*".equals(entry.primaryId())).orElse(false);
     }
     public static boolean supportsCarrier(Set<FusionCarrier> roles) { return MeleeAttackThemes.supportsWeapon(roles); }
@@ -121,6 +121,7 @@ public final class GrapnelSkills {
         if (GrapnelChanneling.isPair(pair)) return GrapnelChanneling.supportsCarrier(roles);
         if (GrapnelRiptide.isPair(pair)) return GrapnelRiptide.supportsCarrier(roles);
         if (GrapnelLoyalty.isPair(pair)) return GrapnelLoyalty.supportsCarrier(roles);
+        if (GrapnelFrost.isPair(pair)) return GrapnelFrost.supportsCarrier(roles);
         if (GrapnelWind.isPair(pair)) return GrapnelWind.supportsCarrier(roles);
         if (GrapnelThorns.isPair(pair)) return GrapnelThorns.supportsCarrier(roles);
         if (GrapnelAttribute.isPair(pair)) return GrapnelAttribute.supportsCarrier(pair, roles);
@@ -374,7 +375,7 @@ public final class GrapnelSkills {
             || GrapnelWind.hasEquipped(player) || GrapnelThorns.hasEquipped(player) || GrapnelAttribute.hasEquipped(player)
             || GrapnelLunge.selected(player.getMainHandItem()) != null || GrapnelChanneling.selected(player.getMainHandItem()) != null
             || GrapnelLooting.selected(player.getMainHandItem()) != null || GrapnelRiptide.hasEquipped(player)
-            || hasReturnedMark(player) || hasProjectileMark(player);
+            || GrapnelFrost.hasEquipped(player) || hasReturnedMark(player) || hasProjectileMark(player);
     }
     private static boolean hasReturnedMark(ServerPlayer player) {
         Mark mark = MARKS.get(player.getUUID());
@@ -465,6 +466,6 @@ public final class GrapnelSkills {
         MARKS.clear(); FLIGHTS.clear(); PENDING_PUSHES.clear();
         GrapnelPiercing.clearServer(); GrapnelDefense.clearServer(); GrapnelQuickCharge.clearServer(); GrapnelDurability.clearServer();
         GrapnelImpact.clearServer(); GrapnelWind.clearServer(); GrapnelThorns.clearServer(); GrapnelMotion.clearServer();
-        GrapnelSweep.clearServer(); GrapnelBreath.clearServer(); GrapnelLunge.clearServer(); GrapnelChanneling.clearServer(); GrapnelLooting.clearServer(); GrapnelTridentFlight.clearServer(); GrapnelRiptide.clearServer(); GrapnelLoyalty.clearServer(); ProtectionProjection.clear();
+        GrapnelSweep.clearServer(); GrapnelBreath.clearServer(); GrapnelLunge.clearServer(); GrapnelChanneling.clearServer(); GrapnelLooting.clearServer(); GrapnelTridentFlight.clearServer(); GrapnelRiptide.clearServer(); GrapnelLoyalty.clearServer(); GrapnelFrost.clearServer(); ProtectionProjection.clear();
     }
 }

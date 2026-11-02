@@ -60,6 +60,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelImpact;
 import enchantment_fusion.mechanics.signatures.GrapnelLunge;
 import enchantment_fusion.mechanics.signatures.GrapnelRiptide;
 import enchantment_fusion.mechanics.signatures.GrapnelLoyalty;
+import enchantment_fusion.mechanics.signatures.GrapnelFrost;
 import enchantment_fusion.mechanics.signatures.GrapnelLooting;
 import enchantment_fusion.mechanics.signatures.GrapnelChanneling;
 import enchantment_fusion.mechanics.signatures.GrapnelWind;
@@ -120,6 +121,7 @@ public final class FusionTooltipRenderer {
         if (GrapnelLunge.isPair(pair)) return "tooltip.enchantment_fusion.lunge_grapnel";
         if (GrapnelRiptide.isPair(pair)) return "tooltip.enchantment_fusion.riptide_grapnel";
         if (GrapnelLoyalty.isPair(pair)) return "tooltip.enchantment_fusion.loyalty_grapnel";
+        if (GrapnelFrost.isPair(pair)) return "tooltip.enchantment_fusion.frost_grapnel";
         if (GrapnelChanneling.isPair(pair)) return "tooltip.enchantment_fusion.channeling_grapnel";
         if (GrapnelLooting.isPair(pair)) return "tooltip.enchantment_fusion.looting_grapnel";
         if (GrapnelDefense.FEATHER.equals(pair.primaryId())) return "tooltip.enchantment_fusion.feather_grapnel";

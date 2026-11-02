@@ -50,7 +50,7 @@ final class GrapnelSkillsTest {
                 assertEquals(!GrapnelImpact.DENSITY.equals(impact), GrapnelSkills.supportsCarrier(pair, Set.of(FusionCarrier.SWORD)));
             }
             assertTrue(GrapnelSkills.matches(FusedPair.clean("minecraft:lunge", 1, GrapnelSkills.LURE, 1)));
-            assertFalse(GrapnelSkills.matches(FusedPair.clean("minecraft:frost_walker", 1, GrapnelSkills.LURE, 1)));
+            assertTrue(GrapnelSkills.matches(FusedPair.clean("minecraft:frost_walker", 1, GrapnelSkills.LURE, 1)));
         } finally { SignatureCatalog.publish(old); }
     }
     @Test void exactAndDifferentWildcardKeepTheirPriority() {

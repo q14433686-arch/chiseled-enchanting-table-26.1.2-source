@@ -1205,5 +1205,7 @@
   "tooltip.enchantment_fusion.ranged_silk_recover": "Recolha normalmente sua última flecha real fincada em até 16 blocos com visão livre. É preciso espaço no inventário. Flechas infinitas, fantasmas, de outros mods e em voo são excluídas.",
   "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "Equipamentos antigos incompatíveis mantêm o efeito. Novas fusões exigem arco ou besta.",
   "tooltip.enchantment_fusion.loyalty_grapnel": "Quando um tridente realmente lançado volta por Lealdade e entra no inventário, o local de retorno fica marcado por 8 segundos. Segure o mesmo tridente e ative mirando um inimigo válido a até 8 blocos da marca; a marca deve estar a até 12 blocos e as linhas de visão livres. Inventário cheio, coleta manual ou origem incerta não criam marca. O efeito normal de Lealdade é mantido.",
-  "message.enchantment_fusion.grapnel_loyalty_marked": "Retorno de Lealdade marcado. Segure o tridente devolvido e mire em um inimigo válido."
+  "message.enchantment_fusion.grapnel_loyalty_marked": "Retorno de Lealdade marcado. Segure o tridente devolvido e mire em um inimigo válido.",
+  "tooltip.enchantment_fusion.frost_grapnel": "No chão e sem montaria, uma tentativa real de Passos Gelados de congelar água-fonte coloca gelo fino temporário no ar acima. Apenas uma colocação nova marca sua posição por 8 segundos. Use as mesmas botas e ative mirando um inimigo válido a até 8 blocos da marca; fique a até 12 blocos e mantenha a visão livre. Agachar ou estar na água impede o caminho. A água original permanece, o gelo quebrado não cria água e os demais efeitos de Passos Gelados são mantidos.",
+  "message.enchantment_fusion.grapnel_frost_marked": "Caminho de gelo marcado. Use as botas originais e mire em um inimigo válido."
 }

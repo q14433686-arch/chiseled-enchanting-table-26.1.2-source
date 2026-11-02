@@ -22,6 +22,7 @@ import enchantment_fusion.mechanics.signatures.GrapnelQuickCharge;
 import enchantment_fusion.mechanics.signatures.GrapnelImpact;
 import enchantment_fusion.mechanics.signatures.GrapnelLunge;
 import enchantment_fusion.mechanics.signatures.PrimaryLocationProjection;
+import enchantment_fusion.mechanics.signatures.GrapnelFrost;
 import java.util.function.Consumer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -93,6 +94,11 @@ public abstract class EnchantmentHelperHeavyCrushMixin {
         PrimaryLocationProjection.reconcile(entity);
         original.call(level, entity);
         PrimaryLocationProjection.tick(level, entity);
+    }
+
+    @WrapMethod(method = "isImmuneToDamage")
+    private static boolean ef$projectFrostImmunity(ServerLevel level, LivingEntity victim, DamageSource source, Operation<Boolean> original) {
+        return original.call(level, victim, source) || GrapnelFrost.projectImmunity(level, victim, source);
     }
 
     @WrapMethod(method = "modifyDamage")

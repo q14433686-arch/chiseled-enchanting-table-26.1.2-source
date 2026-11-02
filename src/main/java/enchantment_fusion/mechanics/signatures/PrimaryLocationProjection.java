@@ -35,16 +35,20 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Conditional primary effects are not ordinary permanent equipment attributes. This bridge
- * replays the CURRENT Soul Speed location/tick components only at vanilla's corresponding
- * events, on the same boots and level, when the primary is not already native. The two
- * directions deliberately using it are Soul Speed ▷ Lure and Soul Speed ▷ Swift Sneak.
- * Attribute effects get owned, transient IDs, so a projection never replaces a vanilla or
- * third-party modifier. Other datapack effects, including item damage, use vanilla code.
+ * replays selected CURRENT Soul Speed and Frost Walker location/tick components only at
+ * vanilla's corresponding events, on the same boots and level, when a primary is not native.
+ * Each enchantment owns a separate active set and transient attribute IDs, so one projected
+ * Frost effect cannot stop, replace or borrow the Soul Speed state. Other datapack effects,
+ * including item damage, use vanilla code.
  */
 public final class PrimaryLocationProjection {
-    private static final int MAX_OWNERS = 256, MAX_EFFECTS = 128, MAX_DEPTH = 12;
+    private static final int MAX_STATES = 512, MAX_EFFECTS = 128, MAX_DEPTH = 12;
+    private static final List<String> PRIMARIES = List.of(GrapnelAttribute.SOUL, GrapnelFrost.FROST);
     private record Key(Holder<Attribute> attribute, Identifier nativeId) {}
-    private record Source(ServerPlayer player, ItemStack stack, FusedPair pair, Holder<Enchantment> enchantment) {}
+    private record OwnerKey(UUID player, String primary) {}
+    private record Source(ServerPlayer player, ItemStack stack, FusedPair pair, Holder<Enchantment> enchantment, int rank) {
+        OwnerKey key() { return new OwnerKey(player.getUUID(), pair.primaryId()); }
+    }
     private static final class State {
         final Source source;
         final ServerLevel level;
@@ -54,7 +58,7 @@ public final class PrimaryLocationProjection {
         boolean inLocation;
         State(Source source) { this.source = source; this.level = source.player().level(); }
     }
-    private static final Map<UUID, State> OWNED = new HashMap<>();
+    private static final Map<OwnerKey, State> OWNED = new HashMap<>();
     private static final ThreadLocal<State> CURRENT = new ThreadLocal<>();
     private PrimaryLocationProjection() {}
 
@@ -62,26 +66,31 @@ public final class PrimaryLocationProjection {
     public static boolean needsProjection(int nativeLevel, boolean matchingSlot) {
         return nativeLevel <= 0 && matchingSlot;
     }
-    private static @Nullable Source source(ServerPlayer player) {
+    private static @Nullable Source source(ServerPlayer player, String primary) {
         if (!player.isAlive() || player.isSpectator()) return null;
         ItemStack stack = player.getItemBySlot(EquipmentSlot.FEET);
         if (stack.isEmpty() || stack.isBroken()) return null;
-        Holder<Enchantment> enchantment = FusionStationOperations.lookupEnchantment(player.registryAccess(), GrapnelAttribute.SOUL).orElse(null);
+        Holder<Enchantment> enchantment = FusionStationOperations.lookupEnchantment(player.registryAccess(), primary).orElse(null);
         if (enchantment == null || !needsProjection(stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(enchantment),
             enchantment.value().matchingSlot(EquipmentSlot.FEET))) return null;
         FusedPair best = null;
-        for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
-            if (!GrapnelAttribute.SOUL.equals(pair.primaryId())) continue;
-            boolean lure = GrapnelAttribute.isPair(pair) && GrapnelSkills.applies(pair, stack);
-            String signature = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
-            boolean step = SoulStepSkills.FORWARD.equals(signature) && SoulStepSkills.applies(pair, stack, signature);
-            if ((lure || step) && (best == null || pair.primaryLevel() > best.primaryLevel())) best = pair;
+        if (GrapnelFrost.FROST.equals(primary)) best = GrapnelFrost.projectionPair(stack);
+        else if (GrapnelAttribute.SOUL.equals(primary)) {
+            for (FusedPair pair : stack.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY).pairs()) {
+                if (!GrapnelAttribute.SOUL.equals(pair.primaryId())) continue;
+                boolean lure = GrapnelAttribute.isPair(pair) && GrapnelSkills.applies(pair, stack);
+                String signature = SignatureCatalog.resolve(pair).map(entry -> entry.id()).orElse("");
+                boolean step = SoulStepSkills.FORWARD.equals(signature) && SoulStepSkills.applies(pair, stack, signature);
+                if ((lure || step) && (best == null || pair.primaryLevel() > best.primaryLevel())) best = pair;
+            }
         }
-        return best == null ? null : new Source(player, stack, best, enchantment);
+        if (best == null) return null;
+        int rank = GrapnelFrost.FROST.equals(primary) ? GrapnelFrost.projectionRank(stack, best) : best.primaryLevel();
+        return new Source(player, stack, best, enchantment, rank);
     }
     private static boolean same(Source a, @Nullable Source b) {
         return b != null && a.player() == b.player() && a.stack() == b.stack() && a.pair().equals(b.pair())
-            && a.enchantment().value() == b.enchantment().value();
+            && a.rank() == b.rank() && a.enchantment().value() == b.enchantment().value();
     }
     private static @Nullable Set<EnchantmentLocationBasedEffect> active(State state) {
         return state.source.player().activeLocationDependentEnchantments(EquipmentSlot.FEET).get(state.source.enchantment().value());
@@ -95,47 +104,50 @@ public final class PrimaryLocationProjection {
         state.activeSnapshot = state.activeSet == null ? Set.of() : Set.copyOf(state.activeSet);
     }
     private static @Nullable State ensure(Source source) {
-        ServerPlayer player = source.player();
-        State state = OWNED.get(player.getUUID());
+        ServerPlayer player = source.player(); OwnerKey key = source.key();
+        State state = OWNED.get(key);
         if (state != null && (!same(state.source, source) || state.level != player.level() || !stateIntact(state))) {
             stop(state); state = null;
         }
         if (state == null) {
             // Someone else owns this enchantment's vanilla active-set: do not merge or clear it.
-            if (OWNED.size() >= MAX_OWNERS || player.activeLocationDependentEnchantments(EquipmentSlot.FEET)
+            if (OWNED.size() >= MAX_STATES || player.activeLocationDependentEnchantments(EquipmentSlot.FEET)
                 .containsKey(source.enchantment().value())) return null;
-            state = new State(source); OWNED.put(player.getUUID(), state);
+            state = new State(source); OWNED.put(key, state);
         }
         return state;
     }
     /** Called before vanilla location handling so a native/restored item cannot overlap our old state. */
     public static void reconcile(LivingEntity entity) {
         if (!(entity instanceof ServerPlayer player)) return;
-        State state = OWNED.get(player.getUUID());
-        if (state == null || state.inLocation) return;
-        Source current = source(player);
-        if (!same(state.source, current) || state.level != player.level() || !stateIntact(state)) stop(state);
+        for (String primary : PRIMARIES) {
+            State state = OWNED.get(new OwnerKey(player.getUUID(), primary));
+            if (state == null || state.inLocation) continue;
+            Source current = source(player, primary);
+            if (!same(state.source, current) || state.level != player.level() || !stateIntact(state)) stop(state);
+        }
     }
     public static void locationChanged(ServerLevel level, LivingEntity entity) {
         if (CURRENT.get() != null || !(entity instanceof ServerPlayer player) || player.level() != level) return;
-        Source source = source(player);
-        if (source == null) { reconcile(player); return; }
-        State state = ensure(source);
-        if (state == null) return;
-        State previous = CURRENT.get(); CURRENT.set(state); state.inLocation = true;
-        try {
-            source.enchantment().value().runLocationChangedEffects(level, source.pair().primaryLevel(),
-                new EnchantedItemInUse(source.stack(), EquipmentSlot.FEET, player), player);
-        } catch (RuntimeException error) {
-            EnchantmentFusion.LOGGER.error("Conditional primary location replay failed", error);
-            stop(state);
-        } finally {
-            state.inLocation = false;
-            if (previous == null) CURRENT.remove(); else CURRENT.set(previous);
-        }
-        if (OWNED.get(player.getUUID()) == state) {
-            snapshot(state);
-            if (!same(state.source, source(player)) || state.level != player.level()) stop(state);
+        reconcile(player);
+        for (String primary : PRIMARIES) {
+            Source source = source(player, primary); if (source == null) continue;
+            State state = ensure(source); if (state == null) continue;
+            State previous = CURRENT.get(); CURRENT.set(state); state.inLocation = true;
+            try {
+                source.enchantment().value().runLocationChangedEffects(level, source.rank(),
+                    new EnchantedItemInUse(source.stack(), EquipmentSlot.FEET, player), player);
+            } catch (RuntimeException error) {
+                EnchantmentFusion.LOGGER.error("Conditional primary location replay failed", error);
+                stop(state);
+            } finally {
+                state.inLocation = false;
+                if (previous == null) CURRENT.remove(); else CURRENT.set(previous);
+            }
+            if (OWNED.get(source.key()) == state) {
+                snapshot(state);
+                if (!same(state.source, source(player, primary)) || state.level != player.level()) stop(state);
+            }
         }
     }
     public static void locationChangedItem(ServerLevel level, ItemStack stack, LivingEntity entity, EquipmentSlot slot) {
@@ -144,39 +156,41 @@ public final class PrimaryLocationProjection {
     /** Replay datapack tick effects once, at the same point as native equipped enchantments. */
     public static void tick(ServerLevel level, LivingEntity entity) {
         if (CURRENT.get() != null || !(entity instanceof ServerPlayer player) || player.level() != level) return;
-        Source source = source(player);
-        if (source == null) { reconcile(player); return; }
-        State state = ensure(source);
-        if (state == null) return;
-        State previous = CURRENT.get(); CURRENT.set(state);
-        try {
-            source.enchantment().value().tick(level, source.pair().primaryLevel(),
-                new EnchantedItemInUse(source.stack(), EquipmentSlot.FEET, player), player);
-        } catch (RuntimeException error) {
-            EnchantmentFusion.LOGGER.error("Conditional primary tick replay failed", error);
-            stop(state);
-        } finally { if (previous == null) CURRENT.remove(); else CURRENT.set(previous); }
-        if (OWNED.get(player.getUUID()) == state && (!same(state.source, source(player)) || state.level != player.level())) stop(state);
+        reconcile(player);
+        for (String primary : PRIMARIES) {
+            Source source = source(player, primary); if (source == null) continue;
+            State state = ensure(source); if (state == null) continue;
+            State previous = CURRENT.get(); CURRENT.set(state);
+            try {
+                source.enchantment().value().tick(level, source.rank(),
+                    new EnchantedItemInUse(source.stack(), EquipmentSlot.FEET, player), player);
+            } catch (RuntimeException error) {
+                EnchantmentFusion.LOGGER.error("Conditional primary tick replay failed", error);
+                stop(state);
+            } finally { if (previous == null) CURRENT.remove(); else CURRENT.set(previous); }
+            if (OWNED.get(source.key()) == state && (!same(state.source, source(player, primary)) || state.level != player.level())) stop(state);
+        }
     }
     public static void stopSlot(LivingEntity entity, EquipmentSlot slot) {
         if (slot == EquipmentSlot.FEET) stopAll(entity);
     }
     public static void stopAll(LivingEntity entity) {
-        if (entity instanceof ServerPlayer player) {
-            State state = OWNED.get(player.getUUID());
-            if (state != null) stop(state);
-        }
+        if (entity instanceof ServerPlayer player)
+            for (String primary : PRIMARIES) {
+                State state = OWNED.get(new OwnerKey(player.getUUID(), primary));
+                if (state != null) stop(state);
+            }
     }
     private static void stop(State state) {
         ServerPlayer player = state.source.player();
-        if (!OWNED.remove(player.getUUID(), state)) return;
+        if (!OWNED.remove(state.source.key(), state)) return;
         Set<EnchantmentLocationBasedEffect> current = active(state);
         boolean ownSet = state.inLocation && CURRENT.get() == state || current == state.activeSet
             && (current == null || current.equals(state.activeSnapshot));
         State previous = CURRENT.get(); CURRENT.set(state);
         try {
             if (current != null && ownSet) state.source.enchantment().value().stopLocationBasedEffects(
-                state.source.pair().primaryLevel(), new EnchantedItemInUse(state.source.stack(), EquipmentSlot.FEET, player), player);
+                state.source.rank(), new EnchantedItemInUse(state.source.stack(), EquipmentSlot.FEET, player), player);
         } catch (RuntimeException error) {
             EnchantmentFusion.LOGGER.error("Conditional primary location cleanup failed", error);
         } finally {
@@ -204,21 +218,29 @@ public final class PrimaryLocationProjection {
     private static boolean ours(State state, EnchantedItemInUse item, Entity entity) {
         return entity == state.source.player() && item.itemStack() == state.source.stack() && item.inSlot() == EquipmentSlot.FEET;
     }
-    private static Identifier projectedId(Identifier nativeId) {
-        return EnchantmentFusion.id("primary_location/soul_speed/" + nativeId.toString().replace(':', '/'));
+    private static Identifier projectedId(String primary, Identifier nativeId) {
+        String name = GrapnelAttribute.SOUL.equals(primary) ? "soul_speed" : "frost_walker";
+        return EnchantmentFusion.id("primary_location/" + name + "/" + nativeId.toString().replace(':', '/'));
     }
     /** Mixin entry: true means that vanilla's native-ID attribute operation was handled. */
     public static boolean activateAttribute(EnchantmentAttributeEffect effect, int level, EnchantedItemInUse item,
                                             Entity entity, boolean becameActive) {
         State state = CURRENT.get();
         if (state == null || !ours(state, item, entity)) return false;
-        if (!becameActive || OWNED.get(state.source.player().getUUID()) != state) return true;
+        if (!becameActive || OWNED.get(state.source.key()) != state) return true;
         AttributeModifier nativeModifier = effect.getModifier(level, EquipmentSlot.FEET);
         if (!Double.isFinite(nativeModifier.amount())) return true;
         Key key = new Key(effect.attribute(), nativeModifier.id());
-        AttributeModifier projected = new AttributeModifier(projectedId(nativeModifier.id()), nativeModifier.amount(), nativeModifier.operation());
+        AttributeModifier projected = new AttributeModifier(projectedId(state.source.pair().primaryId(), nativeModifier.id()), nativeModifier.amount(), nativeModifier.operation());
         AttributeInstance instance = state.source.player().getAttribute(effect.attribute());
         if (instance == null) return true;
+        if (GrapnelFrost.FROST.equals(state.source.pair().primaryId())) {
+            // A shared native attribute ID must not be doubled merely because two primaries
+            // were projected under distinct owned IDs. Keep the existing owner untouched.
+            if (instance.getModifier(nativeModifier.id()) != null) return true;
+            for (State other : OWNED.values())
+                if (other != state && other.source.player() == state.source.player() && other.modifiers.containsKey(key)) return true;
+        }
         AttributeModifier existing = instance.getModifier(projected.id());
         if (existing == null) {
             instance.addTransientModifier(projected); state.modifiers.put(key, projected);
@@ -248,8 +270,8 @@ public final class PrimaryLocationProjection {
         int nativeLevel = gear.stack().getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(holder);
         boolean nativeSource = nativeLevel > 0;
         if (nativeSource && nativeLevel != gear.pair().primaryLevel()) return null;
-        State state = OWNED.get(player.getUUID());
-        if (!nativeSource && (state == null || !same(state.source, source(player)) || !stateIntact(state)
+        State state = OWNED.get(new OwnerKey(player.getUUID(), GrapnelAttribute.SOUL));
+        if (!nativeSource && (state == null || !same(state.source, source(player, GrapnelAttribute.SOUL)) || !stateIntact(state)
             || state.source.stack() != gear.stack() || !state.source.pair().equals(gear.pair()))) return null;
         Set<EnchantmentLocationBasedEffect> active = player.activeLocationDependentEnchantments(gear.slot()).get(holder.value());
         if (active == null) return null;
@@ -263,7 +285,7 @@ public final class PrimaryLocationProjection {
         if (match == null) return null;
         AttributeModifier expected = match.getModifier(gear.pair().primaryLevel(), gear.slot());
         if (!Double.isFinite(expected.amount())) return null;
-        Identifier id = nativeSource ? expected.id() : projectedId(expected.id());
+        Identifier id = nativeSource ? expected.id() : projectedId(GrapnelAttribute.SOUL, expected.id());
         AttributeModifier wanted = nativeSource ? expected : new AttributeModifier(id, expected.amount(), expected.operation());
         if (!nativeSource && !wanted.equals(state.modifiers.get(new Key(match.attribute(), expected.id())))) return null;
         AttributeInstance instance = player.getAttribute(match.attribute());

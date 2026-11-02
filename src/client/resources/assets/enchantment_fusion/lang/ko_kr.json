@@ -1205,5 +1205,7 @@
   "tooltip.enchantment_fusion.ranged_silk_recover": "시야가 트인 16블록 안의 자신이 마지막으로 쏜 지면의 실제 화살을 일반 획득으로 회수합니다. 인벤토리 공간이 필요하며 무한, 환영, 다른 모드, 비행 중인 화살은 회수하지 않습니다.",
   "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "기존 부적합 장비의 효과는 유지됩니다. 새 융합에는 활이나 석궁이 필요합니다.",
   "tooltip.enchantment_fusion.loyalty_grapnel": "실제로 던진 삼지창이 충성으로 돌아와 인벤토리에 들어오면 귀환 위치를 8초간 표시합니다. 돌아온 같은 삼지창을 들고 표시에서 8블록 이내의 유효한 적을 조준해 발동하세요. 표시는 플레이어에게서 12블록 이내여야 하며 시야가 확보되어야 합니다. 인벤토리가 가득 찼거나 직접 주운 경우, 출처가 불분명한 경우에는 표시되지 않습니다. 충성의 기본 효과는 유지됩니다.",
-  "message.enchantment_fusion.grapnel_loyalty_marked": "충성 귀환 위치를 표시했습니다. 돌아온 삼지창을 들고 유효한 적을 조준하세요."
+  "message.enchantment_fusion.grapnel_loyalty_marked": "충성 귀환 위치를 표시했습니다. 돌아온 삼지창을 들고 유효한 적을 조준하세요.",
+  "tooltip.enchantment_fusion.frost_grapnel": "이 장화를 신고 땅에 서 있으며 탑승 중이 아닐 때, 차가운 걸음이 실제로 물 근원을 얼리려 하면 그 위의 빈 공간에 임시 얇은 얼음을 놓습니다. 새로 놓인 경우에만 현재 위치가 8초간 표시됩니다. 같은 장화를 신고 표시에서 8블록 이내의 유효한 적을 조준해 발동하세요. 표시는 12블록 이내이고 시야가 확보되어야 합니다. 웅크리거나 물속에 있으면 길을 만들지 않습니다. 물 근원은 그대로이며 부서진 얼음은 물을 만들지 않고 다른 차가운 걸음 효과도 유지됩니다.",
+  "message.enchantment_fusion.grapnel_frost_marked": "서리 길을 표시했습니다. 원래 장화를 신고 유효한 적을 조준하세요."
 }

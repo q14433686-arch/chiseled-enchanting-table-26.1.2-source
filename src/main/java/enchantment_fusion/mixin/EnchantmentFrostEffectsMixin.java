@@ -16,6 +16,7 @@ import enchantment_fusion.mechanics.signatures.ConfirmedWindBurst;
 import enchantment_fusion.mechanics.signatures.GrapnelThorns;
 import enchantment_fusion.mechanics.signatures.GrapnelChanneling;
 import enchantment_fusion.mechanics.signatures.GrapnelLoyalty;
+import enchantment_fusion.mechanics.signatures.GrapnelFrost;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -102,12 +103,15 @@ public abstract class EnchantmentFrostEffectsMixin {
     @WrapMethod(method = "runLocationChangedEffects")
     private void ef$scopeNativeWaterWrites(ServerLevel level, int enchantmentLevel, EnchantedItemInUse item,
                                            LivingEntity wearer, Operation<Void> original) {
-        boolean guarded = FrostFallSkills.suppressNativeWaterFreeze((Enchantment) (Object) this, level, item, wearer);
-        boolean entered = NativeFrostWaterGuard.enter(guarded);
+        Enchantment enchantment = (Enchantment) (Object) this;
+        GrapnelFrost.Scope scope = GrapnelFrost.begin(enchantment, level, enchantmentLevel, item, wearer);
+        boolean guarded = FrostFallSkills.suppressNativeWaterFreeze(enchantment, level, item, wearer);
+        boolean entered = NativeFrostWaterGuard.enter(guarded), completed = false;
         try {
-            original.call(level, enchantmentLevel, item, wearer);
+            original.call(level, enchantmentLevel, item, wearer); completed = true;
         } finally {
-            NativeFrostWaterGuard.exit(entered);
+            try { NativeFrostWaterGuard.exit(entered); }
+            finally { GrapnelFrost.end(scope, completed); }
         }
     }
 }

@@ -1205,5 +1205,7 @@
   "tooltip.enchantment_fusion.ranged_silk_recover": "視線の通る16ブロック以内で、自分が最後に放ち地面に刺さった実矢を通常の拾得で回収します。持ち物に空きが必要です。無限、幻影、他MOD、飛行中の矢は回収しません。",
   "tooltip.enchantment_fusion.legacy_ranged_silk_carrier": "古い不適合装備は旧効果を維持します。新たな融合には弓かクロスボウが必要です。",
   "tooltip.enchantment_fusion.loyalty_grapnel": "実際に投げたトライデントが忠誠心で戻り、インベントリに入ると、帰還地点を8秒間記録する。同じトライデントを持ち、記録地点から8ブロック以内の対象を狙って発動する。記録地点は自身から12ブロック以内で、視線が通る必要がある。満杯、手動回収、出所不明では記録しない。忠誠心の通常効果は維持。",
-  "message.enchantment_fusion.grapnel_loyalty_marked": "忠誠心の帰還地点を記録。戻ったトライデントを持ち、対象を狙おう。"
+  "message.enchantment_fusion.grapnel_loyalty_marked": "忠誠心の帰還地点を記録。戻ったトライデントを持ち、対象を狙おう。",
+  "tooltip.enchantment_fusion.frost_grapnel": "地上で騎乗していないとき、氷渡りが水源を実際に凍らせようとすると、水の上の空間に一時的な薄氷を置く。新たに置けた場合だけ現在地を8秒間記録する。同じブーツを履き、記録地点の8ブロック以内にいる対象を狙って発動する。地点は自身から12ブロック以内で視線が必要。スニーク中や水中では氷を置かない。水源は残り、薄氷は壊れても水にならず、その他の氷渡り効果も維持。",
+  "message.enchantment_fusion.grapnel_frost_marked": "氷の道を記録。元のブーツを履き、対象を狙おう。"
 }

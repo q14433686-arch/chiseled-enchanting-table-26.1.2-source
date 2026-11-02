@@ -140,15 +140,24 @@ public final class TemporaryFrostEffects {
         }
     }
 
-    private static void placeThinIceAbove(ServerLevel level, ServerPlayer player, BlockPos water) {
+    /**
+     * One observed Frost Walker replacement may instead place our thin path above the same
+     * protected source-water cell. A true result requires the actual write and unchanged water.
+     */
+    public static boolean placeObservedWakeCell(ServerLevel level, ServerPlayer player, BlockPos water) {
+        return mayModify(level, player, water) && placeThinIceAbove(level, player, water);
+    }
+
+    private static boolean placeThinIceAbove(ServerLevel level, ServerPlayer player, BlockPos water) {
         BlockPos top = water.above();
-        if (!level.hasChunkAt(water) || !mayModify(level, player, top)) return;
+        if (!level.hasChunkAt(water) || !mayModify(level, player, top)) return false;
         BlockState state = level.getBlockState(water);
-        if (!state.is(Blocks.WATER) || !state.getFluidState().isSource() || !level.getBlockState(top).isAir()) return;
+        if (!state.is(Blocks.WATER) || !state.getFluidState().isSource() || !level.getBlockState(top).isAir()) return false;
         AABB thinIce = new AABB(top.getX(), top.getY(), top.getZ(),
             top.getX() + 1.0D, top.getY() + 0.125D, top.getZ() + 1.0D);
-        if (clearOfLivingEntities(level, thinIce)) {
-            level.setBlockAndUpdate(top, FusionBlocks.TEMPORARY_FROST_PATH.defaultBlockState());
-        }
+        return clearOfLivingEntities(level, thinIce)
+            && level.setBlockAndUpdate(top, FusionBlocks.TEMPORARY_FROST_PATH.defaultBlockState())
+            && level.getBlockState(top).is(FusionBlocks.TEMPORARY_FROST_PATH)
+            && level.getBlockState(water).equals(state);
     }
 }
