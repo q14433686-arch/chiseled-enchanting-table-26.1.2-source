@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -19,11 +20,11 @@ import org.jetbrains.annotations.Nullable;
 public final class ProtectionProjection {
     private record Request(EquipmentSlot slot, FusedEnchantmentList pairs, Map<Enchantment, Integer> levels) {}
     public static final class Frame {
-        final @Nullable Frame previous; final ServerPlayer player; final DamageSource source;
+        final @Nullable Frame previous; final ServerPlayer player; final ServerLevel level; final DamageSource source;
         final Map<ItemStack, Map<Enchantment, Integer>> applied = new IdentityHashMap<>();
         final Map<ItemStack, Request> requested = new IdentityHashMap<>();
         Frame(@Nullable Frame previous, ServerPlayer player, DamageSource source) {
-            this.previous = previous; this.player = player; this.source = source;
+            this.previous = previous; this.player = player; this.level = player.level(); this.source = source;
         }
     }
     private static final ThreadLocal<Frame> CURRENT = new ThreadLocal<>();
@@ -50,20 +51,21 @@ public final class ProtectionProjection {
     /** Never reroll: raise the level of the original invocation, before it consumes randomness. */
     public static int effectiveLevel(Enchantment enchantment, int original, ItemStack item, Entity victim, DamageSource source) {
         Frame frame = CURRENT.get();
-        if (frame == null || frame.player != victim || frame.source != source) return original;
+        if (frame == null || frame.player != victim || frame.source != source || frame.player.level() != frame.level) return original;
         Request request = frame.requested.get(item);
-        if (request == null || frame.player.getItemBySlot(request.slot()) != item
+        if (request == null || frame.player.getItemBySlot(request.slot()) != item || item.isEmpty()
+            || !FireTradeoffSkills.slotMatches(item, request.slot())
             || !request.pairs().equals(item.getOrDefault(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY))) return original;
         return Math.max(original, request.levels().getOrDefault(enchantment, original));
     }
     public static void observe(Enchantment enchantment, int level, ItemStack item, Entity victim, DamageSource source) {
         Frame frame = CURRENT.get();
-        if (frame == null || frame.player != victim || frame.source != source) return;
+        if (frame == null || frame.player != victim || frame.source != source || frame.player.level() != frame.level) return;
         frame.applied.computeIfAbsent(item, ignored -> new IdentityHashMap<>()).merge(enchantment, level, Math::max);
     }
     public static boolean applied(ServerPlayer player, DamageSource source, ItemStack item, Enchantment enchantment) {
         Frame frame = CURRENT.get();
-        if (frame == null || frame.player != player || frame.source != source) return false;
+        if (frame == null || frame.player != player || frame.source != source || player.level() != frame.level) return false;
         Map<Enchantment, Integer> enchantments = frame.applied.get(item);
         return enchantments != null && enchantments.containsKey(enchantment);
     }

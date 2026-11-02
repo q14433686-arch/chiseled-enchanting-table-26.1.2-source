@@ -186,7 +186,33 @@ final class BlastDefenseProbe {
                 require(player.hurtServer(level, explosion, 8.0F), "Cross-family blast damage must be accepted");
                 require(Math.abs(before - player.getHealth() - expectedMulti) < 0.01F,
                     "The guard's higher blast secondary and grapnel primary must evaluate once at the maximum level");
+                ProtectionProjection.Frame outer = ProtectionProjection.begin(player, explosion);
+                try {
+                    require(ProtectionProjection.effectiveLevel(blast.value(), 1, multi, player, explosion) == 4,
+                        "The explosion pass includes the higher secondary before running the effect");
+                    require(ProtectionProjection.effectiveLevel(blast.value(), 1, multi.copy(), player, explosion) == 1,
+                        "An equal but different item must not inherit the original item's request");
+                    ProtectionProjection.Frame inner = ProtectionProjection.begin(player, ordinary);
+                    try {
+                        require(ProtectionProjection.effectiveLevel(blast.value(), 1, multi, player, ordinary) == 1,
+                            "A nested ordinary pass cannot inherit the outer explosion-only secondary");
+                    } finally { ProtectionProjection.end(inner); }
+                    require(ProtectionProjection.effectiveLevel(blast.value(), 1, multi, player, explosion) == 4,
+                        "Closing a nested pass restores the outer request");
+                    player.setItemSlot(EquipmentSlot.CHEST, multi.copy());
+                    require(ProtectionProjection.effectiveLevel(blast.value(), 1, multi, player, explosion) == 1,
+                        "A removed equipment instance cannot inherit a stale request");
+                } finally { player.setItemSlot(EquipmentSlot.CHEST, multi); ProtectionProjection.end(outer); }
             }
+            ItemStack shield = new ItemStack(Items.SHIELD);
+            shield.set(FusionDataComponents.FUSED_PAIRS, FusedEnchantmentList.EMPTY
+                .append(FusedPair.clean("minecraft:protection", 4, "minecraft:lure", 1)));
+            player.setItemSlot(EquipmentSlot.MAINHAND, shield); player.setItemSlot(EquipmentSlot.OFFHAND, shield);
+            ProtectionProjection.Frame duplicate = ProtectionProjection.begin(player, ordinary);
+            try {
+                require(ProtectionProjection.effectiveLevel(protection.value(), 1, shield, player, ordinary) == 1,
+                    "The same item object in two relevant slots has ambiguous provenance");
+            } finally { ProtectionProjection.end(duplicate); }
         } finally { saved.restore(); }
     }
 

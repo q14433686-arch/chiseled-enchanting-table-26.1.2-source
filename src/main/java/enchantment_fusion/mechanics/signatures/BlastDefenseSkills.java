@@ -189,10 +189,12 @@ public final class BlastDefenseSkills {
         }
     }
     public static float finishProtection(ProtectionFrame frame, float nativeTotal, ServerLevel level) {
+        if (frame.player.level() != level) return nativeTotal;
         float total = nativeTotal;
         Holder<Enchantment> protection = enchant(level, PROTECTION), blast = enchant(level, BLAST);
         // First restore native primary effects only on armor on which they could not be projected.
         for (Gear gear : frame.gear) {
+            if (frame.player.level() != level) return nativeTotal;
             if (!stillWorn(frame.player, gear)) continue;
             Holder<Enchantment> primary = isCounter(gear.pair()) ? blast : protection;
             if (primary == null || nativeEnchantment(gear.stack(), primary)
@@ -202,6 +204,7 @@ public final class BlastDefenseSkills {
             total = value.floatValue();
         }
         for (Gear gear : frame.gear) {
+            if (frame.player.level() != level) return nativeTotal;
             if (!isGuard(gear.pair()) || !stillWorn(frame.player, gear)) continue;
             // Apply the actual datapack secondary effect only if it is not already native.
             if (blast != null && !nativeEnchantment(gear.stack(), blast)
@@ -214,7 +217,7 @@ public final class BlastDefenseSkills {
             total += BlastDefenseMath.convertedProtection(frame.observedMain.getOrDefault(gear.stack(), 0.0F), percent);
             CompendiumDiscoveryTracker.recordDiscovery(frame.player, gear.pair().primaryId(), gear.pair().secondaryId());
         }
-        return Float.isFinite(total) ? total : nativeTotal;
+        return frame.player.level() == level && Float.isFinite(total) ? total : nativeTotal;
     }
     public static void endProtection(@Nullable ProtectionFrame frame) {
         if (frame == null) return;

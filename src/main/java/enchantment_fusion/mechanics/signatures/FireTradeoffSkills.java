@@ -163,10 +163,13 @@ public final class FireTradeoffSkills {
 
     /** Preserve native primary data-pack protection on actual armor/shields without replaying a native slot effect. */
     public static float primaryProtection(ServerLevel level, ServerPlayer player, DamageSource source, float vanilla) {
+        if (player.level() != level) return vanilla;
         float total = vanilla;
         for (EquipmentSlot slot : SLOTS) {
+            if (player.level() != level) return vanilla;
             ItemStack stack = player.getItemBySlot(slot);
             for (var entry : protectionLevels(stack, slot, source).entrySet()) {
+                if (player.level() != level) return vanilla;
                 Holder<Enchantment> primary = FusionStationOperations.lookupEnchantment(level.registryAccess(), entry.getKey()).orElse(null);
                 if (primary == null) continue;
                 int nativeLevel = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY).getLevel(primary);
@@ -175,7 +178,7 @@ public final class FireTradeoffSkills {
                 MutableFloat value = new MutableFloat(total);
                 primary.value().modifyDamageProtection(level, Math.max(entry.getValue(), nativeLevel), stack, player, source, value);
                 total = value.floatValue();
-                if (!Float.isFinite(total)) return vanilla;
+                if (!Float.isFinite(total) || player.level() != level) return vanilla;
             }
         }
         return total;
